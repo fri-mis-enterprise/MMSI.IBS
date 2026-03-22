@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260322093451_AddMMSIJobOrder")]
+    partial class AddMMSIJobOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4679,6 +4682,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("remarks");
 
+                    b.Property<int?>("ServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("varchar(20)")
@@ -4712,6 +4719,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("PortId")
                         .HasDatabaseName("ix_mmsi_job_orders_port_id");
+
+                    b.HasIndex("ServiceId")
+                        .HasDatabaseName("ix_mmsi_job_orders_service_id");
 
                     b.HasIndex("TerminalId")
                         .HasDatabaseName("ix_mmsi_job_orders_terminal_id");
@@ -7278,6 +7288,11 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("PortId")
                         .HasConstraintName("fk_mmsi_job_orders_mmsi_ports_port_id");
 
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIService", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .HasConstraintName("fk_mmsi_job_orders_mmsi_services_service_id");
+
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
@@ -7293,6 +7308,8 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Port");
+
+                    b.Navigation("Service");
 
                     b.Navigation("Terminal");
 

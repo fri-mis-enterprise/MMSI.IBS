@@ -1,0 +1,89 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIJobOrder>
+
+@{
+    ViewData["Title"] = "Job Orders";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow mb-3">
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        <a asp-action="Create" class="btn btn-light shadow-sm">
+            <i class="bi bi-plus-circle"></i> Create Job Order
+        </a>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="jobOrdersTable" style="width:100%">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Job Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th class="d-none d-md-table-cell">Vessel</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">
+                                    <a asp-action="Details" asp-route-id="@item.JobOrderId" class="text-decoration-none text-primary">
+                                        @item.JobOrderNumber
+                                    </a>
+                                </td>
+                                <td>@item.Date.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="@item.Customer?.CustomerName">
+                                        @item.Customer?.CustomerName
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    <div class="text-truncate" style="max-width: 150px;" title="@item.Vessel?.VesselName">
+                                        @item.Vessel?.VesselName
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill @(item.Status == "Open" ? "bg-success" : "bg-secondary")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Details" asp-route-id="@item.JobOrderId" class="btn btn-sm btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.JobOrderId" class="btn btn-sm btn-outline-secondary" title="Edit Job Order">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.JobOrderId" class="btn btn-sm btn-outline-danger" title="Delete Job Order">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#jobOrdersTable').DataTable({
+                responsive: true,
+                order: [[0, 'desc']],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search Job Orders..."
+                }
+            });
+        });
+    </script>
+}

@@ -77,6 +77,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IMsapRepository Msap { get; }
         IServiceRequestRepository ServiceRequest { get; }
+        IJobOrderRepository JobOrder { get; }
         IDispatchTicketRepository DispatchTicket { get; }
         IBillingRepository Billing { get; }
         ICollectionRepository Collection { get; }

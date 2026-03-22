@@ -92,6 +92,7 @@
 
     <div class="card-body">
         <form id="myForm" method="post" class="row" enctype="multipart/form-data">
+            <input type="hidden" asp-for="JobOrderId" />
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -277,6 +278,7 @@
                         } else {
                             terminalSelectVar.append('<option value="">No terminals found</option>');
                         }
+                        terminalSelectVar.trigger('change');
                     },
                     complete: function() {
                         terminalLoading.hide();
@@ -284,6 +286,11 @@
                 });
             }
             port.change(HandlePortChange);
+
+            // Trigger on load if pre-filled (e.g. from Job Order)
+            if (port.val() && terminalSelectVar.children('option').length <= 1) {
+                HandlePortChange();
+            }
 
             // Date Mirroring & Duration Logic
             const dateLeft = $("#DateLeft");

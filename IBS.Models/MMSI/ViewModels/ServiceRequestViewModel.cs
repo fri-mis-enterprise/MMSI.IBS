@@ -8,6 +8,8 @@ namespace IBS.Models.MMSI.ViewModels
 {
     public class ServiceRequestViewModel
     {
+        public int? JobOrderId { get; set; }
+
         public int? DispatchTicketId { get; set; }
 
         public DateOnly? Date { get; set; }

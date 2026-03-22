@@ -163,6 +163,7 @@ namespace IBS.DataAccess.Repository
 
         public IMsapRepository Msap { get; private set; }
         public IServiceRequestRepository ServiceRequest { get; private set; }
+        public IJobOrderRepository JobOrder { get; private set; }
         public IDispatchTicketRepository DispatchTicket { get; private set; }
         public IBillingRepository Billing { get; private set; }
         public ICollectionRepository Collection { get; private set; }
@@ -241,6 +242,7 @@ namespace IBS.DataAccess.Repository
             Billing = new BillingRepository(_db);
             Collection = new CollectionRepository(_db);
             DispatchTicket = new DispatchTicketRepository(_db);
+            JobOrder = new JobOrderRepository(_db);
             MMSIReport = new MMSIReportRepository(_db);
             Msap = new MsapRepository(_db);
             Port = new PortRepository(_db);

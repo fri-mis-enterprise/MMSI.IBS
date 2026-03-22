@@ -1,0 +1,296 @@
+@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+
+@{
+    ViewData["Title"] = $"Job Order {Model.JobOrderNumber}";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header Card -->
+    <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h4 class="m-0"><i class="bi bi-folder2-open"></i> @Model.JobOrderNumber</h4>
+            <div class="d-flex gap-2">
+                @if (Model.Status == "Open")
+                {
+                    <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm" class="d-inline">
+                        <button type="button" class="btn btn-sm btn-warning shadow-sm" onclick="confirmClose()">
+                            <i class="bi bi-lock"></i> Close Job Order
+                        </button>
+                    </form>
+                }
+                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="btn btn-sm btn-light">
+                    <i class="bi bi-pencil"></i> Edit Details
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.JobOrderId" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+                <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <small class="text-muted d-block">Date</small>
+                    <span class="fw-bold">@Model.Date.ToString("MMM dd, yyyy")</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-muted d-block">Status</small>
+                    <span class="badge @(Model.Status == "Open" ? "bg-success" : "bg-secondary")">@Model.Status</span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <small class="text-muted d-block">Customer</small>
+                    <span class="fw-bold fs-5">@Model.CustomerName</span>
+                </div>
+                
+                <div class="col-12"><hr class="my-2"></div>
+                
+                <div class="col-6 col-md-3">
+                    <small class="text-muted d-block">Vessel</small>
+                    <span class="fw-bold">@Model.VesselName</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-muted d-block">COS #</small>
+                    <span>@(Model.COSNumber ?? "-")</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <small class="text-muted d-block">Voyage #</small>
+                    <span>@(Model.VoyageNumber ?? "-")</span>
+                </div>
+                
+                @if(!string.IsNullOrEmpty(Model.Remarks))
+                {
+                    <div class="col-12">
+                        <small class="text-muted d-block">Remarks</small>
+                        <p class="mb-0 fst-italic">@Model.Remarks</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Tickets Section -->
+    <div class="card shadow border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="m-0 text-primary">Dispatch Tickets</h5>
+            @if (Model.Status == "Open")
+            {
+                <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addTicketModal">
+                    <i class="bi bi-plus-lg"></i> Add Ticket
+                </button>
+            }
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="ticketsTable" style="width:100%">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Ticket #</th>
+                            <th>Date</th>
+                            <th>Service</th>
+                            <th>Tugboat</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ticket in Model.DispatchTickets)
+                        {
+                            <tr>
+                                <td class="fw-bold">@ticket.DispatchNumber</td>
+                                <td>@(ticket.Date?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                <td>@ticket.Service?.ServiceName</td>
+                                <td>@ticket.Tugboat?.TugboatName</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-info text-dark">@ticket.Status</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-info" title="Quick View" onclick="showTicketModal(@ticket.DispatchTicketId)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        @if (Model.Status == "Open")
+                                        {
+                                            <a asp-controller="DispatchTicket" asp-action="EditTicket" asp-route-id="@ticket.DispatchTicketId" class="btn btn-sm btn-outline-primary" title="Edit Ticket">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        <a asp-controller="DispatchTicket" asp-action="Preview" asp-route-id="@ticket.DispatchTicketId" class="btn btn-sm btn-outline-secondary" title="Full Preview">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ticket Details Modal -->
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="ticketModalLabel">Dispatch Ticket Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="ticketModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Ticket Modal -->
+<div class="modal fade" id="addTicketModal" tabindex="-1" aria-labelledby="addTicketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addTicketModalLabel"><i class="bi bi-plus-circle me-2"></i>Add New Dispatch Ticket</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (ViewData["TicketViewModel"] != null)
+                {
+                    <partial name="_DispatchTicketFormPartial" model='ViewData["TicketViewModel"]' />
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        Ticket form could not be loaded. Please try again or contact administrator.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddTicketForm()"><i class="bi bi-save me-1"></i> Save Ticket</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#ticketsTable').DataTable({
+                responsive: true,
+                order: [[0, 'desc']],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search Tickets..."
+                }
+            });
+
+            // Initialize Select2 for the modal
+            $('#addTicketModal').on('shown.bs.modal', function () {
+                $('.js-select2-modal').select2({
+                    dropdownParent: $('#addTicketModal'),
+                    theme: 'bootstrap-5'
+                });
+            });
+        });
+
+        function submitAddTicketForm() {
+            var form = $('#addTicketForm');
+            if (form[0].checkValidity()) {
+                form.submit();
+            } else {
+                form[0].reportValidity();
+            }
+        }
+
+        function confirmClose() {
+            Swal.fire({
+                title: 'Close Job Order?',
+                text: "Closing this Job Order will prevent adding new tickets to it.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, close it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#closeForm').submit();
+                }
+            })
+        }
+
+        function showTicketModal(id) {
+            const modal = new bootstrap.Modal(document.getElementById('ticketModal'));
+            const body = document.getElementById('ticketModalBody');
+            
+            body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+            
+            modal.show();
+
+            fetch(`@Url.Action("GetTicketDetails", "JobOrder")/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    body.innerHTML = `
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Dispatch #</label>
+                                <span class="fw-bold">${data.dispatchNumber}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Date</label>
+                                <span class="fw-bold">${data.date}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Service</label>
+                                <span>${data.serviceName}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Tugboat</label>
+                                <span>${data.tugboatName}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Tug Master</label>
+                                <span>${data.tugMasterName}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Location</label>
+                                <span>${data.location}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Time Start</label>
+                                <span>${data.timeStart}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted d-block">Time End</label>
+                                <span>${data.timeEnd}</span>
+                            </div>
+                            <div class="col-12">
+                                <label class="text-muted d-block">Remarks</label>
+                                <p class="mb-0 fst-italic">${data.remarks}</p>
+                            </div>
+                            <div class="col-12">
+                                <hr>
+                                <label class="text-muted d-block">Status</label>
+                                <span class="badge rounded-pill bg-info text-dark">${data.status}</span>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    body.innerHTML = `<div class="alert alert-danger">Error loading ticket details: ${error}</div>`;
+                });
+        }
+    </script>
+}

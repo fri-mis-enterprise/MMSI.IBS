@@ -150,6 +150,10 @@ namespace IBS.Models.MMSI
 
         public string? VideoSignedUrl { get; set; }
 
+        public int? JobOrderId { get; set; }
+        [ForeignKey(nameof(JobOrderId))]
+        public MMSIJobOrder? JobOrder { get; set; }
+
         public int? BillingId { get; set; }
         [ForeignKey(nameof(BillingId))]
         public MMSIBilling? Billing { get; set; }
