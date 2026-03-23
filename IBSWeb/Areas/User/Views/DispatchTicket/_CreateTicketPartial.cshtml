@@ -161,11 +161,9 @@
 
 <script>
     $(document).ready(function () {
-        // Re-initialize Select2 for modal elements
+        // Initialize Select2 for modal - must have dropdownParent set
         $('#addTicketModal .js-select2').select2({
             dropdownParent: $('#addTicketModal'),
-            width: '100%',
-            theme: 'classic'
         });
 
         const port = $("#ModalPortSelect");

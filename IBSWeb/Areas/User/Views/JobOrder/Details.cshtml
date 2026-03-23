@@ -192,12 +192,11 @@
                 }
             });
 
-            // Initialize Select2 for the modal
-            $('#addTicketModal').on('shown.bs.modal', function () {
-                $('.js-select2-modal').select2({
-                    dropdownParent: $('#addTicketModal'),
-                    theme: 'bootstrap-5'
-                });
+            // Initialize Select2 for the add ticket modal dropdowns
+            $('#addTicketModal .js-select2').select2({
+                dropdownParent: $('#addTicketModal'),
+                theme: 'classic',
+                width: '100%'
             });
         });
 
