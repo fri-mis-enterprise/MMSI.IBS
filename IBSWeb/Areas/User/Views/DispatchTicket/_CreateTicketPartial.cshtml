@@ -15,8 +15,10 @@
     }
 </style>
 
-<form id="createTicketForm" method="post" class="row" enctype="multipart/form-data">
+<form id="dispatchTicketForm" method="post" asp-action="@(Model.DispatchTicketId > 0 ? "EditTicket" : "Create")" asp-controller="DispatchTicket" class="row" enctype="multipart/form-data">
     <input type="hidden" asp-for="JobOrderId" />
+    <input type="hidden" asp-for="DispatchTicketId" />
+    
     <div class="border-2 px-3">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -24,13 +26,13 @@
         <h5 class="section-header text-secondary border-bottom"><i class="bi bi-info-circle me-2"></i>I. Reference Information</h5>
         <div class="row">
             <div class="form-floating col-md-3 col-6 my-2">
-                <input asp-for="Date" type="date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="TicketDate" placeholder=" ">
+                <input asp-for="Date" type="date" value="@(Model.Date.HasValue ? Model.Date.Value.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="TicketDate" placeholder=" ">
                 <label asp-for="Date" for="TicketDate" class="ms-2">Date Today<span class="required text-danger">*</span></label>
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
             <div class="form-floating col-md-3 col-6 my-2">
                 <input asp-for="DispatchNumber" type="text" class="form-control border-0 shadow" id="DispatchNumber" placeholder=" " maxlength="20" required>
-                <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch/Mooring #<span class="required text-danger">*</span></label>
+                <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch<span class="required text-danger">*</span></label>
                 <span asp-validation-for="DispatchNumber" class="text-danger"></span>
             </div>
             <div class="form-floating col-md-3 col-6 my-2">
@@ -54,22 +56,22 @@
         </div>
         <div class="row">
             <div class="form-floating col-md-3 col-6 my-2">
-                <input type="date" asp-for="DateLeft" value="@DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd")" class="form-control border-0 shadow modal-timeline-input" id="ModalDateLeft" placeholder=" " required>
+                <input type="date" asp-for="DateLeft" value="@(Model.DateLeft.HasValue ? Model.DateLeft.Value.ToString("yyyy-MM-dd") : DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd"))" class="form-control border-0 shadow modal-timeline-input" id="ModalDateLeft" placeholder=" " required>
                 <label asp-for="DateLeft" for="ModalDateLeft" class="ms-2">Date Start<span class="required text-danger">*</span></label>
                 <span asp-validation-for="DateLeft" class="text-danger"></span>
             </div>
             <div class="form-floating col-md-3 col-6 my-2">
-                <input type="time" asp-for="TimeLeft" value="@TimeOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("HH\\:mm")" class="form-control border-0 shadow modal-timeline-input" id="ModalTimeLeft" placeholder=" " required>
+                <input type="time" asp-for="TimeLeft" value="@(Model.TimeLeft.HasValue ? Model.TimeLeft.Value.ToString("HH\\:mm") : TimeOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("HH\\:mm"))" class="form-control border-0 shadow modal-timeline-input" id="ModalTimeLeft" placeholder=" " required>
                 <label asp-for="TimeLeft" for="ModalTimeLeft" class="ms-2">Time Start<span class="required text-danger">*</span></label>
                 <span asp-validation-for="TimeLeft" class="text-danger"></span>
             </div>
             <div class="form-floating col-md-3 col-6 my-2">
-                <input type="date" asp-for="DateArrived" value="@DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd")" class="form-control border-0 shadow modal-timeline-input" id="ModalDateArrived" placeholder=" " required>
+                <input type="date" asp-for="DateArrived" value="@(Model.DateArrived.HasValue ? Model.DateArrived.Value.ToString("yyyy-MM-dd") : DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd"))" class="form-control border-0 shadow modal-timeline-input" id="ModalDateArrived" placeholder=" " required>
                 <label asp-for="DateArrived" for="ModalDateArrived" class="ms-2">Date End<span class="required text-danger">*</span></label>
                 <span asp-validation-for="DateArrived" class="text-danger"></span>
             </div>
             <div class="form-floating col-md-3 col-6 my-2">
-                <input type="time" asp-for="TimeArrived" value="@TimeOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("HH\\:mm")" class="form-control border-0 shadow modal-timeline-input" id="ModalTimeArrived" placeholder=" " required>
+                <input type="time" asp-for="TimeArrived" value="@(Model.TimeArrived.HasValue ? Model.TimeArrived.Value.ToString("HH\\:mm") : TimeOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("HH\\:mm"))" class="form-control border-0 shadow modal-timeline-input" id="ModalTimeArrived" placeholder=" " required>
                 <label asp-for="TimeArrived" for="ModalTimeArrived" class="ms-2">Time End<span class="required text-danger">*</span></label>
                 <span asp-validation-for="TimeArrived" class="text-danger"></span>
             </div>
@@ -150,10 +152,30 @@
             <div class="form-group col-md-6 col-12 my-2">
                 <label for="modalImageUpload" class="form-label">Upload image of Dispatch Ticket</label>
                 <input class="form-control form-control-sm border-0 shadow" id="modalImageUpload" name="imageFile" type='file' accept="image/png, image/jpg, image/jpeg"/>
+                
+                @if (!string.IsNullOrEmpty(Model.ImageName))
+                {
+                    <div class="mt-2">
+                        <small class="text-muted d-block text-truncate">Current: @Model.ImageName</small>
+                        <div class="d-flex gap-2 mt-1">
+                            <button type="button" class="btn btn-sm btn-info text-white view-image-btn" data-url="@Model.ImageSignedUrl"><i class="bi bi-eye"></i> View</button>
+                        </div>
+                    </div>
+                }
             </div>
             <div class="form-group col-md-6 col-12 my-2">
                 <label for="modalVideoUpload" class="form-label">Upload video of service operation</label>
                 <input class="form-control form-control-sm border-0 shadow" id="modalVideoUpload" name="videoFile" type='file' accept="video/mp4, video/ogg"/>
+                
+                @if (!string.IsNullOrEmpty(Model.VideoName))
+                {
+                     <div class="mt-2">
+                        <small class="text-muted d-block text-truncate">Current: @Model.VideoName</small>
+                        <div class="d-flex gap-2 mt-1">
+                            <button type="button" class="btn btn-sm btn-info text-white view-video-btn" data-url="@Model.VideoSignedUrl"><i class="bi bi-play-circle"></i> Play</button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -187,7 +209,9 @@
                             terminalSelectVar.append($('<option>', { value: item.value, text: item.text }));
                         });
                     }
-                    terminalSelectVar.trigger('change');
+                    // If we are editing and have a terminal ID, we might want to re-select it
+                    // But usually the backend pre-populates the select list, so we might not need to do anything
+                    // unless the list was empty initially.
                 },
                 complete: function() {
                     terminalLoading.hide();
@@ -196,7 +220,8 @@
         }
         port.change(HandlePortChange);
 
-        // Initial trigger for terminal loading
+        // Only trigger port change if terminals are empty (Create mode mostly)
+        // In Edit mode, the select list is usually pre-populated by the server.
         if (port.val() && terminalSelectVar.children('option').length <= 1) {
             HandlePortChange();
         }
@@ -231,6 +256,7 @@
         }
 
         dateLeft.change(function() {
+            // Only auto-fill end date if it's empty (Create mode)
             if (!dateArrived.val()) {
                 dateArrived.val(dateLeft.val());
             }
@@ -238,6 +264,41 @@
         });
 
         $(".modal-timeline-input").on("input change", calculateDuration);
+        
+        // Initial Calculation (for Edit mode)
         calculateDuration();
+        
+        // View Image Handler
+        $('.view-image-btn').click(function() {
+            var url = $(this).data('url');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    imageUrl: url,
+                    imageAlt: "Dispatch Ticket Image",
+                    showConfirmButton: false,
+                    background: 'transparent',
+                    padding: 0,
+                    width: 'auto',
+                    heightAuto: true
+                });
+            } else {
+                window.open(url, '_blank');
+            }
+        });
+        
+        // View Video Handler
+        $('.view-video-btn').click(function() {
+             var url = $(this).data('url');
+             if (typeof Swal !== 'undefined') {
+                 Swal.fire({
+                    html: `<video width="100%" height="auto" controls autoplay><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`,
+                    showConfirmButton: false,
+                    background: 'transparent',
+                    width: '80%'
+                });
+             } else {
+                 window.open(url, '_blank');
+             }
+        });
     });
 </script>

@@ -58,6 +58,97 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetDispatchTicketPartial(int? id, int? jobOrderId, CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+            var viewModel = new ServiceRequestViewModel();
+
+            if (id.HasValue && id > 0)
+            {
+                // Edit Mode
+                if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateDispatchTicket, cancellationToken))
+                {
+                    return Forbid();
+                }
+
+                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                if (model == null) return NotFound();
+
+                if (model.TerminalId.HasValue)
+                {
+                    model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
+                    if (model.Terminal != null)
+                    {
+                        model.Terminal.Port = await _unitOfWork.Port.GetAsync(p => p.PortId == model.Terminal.PortId, cancellationToken);
+                    }
+                }
+
+                viewModel = DispatchTicketModelToServiceRequestVm(model);
+                
+                if (!string.IsNullOrEmpty(model.ImageName))
+                {
+                    viewModel.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
+                }
+                if (!string.IsNullOrEmpty(model.VideoName))
+                {
+                    viewModel.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
+                }
+                
+                ViewData["Title"] = "Edit Dispatch Ticket";
+                ViewData["JobOrderId"] = viewModel.JobOrderId;
+            }
+            else
+            {
+                // Create Mode
+                if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateDispatchTicket, cancellationToken))
+                {
+                    return Forbid();
+                }
+                
+                ViewData["Title"] = "Create Dispatch Ticket";
+                
+                // Pre-fill from JobOrder if provided
+                if (jobOrderId.HasValue)
+                {
+                    var jobOrder = await _unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == jobOrderId, cancellationToken);
+                    if (jobOrder != null)
+                    {
+                        viewModel.JobOrderId = jobOrderId;
+                        viewModel.CustomerId = jobOrder.CustomerId;
+                        viewModel.VesselId = jobOrder.VesselId;
+                        viewModel.PortId = jobOrder.PortId;
+                        viewModel.TerminalId = jobOrder.TerminalId;
+                        viewModel.COSNumber = jobOrder.COSNumber;
+                        viewModel.VoyageNumber = jobOrder.VoyageNumber;
+                        viewModel.Date = jobOrder.Date;
+                        
+                        // Set Terminal temporarily to trigger port pre-selection
+                        if (jobOrder.TerminalId.HasValue)
+                        {
+                             viewModel.Terminal = new MMSITerminal { PortId = jobOrder.PortId ?? 0 };
+                        }
+                        ViewData["JobOrderId"] = jobOrderId;
+                    }
+                }
+            }
+
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            
+            // Ensure PortId is set for the view to trigger the cascade if needed
+            if (viewModel.Terminal?.Port?.PortId > 0)
+            {
+                ViewData["PortId"] = viewModel.Terminal.Port.PortId;
+            }
+            else
+            {
+                ViewData["PortId"] = viewModel.PortId > 0 ? viewModel.PortId : 0;
+            }
+
+            return PartialView("_CreateTicketPartial", viewModel);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Create(int? jobOrderId, CancellationToken cancellationToken = default)
         {
             if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateDispatchTicket, cancellationToken))
@@ -354,6 +445,13 @@ namespace IBSWeb.Areas.User.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Tariff entered successfully!";
+                
+                // Redirect back to JobOrder Details if the ticket belongs to a job order
+                if (currentModel.JobOrderId.HasValue)
+                {
+                    return RedirectToAction("Details", "JobOrder", new { id = currentModel.JobOrderId.Value });
+                }
+                
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
@@ -476,6 +574,13 @@ namespace IBSWeb.Areas.User.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Tariff edited successfully!";
+                
+                // Redirect back to JobOrder Details if the ticket belongs to a job order
+                if (currentModel.JobOrderId.HasValue)
+                {
+                    return RedirectToAction("Details", "JobOrder", new { id = currentModel.JobOrderId.Value });
+                }
+                
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
@@ -488,7 +593,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> EditTicket(int id, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> EditTicket(int id, int? jobOrderId, CancellationToken cancellationToken = default)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -519,7 +624,11 @@ namespace IBSWeb.Areas.User.Controllers
                 viewModel.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
             }
 
+            // Preserve JobOrderId for redirection after save
+            viewModel.JobOrderId = jobOrderId ?? model.JobOrderId;
+            
             ViewData["PortId"] = model.Terminal?.Port?.PortId;
+            ViewData["JobOrderId"] = viewModel.JobOrderId;
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(viewModel);
         }
@@ -719,6 +828,13 @@ namespace IBSWeb.Areas.User.Controllers
 
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Entry edited successfully!";
+                    
+                    // Redirect back to JobOrder Details if the ticket belongs to a job order
+                    if (currentModel.JobOrderId.HasValue)
+                    {
+                        return RedirectToAction("Details", "JobOrder", new { id = currentModel.JobOrderId.Value });
+                    }
+                    
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
@@ -726,7 +842,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["warning"] = "Date/Time Left cannot be later than Date/Time Arrived!";
                     ViewData["PortId"] = model.Terminal?.Port?.PortId;
-                    return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
+                    return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId, jobOrderId = viewModel.JobOrderId });
                 }
             }
             catch (Exception ex)
@@ -735,7 +851,7 @@ namespace IBSWeb.Areas.User.Controllers
                 _logger.LogError(ex, "Failed to edit ticket.");
                 TempData["error"] = ex.Message;
                 ViewData["PortId"] = model.Terminal?.Port?.PortId;
-                return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
+                return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId, jobOrderId = viewModel.JobOrderId });
             }
         }
 
@@ -1360,6 +1476,7 @@ namespace IBSWeb.Areas.User.Controllers
                 TugMasterId = model.TugMasterId,
                 VesselId = model.VesselId,
                 Terminal = model.Terminal,
+                PortId = model.Terminal?.PortId,
                 Remarks = model.Remarks,
                 ImageName = model.ImageName,
                 ImageSignedUrl = model.ImageSignedUrl,
@@ -1377,6 +1494,7 @@ namespace IBSWeb.Areas.User.Controllers
             var viewModel = new TariffViewModel
             {
                 DispatchTicketId = model.DispatchTicketId,
+                JobOrderId = model.JobOrderId,
                 DispatchNumber = model.DispatchNumber,
                 COSNumber = model.COSNumber,
                 VoyageNumber = model.VoyageNumber,

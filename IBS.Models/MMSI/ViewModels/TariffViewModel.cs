@@ -9,6 +9,8 @@ namespace IBS.Models.MMSI.ViewModels
     {
         public int DispatchTicketId { get; set; }
 
+        public int? JobOrderId { get; set; }
+
         public int? CustomerId { get; set; }
 
         public decimal? DispatchRate { get; set; }

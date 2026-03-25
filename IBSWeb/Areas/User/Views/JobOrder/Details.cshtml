@@ -76,7 +76,7 @@
             <h5 class="m-0 text-primary">Dispatch Tickets</h5>
             @if (Model.Status == "Open")
             {
-                <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addTicketModal">
+                <button type="button" class="btn btn-primary shadow-sm" onclick="openDispatchTicketModal()">
                     <i class="bi bi-plus-lg"></i> Add Ticket
                 </button>
             }
@@ -103,7 +103,7 @@
                                 <td>@ticket.Service?.ServiceName</td>
                                 <td>@ticket.Tugboat?.TugboatName</td>
                                 <td>
-                                    <span class="badge rounded-pill bg-info text-dark">@ticket.Status</span>
+                                    <span class="badge rounded-pill text-dark">@ticket.Status</span>
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-1">
@@ -112,9 +112,9 @@
                                         </button>
                                         @if (Model.Status == "Open")
                                         {
-                                            <a asp-controller="DispatchTicket" asp-action="EditTicket" asp-route-id="@ticket.DispatchTicketId" class="btn btn-sm btn-outline-primary" title="Edit Ticket">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" title="Edit Ticket" onclick="openDispatchTicketModal(@ticket.DispatchTicketId)">
                                                 <i class="bi bi-pencil"></i>
-                                            </a>
+                                            </button>
                                         }
                                         <a asp-controller="DispatchTicket" asp-action="Preview" asp-route-id="@ticket.DispatchTicketId" class="btn btn-sm btn-outline-secondary" title="Full Preview">
                                             <i class="bi bi-file-earmark-text"></i>
@@ -134,7 +134,7 @@
 <div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-info text-white">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="ticketModalLabel">Dispatch Ticket Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -160,21 +160,16 @@
                 <h5 class="modal-title" id="addTicketModalLabel"><i class="bi bi-plus-circle me-2"></i>Add New Dispatch Ticket</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                @if (ViewData["TicketViewModel"] != null)
-                {
-                    <partial name="_DispatchTicketFormPartial" model='ViewData["TicketViewModel"]' />
-                }
-                else
-                {
-                    <div class="alert alert-warning">
-                        Ticket form could not be loaded. Please try again or contact administrator.
+            <div class="modal-body" id="addTicketModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                }
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitAddTicketForm()"><i class="bi bi-save me-1"></i> Save Ticket</button>
+                <button type="button" class="btn btn-primary" id="saveTicketBtn" onclick="submitAddTicketForm()"><i class="bi bi-save me-1"></i> Save Ticket</button>
             </div>
         </div>
     </div>
@@ -191,22 +186,54 @@
                     searchPlaceholder: "Search Tickets..."
                 }
             });
-
-            // Initialize Select2 for the add ticket modal dropdowns
-            $('#addTicketModal .js-select2').select2({
-                dropdownParent: $('#addTicketModal'),
-                theme: 'classic',
-                width: '100%'
-            });
         });
 
+        function openDispatchTicketModal(ticketId = null) {
+            const modal = new bootstrap.Modal(document.getElementById('addTicketModal'));
+            const body = document.getElementById('addTicketModalBody');
+            const title = document.getElementById('addTicketModalLabel');
+            const saveBtn = document.getElementById('saveTicketBtn');
+
+            // Set Title and Button
+            title.innerHTML = ticketId ? '<i class="bi bi-pencil-square me-2"></i>Edit Dispatch Ticket' : '<i class="bi bi-plus-circle me-2"></i>Add New Dispatch Ticket';
+            saveBtn.innerHTML = ticketId ? '<i class="bi bi-check-circle me-1"></i> Update Ticket' : '<i class="bi bi-save me-1"></i> Save Ticket';
+
+            // Show Loading
+            body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+            modal.show();
+
+            // Fetch partial
+            const url = '@Url.Action("GetDispatchTicketPartial", "DispatchTicket")';
+            $.get(url, { id: ticketId, jobOrderId: '@Model.JobOrderId' }, function (data) {
+                body.innerHTML = data;
+            }).fail(function () {
+                body.innerHTML = '<div class="alert alert-danger">Error loading form. Please try again.</div>';
+            });
+        }
+
         function submitAddTicketForm() {
-            var form = $('#addTicketForm');
-            if (form[0].checkValidity()) {
-                form.submit();
-            } else {
+            var form = $('#dispatchTicketForm');
+            
+            if (form.length === 0) return;
+
+            // Check form validity using HTML5 validation
+            if (!form[0].checkValidity()) {
                 form[0].reportValidity();
+                return;
             }
+            
+            // Show loading indicator on button
+            const submitBtn = $('#saveTicketBtn');
+            submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Saving...');
+            
+            // Let the form submit normally
+            form.submit();
         }
 
         function confirmClose() {
