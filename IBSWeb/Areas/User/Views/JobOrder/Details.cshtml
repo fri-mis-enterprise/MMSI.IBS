@@ -446,9 +446,10 @@
                 }
 
                 function initializeEditModal() {
-                    // Initialize Select2 for edit modal
+                    // Initialize Select2 for edit modal with proper width
                     $('#editJobOrderModal .js-select2').select2({
                         dropdownParent: $('#editJobOrderModal'),
+                        width: '100%'
                     });
 
                     // Terminal loading logic

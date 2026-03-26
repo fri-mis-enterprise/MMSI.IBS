@@ -197,12 +197,15 @@ namespace IBSWeb.Areas.User.Controllers
             if (!await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.EditJobOrder))
                 return PartialView("_ErrorModal", new { message = "Access denied" });
 
-            var jobOrder = await _unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == id, cancellationToken);
+            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
                 return NotFound();
 
             var viewModel = MapToViewModel(jobOrder);
             await PopulateSelectListsAsync(viewModel, cancellationToken);
+            
+            // Pass ticket count for warning display
+            ViewData["HasTickets"] = jobOrder.DispatchTickets.Any();
 
             return PartialView("_EditModal", viewModel);
         }

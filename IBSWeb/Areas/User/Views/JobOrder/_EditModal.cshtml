@@ -6,6 +6,20 @@
     
     <div class="modal-body p-4">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        
+        @if (ViewData["HasTickets"] as bool? == true)
+        {
+            <div class="alert alert-warning d-flex align-items-start mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2 fs-5"></i>
+                <div>
+                    <strong>Warning: Existing Dispatch Tickets</strong>
+                    <p class="mb-0 small">
+                        This Job Order has existing dispatch tickets. Changing details (especially Port, Terminal, or Vessel) 
+                        may require you to review and update the affected tickets to ensure consistency.
+                    </p>
+                </div>
+            </div>
+        }
 
         <div class="row g-3">
             <!-- Date -->
@@ -18,7 +32,7 @@
             <!-- Customer -->
             <div class="col-12 col-md-6">
                 <label asp-for="CustomerId" class="form-label fw-bold small"></label>
-                <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="min-height: 38px;">
+                <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2">
                     <option value="">-- Select Customer --</option>
                 </select>
                 <span asp-validation-for="CustomerId" class="text-danger small"></span>
@@ -27,7 +41,7 @@
             <!-- Vessel -->
             <div class="col-12 col-md-6">
                 <label asp-for="VesselId" class="form-label fw-bold small"></label>
-                <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2" style="min-height: 38px;">
+                <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2">
                     <option value="">-- Select Vessel --</option>
                 </select>
                 <span asp-validation-for="VesselId" class="text-danger small"></span>
@@ -36,7 +50,7 @@
             <!-- Port & Terminal -->
             <div class="col-12 col-md-6">
                 <label asp-for="PortId" class="form-label fw-bold small"></label>
-                <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2" id="EditPortId" style="min-height: 38px;">
+                <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2" id="EditPortId">
                     <option value="">-- Select Port --</option>
                 </select>
                 <span asp-validation-for="PortId" class="text-danger small"></span>
@@ -44,7 +58,7 @@
 
             <div class="col-12 col-md-6">
                 <label asp-for="TerminalId" class="form-label fw-bold small"></label>
-                <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select js-select2" id="EditTerminalId" style="min-height: 38px;">
+                <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select js-select2" id="EditTerminalId">
                     <option value="">-- Select Terminal --</option>
                 </select>
                 <span asp-validation-for="TerminalId" class="text-danger small"></span>
