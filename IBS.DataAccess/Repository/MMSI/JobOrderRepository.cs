@@ -21,6 +21,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
+                .Include(j => j.DispatchTickets)
                 .ToListAsync(cancellationToken);
         }
 

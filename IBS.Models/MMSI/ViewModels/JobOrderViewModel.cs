@@ -28,9 +28,11 @@ namespace IBS.Models.MMSI.ViewModels
         
         [Display(Name = "Port")]
         public int? PortId { get; set; }
-        
+        public string? PortName { get; set; }
+
         [Display(Name = "Terminal")]
         public int? TerminalId { get; set; }
+        public string? TerminalName { get; set; }
         
         [Display(Name = "COS Number")]
         public string? COSNumber { get; set; }

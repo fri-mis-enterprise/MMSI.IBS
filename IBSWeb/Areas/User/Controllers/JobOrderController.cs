@@ -157,7 +157,9 @@ namespace IBSWeb.Areas.User.Controllers
                 VesselId        = jobOrder.VesselId,
                 VesselName      = jobOrder.Vessel?.VesselName,
                 PortId          = jobOrder.PortId,
+                PortName        = jobOrder.Port?.PortName,
                 TerminalId      = jobOrder.TerminalId,
+                TerminalName    = jobOrder.Terminal?.TerminalName,
                 COSNumber       = jobOrder.COSNumber,
                 VoyageNumber    = jobOrder.VoyageNumber,
                 Remarks         = jobOrder.Remarks,
@@ -317,12 +319,12 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Close(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Close(int id, bool confirmed = false, CancellationToken cancellationToken = default)
         {
             if (!await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.CloseJobOrder))
                 return AccessDenied();
 
-            var jobOrder = await _unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == id, cancellationToken);
+            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
                 return NotFound();
 
@@ -330,6 +332,40 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is already closed.";
                 return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Validate dispatch tickets before closing
+            if (jobOrder.DispatchTickets.Any())
+            {
+                var ticketsWithoutTariff = jobOrder.DispatchTickets
+                    .Count(dt => dt.Status == "Pending" || dt.Status == "For Tariff");
+
+                var ticketsForApproval = jobOrder.DispatchTickets
+                    .Count(dt => dt.Status == "For Approval");
+
+                var ticketsDisapproved = jobOrder.DispatchTickets
+                    .Count(dt => dt.Status == "Disapproved");
+
+                // Block closing if there are tickets without tariff
+                if (ticketsWithoutTariff > 0)
+                {
+                    TempData["error"] = $"Cannot close Job Order. {ticketsWithoutTariff} dispatch ticket(s) have no tariff set. Please set tariff rates for all tickets before closing.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                // Block closing if there are disapproved tickets
+                if (ticketsDisapproved > 0)
+                {
+                    TempData["error"] = $"Cannot close Job Order. {ticketsDisapproved} dispatch ticket(s) are disapproved. Please edit and re-approve all disapproved tickets before closing.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                // Warn if there are tickets pending approval (only proceed if user confirmed)
+                if (ticketsForApproval > 0 && !confirmed)
+                {
+                    TempData["warning"] = $"Warning: {ticketsForApproval} dispatch ticket(s) are pending approval. These tickets will not be included in billing until approved. Are you sure you want to close this Job Order?";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
             }
 
             var currentUser = await GetCurrentUserAsync();
