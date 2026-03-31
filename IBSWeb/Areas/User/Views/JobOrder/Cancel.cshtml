@@ -1,0 +1,74 @@
+@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+
+@{
+    ViewData["Title"] = "Cancel Job Order";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-danger text-white">
+            <h3 class="card-title m-0"><i class="bi bi-slash-circle"></i> Cancel Job Order</h3>
+        </div>
+        <div class="card-body">
+            @if (ViewData["HasTickets"] as bool? == true)
+            {
+                <div class="alert alert-warning d-flex align-items-start" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-4 flex-shrink-0"></i>
+                    <div>
+                        <strong>Warning: This Job Order has existing dispatch tickets</strong>
+                        <p class="mb-0 small mt-1">
+                            Cancelling this Job Order will affect the following tickets:
+                        </p>
+                        @if (ViewData["TicketsForApproval"] as int? > 0)
+                        {
+                            <p class="mb-1 small text-danger">• @ViewData["TicketsForApproval"] ticket(s) pending approval will be affected</p>
+                        }
+                        @if (ViewData["TicketsDisapproved"] as int? > 0)
+                        {
+                            <p class="mb-1 small text-danger">• @ViewData["TicketsDisapproved"] disapproved ticket(s) need attention</p>
+                        }
+                        @if (ViewData["TicketsWithoutTariff"] as int? > 0)
+                        {
+                            <p class="mb-0 small text-danger">• @ViewData["TicketsWithoutTariff"] ticket(s) without tariff will be orphaned</p>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                    <div>
+                        <strong>Warning:</strong> This action cannot be undone. Are you sure you want to cancel this Job Order?
+                    </div>
+                </div>
+            }
+
+            <dl class="row">
+                <dt class="col-sm-3 fw-bold">Job Order Number</dt>
+                <dd class="col-sm-9">@Model.JobOrderNumber</dd>
+
+                <dt class="col-sm-3 fw-bold">Date</dt>
+                <dd class="col-sm-9">@Model.Date.ToString("MMM dd, yyyy")</dd>
+
+                <dt class="col-sm-3 fw-bold">Customer</dt>
+                <dd class="col-sm-9">@Model.CustomerName</dd>
+
+                <dt class="col-sm-3 fw-bold">Vessel</dt>
+                <dd class="col-sm-9">@Model.VesselName</dd>
+            </dl>
+
+            <form asp-action="CancelConfirmed" asp-route-id="@Model.JobOrderId" method="post">
+                <input type="hidden" asp-for="JobOrderId" />
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.JobOrderId" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-slash-circle"></i> Cancel Job Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

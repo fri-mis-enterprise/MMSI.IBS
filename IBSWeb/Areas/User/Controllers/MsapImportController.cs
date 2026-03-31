@@ -1,6 +1,4 @@
 using IBS.Models.Books;
-using IBS.Models.AccountsReceivable;
-using IBS.Models.AccountsPayable;
 using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
@@ -12,7 +10,7 @@ using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services;
-using IBS.Services.Attributes;
+using IBS.Services.AccessControl;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,27 +22,27 @@ using System.Text;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    [CompanyAuthorize(SD.Company_MMSI)]
-    public class MsapImportController : Controller
+    public class MsapImportController : MmsiBaseController
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<MsapImportController> _logger;
-        private readonly IUserAccessService _userAccessService;
 
         private readonly CsvConfiguration _csvConfig = new(CultureInfo.InvariantCulture)
         {
             PrepareHeaderForMatch = args => args.Header.ToLower(),
         };
 
-        public MsapImportController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
-            ILogger<MsapImportController> logger, IUserAccessService userAccessService)
+        public MsapImportController(
+            IUnitOfWork unitOfWork,
+            ApplicationDbContext dbContext,
+            IAccessControlService accessControl,
+            UserManager<ApplicationUser> userManager,
+            ILogger<MsapImportController> logger)
+            : base(accessControl, userManager)
         {
-            _userManager = userManager;
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
-            _userAccessService = userAccessService;
             _logger = logger;
         }
 
@@ -57,20 +55,26 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await UserManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await UserManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            if (!await HasMsapImportAccessAsync())
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction("Index", "Home", new { area = "User" });
+            }
+
             return View();
         }
 
@@ -78,6 +82,12 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(List<string> fieldList)
         {
+            if (!await HasMsapImportAccessAsync())
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction("Index", "Home", new { area = "User" });
+            }
+
             try
             {
                 if (fieldList == null || fieldList.Count == 0)
@@ -109,19 +119,19 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                var customerCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/customer.csv";
-                var portCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/port.csv";
-                var terminalCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/terminal.csv";
-                var principalCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/principal.csv";
-                var servicesCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/services.csv";
-                var tugboatCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/tugboat.csv";
-                var tugboatOwnerCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/tugboatowner.csv";
-                var tugMasterCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/tugmaster.csv";
-                var vesselCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/vessel.csv";
-                var dispatchTicketCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/dispatch.csv";
-                var billingCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/billing.csv";
-                var collectionCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/collection.csv";
-                var tariffCSVPath = "/home/roi/Documents/Database from MSAP/test/csv_output/tariff.csv";
+                var customerCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\customer.csv";
+                var portCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\port.csv";
+                var terminalCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\terminal.csv";
+                var principalCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\principal.csv";
+                var servicesCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\services.csv";
+                var tugboatCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\tugboat.csv";
+                var tugboatOwnerCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\tugboatowner.csv";
+                var tugMasterCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\tugmaster.csv";
+                var vesselCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\vessel.csv";
+                var dispatchTicketCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\dispatch.csv";
+                var billingCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\billing.csv";
+                var collectionCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\collection.csv";
+                var tariffCSVPath = @"C:\Users\MIS2\Documents\CSV_OUTPUTS\tariff.csv";
 
                 string result;
 

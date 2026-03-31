@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.AccountsPayable;
 using IBS.Models.MasterFile;
 
 namespace IBS.Models.Integrated
@@ -114,9 +113,6 @@ namespace IBS.Models.Integrated
         #region--PO properties
 
         public int? PurchaseOrderId { get; set; }
-
-        [ForeignKey(nameof(PurchaseOrderId))]
-        public PurchaseOrder? PurchaseOrder { get; set; }
 
         [StringLength(50)]
         public string? DeliveryOption { get; set; }

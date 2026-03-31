@@ -1,6 +1,4 @@
 using IBS.Models.Books;
-using IBS.Models.AccountsReceivable;
-using IBS.Models.AccountsPayable;
 using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using IBS.DataAccess.Data;
@@ -86,11 +84,6 @@ namespace IBSWeb.Areas.User.Controllers
                                      && dr.Company == companyClaims)
                         .CountAsync(),
 
-                OMApprovalPOCount = await _dbContext.PurchaseOrders
-                        .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM)
-                                     && po.Company == companyClaims)
-                        .CountAsync(),
-
                 CNCApprovalCount = await _dbContext.CustomerOrderSlips
                     .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC)
                                   && cos.Company == companyClaims)
@@ -115,25 +108,6 @@ namespace IBSWeb.Areas.User.Controllers
                         .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing)
                                      && dr.Company == companyClaims)
                         .CountAsync(),
-
-                RecordLiftingDateCount = await _dbContext.DeliveryReceipts
-                        .Where(dr => !dr.HasReceivingReport
-                                     && dr.CanceledBy == null
-                                     && dr.VoidedBy == null
-                                     && dr.Company == companyClaims)
-                        .CountAsync(),
-
-                RecordSupplierDetails = await _dbContext.ReceivingReports
-                    .Where(rr => (rr.SupplierDrNo == null
-                                  || rr.SupplierInvoiceDate == null
-                                  || rr.SupplierInvoiceNumber == null
-                                  || rr.WithdrawalCertificate == null
-                                  || rr.SupplierDrNo == null
-                                  || rr.CostBasedOnSoa == 0)
-                                 && rr.CanceledBy == null
-                                 && rr.VoidedBy == null
-                                 && rr.Company == companyClaims)
-                    .CountAsync(),
 
                 #endregion -- Filpride
 

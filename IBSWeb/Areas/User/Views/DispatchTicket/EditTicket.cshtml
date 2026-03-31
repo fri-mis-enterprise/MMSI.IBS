@@ -86,8 +86,14 @@
 <div class="card shadow mt-4">
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
             <h2 class="text-white py-2">@ViewData["Title"]</h2>
+            @if (Model.JobOrderId.HasValue)
+            {
+                <a asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to Job Order
+                </a>
+            }
         </div>
     </div>
     
@@ -95,6 +101,7 @@
         
         <form id="myForm" method="post" class="row" enctype="multipart/form-data">
             <input asp-for="DispatchTicketId" type="hidden">
+            <input asp-for="JobOrderId" type="hidden">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -263,9 +270,18 @@
                     <button class="btn btn-primary custom-btn col-12 align-content-center selected-options shadow" type="submit" id="submitButton"><i class="bi bi-check-circle"></i> Save</button>
                 </div>
                 <div class="text-center" style="width: 150px">
-                    <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="DispatchTicket" asp-action="Index" asp-route-filterType="@filterType">
-                        <i class="bi bi-arrow-90deg-left"></i> Go Back
-                    </a>
+                    @if (Model.JobOrderId.HasValue)
+                    {
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value">
+                            <i class="bi bi-arrow-90deg-left"></i> Back to Job Order
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="DispatchTicket" asp-action="Index" asp-route-filterType="@filterType">
+                            <i class="bi bi-arrow-90deg-left"></i> Go Back
+                        </a>
+                    }
                 </div>
             </div>
         </form>
@@ -325,6 +341,7 @@
                                 terminalSelectVar.append($('<option>', { value: item.value, text: item.text }));
                             });
                         }
+                        terminalSelectVar.trigger('change');
                     },
                     complete: function() { terminalLoading.hide(); }
                 });

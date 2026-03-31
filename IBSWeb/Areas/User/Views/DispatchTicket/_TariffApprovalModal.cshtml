@@ -1,0 +1,146 @@
+@model IBS.Models.MMSI.ViewModels.TariffViewModel
+
+<!-- Ticket Summary -->
+<div class="card bg-light mb-3">
+    <div class="card-body py-2">
+        <h6 class="card-subtitle mb-2 text-muted"><i class="bi bi-info-circle me-1"></i>Ticket Summary</h6>
+        <div class="row g-2 small">
+            <div class="col-6">
+                <strong>Customer:</strong><br />@Model.CustomerName
+            </div>
+            <div class="col-6">
+                <strong>Vessel:</strong><br />@Model.VesselName
+            </div>
+            <div class="col-6">
+                <strong>Timeline:</strong><br />@Model.DateLeft @Model.TimeLeft - @Model.DateArrived @Model.TimeArrived
+            </div>
+            <div class="col-6">
+                <strong>Duration:</strong><br /><span class="text-primary fw-bold">@Model.TotalHours hrs</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.ImageName))
+            {
+                <div class="col-12">
+                    <a href="@Model.ImageSignedUrl" target="_blank" class="text-decoration-none">
+                        <i class="bi bi-paperclip me-1"></i>View attached image
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Tariff Details (Read-only) -->
+<h6 class="border-bottom pb-2 mb-3"><i class="bi bi-receipt me-1"></i>Tariff Details</h6>
+
+<div class="row g-3">
+    <!-- Dispatch Charges -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white py-2">
+                <strong>Dispatch</strong>
+            </div>
+            <div class="card-body p-3">
+                <div class="row mb-2">
+                    <div class="col-6 small text-muted">Rate:</div>
+                    <div class="col-6 text-end">₱ @Model.DispatchRate?.ToString("N2")/hr</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-6 small text-muted">Discount:</div>
+                    <div class="col-6 text-end">@Model.DispatchDiscount?.ToString("N2")%</div>
+                </div>
+                <hr class="my-2" />
+                <div class="row mb-1">
+                    <div class="col-6 small text-muted">Billing:</div>
+                    <div class="col-6 text-end fw-bold text-primary">₱ @Model.DispatchBillingAmount.ToString("N2")</div>
+                </div>
+                <div class="row">
+                    <div class="col-6 small text-muted">Net Revenue:</div>
+                    <div class="col-6 text-end fw-bold">₱ @Model.DispatchNetRevenue.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BAF Charges -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white py-2">
+                <strong>BAF</strong>
+            </div>
+            <div class="card-body p-3">
+                <div class="row mb-2">
+                    <div class="col-6 small text-muted">Rate:</div>
+                    <div class="col-6 text-end">₱ @Model.BAFRate?.ToString("N2")/hr</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-6 small text-muted">Discount:</div>
+                    <div class="col-6 text-end">@Model.BAFDiscount?.ToString("N2")%</div>
+                </div>
+                <hr class="my-2" />
+                <div class="row mb-1">
+                    <div class="col-6 small text-muted">Billing:</div>
+                    <div class="col-6 text-end fw-bold text-primary">₱ @Model.BAFBillingAmount.ToString("N2")</div>
+                </div>
+                <div class="row">
+                    <div class="col-6 small text-muted">Net Revenue:</div>
+                    <div class="col-6 text-end fw-bold">₱ @Model.BAFNetRevenue.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charges -->
+@if (Model.ApOtherTugs.HasValue && Model.ApOtherTugs > 0)
+{
+    <div class="mt-3">
+        <div class="row">
+            <div class="col-6 small text-muted">AP/Other Tugs:</div>
+            <div class="col-6 text-end fw-bold">₱ @Model.ApOtherTugs.Value.ToString("N2")</div>
+        </div>
+    </div>
+}
+
+<!-- Total Summary -->
+<div class="card bg-light mt-3">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-6 text-center border-end">
+                <small class="text-muted">Total Billing</small>
+                <div class="fw-bold fs-4">₱ @Model.TotalBilling.ToString("N2")</div>
+            </div>
+            <div class="col-6 text-center">
+                <small class="text-muted">Total Net Revenue</small>
+                <div class="fw-bold fs-4 text-success">₱ @Model.TotalNetRevenue.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Trail -->
+<div class="alert alert-info py-2 mt-3 mb-0">
+    <small>
+        <i class="bi bi-clock-history me-1"></i>
+        <strong>Tariff History:</strong>
+        @if (!string.IsNullOrEmpty(Model.TariffBy))
+        {
+            <text>Set by <strong>@Model.TariffBy</strong> on @Model.TariffDate.ToString("MMM dd, yyyy hh:mm tt")</text>
+        }
+        @if (!string.IsNullOrEmpty(Model.TariffEditedBy))
+        {
+            <text>, edited by <strong>@Model.TariffEditedBy</strong> on @Model.TariffEditedDate?.ToString("MMM dd, yyyy hh:mm tt")</text>
+        }
+    </small>
+</div>
+
+<div class="modal-footer mt-3">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle me-1"></i>Cancel
+    </button>
+    <button type="button" class="btn btn-danger" onclick="openDisapproveModal(@Model.DispatchTicketId)">
+        <i class="bi bi-x-circle me-1"></i>Disapprove
+    </button>
+    <button type="button" class="btn btn-success" onclick="approveTariff(@Model.DispatchTicketId)">
+        <i class="bi bi-check-circle me-1"></i>Approve
+    </button>
+</div>

@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.Models.AccountsReceivable;
 using IBS.Models.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;

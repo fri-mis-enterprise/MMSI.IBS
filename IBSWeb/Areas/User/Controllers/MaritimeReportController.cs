@@ -1,6 +1,4 @@
 using IBS.Models.Books;
-using IBS.Models.AccountsReceivable;
-using IBS.Models.AccountsPayable;
 using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
@@ -25,10 +23,10 @@ namespace IBSWeb.Areas.User.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<ReportController> _logger;
+        private readonly ILogger<MaritimeReportController> _logger;
 
         public MaritimeReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork,
-            ILogger<ReportController> logger)
+            ILogger<MaritimeReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

@@ -1,6 +1,4 @@
 using IBS.Models.Books;
-using IBS.Models.AccountsReceivable;
-using IBS.Models.AccountsPayable;
 using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
@@ -140,10 +138,29 @@ namespace IBSWeb.Areas.User.Controllers
                 tempModel.CanCreateServiceRequest = model.CanCreateServiceRequest;
                 tempModel.CanPostServiceRequest = model.CanPostServiceRequest;
                 tempModel.CanCreateDispatchTicket = model.CanCreateDispatchTicket;
+                tempModel.CanEditDispatchTicket = model.CanEditDispatchTicket;
+                tempModel.CanCancelDispatchTicket = model.CanCancelDispatchTicket;
                 tempModel.CanSetTariff = model.CanSetTariff;
                 tempModel.CanApproveTariff = model.CanApproveTariff;
                 tempModel.CanCreateBilling = model.CanCreateBilling;
                 tempModel.CanCreateCollection = model.CanCreateCollection;
+                tempModel.CanCreateJobOrder = model.CanCreateJobOrder;
+                tempModel.CanEditJobOrder = model.CanEditJobOrder;
+                tempModel.CanDeleteJobOrder = model.CanDeleteJobOrder;
+                tempModel.CanCloseJobOrder = model.CanCloseJobOrder;
+
+                // Treasury permissions
+                tempModel.CanAccessTreasury = model.CanAccessTreasury;
+                tempModel.CanCreateDisbursement = model.CanCreateDisbursement;
+
+                // MSAP Import permissions
+                tempModel.CanManageMsapImport = model.CanManageMsapImport;
+
+                // Reports permissions
+                tempModel.CanViewGeneralLedger = model.CanViewGeneralLedger;
+                tempModel.CanViewInventoryReport = model.CanViewInventoryReport;
+                tempModel.CanViewMaritimeReport = model.CanViewMaritimeReport;
+
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);

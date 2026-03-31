@@ -85,13 +85,20 @@
 <div class="card text-dark bg-white shadow mt-4">
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
             <h2 class="text-white py-2">@ViewData["Title"]</h2>
+            @if (Model.JobOrderId.HasValue)
+            {
+                <a asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to Job Order
+                </a>
+            }
         </div>
     </div>
 
     <div class="card-body">
         <form id="myForm" method="post" class="row" enctype="multipart/form-data">
+            <input type="hidden" asp-for="JobOrderId" />
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -277,6 +284,7 @@
                         } else {
                             terminalSelectVar.append('<option value="">No terminals found</option>');
                         }
+                        terminalSelectVar.trigger('change');
                     },
                     complete: function() {
                         terminalLoading.hide();
@@ -284,6 +292,11 @@
                 });
             }
             port.change(HandlePortChange);
+
+            // Trigger on load if pre-filled (e.g. from Job Order)
+            if (port.val() && terminalSelectVar.children('option').length <= 1) {
+                HandlePortChange();
+            }
 
             // Date Mirroring & Duration Logic
             const dateLeft = $("#DateLeft");

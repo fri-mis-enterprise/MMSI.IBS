@@ -9,6 +9,8 @@ namespace IBS.Models.MMSI.ViewModels
     {
         public int DispatchTicketId { get; set; }
 
+        public int? JobOrderId { get; set; }
+
         public int? CustomerId { get; set; }
 
         public decimal? DispatchRate { get; set; }
@@ -80,6 +82,16 @@ namespace IBS.Models.MMSI.ViewModels
         public string? DispatchChargeType { get; set; }
 
         public string? BAFChargeType { get; set; }
+
+        public string? ImageSignedUrl { get; set; }
+
+        public string? TariffBy { get; set; }
+
+        public DateTime TariffDate { get; set; }
+
+        public string? TariffEditedBy { get; set; }
+
+        public DateTime? TariffEditedDate { get; set; }
 
         #endregion
 

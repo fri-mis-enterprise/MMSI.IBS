@@ -1,0 +1,137 @@
+@model IBS.Models.MMSI.ViewModels.ServiceRequestViewModel
+
+<style>
+    /* Fix Select2 dropdown appearing behind modal backdrop */
+    .select2-container--open .select2-dropdown {
+        z-index: 1060 !important;
+    }
+    
+    .select2-container {
+        z-index: 1055 !important;
+    }
+    
+    /* Allow dropdown to overflow modal body */
+    #addTicketModal .modal-body {
+        overflow: visible !important;
+    }
+    
+    #addTicketModal .modal-content {
+        overflow: visible !important;
+    }
+</style>
+
+<form id="addTicketForm" asp-controller="DispatchTicket" asp-action="Create" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="JobOrderId" />
+    <input type="hidden" asp-for="PortId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row g-3">
+        <!-- I. Reference Information -->
+        <div class="col-12">
+            <h6 class="border-bottom pb-2 mb-2 text-secondary fw-bold"><i class="bi bi-info-circle me-2"></i>I. Reference Information</h6>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Date" class="form-label small fw-bold">Date Today</label>
+            <input asp-for="Date" type="date" class="form-control form-control-sm  shadow-sm" required>
+            <span asp-validation-for="Date" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="DispatchNumber" class="form-label small fw-bold">Dispatch/Mooring #</label>
+            <input asp-for="DispatchNumber" class="form-control form-control-sm  shadow-sm" required maxlength="20">
+            <span asp-validation-for="DispatchNumber" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="COSNumber" class="form-label small fw-bold">COS # (Optional)</label>
+            <input asp-for="COSNumber" class="form-control form-control-sm  shadow-sm" maxlength="10">
+        </div>
+        <div class="col-md-6">
+            <label asp-for="VoyageNumber" class="form-label small fw-bold">Voyage # (Optional)</label>
+            <input asp-for="VoyageNumber" class="form-control form-control-sm  shadow-sm" maxlength="20">
+        </div>
+
+        <!-- II. Timeline -->
+        <div class="col-12 mt-3">
+            <h6 class="border-bottom pb-2 mb-2 text-secondary fw-bold"><i class="bi bi-clock me-2"></i>II. Timeline</h6>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="DateLeft" class="form-label small fw-bold">Date Start</label>
+            <input asp-for="DateLeft" type="date" class="form-control form-control-sm  shadow-sm" required>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TimeLeft" class="form-label small fw-bold">Time Start</label>
+            <input asp-for="TimeLeft" type="time" class="form-control form-control-sm  shadow-sm" required>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="DateArrived" class="form-label small fw-bold">Date End</label>
+            <input asp-for="DateArrived" type="date" class="form-control form-control-sm  shadow-sm" required>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TimeArrived" class="form-label small fw-bold">Time End</label>
+            <input asp-for="TimeArrived" type="time" class="form-control form-control-sm  shadow-sm" required>
+        </div>
+        <div class="col-12 mt-2">
+            <div id="durationAlert" class="badge bg-secondary duration-badge shadow-sm">
+                <i class="bi bi-calculator me-1"></i>
+                Duration: <span id="modalDurationDisplay" class="fw-bold">0.00</span> hours
+            </div>
+        </div>
+
+        <!-- III. Service & Provider -->
+        <div class="col-12 mt-3">
+            <h6 class="border-bottom pb-2 mb-2 text-secondary fw-bold"><i class="bi bi-geo-alt me-2"></i>III. Service Details</h6>
+        </div>
+        <div class="col-md-12">
+            <label asp-for="CustomerId" class="form-label small fw-bold">Customer</label>
+            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select form-select-sm js-select2 shadow-sm" style="width:100%" required>
+                <option value="">-- Select Customer --</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="VesselId" class="form-label small fw-bold">Vessel</label>
+            <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select form-select-sm js-select2 shadow-sm" style="width:100%" required>
+                <option value="">-- Select Vessel --</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TerminalId" class="form-label small fw-bold">Terminal</label>
+            <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select form-select-sm js-select2 shadow-sm" style="width:100%" required>
+                <option value="">-- Select Terminal --</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="ServiceId" class="form-label small fw-bold">Activity/Service Type</label>
+            <select asp-for="ServiceId" asp-items="@Model.Services" class="form-select form-select-sm js-select2 shadow-sm" style="width:100%" required>
+                <option value="">-- Select Service --</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="TugBoatId" class="form-label small fw-bold">Tugboat/Service provider</label>
+            <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="form-select form-select-sm js-select2 shadow-sm" style="width:100%" required>
+                <option value="">-- Select Tugboat --</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="TugMasterId" class="form-label small fw-bold">Master on Duty</label>
+           <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="form-select form-select-sm js-select2 shadow-sm" style="width:100%" required>
+                <option value="">-- Select Master --</option>
+            </select>
+        </div>
+
+        <!-- V. Media & Remarks -->
+        <div class="col-12 mt-3">
+            <h6 class="border-bottom pb-2 mb-2 text-secondary fw-bold"><i class="bi bi-chat-left-text me-2"></i>IV. Media & Remarks</h6>
+        </div>
+        <div class="col-12">
+            <label asp-for="Remarks" class="form-label small fw-bold">Remarks (Optional)</label>
+            <textarea asp-for="Remarks" class="form-control form-control-sm  shadow-sm" rows="2"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">Dispatch Ticket Image</label>
+            <input name="imageFile" type="file" class="form-control form-control-sm  shadow-sm" accept="image/*">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">Operation Video</label>
+            <input name="videoFile" type="file" class="form-control form-control-sm  shadow-sm" accept="video/*">
+        </div>
+    </div>
+</form>

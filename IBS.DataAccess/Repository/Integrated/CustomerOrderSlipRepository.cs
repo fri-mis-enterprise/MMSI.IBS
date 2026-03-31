@@ -49,9 +49,7 @@ namespace IBS.DataAccess.Repository.Integrated
                 .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
-                .Include(cos => cos.PickUpPoint)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier);
+                .Include(cos => cos.PickUpPoint);
 
             if (filter != null)
             {
@@ -69,8 +67,6 @@ namespace IBS.DataAccess.Repository.Integrated
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PickUpPoint)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

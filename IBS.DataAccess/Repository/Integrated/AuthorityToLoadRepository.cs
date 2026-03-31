@@ -66,7 +66,7 @@ namespace IBS.DataAccess.Repository.Integrated
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Hauler)
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Customer)
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.PickUpPoint)
-                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.AppointedSuppliers)!.ThenInclude(a => a.PurchaseOrder)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.AppointedSuppliers)
                 .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.Customer)
                 .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.Product)
                 .FirstOrDefaultAsync(cancellationToken);

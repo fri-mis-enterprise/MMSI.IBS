@@ -203,9 +203,18 @@
 
             </div>
             <div class="text-center" style="width: 250px;">
-                <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index" asp-area="User" asp-route-filterType="@filterType">
-                    <i class="bi bi-arrow-90deg-left"></i> Go Back
-                </a>
+                @if (Model.JobOrderId.HasValue)
+                {
+                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value">
+                        <i class="bi bi-arrow-90deg-left"></i> Back to Job Order
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index" asp-area="User" asp-route-filterType="@filterType">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                }
             </div>
         </div>
     </div>

@@ -1,5 +1,4 @@
 using IBS.Models.Enums;
-using IBS.Models.AccountsPayable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,9 +10,6 @@ namespace IBS.Models
         public int Id { get; set; }
 
         public int JvId { get; set; }
-
-        [ForeignKey(nameof(JvId))]
-        public JournalVoucherHeader JvHeader { get; set; }
 
         public JvFrequency JvFrequency { get; set; } = JvFrequency.Monthly;
 

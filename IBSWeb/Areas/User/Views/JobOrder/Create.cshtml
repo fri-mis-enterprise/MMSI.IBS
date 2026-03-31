@@ -1,0 +1,151 @@
+@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+
+@{
+    ViewData["Title"] = "Create Job Order";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="card-title m-0"><i class="bi bi-plus-circle"></i> Create New Job Order</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <!-- Date -->
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Date" class="form-label fw-bold"></label>
+                        <input asp-for="Date" type="date" class="form-control" />
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+
+                    <!-- Customer -->
+                    <div class="col-12 col-md-6">
+                        <label asp-for="CustomerId" class="form-label fw-bold"></label>
+                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2">
+                            <option value="">-- Select Customer --</option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+
+                    <!-- Vessel -->
+                    <div class="col-12 col-md-6">
+                        <label asp-for="VesselId" class="form-label fw-bold"></label>
+                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2">
+                            <option value="">-- Select Vessel --</option>
+                        </select>
+                        <span asp-validation-for="VesselId" class="text-danger"></span>
+                    </div>
+
+                    <!-- Port & Terminal -->
+                    <div class="col-12 col-md-6">
+                        <label asp-for="PortId" class="form-label fw-bold"></label>
+                        <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2" id="PortId">
+                            <option value="">-- Select Port --</option>
+                        </select>
+                        <span asp-validation-for="PortId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label asp-for="TerminalId" class="form-label fw-bold"></label>
+                        <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select js-select2" id="TerminalId">
+                            <option value="">-- Select Terminal --</option>
+                        </select>
+                        <span asp-validation-for="TerminalId" class="text-danger"></span>
+                    </div>
+
+                    <!-- References -->
+                    <div class="col-12 col-md-6">
+                        <label asp-for="COSNumber" class="form-label fw-bold"></label>
+                        <input asp-for="COSNumber" class="form-control" placeholder="Optional" />
+                        <span asp-validation-for="COSNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label asp-for="VoyageNumber" class="form-label fw-bold"></label>
+                        <input asp-for="VoyageNumber" class="form-control" placeholder="Optional" />
+                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="col-12">
+                        <label asp-for="Remarks" class="form-label fw-bold"></label>
+                        <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save"></i> Create Job Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function loadTerminals(portId, selectedTerminalId) {
+            var terminalSelect = $('#TerminalId');
+            
+            if (!portId) {
+                terminalSelect.empty();
+                terminalSelect.append('<option value="">-- Select Terminal --</option>');
+                terminalSelect.trigger('change');
+                return;
+            }
+
+            terminalSelect.empty();
+            terminalSelect.append('<option value="">Loading...</option>');
+            terminalSelect.trigger('change');
+
+            $.ajax({
+                url: '@Url.Action("ChangeTerminal", "JobOrder", new { area = "User" })',
+                type: 'GET',
+                data: { portId: portId },
+                success: function (data) {
+                    terminalSelect.empty();
+                    terminalSelect.append('<option value="">-- Select Terminal --</option>');
+                    $.each(data, function (i, item) {
+                        var value = item.value || item.Value;
+                        var text = item.text || item.Text;
+                        var option = $('<option>', {
+                            value: value,
+                            text: text
+                        });
+                        if (selectedTerminalId && value === selectedTerminalId) {
+                            option.prop('selected', true);
+                        }
+                        terminalSelect.append(option);
+                    });
+                    terminalSelect.trigger('change');
+                },
+                error: function () {
+                    terminalSelect.empty();
+                    terminalSelect.append('<option value="">Error loading terminals</option>');
+                    terminalSelect.trigger('change');
+                }
+            });
+        }
+        
+        $(document).ready(function() {
+            $('#PortId').on('change', function() {
+                loadTerminals($(this).val());
+            });
+
+            // Initial load check
+            var initialPortId = $('#PortId').val();
+            var initialTerminalId = '@Model.TerminalId';
+            if (initialPortId) {
+                // Only load if the terminal select is empty (meaning we need to fetch options)
+                if ($('#TerminalId').children('option').length <= 1) {
+                    loadTerminals(initialPortId, initialTerminalId);
+                }
+            }
+        });
+    </script>
+}

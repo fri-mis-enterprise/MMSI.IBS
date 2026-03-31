@@ -1,4 +1,3 @@
-using IBS.Models.AccountsPayable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
@@ -17,9 +16,6 @@ namespace IBS.Models.Integrated
         public CustomerOrderSlip? CustomerOrderSlip { get; set; }
 
         public int PurchaseOrderId { get; set; }
-
-        [ForeignKey(nameof(PurchaseOrderId))]
-        public PurchaseOrder? PurchaseOrder { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal Quantity { get; set; }

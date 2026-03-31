@@ -112,6 +112,10 @@ html {
     color: white;
 }
 
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
 .text-warning {
     color: #BD7418 !important;
 }

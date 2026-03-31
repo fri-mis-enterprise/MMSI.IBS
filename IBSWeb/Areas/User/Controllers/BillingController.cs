@@ -1,6 +1,4 @@
 using IBS.Models.Books;
-using IBS.Models.AccountsReceivable;
-using IBS.Models.AccountsPayable;
 using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
@@ -47,6 +45,12 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
+            if (!await HasBillingAccessAsync(cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction("Index", "Home", new { area = "User" });
+            }
+
             var model = await _unitOfWork.Billing.GetAllAsync(null, cancellationToken);
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
@@ -141,10 +145,16 @@ namespace IBSWeb.Areas.User.Controllers
                     model.MMSIBillingNumber = viewModel.MMSIBillingNumber!;
                 }
 
+                if (model.ToBillDispatchTickets == null || !model.ToBillDispatchTickets.Any())
+                {
+                    throw new InvalidOperationException("At least one dispatch ticket must be selected.");
+                }
+
                 await _unitOfWork.Billing.AddAsync(model, cancellationToken);
-                var newModel = await _unitOfWork.Billing.GetAsync(b => b.CreatedDate == datetimeNow, cancellationToken);
-                int id = newModel!.MMSIBillingId;
-                newModel = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var newModel = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken)
+                    ?? throw new InvalidOperationException("Failed to retrieve the newly created billing record.");
 
                 #region -- Audit Trail
 
@@ -153,7 +163,7 @@ namespace IBSWeb.Areas.User.Controllers
                     Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Create billing #{newModel!.MMSIBillingNumber} for tickets #{string.Join(", #", model.ToBillDispatchTickets!)}",
+                    Activity = $"Create billing #{newModel.MMSIBillingNumber} for tickets #{string.Join(", #", model.ToBillDispatchTickets!)}",
                     DocumentType = "Billing",
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 };
@@ -164,36 +174,51 @@ namespace IBSWeb.Areas.User.Controllers
 
                 decimal totalAmount = 0;
 
+                _logger.LogInformation("Processing ToBillDispatchTickets: {Tickets}",
+                    string.Join(", ", model.ToBillDispatchTickets!));
+
                 foreach (var billDispatchTicket in model.ToBillDispatchTickets!)
                 {
-                    var dtEntry = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == int.Parse(billDispatchTicket), cancellationToken);
-                    totalAmount = (totalAmount + dtEntry?.TotalNetRevenue) ?? 0m;
-                    dtEntry!.Status = "Billed";
-                    dtEntry.BillingId = model.MMSIBillingId;
-                    dtEntry.BillingNumber = model.MMSIBillingNumber;
+                    if (!int.TryParse(billDispatchTicket, out int ticketId))
+                    {
+                        throw new InvalidOperationException($"Invalid dispatch ticket ID format: '{billDispatchTicket}'");
+                    }
+
+                    var dtEntry = await _unitOfWork.DispatchTicket
+                        .GetAsync(dt => dt.DispatchTicketId == ticketId, cancellationToken);
+                    _logger.LogInformation("Ticket {TicketId} result: {Result}", ticketId, dtEntry == null ? "NULL" : "FOUND");
+
+                    if (dtEntry == null)
+                    {
+                        throw new InvalidOperationException($"Dispatch ticket #{ticketId} not found or has already been processed.");
+                    }
+
+                    totalAmount += dtEntry.TotalNetRevenue;
+                    dtEntry.Status = "Billed";
+                    dtEntry.BillingId = newModel.MMSIBillingId;
+                    dtEntry.BillingNumber = newModel.MMSIBillingNumber;
                 }
 
-                model.Amount = totalAmount;
-                model.Balance = totalAmount;
-                model.IsPaid = false;
-                model.Terms = model.PrincipalId != null
-                    ? (await _unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken))?.Terms
-                    : model.Customer?.CustomerTerms;
-                model.DueDate = await _unitOfWork.Billing.ComputeDueDateAsync(model.Terms ?? "COD", model.Date, cancellationToken);
-                model.Company = await GetCompanyClaimAsync() ?? "MMSI";
+                newModel.Amount = totalAmount;
+                newModel.Balance = totalAmount;
+                newModel.IsPaid = false;
+                newModel.Terms = newModel.PrincipalId != null
+                    ? (await _unitOfWork.Principal.GetAsync(p => p.PrincipalId == newModel.PrincipalId, cancellationToken))?.Terms
+                    : newModel.Customer?.CustomerTerms;
+                newModel.DueDate = await _unitOfWork.Billing.ComputeDueDateAsync(newModel.Terms ?? "COD", newModel.Date, cancellationToken);
+                newModel.Company = await GetCompanyClaimAsync() ?? "MMSI";
 
                 await _unitOfWork.SaveAsync(cancellationToken);
 
-                var billingForPosting = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken);
-                await _unitOfWork.Billing.PostAsync(billingForPosting!, cancellationToken);
+                await _unitOfWork.Billing.PostAsync(newModel, cancellationToken);
 
                 if (model.IsUndocumented)
                 {
-                    TempData["success"] = $"Billing was successfully created. Control Number: {model.MMSIBillingNumber}";
+                    TempData["success"] = $"Billing was successfully created. Control Number: {newModel.MMSIBillingNumber}";
                 }
                 else
                 {
-                    TempData["success"] = $"Billing #{model.MMSIBillingNumber} was successfully created.";
+                    TempData["success"] = $"Billing #{newModel.MMSIBillingNumber} was successfully created.";
                 }
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -904,6 +929,12 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             return viewModel;
+        }
+
+        private async Task<bool> HasBillingAccessAsync(CancellationToken cancellationToken)
+        {
+            var userId = _userManager.GetUserId(User)!;
+            return await _userAccessService.CheckAccess(userId, ProcedureEnum.CreateBilling, cancellationToken);
         }
     }
 }

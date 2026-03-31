@@ -1,4 +1,3 @@
-using IBS.Models.AccountsPayable;
 using IBS.Models.MasterFile;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -95,9 +94,6 @@ namespace IBS.Models.Books
         public DateTime? ValidatedDate { get; set; }
 
         public int? POId { get; set; }
-
-        [ForeignKey(nameof(POId))]
-        public PurchaseOrder? PurchaseOrder { get; set; }
 
         public string Company { get; set; } = string.Empty;
     }

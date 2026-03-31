@@ -1,0 +1,1656 @@
+@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+
+@{
+    ViewData["Title"] = $"Job Order {Model.JobOrderNumber}";
+}
+
+<link rel="stylesheet" href="~/css/index-style.css">
+
+<style>
+    .sticky-panel {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header Card -->
+    <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center p-3">
+            <h5 class="m-0"><i class="bi bi-folder2-open"></i> @Model.JobOrderNumber</h5>
+            <div class="d-flex gap-2">
+                @if (Model.Status == "Open")
+                {
+                    <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm"
+                          class="d-inline">
+                        <input type="hidden" id="confirmCloseValue" name="confirmed" value="false" />
+                        <button type="button" class="btn btn-warning" onclick="confirmClose()">
+                            <i class="bi bi-lock"></i> Close Job Order
+                        </button>
+                    </form>
+                }
+                <button type="button" class="btn btn-light" onclick="openEditJobOrderModal(@Model.JobOrderId, @(Model.DispatchTickets != null && Model.DispatchTickets.Any() ? "true" : "false"))">
+                    <i class="bi bi-pencil"></i> Edit Details
+                </button>
+                @if (Model.Status == "Open" && User.IsInRole("Admin"))
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.JobOrderId" method="post" id="cancelConfirmForm" class="d-inline">
+                        <input type="hidden" name="confirmed" id="cancelConfirmed" value="false" />
+                        <button type="button" class="btn btn-outline-danger" onclick="confirmCancel()">
+                            <i class="bi bi-slash-circle"></i> Cancel
+                        </button>
+                    </form>
+                }
+                <a asp-action="Index" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2-Panel Layout -->
+    <div class="row g-4">
+        <!-- Left Panel: Job Order Details (35%) -->
+        <div class="col-lg-4 col-md-5">
+            <div class="card shadow border-0 sticky-panel">
+                <div class="card-header bg-primary text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="m-0"><i class="bi bi-info-circle me-2"></i>Job Order Details</h6>
+                        </div>
+                        <span class="badge @(Model.Status == "Open" ? "bg-success" : "bg-secondary") fs-6">@Model.Status</span>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <!-- Job Order Information -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Date</label>
+                            <div class="fw-bold">@Model.Date.ToString("MMM dd, yyyy")</div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-2">
+                    
+                    <!-- Customer & Vessel -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="text-muted small mb-1">Customer</label>
+                            <div class="fw-bold">@Model.CustomerName</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-muted small mb-1">Vessel</label>
+                            <div class="fw-bold">@Model.VesselName</div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-2">
+                    
+                    <!-- Location -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Port</label>
+                            <div>@(Model.PortName ?? "-")</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Terminal</label>
+                            <div>@(Model.TerminalName ?? "-")</div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-2">
+                    
+                    <!-- Voyage Details -->
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">COS #</label>
+                            <div>@(Model.COSNumber ?? "-")</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Voyage #</label>
+                            <div>@(Model.VoyageNumber ?? "-")</div>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Remarks))
+                    {
+                        <hr class="my-3">
+                        <div>
+                            <label class="text-muted small mb-1"><i class="bi bi-chat-left-text me-1"></i>Remarks</label>
+                            <p class="mb-0 small text-muted">@Model.Remarks</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Dispatch Tickets (65%) -->
+        <div class="col-lg-8 col-md-7">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
+                    <h5 class="m-0 text-primary"><i class="bi bi-list-task me-2"></i>Dispatch Tickets</h5>
+                    @if (Model.Status == "Open")
+                    {
+                        <button type="button" class="btn btn-primary" onclick="openDispatchTicketModal()">
+                            <i class="bi bi-plus-circle"></i> Add Ticket
+                        </button>
+                    }
+                </div>
+                <div class="card-body p-3">
+                    <div class="table-responsive" style="max-height: 70vh">
+                        <table class="table table-hover mb-0" id="ticketsTable" style="width:100%">
+                            <thead class="bg-light">
+                            <tr>
+                                <th class="text-start">Ticket #</th>
+                                <th class="text-center">Timeline</th>
+                                <th class="text-start">Date</th>
+                                <th class="text-start">Service</th>
+                                <th class="text-start">Tugboat</th>
+                                <th class="text-center">Total Hrs</th>
+                                <th class="text-end">Billing</th>
+                                <th class="text-start">Status</th>
+                                <th class="text-center" style="width: 120px;">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @if (Model.DispatchTickets != null)
+                            {
+                                @foreach (var ticket in Model.DispatchTickets)
+                                {
+                                <tr>
+                                    <td class="text-start">
+                                        <span class="fw-bold">@ticket.DispatchNumber</span>
+                                    </td>
+                                    <td class="text-start small">
+                                        <span>@ticket.DateLeft!.Value.ToString("MMM dd"), @ticket.TimeLeft!.Value.ToString("HH:mm")</span>
+                                        <span class="text-muted mx-1">→</span>
+                                        <span>@ticket.DateArrived!.Value.ToString("MMM dd"), @ticket.TimeArrived!.Value.ToString("HH:mm")</span>
+                                    </td>
+                                    <td class="text-start">@(ticket.Date?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                    <td class="text-start">@ticket.Service?.ServiceName</td>
+                                    <td class="text-start">@ticket.Tugboat?.TugboatName</td>
+                                    <td class="text-center">@ticket.TotalHours.ToString("N2")</td>
+                                    <td class="text-center">₱ @ticket.TotalBilling.ToString("N2")</td>
+                                    <td class="text-start"><span class="badge rounded-pill @GetStatusBadgeClass(ticket.Status)">@ticket.Status</span></td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            @* Quick View - Always visible *@
+                                            <button type="button" class="btn btn-sm btn-outline-info" title="Quick View"
+                                                    onclick="showTicketModal(@ticket.DispatchTicketId)">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+
+                                            @* Status-based actions *@
+                                            @if (ticket.Status == "For Tariff" || ticket.Status == "Pending")
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        title="Set Tariff"
+                                                        onclick="openSetTariffModal(@ticket.DispatchTicketId)">
+                                                    <i class="bi bi-currency-dollar"></i>
+                                                </button>
+                                                @if (Model.Status == "Open")
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                            title="Edit Ticket"
+                                                            onclick="openDispatchTicketModal(@ticket.DispatchTicketId)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                }
+                                            }
+                                            else if (ticket.Status == "For Approval")
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-success"
+                                                        title="Review & Approve"
+                                                        onclick="openApprovalModal(@ticket.DispatchTicketId)">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                                @if (Model.Status == "Open")
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                            title="Edit Ticket"
+                                                            onclick="openDispatchTicketModal(@ticket.DispatchTicketId)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                }
+                                            }
+                                            else if (ticket.Status == "Disapproved")
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                                        title="Edit Tariff"
+                                                        onclick="openEditTariffModal(@ticket.DispatchTicketId)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                            }
+                                            else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
+                                            {
+                                                @if (Model.Status == "Open")
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                            title="Edit Ticket (Warning: Billed)"
+                                                            onclick="openDispatchTicketModalWithWarning(@ticket.DispatchTicketId, '@ticket.Status')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                }
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                                }
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Details Modal -->
+        <div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="ticketModalLabel">
+                            <i class="bi bi-ticket-perforated me-2"></i>Dispatch Ticket - <span id="ticketModalDispatchNumber"></span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="ticketModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light" id="ticketModalFooter">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Ticket Modal -->
+        <div class="modal fade" id="addTicketModal" tabindex="-1" aria-labelledby="addTicketModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="addTicketModalLabel"><i class="bi bi-plus-circle me-2"></i>Add New
+                            Dispatch Ticket</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="addTicketModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveTicketBtn"
+                                onclick="submitAddTicketForm()"><i class="bi bi-save me-1"></i> Save Ticket
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Job Order Modal -->
+        <div class="modal fade" id="editJobOrderModal" tabindex="-1" aria-labelledby="editJobOrderModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editJobOrderModalLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Edit Job Order - <span id="editJobOrderNumber"></span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="editJobOrderModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            <script>
+                $(document).ready(function () {
+                    $('#ticketsTable').DataTable({
+                        responsive: true,
+                        order: [[0, 'desc']],
+                        language: {
+                            search: "_INPUT_",
+                            searchPlaceholder: "Search Tickets..."
+                        }
+                    });
+                });
+
+                function openDispatchTicketModal(ticketId = null) {
+                    const modalElement = document.getElementById('addTicketModal');
+                    const body = document.getElementById('addTicketModalBody');
+                    const title = document.getElementById('addTicketModalLabel');
+                    const saveBtn = document.getElementById('saveTicketBtn');
+
+                    // Set Title and Button
+                    title.innerHTML = ticketId ? '<i class="bi bi-pencil-square me-2"></i>Edit Dispatch Ticket' : '<i class="bi bi-plus-circle me-2"></i>Add New Dispatch Ticket';
+                    saveBtn.innerHTML = ticketId ? '<i class="bi bi-check-circle me-1"></i> Update Ticket' : '<i class="bi bi-save me-1"></i> Save Ticket';
+
+                    // Show Loading in body first (before modal is shown)
+                    body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+                    // Fetch partial FIRST, before showing modal
+                    const url = '@Url.Action("GetDispatchTicketPartial", "DispatchTicket")';
+                    console.log('Fetching ticket form from:', url);
+                    
+                    $.get(url, {id: ticketId, jobOrderId: '@Model.JobOrderId'}, function (data) {
+                        console.log('✓ Form loaded, length:', data.length);
+                        
+                        // Check if response is permission denied
+                        if (data.indexOf('permission-denied-content') !== -1) {
+                            // Show permission denied in dedicated modal instead
+                            $('#permissionDeniedModal .modal-body').html(data);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show the add ticket modal with the form
+                            body.innerHTML = data;
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                            
+                            // Initialize duration calculation after content is fully rendered
+                            setTimeout(function () {
+                                console.log('Initializing duration calculation...');
+                                initializeDurationCalculation();
+                            }, 200);
+                        }
+                    }).fail(function (xhr, status, error) {
+                        console.error('✗ Failed to load form:', status, error);
+                        console.error('Response:', xhr.responseText);
+                        
+                        // Check if response is permission denied
+                        if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
+                            $('#permissionDeniedModal .modal-body').html(xhr.responseText);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show error in the add ticket modal
+                            body.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load ticket form. Please try again.</div>';
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                    });
+                }
+
+                function openEditJobOrderModal(jobOrderId, hasTickets = false) {
+                    if (hasTickets === "true" || hasTickets === true) {
+                        openEditJobOrderModalWithWarning(jobOrderId);
+                    } else {
+                        openEditJobOrderModalNoWarning(jobOrderId);
+                    }
+                }
+
+                function openEditJobOrderModalNoWarning(jobOrderId) {
+                    const modal = new bootstrap.Modal(document.getElementById('editJobOrderModal'));
+                    const body = document.getElementById('editJobOrderModalBody');
+                    const titleSpan = document.getElementById('editJobOrderNumber');
+
+                    // Show Loading
+                    body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+                    modal.show();
+
+                    // Fetch edit form partial
+                    $.get('@Url.Action("EditModal", "JobOrder")', {id: jobOrderId}, function (data) {
+                        body.innerHTML = data;
+                        titleSpan.textContent = '@Model.JobOrderNumber';
+                        // Initialize Select2 and terminal loading after content is loaded
+                        setTimeout(function() {
+                            initializeEditModal();
+                        }, 100);
+                    }).fail(function (xhr, status, error) {
+                        console.error('Error loading edit form:', status, error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to load edit form. Please try again.'
+                        });
+                        body.innerHTML = '<div class="alert alert-danger">Error loading form. Please try again.</div>';
+                    });
+                }
+
+                function openEditJobOrderModalWithWarning(jobOrderId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Edit Job Order with Tickets',
+                        html: `
+                            <div class="text-start">
+                                <p class="mb-2"><strong>This Job Order has existing dispatch tickets.</strong></p>
+                                <p class="small text-muted mb-0">
+                                    Changing details (especially Port, Terminal, or Vessel) may require you to review 
+                                    and update the affected tickets to ensure consistency.
+                                </p>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Continue Editing',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            openEditJobOrderModal(jobOrderId);
+                        }
+                    });
+                }
+
+                function submitEditJobOrderForm() {
+                    const form = $('#editJobOrderForm');
+
+                    if (form.length === 0) return;
+
+                    // Check form validity using HTML5 validation
+                    if (!form[0].checkValidity()) {
+                        form[0].reportValidity();
+                        return;
+                    }
+
+                    // Show loading indicator
+                    Swal.fire({
+                        title: 'Saving Changes...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading() }
+                    });
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: form.serialize(),
+                        success: function (response) {
+                            // Check if it's a redirect (successful) or validation error
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Saved!',
+                                text: 'Job Order updated successfully.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                bootstrap.Modal.getInstance(document.getElementById('editJobOrderModal')).hide();
+                                location.reload();
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error saving job order:', status, error);
+                            Swal.fire('Error', 'An error occurred while saving changes.', 'error');
+                        }
+                    });
+                }
+
+                function initializeEditModal() {
+                    // Initialize Select2 for edit modal with proper width
+                    $('#editJobOrderModal .js-select2').select2({
+                        dropdownParent: $('#editJobOrderModal'),
+                        width: '100%'
+                    });
+
+                    // Terminal loading logic
+                    $('#EditPortId').off('change').on('change', function() {
+                        var portId = $(this).val();
+                        var terminalSelect = $('#EditTerminalId');
+
+                        console.log('Port changed, portId:', portId);
+
+                        if (!portId) {
+                            terminalSelect.empty();
+                            terminalSelect.append('<option value="">-- Select Terminal --</option>');
+                            terminalSelect.trigger('change');
+                            return;
+                        }
+
+                        terminalSelect.empty();
+                        terminalSelect.append('<option value="">Loading...</option>');
+                        terminalSelect.trigger('change');
+
+                        $.ajax({
+                            url: '@Url.Action("ChangeTerminal", "JobOrder")',
+                            type: 'GET',
+                            data: { portId: portId },
+                            success: function (data) {
+                                console.log('Terminals loaded:', data);
+                                terminalSelect.empty();
+                                terminalSelect.append('<option value="">-- Select Terminal --</option>');
+                                $.each(data, function (i, item) {
+                                    terminalSelect.append($('<option>', {
+                                        value: item.Value || item.value,
+                                        text: item.Text || item.text
+                                    }));
+                                });
+                                terminalSelect.trigger('change');
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error loading terminals:', xhr.responseText, error);
+                                terminalSelect.empty();
+                                terminalSelect.append('<option value="">Error loading terminals</option>');
+                                terminalSelect.trigger('change');
+                            }
+                        });
+                    });
+                    
+                    // Trigger initial terminal load if port is already selected
+                    var initialPortId = $('#EditPortId').val();
+                    console.log('Initial portId:', initialPortId);
+                    console.log('Terminal options count:', $('#EditTerminalId').children('option').length);
+                    if (initialPortId && $('#EditTerminalId').children('option').length <= 1) {
+                        setTimeout(function() {
+                            $('#EditPortId').trigger('change');
+                        }, 200);
+                    }
+                }
+
+                function openDispatchTicketModalWithWarning(ticketId, status) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Edit Billed Ticket',
+                        html: `<p>This ticket has status <strong class="text-primary">${status}</strong>.</p>
+                               <p class="small text-muted">Editing this ticket may affect billing records. Make sure to update all related information correctly.</p>`,
+                        showCancelButton: true,
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, edit anyway',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            openDispatchTicketModal(ticketId);
+                        }
+                    });
+                }
+
+                function submitAddTicketForm() {
+                    var form = $('#dispatchTicketForm');
+
+                    if (form.length === 0) return;
+
+                    // Check form validity using HTML5 validation
+                    if (!form[0].checkValidity()) {
+                        form[0].reportValidity();
+                        return;
+                    }
+
+                    // Show loading indicator
+                    Swal.fire({
+                        title: 'Saving Ticket...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading() }
+                    });
+
+                    // Let the form submit normally
+                    form.submit();
+                }
+
+                // Calculate duration between start and end datetime
+                function initializeDurationCalculation() {
+                    // Wait for elements to exist in DOM - modal uses different IDs
+                    const checkExist = setInterval(function () {
+                        // Modal uses IDs with 'Modal' prefix (capital M)
+                        let dateLeftInput = $('#ModalDateLeft, [name="DateLeft"]');
+                        let timeLeftInput = $('#ModalTimeLeft, [name="TimeLeft"]');
+                        let dateArrivedInput = $('#ModalDateArrived, [name="DateArrived"]');
+                        let timeArrivedInput = $('#ModalTimeArrived, [name="TimeArrived"]');
+                        let durationBadge = $('#modalDurationDisplay');
+                        let durationDisplay = $('#modalTotalHours');
+
+                        console.log('Checking for elements...', {
+                            dateLeft: dateLeftInput.length,
+                            timeLeft: timeLeftInput.length,
+                            dateArrived: dateArrivedInput.length,
+                            timeArrived: timeArrivedInput.length,
+                            durationBadge: durationBadge.length,
+                            durationDisplay: durationDisplay.length
+                        });
+
+                        // Check if all elements exist
+                        if (dateLeftInput.length && timeLeftInput.length &&
+                            dateArrivedInput.length && timeArrivedInput.length &&
+                            durationBadge.length && durationDisplay.length) {
+
+                            clearInterval(checkExist);
+                            console.log('✓ Duration calculation initialized');
+
+                            // Listen to changes on all datetime inputs
+                            dateLeftInput.add(timeLeftInput).add(dateArrivedInput).add(timeArrivedInput).on('change input', function () {
+                                console.log('✓ Datetime input changed, recalculating...');
+                                calculateDuration();
+                            });
+
+                            // Initial calculation
+                            calculateDuration();
+                        }
+                    }, 100); // Check every 100ms
+
+                    function calculateDuration() {
+                        // Modal uses IDs with 'Modal' prefix
+                        let dateLeft = $('#ModalDateLeft').val() || $('[name="DateLeft"]').val();
+                        let timeLeft = $('#ModalTimeLeft').val() || $('[name="TimeLeft"]').val();
+                        let dateArrived = $('#ModalDateArrived').val() || $('[name="DateArrived"]').val();
+                        let timeArrived = $('#ModalTimeArrived').val() || $('[name="TimeArrived"]').val();
+                        let durationBadge = $('#modalDurationDisplay');
+                        let durationDisplay = $('#modalTotalHours');
+
+                        console.log('Calculating duration:', {dateLeft, timeLeft, dateArrived, timeArrived});
+
+                        if (!dateLeft || !timeLeft || !dateArrived || !timeArrived) {
+                            durationDisplay.text('0');
+                            return;
+                        }
+
+                        const startDateTime = new Date(`${dateLeft}T${timeLeft}`);
+                        const endDateTime = new Date(`${dateArrived}T${timeArrived}`);
+
+                        if (endDateTime < startDateTime) {
+                            durationDisplay.text('Invalid (End before Start)');
+                            durationBadge.removeClass('bg-secondary').addClass('bg-danger');
+                            console.log('✓ Duration badge updated (invalid)');
+                            return;
+                        }
+
+                        const diffMs = endDateTime - startDateTime;
+                        const diffHrs = (diffMs / 3600000).toFixed(2); // Convert ms to hours
+
+                        console.log('✓ Duration calculated:', diffHrs, 'hours');
+                        durationDisplay.text(diffHrs);
+
+                        // Update badge color
+                        durationBadge.removeClass('bg-danger').addClass('bg-secondary');
+                        console.log('✓ Duration badge updated');
+                    }
+                }
+
+                function confirmClose() {
+                    Swal.fire({
+                        title: 'Close Job Order?',
+                        text: "Closing this Job Order will prevent adding new tickets to it.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, close it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Submit form normally - will handle redirect properly
+                            $('#closeForm').submit();
+                        }
+                    })
+                }
+
+                function confirmCancel() {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Admin Action: Cancel Job Order?',
+                        html: `
+                            <div class="text-start">
+                                <p class="mb-2"><strong>This will:</strong></p>
+                                <ul class="mb-2">
+                                    <li>Mark Job Order as "Cancelled"</li>
+                                    <li>Prevent adding new dispatch tickets</li>
+                                    <li>Affect existing tickets</li>
+                                </ul>
+                                <p class="text-danger small mb-0">
+                                    Admin-only action. Tickets in billing process (For Billing/Billed) will block cancellation.
+                                </p>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, cancel it!',
+                        cancelButtonText: 'Review'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Submit via AJAX to handle permission denied
+                            $.ajax({
+                                url: '@Url.Action("Cancel", "JobOrder")',
+                                type: 'GET',
+                                data: { id: '@Model.JobOrderId' },
+                                success: function(response) {
+                                    // If we get HTML back, check what type
+                                    if (response.indexOf('permission-denied-content') !== -1) {
+                                        // Show permission denied in modal
+                                        $('#permissionDeniedModal .modal-body').html(response);
+                                        new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                                    } else if (response.indexOf('card-header bg-danger') !== -1) {
+                                        // Got the Cancel confirmation view - show it in modal
+                                        $('#cancelConfirmModal .modal-body').html(response);
+                                        
+                                        // Setup form submission within modal
+                                        $('#cancelConfirmModal form').on('submit', function(e) {
+                                            e.preventDefault();
+                                            var form = $(this);
+                                            $.post(form.attr('action'), form.serialize(), function(result) {
+                                                if (result.indexOf('permission-denied-content') !== -1) {
+                                                    $('#permissionDeniedModal .modal-body').html(result);
+                                                    bootstrap.Modal.getInstance(document.getElementById('cancelConfirmModal')).hide();
+                                                    new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                                                } else {
+                                                    // Success - reload page
+                                                    location.reload();
+                                                }
+                                            }).fail(function(xhr) {
+                                                if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
+                                                    $('#permissionDeniedModal .modal-body').html(xhr.responseText);
+                                                    bootstrap.Modal.getInstance(document.getElementById('cancelConfirmModal')).hide();
+                                                    new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                                                } else {
+                                                    Swal.fire('Error', 'Failed to cancel Job Order', 'error');
+                                                }
+                                            });
+                                        });
+                                        
+                                        new bootstrap.Modal(document.getElementById('cancelConfirmModal')).show();
+                                    } else {
+                                        // Success - reload page
+                                        location.reload();
+                                    }
+                                },
+                                error: function(xhr) {
+                                    // Check if response is permission denied
+                                    if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
+                                        $('#permissionDeniedModal .modal-body').html(xhr.responseText);
+                                        new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                                    } else {
+                                        Swal.fire('Error', 'Failed to load cancel form', 'error');
+                                    }
+                                }
+                            });
+                        }
+                    })
+                }
+
+                // Check for server-side messages (error/warning/success)
+                @if (TempData.Peek("error") != null)
+                {
+                    <text>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: '@Html.Raw(TempData.Peek("error"))',
+                        confirmButtonColor: '#d33'
+                    });
+                    </text>
+                }
+                @if (TempData.Peek("warning") != null)
+                {
+                    <text>
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning: Affected Tickets',
+                        html: '@Html.Raw(TempData.Peek("warning"))',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, cancel anyway',
+                        cancelButtonText: 'Review Tickets'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Set confirmed flag and submit
+                            $('#cancelConfirmed').val('true');
+                            $('#cancelConfirmForm').submit();
+                        }
+                    });
+                    </text>
+                }
+                @if (TempData.Peek("success") != null)
+                {
+                    <text>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: '@TempData.Peek("success")',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    </text>
+                }
+
+                function showTicketModal(id) {
+                    const modal = new bootstrap.Modal(document.getElementById('ticketModal'));
+                    const body = document.getElementById('ticketModalBody');
+                    const footer = document.getElementById('ticketModalFooter');
+                    const titleSpan = document.getElementById('ticketModalDispatchNumber');
+
+                    body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+                    modal.show();
+
+                    fetch(`@Url.Action("GetTicketDetails", "JobOrder")/${id}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Update title
+                            titleSpan.textContent = data.dispatchNumber;
+
+                            // Build compact rich content
+                            body.innerHTML = `
+                        <div class="row g-3">
+                            <!-- Basic Info - 3 columns for compactness -->
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-info-circle me-2"></i>Ticket Information</h6>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Dispatch #</label>
+                                <div class="fw-bold">${data.dispatchNumber}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Date</label>
+                                <div class="fw-bold">${data.date}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Service</label>
+                                <div>${data.serviceName}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Tugboat</label>
+                                <div>${data.tugboatName}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Tug Master</label>
+                                <div>${data.tugMasterName}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Location</label>
+                                <div>${data.location}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Time Start</label>
+                                <div>${data.timeStart}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Time End</label>
+                                <div>${data.timeEnd}</div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="text-muted small mb-0">Duration</label>
+                                <div class="fw-bold text-primary">${data.totalHours} hrs</div>
+                            </div>
+                            
+                            <!-- Tariff Info (if available) -->
+                            ${data.dispatchRate && data.dispatchRate !== '-' ? `
+                            <div class="col-12 mt-3">
+                                <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-currency-dollar me-2"></i>Tariff Details</h6>
+                            </div>
+                            <div class="col-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-header bg-primary text-white py-2">
+                                        <strong>Dispatch</strong>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="row mb-2">
+                                            <div class="col-6 small">Rate: ₱ ${data.dispatchRate}/hr</div>
+                                            <div class="col-6 small text-end">Disc: ${data.dispatchDiscount}%</div>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div class="text-center fw-bold text-primary">₱ ${data.dispatchBilling}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-header bg-primary text-white py-2">
+                                        <strong>BAF</strong>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="row mb-2">
+                                            <div class="col-6 small">Rate: ₱ ${data.bafRate}/hr</div>
+                                            <div class="col-6 small text-end">Disc: ${data.bafDiscount}%</div>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div class="text-center fw-bold text-primary">₱ ${data.bafBilling}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body py-3">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-6 text-center border-end">
+                                                <div class="text-muted small">Total Billing</div>
+                                                <div class="fw-bold">₱ ${data.totalBilling}</div>
+                                            </div>
+                                            <div class="col-6 text-center">
+                                                <div class="text-muted small">Net Revenue</div>
+                                                <div class="fw-bold text-success">₱ ${data.totalNetRevenue}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : '<div class="col-12"><div class="alert alert-warning mb-0 py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>No tariff details set yet.</div></div>'}
+                            
+                            <!-- Remarks & Status -->
+                            <div class="col-12 mt-3">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label class="text-muted small mb-1">Remarks</label>
+                                        <p class="mb-0 fst-italic small">${data.remarks || 'No remarks'}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <label class="text-muted small mb-1">Status</label><br>
+                                        <span class="badge rounded-pill ${getStatusBadgeClass(data.status)}">${data.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                            // Build action buttons based on status
+                            footer.innerHTML = buildTicketModalActions(data);
+                        })
+                        .catch(error => {
+                            body.innerHTML = `<div class="alert alert-danger">Error loading ticket details: ${error}</div>`;
+                        });
+                }
+
+                function getStatusBadgeClass(status) {
+                    const classes = {
+                        'Pending': 'bg-secondary',
+                        'For Tariff': 'bg-warning text-dark',
+                        'For Approval': 'bg-orange',
+                        'For Billing': 'bg-primary',
+                        'Billed': 'bg-success',
+                        'Disapproved': 'bg-danger'
+                    };
+                    return classes[status] || 'bg-secondary';
+                }
+
+                function buildTicketModalActions(data) {
+                    const isJobOrderOpen = '@Model.Status' === 'Open';
+                    let buttons = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+
+                    switch(data.status) {
+                        case 'Pending':
+                        case 'For Tariff':
+                            buttons = `
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="openSetTariffModal(${data.id})">
+                                    <i class="bi bi-currency-dollar me-1"></i>Set Tariff
+                                </button>
+                            `;
+                            break;
+                        case 'For Approval':
+                            buttons = `
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-danger" onclick="openDisapproveModal(${data.id})">
+                                    <i class="bi bi-x-circle me-1"></i>Disapprove
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="approveTariff(${data.id})">
+                                    <i class="bi bi-check-circle me-1"></i>Approve
+                                </button>
+                            `;
+                            break;
+                        case 'Disapproved':
+                            buttons = `
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-warning" onclick="openEditTariffModal(${data.id})">
+                                    <i class="bi bi-pencil me-1"></i>Edit Tariff
+                                </button>
+                            `;
+                            break;
+                        case 'For Billing':
+                        case 'Billed':
+                            if (isJobOrderOpen) {
+                                buttons = `
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary" onclick="openDispatchTicketModalWithWarning(${data.id}, '${data.status}')">
+                                        <i class="bi bi-pencil me-1"></i>Edit Ticket
+                                    </button>
+                                `;
+                            }
+                            break;
+                    }
+
+                    return buttons;
+                }
+
+                // Tariff Modal Functions
+                function openSetTariffModal(ticketId) {
+                    const modalElement = document.getElementById('setTariffModal');
+                    const body = document.getElementById('setTariffModalBody');
+
+                    // Show Loading in body first (before modal is shown)
+                    body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+                    // Fetch content FIRST, before showing modal
+                    $.get('@Url.Action("SetTariffModal", "DispatchTicket")', {id: ticketId}, function (data) {
+                        // Check if response is permission denied
+                        if (data.indexOf('permission-denied-content') !== -1) {
+                            // Show permission denied in dedicated modal instead
+                            $('#permissionDeniedModal .modal-body').html(data);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show the tariff modal with the form
+                            body.innerHTML = data;
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                            
+                            // Initialize calculation after content loads
+                            setTimeout(function () {
+                                initializeTariffCalculation();
+                            }, 100);
+                        }
+                    }).fail(function (xhr, status, error) {
+                        console.error('Error loading tariff modal:', status, error);
+                        
+                        // Check if response is permission denied
+                        if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
+                            $('#permissionDeniedModal .modal-body').html(xhr.responseText);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show error in the tariff modal
+                            body.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load tariff form. Please try again.</div>';
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                    });
+                }
+
+                function openEditTariffModal(ticketId) {
+                    const modalElement = document.getElementById('editTariffModal');
+                    const body = document.getElementById('editTariffModalBody');
+
+                    // Show Loading in body first (before modal is shown)
+                    body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+                    // Fetch content FIRST, before showing modal
+                    $.get('@Url.Action("EditTariffModal", "DispatchTicket")', {id: ticketId}, function (data) {
+                        // Check if response is permission denied
+                        if (data.indexOf('permission-denied-content') !== -1) {
+                            // Show permission denied in dedicated modal instead
+                            $('#permissionDeniedModal .modal-body').html(data);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show the edit tariff modal with the form
+                            body.innerHTML = data;
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                            
+                            // Initialize calculation after content loads
+                            setTimeout(function () {
+                                initializeTariffCalculation();
+                            }, 100);
+                        }
+                    }).fail(function (xhr, status, error) {
+                        console.error('Error loading edit tariff modal:', status, error);
+                        
+                        // Check if response is permission denied
+                        if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
+                            $('#permissionDeniedModal .modal-body').html(xhr.responseText);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show error in the tariff modal
+                            body.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load tariff form. Please try again.</div>';
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                    });
+                }
+
+                function openApprovalModal(ticketId) {
+                    const modalElement = document.getElementById('tariffApprovalModal');
+                    const body = document.getElementById('tariffApprovalModalBody');
+
+                    // Show Loading in body first (before modal is shown)
+                    body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+
+                    // Fetch content FIRST, before showing modal
+                    $.get('@Url.Action("TariffApprovalModal", "DispatchTicket")', {id: ticketId}, function (data) {
+                        // Check if response is permission denied
+                        if (data.indexOf('permission-denied-content') !== -1) {
+                            // Show permission denied in dedicated modal instead
+                            $('#permissionDeniedModal .modal-body').html(data);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show the approval modal with the content
+                            body.innerHTML = data;
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                    }).fail(function (xhr, status, error) {
+                        console.error('Error loading approval modal:', status, error);
+                        
+                        // Check if response is permission denied
+                        if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
+                            $('#permissionDeniedModal .modal-body').html(xhr.responseText);
+                            new bootstrap.Modal(document.getElementById('permissionDeniedModal')).show();
+                        } else {
+                            // Show error in the tariff modal
+                            body.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load tariff details. Please try again.</div>';
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                    });
+                }
+
+                function approveTariff(ticketId) {
+                    Swal.fire({
+                        title: 'Approve Tariff?',
+                        text: "This will move the ticket to 'For Billing' status.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, approve it!',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show loading
+                            Swal.fire({
+                                title: 'Approving...',
+                                allowOutsideClick: false,
+                                didOpen: () => { Swal.showLoading() }
+                            });
+
+                            $.post('@Url.Action("ApproveTariff", "DispatchTicket")', {id: ticketId}, function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Approved!',
+                                        text: 'Tariff approved successfully.',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        bootstrap.Modal.getInstance(document.getElementById('tariffApprovalModal')).hide();
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            }).fail(function () {
+                                Swal.fire('Error', 'An error occurred while approving the tariff.', 'error');
+                            });
+                        }
+                    });
+                }
+
+                function submitSetTariffForm() {
+                    const form = $('#setTariffForm');
+                    if (!form.valid()) return;
+
+                    Swal.fire({
+                        title: 'Saving Tariff...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading() }
+                    });
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: form.serialize(),
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Tariff Saved!',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    bootstrap.Modal.getInstance(document.getElementById('setTariffModal')).hide();
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message
+                                });
+                                const submitBtn = form.find('button[type="submit"]');
+                                submitBtn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save Tariff');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error saving tariff:', status, error);
+                            Swal.fire('Error', 'An error occurred while saving the tariff.', 'error');
+                            const submitBtn = form.find('button[type="submit"]');
+                            submitBtn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save Tariff');
+                        }
+                    });
+                }
+
+                function submitEditTariffForm() {
+                    const form = $('#editTariffForm');
+                    if (!form.valid()) return;
+
+                    Swal.fire({
+                        title: 'Updating Tariff...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading() }
+                    });
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: form.serialize(),
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Tariff Updated!',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    bootstrap.Modal.getInstance(document.getElementById('editTariffModal')).hide();
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message
+                                });
+                                const submitBtn = form.find('button[type="submit"]');
+                                submitBtn.prop('disabled', false).html('<i class="bi bi-pencil me-1"></i>Update Tariff');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error updating tariff:', status, error);
+                            Swal.fire('Error', 'An error occurred while updating the tariff.', 'error');
+                            const submitBtn = form.find('button[type="submit"]');
+                            submitBtn.prop('disabled', false).html('<i class="bi bi-pencil me-1"></i>Update Tariff');
+                        }
+                    });
+                }
+
+                function openDisapproveModal(ticketId) {
+                    // Store ticket ID for submission
+                    $('#disapproveTicketId').val(ticketId);
+
+                    // Reset form
+                    $('#disapproveReason').val('').removeClass('is-invalid');
+
+                    // Get the approval modal and hide its backdrop
+                    const approvalModalEl = document.getElementById('tariffApprovalModal');
+                    const approvalModal = bootstrap.Modal.getInstance(approvalModalEl);
+                    if (approvalModal) {
+                        // Hide the backdrop of the approval modal so disapprove modal shows correctly
+                        approvalModalEl.querySelector('.modal-backdrop')?.remove();
+                    }
+
+                    // Show disapprove modal
+                    const modal = new bootstrap.Modal(document.getElementById('disapproveModal'), {
+                        backdrop: true
+                    });
+                    modal.show();
+
+                    // Focus textarea after modal is shown
+                    document.getElementById('disapproveModal').addEventListener('shown.bs.modal', function () {
+                        document.getElementById('disapproveReason').focus();
+                    }, { once: true });
+                }
+
+                function addDisapproveReason(reason) {
+                    const currentText = $('#disapproveReason').val();
+                    if (currentText) {
+                        $('#disapproveReason').val(currentText + ' - ' + reason);
+                    } else {
+                        $('#disapproveReason').val(reason);
+                    }
+                    $('#disapproveReason').focus();
+                }
+
+                function submitDisapproval() {
+                    const ticketId = $('#disapproveTicketId').val();
+                    const reason = $('#disapproveReason').val().trim();
+
+                    if (reason.length < 10) {
+                        $('#disapproveReason').addClass('is-invalid');
+                        return;
+                    }
+
+                    // Close the modal first
+                    bootstrap.Modal.getInstance(document.getElementById('disapproveModal')).hide();
+
+                    // Show loading
+                    Swal.fire({
+                        title: 'Disapproving...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading() }
+                    });
+
+                    $.post('@Url.Action("DisapproveTariff", "DispatchTicket")', {
+                        id: ticketId,
+                        reason: reason
+                    }, function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Disapproved!',
+                                text: 'Tariff disapproved successfully.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                bootstrap.Modal.getInstance(document.getElementById('tariffApprovalModal'))?.hide();
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', response.message, 'error');
+                        }
+                    }).fail(function () {
+                        Swal.fire('Error', 'An error occurred while disapproving the tariff.', 'error');
+                    });
+                }
+
+                // Tariff calculation function - works for both Set and Edit modals
+                function calculateTariffInModal() {
+                    const totalHours = parseFloat($('#TotalHours').val()) || 0;
+
+                    // Get charge type (applies to BOTH Dispatch and BAF)
+                    const chargeType = $('input[name="chargeType"]:checked').val() || 'Per hour';
+
+                    // Dispatch
+                    const dispatchRate = parseFloat($('#DispatchRate').val()) || 0;
+                    const dispatchDiscount = parseFloat($('#DispatchDiscount').val()) || 0;
+                    let dispatchBilling = 0;
+
+                    if (chargeType === 'Per hour') {
+                        dispatchBilling = dispatchRate * totalHours;
+                    } else {
+                        // Per move - no multiplication by hours
+                        dispatchBilling = dispatchRate;
+                    }
+
+                    const dispatchNet = dispatchBilling - (dispatchBilling * dispatchDiscount / 100);
+
+                    $('#dispatchBilling').text('₱ ' + dispatchBilling.toFixed(2));
+                    $('#dispatchNet').text('₱ ' + dispatchNet.toFixed(2));
+                    // Update hidden fields for form submission
+                    $('#hiddenDispatchBilling').val(dispatchBilling.toFixed(2));
+                    $('#hiddenDispatchNet').val(dispatchNet.toFixed(2));
+
+                    // BAF
+                    const bafRate = parseFloat($('#BAFRate').val()) || 0;
+                    const bafDiscount = parseFloat($('#BAFDiscount').val()) || 0;
+                    let bafBilling = 0;
+
+                    if (chargeType === 'Per hour') {
+                        bafBilling = bafRate * totalHours;
+                    } else {
+                        // Per move - no multiplication by hours
+                        bafBilling = bafRate;
+                    }
+
+                    const bafNet = bafBilling - (bafBilling * bafDiscount / 100);
+
+                    $('#bafBilling').text('₱ ' + bafBilling.toFixed(2));
+                    $('#bafNet').text('₱ ' + bafNet.toFixed(2));
+                    // Update hidden fields for form submission
+                    $('#hiddenBAFBilling').val(bafBilling.toFixed(2));
+                    $('#hiddenBAFNet').val(bafNet.toFixed(2));
+
+                    // Totals
+                    const apOtherTugs = parseFloat($('#ApOtherTugs').val()) || 0;
+                    const totalBilling = dispatchBilling + bafBilling + apOtherTugs;
+                    const totalNet = dispatchNet + bafNet + apOtherTugs;
+
+                    $('#totalBilling').text('₱ ' + totalBilling.toFixed(2));
+                    $('#totalNet').text('₱ ' + totalNet.toFixed(2));
+                    // Update hidden fields for form submission
+                    $('#hiddenTotalBilling').val(totalBilling.toFixed(2));
+                    $('#hiddenTotalNet').val(totalNet.toFixed(2));
+                }
+
+                // Update charge type (applies to both Dispatch and BAF)
+                function updateChargeType() {
+                    calculateTariffInModal();
+                }
+
+                // Initialize calculation listeners when modal content loads
+                function initializeTariffCalculation() {
+                    // Listen to rate and discount changes
+                    $('#DispatchRate, #DispatchDiscount, #BAFRate, #BAFDiscount, #ApOtherTugs').on('input', function () {
+                        calculateTariffInModal();
+                    });
+
+                    // Listen to charge type changes
+                    $('input[name="chargeType"]').on('change', function () {
+                        calculateTariffInModal();
+                    });
+
+                    // Check for default tariff rates when customer changes
+                    $('#CustomerId').on('change', function () {
+                        checkForDefaultTariff();
+                    });
+
+                    // Initial calculation
+                    calculateTariffInModal();
+
+                    // Check for default tariff after a short delay
+                    setTimeout(function () {
+                        checkForDefaultTariff();
+                    }, 200);
+                }
+
+                // Check for default tariff rates based on customer
+                function checkForDefaultTariff() {
+                    const customerId = $('#CustomerId').val();
+                    const dispatchTicketId = $('#DispatchTicketId').val();
+
+                    if (!customerId || !dispatchTicketId) return;
+
+                    $.ajax({
+                        url: '@Url.Action("CheckForTariffRate", "DispatchTicket")',
+                        type: 'POST',
+                        data: {customerId: customerId, dispatchTicketId: dispatchTicketId},
+                        success: function (result) {
+                            if (result.exists) {
+                                // Apply default rates
+                                $('#DispatchRate').val(result.dispatch);
+                                $('#BAFRate').val(result.baf);
+                                $('#DispatchDiscount').val(result.dispatchDiscount);
+                                $('#BAFDiscount').val(result.bafDiscount);
+
+                                // Recalculate with new values
+                                calculateTariffInModal();
+
+                                // Show notification
+                                const toastHtml = `
+                            <div class="toast-container">
+                                <div class="toast show align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                    <div class="d-flex">
+                                        <div class="toast-body">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            Default rates applied!
+                                            <div class="mt-1 small">
+                                                Dispatch: ₱${result.dispatch} | BAF: ₱${result.baf}
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                    </div>
+                                </div>
+                            </div>`;
+                                $('body').append(toastHtml);
+                                setTimeout(function () {
+                                    $('.toast-container').remove();
+                                }, 3000);
+                            }
+                        },
+                        error: function () {
+                            console.log('Could not fetch default tariff rates');
+                        }
+                    });
+                }
+            </script>
+        }
+
+        @functions {
+
+            string GetStatusBadgeClass(string status)
+            {
+                return status switch
+                {
+                    "For Tariff" => "bg-warning text-dark",
+                    "For Approval" => "bg-orange text-dark",
+                    "For Billing" => "bg-primary text-white",
+                    "Billed" => "bg-success text-white",
+                    "Disapproved" => "bg-danger text-white",
+                    _ => "bg-secondary text-dark"
+                };
+            }
+
+        }
+
+        <!-- Set Tariff Modal -->
+        <div class="modal fade" id="setTariffModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body" id="setTariffModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Tariff Modal -->
+        <div class="modal fade" id="editTariffModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body" id="editTariffModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tariff Approval Modal -->
+        <div class="modal fade" id="tariffApprovalModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white" id="tariffApprovalModalHeader">
+                        <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Review Tariff</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="tariffApprovalModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disapprove Reason Modal -->
+        <div class="modal fade" id="disapproveModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h6 class="modal-title"><i class="bi bi-exclamation-triangle me-1"></i>Disapprove Tariff</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="disapproveTicketId"/>
+                        <div class="mb-3">
+                            <label for="disapproveReason" class="form-label fw-bold">Reason <span class="text-danger">*</span></label>
+                            <textarea id="disapproveReason" class="form-control" rows="5" required minlength="10" placeholder="Please provide a detailed reason for disapproval (minimum 10 characters)"></textarea>
+                            <div class="invalid-feedback">Please provide a reason (at least 10 characters)</div>
+                        </div>
+                        <div>
+                            <small class="text-muted">Common reasons (click to add):</small>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary me-1 mb-1" style="cursor: pointer; font-weight: normal;" onclick="addDisapproveReason('Incorrect rate')">Incorrect rate</span>
+                                <span class="badge bg-secondary me-1 mb-1" style="cursor: pointer; font-weight: normal;" onclick="addDisapproveReason('Missing documentation')">Missing documentation</span>
+                                <span class="badge bg-secondary me-1 mb-1" style="cursor: pointer; font-weight: normal;" onclick="addDisapproveReason('Needs revision')">Needs revision</span>
+                                <span class="badge bg-secondary me-1 mb-1" style="cursor: pointer; font-weight: normal;" onclick="addDisapproveReason('Does not match agreed terms')">Does not match agreed terms</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="submitDisapproval()">
+                            <i class="bi bi-x-circle me-1"></i>Disapprove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permission Denied Modal -->
+        <div class="modal fade" id="permissionDeniedModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-shield-lock me-2"></i>Access Denied
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel Confirmation Modal -->
+        <div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Cancel Job Order
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

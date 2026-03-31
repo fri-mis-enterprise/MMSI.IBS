@@ -1,0 +1,114 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIJobOrder>
+
+@{
+    ViewData["Title"] = "Job Orders";
+}
+
+<link rel="stylesheet" href="~/css/index-style.css">
+
+@{
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        <a asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> Create Job Order
+        </a>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="jobOrdersTable" style="width:100%">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="text-start">Job Order #</th>
+                            <th class="text-start">Date</th>
+                            <th class="text-start">Customer</th>
+                            <th class="text-start">Vessel</th>
+                            <th class="text-start">COS #</th>
+                            <th class="text-center">Tickets</th>
+                            <th class="text-start">Status</th>
+                            <th class="text-center" style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var isCancelled = item.Status == "Cancelled";
+                            <tr>
+                                <td class="text-start">
+                                    <a asp-action="Details" asp-route-id="@item.JobOrderId" class="text-decoration-none text-primary fw-bold">
+                                        @item.JobOrderNumber
+                                    </a>
+                                </td>
+                                <td class="text-start">@item.Date.ToString("MMM dd, yyyy")</td>
+                                <td class="text-start">
+                                    <div class="text-truncate" style="max-width: 250px;" title="@item.Customer?.CustomerName">
+                                        @item.Customer?.CustomerName
+                                    </div>
+                                </td>
+                                <td class="text-start">
+                                    <div class="text-truncate" style="max-width: 200px;" title="@item.Vessel?.VesselName">
+                                        @item.Vessel?.VesselName
+                                    </div>
+                                </td>
+                                <td class="text-start">
+                                    <span class="text-muted">@(item.COSNumber ?? "-")</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">@item.DispatchTickets.Count</span>
+                                </td>
+                                <td class="text-start">
+                                    @if (isCancelled)
+                                    {
+                                        <span class="badge rounded-pill bg-secondary">@item.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill @(item.Status == "Open" ? "bg-success" : "bg-secondary")">
+                                            @item.Status
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                                data-bs-toggle="dropdown" aria-expanded="false"
+                                                style="min-width: 100px;">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important;">
+                                            <li>
+                                                <a class="dropdown-item" asp-action="Details" asp-route-id="@item.JobOrderId">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#jobOrdersTable').DataTable({
+                responsive: true,
+                order: [[0, 'desc']],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search Job Orders..."
+                }
+            });
+        });
+    </script>
+}

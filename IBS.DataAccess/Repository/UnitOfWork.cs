@@ -2,12 +2,6 @@ using IBS.Models.Books;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.AccountsPayable;
-using IBS.DataAccess.Repository.AccountsPayable.IRepository;
-using IBS.DataAccess.Repository.AccountsReceivable;
-using IBS.DataAccess.Repository.AccountsReceivable.IRepository;
-using IBS.DataAccess.Repository.Books;
-using IBS.DataAccess.Repository.Books.IRepository;
 using IBS.DataAccess.Repository.Integrated;
 using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.DataAccess.Repository.IRepository;
@@ -103,7 +97,6 @@ namespace IBS.DataAccess.Repository
 
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
         public ICustomerOrderSlipRepository CustomerOrderSlip { get; private set; }
-        public IDeliveryReceiptRepository DeliveryReceipt { get; private set; }
         public ISupplierRepository Supplier { get; private set; }
         public ICustomerRepository Customer { get; private set; }
         public IAuditTrailRepository AuditTrail { get; private set; }
@@ -113,49 +106,11 @@ namespace IBS.DataAccess.Repository
 
         #endregion
 
-        #region AAS
-
-        #region Accounts Receivable
-        public ISalesInvoiceRepository SalesInvoice { get; private set; }
-
-        public IServiceInvoiceRepository ServiceInvoice { get; private set; }
-
-        public ICollectionReceiptRepository CollectionReceipt { get; private set; }
-
-        public IDebitMemoRepository DebitMemo { get; private set; }
-
-        public ICreditMemoRepository CreditMemo { get; private set; }
-        #endregion
-
-        #region Accounts Payable
-        public ICheckVoucherRepository CheckVoucher { get; private set; }
-
-        public IJournalVoucherRepository JournalVoucher { get; private set; }
-
-        public IPurchaseOrderRepository PurchaseOrder { get; private set; }
-
-        public IReceivingReportRepository ReceivingReport { get; private set; }
-        #endregion
-
-        #region Books and Report
-        public IInventoryRepository Inventory { get; private set; }
-
-        public IReportRepository Report { get; private set; }
-        #endregion
-
-        #region Master File
+        #region --Master File
 
         public IBankAccountRepository BankAccount { get; private set; }
-
         public IServiceMasterRepository ServiceMaster { get; private set; }
-
         public IPickUpPointRepository PickUpPoint { get; private set; }
-
-        public IFreightRepository Freight { get; private set; }
-
-        public IAuthorityToLoadRepository AuthorityToLoad { get; private set; }
-
-        #endregion
 
         #endregion
 
@@ -163,6 +118,7 @@ namespace IBS.DataAccess.Repository
 
         public IMsapRepository Msap { get; private set; }
         public IServiceRequestRepository ServiceRequest { get; private set; }
+        public IJobOrderRepository JobOrder { get; private set; }
         public IDispatchTicketRepository DispatchTicket { get; private set; }
         public IBillingRepository Billing { get; private set; }
         public ICollectionRepository Collection { get; private set; }
@@ -191,12 +147,8 @@ namespace IBS.DataAccess.Repository
             #region--Master Files
 
             CustomerOrderSlip = new CustomerOrderSlipRepository(_db);
-            DeliveryReceipt = new DeliveryReceiptRepository(_db);
             Customer = new CustomerRepository(_db);
             Supplier = new SupplierRepository(_db);
-            PickUpPoint = new PickUpPointRepository(_db);
-            Freight = new FreightRepository(_db);
-            AuthorityToLoad = new AuthorityToLoadRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
             AuditTrail = new AuditTrailRepository(_db);
             Employee = new EmployeeRepository(_db);
@@ -205,34 +157,11 @@ namespace IBS.DataAccess.Repository
 
             #endregion
 
-            #region AAS
-
-            #region Accounts Receivable
-            SalesInvoice = new SalesInvoiceRepository(_db);
-            ServiceInvoice = new ServiceInvoiceRepository(_db);
-            CollectionReceipt = new CollectionReceiptRepository(_db);
-            DebitMemo = new DebitMemoRepository(_db);
-            CreditMemo = new CreditMemoRepository(_db);
-            #endregion
-
-            #region Accounts Payable
-            CheckVoucher = new CheckVoucherRepository(_db);
-            JournalVoucher = new JournalVoucherRepository(_db);
-            PurchaseOrder = new PurchaseOrderRepository(_db);
-            ReceivingReport = new ReceivingReportRepository(_db);
-            #endregion
-
-            #region Books and Report
-            Inventory = new InventoryRepository(_db);
-            Report = new ReportRepository(_db);
-            #endregion
-
-            #region Master File
+            #region --Master File
 
             BankAccount = new BankAccountRepository(_db);
             ServiceMaster = new ServiceMasterRepository(_db);
-
-            #endregion
+            PickUpPoint = new PickUpPointRepository(_db);
 
             #endregion
 
@@ -241,6 +170,7 @@ namespace IBS.DataAccess.Repository
             Billing = new BillingRepository(_db);
             Collection = new CollectionRepository(_db);
             DispatchTicket = new DispatchTicketRepository(_db);
+            JobOrder = new JobOrderRepository(_db);
             MMSIReport = new MMSIReportRepository(_db);
             Msap = new MsapRepository(_db);
             Port = new PortRepository(_db);
@@ -389,33 +319,6 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = e.EmployeeId.ToString(),
                     Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetDistinctPickupPointListById(string companyClaims, CancellationToken cancellationToken = default)
-        {
-            return await _db.PickUpPoints
-                .Where(GetCompanyFilter<PickUpPoint>(companyClaims))
-                .GroupBy(p => p.Depot)
-                .OrderBy(g => g.Key)
-                .Select(g => new SelectListItem
-                {
-                    Value = g.First().PickUpPointId.ToString(),
-                    Text = g.Key // g.Key is the Depot name
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetServiceListById(string companyClaims, CancellationToken cancellationToken = default)
-        {
-            return await _db.Services
-                .OrderBy(s => s.ServiceId)
-                .Where(GetCompanyFilter<ServiceMaster>(companyClaims))
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceId.ToString(),
-                    Text = s.Name
                 })
                 .ToListAsync(cancellationToken);
         }

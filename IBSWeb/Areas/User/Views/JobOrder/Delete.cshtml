@@ -1,0 +1,47 @@
+@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+
+@{
+    ViewData["Title"] = "Delete Job Order";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-danger text-white">
+            <h3 class="card-title m-0"><i class="bi bi-trash"></i> Delete Job Order</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>Warning:</strong> This action cannot be undone. Are you sure you want to delete this Job Order?
+                </div>
+            </div>
+
+            <dl class="row">
+                <dt class="col-sm-3 fw-bold">Job Order Number</dt>
+                <dd class="col-sm-9">@Model.JobOrderNumber</dd>
+
+                <dt class="col-sm-3 fw-bold">Date</dt>
+                <dd class="col-sm-9">@Model.Date.ToString("MMM dd, yyyy")</dd>
+
+                <dt class="col-sm-3 fw-bold">Customer</dt>
+                <dd class="col-sm-9">@Model.CustomerName</dd>
+
+                <dt class="col-sm-3 fw-bold">Vessel</dt>
+                <dd class="col-sm-9">@Model.VesselName</dd>
+            </dl>
+
+            <form asp-action="DeleteConfirmed" asp-route-id="@Model.JobOrderId" method="post">
+                <input type="hidden" asp-for="JobOrderId" />
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.JobOrderId" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-trash"></i> Delete Job Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

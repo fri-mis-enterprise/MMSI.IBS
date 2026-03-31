@@ -484,3 +484,8 @@ $RECYCLE.BIN/
 *.swp
 
 /IBSWeb/wwwroot/documents/
+
+IBSWeb/bin
+
+# ignore all .cshtml__virtual.html files
+*.cshtml__virtual.html

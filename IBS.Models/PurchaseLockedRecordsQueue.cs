@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.AccountsPayable;
 using IBS.Models.Integrated;
 
 namespace IBS.Models
@@ -15,9 +14,6 @@ namespace IBS.Models
         public DateOnly LockedDate { get; set; }
 
         public int ReceivingReportId { get; set; }
-
-        [ForeignKey(nameof(ReceivingReportId))]
-        public ReceivingReport ReceivingReport { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal Quantity { get; set; }
