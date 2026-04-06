@@ -13,9 +13,9 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-action="Create" class="btn btn-light">
+        <button type="button" class="btn btn-light" onclick="openCreateJobOrderModal()">
             <i class="bi bi-plus-circle"></i> Create Job Order
-        </a>
+        </button>
     </div>
 
     <div class="card shadow border-0 mt-3">
@@ -98,6 +98,30 @@
     </div>
 </div>
 
+<!-- Create Job Order Modal -->
+<div class="modal fade" id="createJobOrderModal" tabindex="-1" aria-labelledby="createJobOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="createJobOrderModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Create New Job Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @if (ViewBag.CreateViewModel != null)
+            {
+                @await Html.PartialAsync("_CreateModal", (IBS.Models.MMSI.ViewModels.JobOrderViewModel)ViewBag.CreateViewModel)
+            }
+            else
+            {
+                <div class="modal-body">
+                    <div class="alert alert-warning">You don't have permission to create Job Orders.</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
@@ -109,6 +133,82 @@
                     searchPlaceholder: "Search Job Orders..."
                 }
             });
+
+            // Initialize Select2 for the create modal
+            $('#createJobOrderModal .js-select2').select2({
+                dropdownParent: $('#createJobOrderModal'),
+                width: '100%'
+            });
+
+            // Terminal loading when port changes
+            $('#CreatePortId').on('change', function () {
+                var portId = $(this).val();
+                var terminalSelect = $('#CreateTerminalId');
+
+                terminalSelect.empty().append('<option value="">-- Select Terminal --</option>');
+                terminalSelect.trigger('change');
+
+                if (!portId) return;
+
+                $.ajax({
+                    url: '@Url.Action("ChangeTerminal", "JobOrder", new { area = "User" })',
+                    type: 'GET',
+                    data: { portId: portId },
+                    success: function (data) {
+                        $.each(data, function (i, item) {
+                            terminalSelect.append($('<option>', {
+                                value: item.Value || item.value,
+                                text: item.Text || item.text
+                            }));
+                        });
+                        terminalSelect.trigger('change');
+                    }
+                });
+            });
         });
+
+        function openCreateJobOrderModal() {
+            new bootstrap.Modal(document.getElementById('createJobOrderModal')).show();
+        }
+
+        function submitCreateJobOrderForm() {
+            const form = $('#createJobOrderForm');
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+
+            Swal.fire({
+                title: 'Creating Job Order...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Created!',
+                            text: 'Job Order created successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = response.redirectUrl || window.location.href;
+                        });
+                    } else {
+                        Swal.close();
+                        Swal.fire('Validation Error', 'Please check the form and try again.', 'warning');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'An error occurred while creating the Job Order.', 'error');
+                }
+            });
+        }
     </script>
 }

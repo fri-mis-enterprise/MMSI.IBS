@@ -1,0 +1,80 @@
+@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+
+<form id="createJobOrderForm" onsubmit="submitCreateJobOrderForm(); return false;" asp-action="Create" asp-controller="JobOrder">
+    <div class="modal-body p-4">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-3">
+            <!-- Date -->
+            <div class="col-12 col-md-6">
+                <label asp-for="Date" class="form-label fw-bold small"></label>
+                <input asp-for="Date" type="date" class="form-control form-control-sm" />
+                <span asp-validation-for="Date" class="text-danger small"></span>
+            </div>
+
+            <!-- Customer -->
+            <div class="col-12 col-md-6">
+                <label asp-for="CustomerId" class="form-label fw-bold small"></label>
+                <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" required>
+                    <option value="">-- Select Customer --</option>
+                </select>
+                <span asp-validation-for="CustomerId" class="text-danger small"></span>
+            </div>
+
+            <!-- Vessel -->
+            <div class="col-12 col-md-6">
+                <label asp-for="VesselId" class="form-label fw-bold small"></label>
+                <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2" required>
+                    <option value="">-- Select Vessel --</option>
+                </select>
+                <span asp-validation-for="VesselId" class="text-danger small"></span>
+            </div>
+
+            <!-- Port & Terminal -->
+            <div class="col-12 col-md-6">
+                <label asp-for="PortId" class="form-label fw-bold small"></label>
+                <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2" id="CreatePortId">
+                    <option value="">-- Select Port --</option>
+                </select>
+                <span asp-validation-for="PortId" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label asp-for="TerminalId" class="form-label fw-bold small"></label>
+                <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select js-select2" id="CreateTerminalId">
+                    <option value="">-- Select Terminal --</option>
+                </select>
+                <span asp-validation-for="TerminalId" class="text-danger small"></span>
+            </div>
+
+            <!-- References -->
+            <div class="col-12 col-md-6">
+                <label asp-for="COSNumber" class="form-label fw-bold small"></label>
+                <input asp-for="COSNumber" class="form-control form-control-sm" placeholder="Optional" />
+                <span asp-validation-for="COSNumber" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label asp-for="VoyageNumber" class="form-label fw-bold small"></label>
+                <input asp-for="VoyageNumber" class="form-control form-control-sm" placeholder="Optional" />
+                <span asp-validation-for="VoyageNumber" class="text-danger small"></span>
+            </div>
+
+            <!-- Remarks -->
+            <div class="col-12">
+                <label asp-for="Remarks" class="form-label fw-bold small"></label>
+                <textarea asp-for="Remarks" class="form-control form-control-sm" rows="3"></textarea>
+                <span asp-validation-for="Remarks" class="text-danger small"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i>Create Job Order
+        </button>
+    </div>
+</form>

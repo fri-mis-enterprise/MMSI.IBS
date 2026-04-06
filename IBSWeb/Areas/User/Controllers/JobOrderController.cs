@@ -44,6 +44,14 @@ namespace IBSWeb.Areas.User.Controllers
 
             var jobOrders = await _unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
 
+            // Populate create modal view model if user has create access
+            if (await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.CreateJobOrder))
+            {
+                var createViewModel = new JobOrderViewModel();
+                await PopulateSelectListsAsync(createViewModel, cancellationToken);
+                ViewBag.CreateViewModel = createViewModel;
+            }
+
             return View(jobOrders
                 .OrderByDescending(j => j.JobOrderNumber)
                 .ToList());
@@ -54,18 +62,15 @@ namespace IBSWeb.Areas.User.Controllers
         #region Create
 
         [HttpGet]
-        public async Task<IActionResult> Create(CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateModal(CancellationToken cancellationToken)
         {
             if (!await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.CreateJobOrder))
-            {
-                TempData["error"] = "Access denied. You don't have permission to create Job Orders.";
-                return RedirectToAction("Index", "Home", new { area = "User" });
-            }
+                return PartialView("_ErrorModal", new { message = "You don't have permission to create Job Orders." });
 
             var viewModel = new JobOrderViewModel();
             await PopulateSelectListsAsync(viewModel, cancellationToken);
 
-            return View(viewModel);
+            return PartialView("_CreateModal", viewModel);
         }
 
         [HttpPost]
@@ -81,7 +86,7 @@ namespace IBSWeb.Areas.User.Controllers
             if (!ModelState.IsValid)
             {
                 await PopulateSelectListsAsync(viewModel, cancellationToken);
-                return View(viewModel);
+                return PartialView("_CreateModal", viewModel);
             }
 
             try
@@ -114,7 +119,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 TempData["success"] = "Job Order created successfully.";
-                return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
+                return Json(new { success = true, redirectUrl = Url.Action("Details", new { id = jobOrder.JobOrderId }) });
             }
             catch (Exception ex)
             {
@@ -123,7 +128,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             await PopulateSelectListsAsync(viewModel, cancellationToken);
-            return View(viewModel);
+            return PartialView("_CreateModal", viewModel);
         }
 
         #endregion
