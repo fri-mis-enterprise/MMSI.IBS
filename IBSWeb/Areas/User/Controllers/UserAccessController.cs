@@ -7,6 +7,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +15,7 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
+    [Authorize(Roles = "Admin")]
     public class UserAccessController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
