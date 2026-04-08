@@ -14,6 +14,7 @@ using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Enum = System.Enum;
 
 namespace IBS.DataAccess.Repository
 {
@@ -122,7 +123,7 @@ namespace IBS.DataAccess.Repository
         public IDispatchTicketRepository DispatchTicket { get; private set; }
         public IBillingRepository Billing { get; private set; }
         public ICollectionRepository Collection { get; private set; }
-        public IMMSIReportRepository MMSIReport { get; private set; }
+        public IReportRepository Report { get; private set; }
         public ITariffTableRepository TariffTable { get; private set; }
         public IPortRepository Port { get; private set; }
         public IPrincipalRepository Principal { get; private set; }
@@ -171,7 +172,7 @@ namespace IBS.DataAccess.Repository
             Collection = new CollectionRepository(_db);
             DispatchTicket = new DispatchTicketRepository(_db);
             JobOrder = new JobOrderRepository(_db);
-            MMSIReport = new MMSIReportRepository(_db);
+            Report = new ReportRepository(_db);
             Msap = new MsapRepository(_db);
             Port = new PortRepository(_db);
             Principal = new PrincipalRepository(_db);

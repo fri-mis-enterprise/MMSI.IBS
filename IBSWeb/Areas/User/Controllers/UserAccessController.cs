@@ -41,7 +41,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            MMSIUserAccess model = new MMSIUserAccess
+            UserAccess model = new UserAccess
             {
                 Users = await _unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken)
             };
@@ -50,7 +50,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIUserAccess model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(UserAccess model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -110,7 +110,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIUserAccess model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(UserAccess model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {

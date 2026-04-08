@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class DispatchTicketRepository : Repository<MMSIDispatchTicket>, IDispatchTicketRepository
+    public class DispatchTicketRepository : Repository<DispatchTicket>, IDispatchTicketRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -22,9 +22,9 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<MMSIDispatchTicket>> GetAllAsync(Expression<Func<MMSIDispatchTicket, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<DispatchTicket>> GetAllAsync(Expression<Func<DispatchTicket, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIDispatchTicket> query = dbSet
+            IQueryable<DispatchTicket> query = dbSet
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t!.Port)
                 .Include(a => a.Tugboat)
@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<MMSIDispatchTicket?> GetAsync(Expression<Func<MMSIDispatchTicket, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<DispatchTicket?> GetAsync(Expression<Func<DispatchTicket, bool>> filter, CancellationToken cancellationToken = default)
         {
             var model =  await dbSet.Where(filter)
                 .Include(a => a.Service)
@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return model;
         }
 
-        public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
+        public async Task<DispatchTicket> GetDispatchTicketLists(DispatchTicket model, CancellationToken cancellationToken = default)
         {
             model.Services = await GetMMSIActivitiesServicesById(cancellationToken);
             model.Ports = await GetMMSIPortsById(cancellationToken);
@@ -96,7 +96,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return ports;
         }
 
-        private async Task<List<SelectListItem>> GetMMSITerminalsById(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetMMSITerminalsById(DispatchTicket model, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> terminals;
 

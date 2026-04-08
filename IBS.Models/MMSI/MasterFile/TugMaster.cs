@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.MMSI.MasterFile
 {
-    public class MMSITugMaster
+    public class TugMaster
     {
         [Key]
         public int TugMasterId { get; set; }

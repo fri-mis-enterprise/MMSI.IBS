@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            MMSITerminal model = new()
+            Terminal model = new()
             {
                 Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSITerminal model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(Terminal model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -120,7 +120,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSITerminal model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(Terminal model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {

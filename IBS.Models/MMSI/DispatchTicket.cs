@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI
 {
-    public class MMSIDispatchTicket
+    public class DispatchTicket
     {
         [Key]
         public int DispatchTicketId { get; set; }
@@ -152,11 +152,11 @@ namespace IBS.Models.MMSI
 
         public int? JobOrderId { get; set; }
         [ForeignKey(nameof(JobOrderId))]
-        public MMSIJobOrder? JobOrder { get; set; }
+        public JobOrder? JobOrder { get; set; }
 
         public int? BillingId { get; set; }
         [ForeignKey(nameof(BillingId))]
-        public MMSIBilling? Billing { get; set; }
+        public Billing? Billing { get; set; }
 
         public string? BillingNumber { get; set; }
 
@@ -168,23 +168,23 @@ namespace IBS.Models.MMSI
 
         public int? TugBoatId { get; set; }
         [ForeignKey(nameof(TugBoatId))]
-        public MMSITugboat? Tugboat { get; set; } //carries the columns of one record
+        public Tugboat? Tugboat { get; set; } //carries the columns of one record
 
         public int? TugMasterId { get; set; }
         [ForeignKey(nameof(TugMasterId))]
-        public MMSITugMaster? TugMaster { get; set; } //carries the columns of one record
+        public TugMaster? TugMaster { get; set; } //carries the columns of one record
 
         public int? VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
-        public MMSIVessel? Vessel { get; set; } //carries the columns of one record
+        public Vessel? Vessel { get; set; } //carries the columns of one record
 
         public int? TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
-        public MMSITerminal? Terminal { get; set; } //carries the columns of one record
+        public Terminal? Terminal { get; set; } //carries the columns of one record
 
         public int? ServiceId { get; set; }
         [ForeignKey(nameof(ServiceId))]
-        public MMSIService? Service { get; set; } //carries the columns of one record
+        public Service? Service { get; set; } //carries the columns of one record
 
         #endregion ---Columns with Table relations---
 

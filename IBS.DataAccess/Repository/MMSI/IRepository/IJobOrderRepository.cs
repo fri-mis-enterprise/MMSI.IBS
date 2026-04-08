@@ -3,10 +3,10 @@ using IBS.Models.MMSI;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface IJobOrderRepository : IRepository<MMSIJobOrder>
+    public interface IJobOrderRepository : IRepository<JobOrder>
     {
-        Task<IEnumerable<MMSIJobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken);
-        Task<MMSIJobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<JobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken);
+        Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken);
         Task<string> GenerateJobOrderNumber(CancellationToken cancellationToken);
     }
 }

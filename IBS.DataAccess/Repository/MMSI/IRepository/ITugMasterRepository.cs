@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface ITugMasterRepository : IRepository<MMSITugMaster>
+    public interface ITugMasterRepository : IRepository<TugMaster>
     {
         Task SaveAsync(CancellationToken cancellationToken);
 

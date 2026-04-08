@@ -229,9 +229,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public MMSIBilling CreateBillingVmToBillingModel(CreateBillingViewModel viewModel)
+        public Billing CreateBillingVmToBillingModel(CreateBillingViewModel viewModel)
         {
-            var model = new MMSIBilling
+            var model = new Billing
             {
                 Date = viewModel.Date,
                 IsUndocumented = viewModel.IsUndocumented,
@@ -261,7 +261,7 @@ namespace IBSWeb.Areas.User.Controllers
             return model;
         }
 
-        public CreateBillingViewModel BillingModelToCreateBillingVm(MMSIBilling model)
+        public CreateBillingViewModel BillingModelToCreateBillingVm(Billing model)
         {
             var viewModel = new CreateBillingViewModel
             {
@@ -897,7 +897,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
         {
             var listToReturn = await _unitOfWork.Billing.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
-            IEnumerable<MMSIDispatchTicket>? billedTickets = null;
+            IEnumerable<DispatchTicket>? billedTickets = null;
 
             if (billingId != 0)
             {

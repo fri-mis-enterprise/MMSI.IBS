@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.MMSI.MasterFile
 {
-    public class MMSIService
+    public class Service
     {
         [Key]
         public int ServiceId { get; set; }

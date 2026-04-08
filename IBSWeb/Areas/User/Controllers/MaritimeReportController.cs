@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var salesReport = await _unitOfWork.MMSIReport.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
+                var salesReport = await _unitOfWork.Report.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (salesReport.Count == 0)
                 {

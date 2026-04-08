@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSITugboatOwner model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(TugboatOwner model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -105,7 +105,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSITugboatOwner model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(TugboatOwner model, CancellationToken cancellationToken)
         {
             var currentModel = await _unitOfWork.TugboatOwner.GetAsync(t => t.TugboatOwnerId == model.TugboatOwnerId, cancellationToken);
 

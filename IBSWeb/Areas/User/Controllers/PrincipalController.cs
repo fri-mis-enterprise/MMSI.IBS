@@ -48,7 +48,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var model = new MMSIPrincipal
+            var model = new Principal
             {
                 CustomerSelectList = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
             };
@@ -56,7 +56,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIPrincipal model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(Principal model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -126,7 +126,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIPrincipal model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(Principal model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {

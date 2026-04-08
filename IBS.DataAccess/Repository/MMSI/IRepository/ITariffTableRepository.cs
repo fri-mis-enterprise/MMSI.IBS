@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface ITariffTableRepository : IRepository<MMSITariffRate>
+    public interface ITariffTableRepository : IRepository<TariffRate>
     {
         Task SaveAsync(CancellationToken cancellationToken);
     }

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI.MasterFile
 {
-    public class MMSIUserAccess
+    public class UserAccess
     {
         [Key]
         public int Id { get; set; }

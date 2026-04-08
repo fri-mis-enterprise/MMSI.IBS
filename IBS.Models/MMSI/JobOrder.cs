@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI
 {
-    public class MMSIJobOrder : BaseEntity
+    public class JobOrder : BaseEntity
     {
         [Key]
         public int JobOrderId { get; set; }
@@ -38,19 +38,19 @@ namespace IBS.Models.MMSI
 
         public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
-        public MMSIVessel? Vessel { get; set; }
+        public Vessel? Vessel { get; set; }
 
         public int? PortId { get; set; }
         [ForeignKey(nameof(PortId))]
-        public MMSIPort? Port { get; set; }
+        public Port? Port { get; set; }
 
         public int? TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
-        public MMSITerminal? Terminal { get; set; }
+        public Terminal? Terminal { get; set; }
 
         #endregion
 
-        public virtual ICollection<MMSIDispatchTicket> DispatchTickets { get; set; } = new List<MMSIDispatchTicket>();
+        public virtual ICollection<DispatchTicket> DispatchTickets { get; set; } = new List<DispatchTicket>();
 
         #region ---Select Lists (Not Mapped)---
 

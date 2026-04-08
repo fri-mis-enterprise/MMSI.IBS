@@ -16,7 +16,7 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class JobOrderController : MmsiBaseController
+    public class JobOrderController : BaseController
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<JobOrderController> _logger;
@@ -93,7 +93,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var currentUser = await GetCurrentUserAsync();
 
-                var jobOrder = new MMSIJobOrder
+                var jobOrder = new JobOrder
                 {
                     Date           = viewModel.Date,
                     CustomerId     = viewModel.CustomerId,
@@ -627,7 +627,7 @@ namespace IBSWeb.Areas.User.Controllers
             await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
         }
 
-        private static JobOrderViewModel MapToViewModel(MMSIJobOrder jobOrder) => new()
+        private static JobOrderViewModel MapToViewModel(JobOrder jobOrder) => new()
         {
             JobOrderId     = jobOrder.JobOrderId,
             JobOrderNumber = jobOrder.JobOrderNumber,

@@ -1843,7 +1843,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("log_messages", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIBilling", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.Billing", b =>
                 {
                     b.Property<int>("MMSIBillingId")
                         .ValueGeneratedOnAdd()
@@ -2041,7 +2041,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_billings", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.Collection", b =>
                 {
                     b.Property<int>("MMSICollectionId")
                         .ValueGeneratedOnAdd()
@@ -2219,7 +2219,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_collections", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIDispatchTicket", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.DispatchTicket", b =>
                 {
                     b.Property<int>("DispatchTicketId")
                         .ValueGeneratedOnAdd()
@@ -2453,7 +2453,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_dispatch_tickets", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIJobOrder", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.JobOrder", b =>
                 {
                     b.Property<int>("JobOrderId")
                         .ValueGeneratedOnAdd()
@@ -2566,7 +2566,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_job_orders", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.TariffRate", b =>
                 {
                     b.Property<int>("TariffRateId")
                         .ValueGeneratedOnAdd()
@@ -2638,7 +2638,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_tariff_rates", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPort", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Port", b =>
                 {
                     b.Property<int>("PortId")
                         .ValueGeneratedOnAdd()
@@ -2667,7 +2667,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_ports", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPrincipal", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Principal", b =>
                 {
                     b.Property<int>("PrincipalId")
                         .ValueGeneratedOnAdd()
@@ -2743,7 +2743,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_principals", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIService", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Service", b =>
                 {
                     b.Property<int>("ServiceId")
                         .ValueGeneratedOnAdd()
@@ -2770,7 +2770,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_services", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITerminal", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Terminal", b =>
                 {
                     b.Property<int>("TerminalId")
                         .ValueGeneratedOnAdd()
@@ -2802,7 +2802,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_terminals", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugMaster", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.TugMaster", b =>
                 {
                     b.Property<int>("TugMasterId")
                         .ValueGeneratedOnAdd()
@@ -2833,7 +2833,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_tug_masters", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboat", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Tugboat", b =>
                 {
                     b.Property<int>("TugboatId")
                         .ValueGeneratedOnAdd()
@@ -2871,7 +2871,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_tugboats", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboatOwner", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.TugboatOwner", b =>
                 {
                     b.Property<int>("TugboatOwnerId")
                         .ValueGeneratedOnAdd()
@@ -2902,7 +2902,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_tugboat_owners", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIUserAccess", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.UserAccess", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3002,7 +3002,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_user_accesses", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIVessel", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Vessel", b =>
                 {
                     b.Property<int>("VesselId")
                         .ValueGeneratedOnAdd()
@@ -4604,9 +4604,9 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Hauler");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIBilling", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.Billing", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MMSICollection", "Collection")
+                    b.HasOne("IBS.Models.MMSI.Collection", "Collection")
                         .WithMany("PaidBills")
                         .HasForeignKey("CollectionId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -4617,22 +4617,22 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("CustomerId")
                         .HasConstraintName("fk_mmsi_billings_customers_customer_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Port", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
                         .HasConstraintName("fk_mmsi_billings_mmsi_ports_port_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPrincipal", "Principal")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Principal", "Principal")
                         .WithMany()
                         .HasForeignKey("PrincipalId")
                         .HasConstraintName("fk_mmsi_billings_mmsi_principals_principal_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Terminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
                         .HasConstraintName("fk_mmsi_billings_mmsi_terminals_terminal_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Vessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
                         .HasConstraintName("fk_mmsi_billings_mmsi_vessels_vessel_id");
@@ -4650,7 +4650,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Vessel");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.Collection", b =>
                 {
                     b.HasOne("IBS.Models.MasterFile.BankAccount", "BankAccount")
                         .WithMany()
@@ -4669,9 +4669,9 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIDispatchTicket", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.DispatchTicket", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MMSIBilling", "Billing")
+                    b.HasOne("IBS.Models.MMSI.Billing", "Billing")
                         .WithMany()
                         .HasForeignKey("BillingId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_billings_billing_id");
@@ -4681,32 +4681,32 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("CustomerId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_customers_customer_id");
 
-                    b.HasOne("IBS.Models.MMSI.MMSIJobOrder", "JobOrder")
+                    b.HasOne("IBS.Models.MMSI.JobOrder", "JobOrder")
                         .WithMany("DispatchTickets")
                         .HasForeignKey("JobOrderId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_job_orders_job_order_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIService", "Service")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Service", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_services_service_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Terminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_terminals_terminal_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugboat", "Tugboat")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Tugboat", "Tugboat")
                         .WithMany()
                         .HasForeignKey("TugBoatId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tugboats_tug_boat_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugMaster", "TugMaster")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.TugMaster", "TugMaster")
                         .WithMany()
                         .HasForeignKey("TugMasterId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tug_masters_tug_master_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Vessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_vessels_vessel_id");
@@ -4728,7 +4728,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Vessel");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIJobOrder", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.JobOrder", b =>
                 {
                     b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
                         .WithMany()
@@ -4737,17 +4737,17 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_job_orders_customers_customer_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Port", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
                         .HasConstraintName("fk_mmsi_job_orders_mmsi_ports_port_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Terminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
                         .HasConstraintName("fk_mmsi_job_orders_mmsi_terminals_terminal_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Vessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4763,7 +4763,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Vessel");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.TariffRate", b =>
                 {
                     b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
                         .WithMany()
@@ -4772,14 +4772,14 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_tariff_rates_customers_customer_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIService", "Service")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Service", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_tariff_rates_mmsi_services_service_id");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Terminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4793,7 +4793,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Terminal");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPrincipal", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Principal", b =>
                 {
                     b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
                         .WithMany()
@@ -4805,9 +4805,9 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITerminal", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Terminal", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Port", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4817,9 +4817,9 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Port");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboat", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Tugboat", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugboatOwner", "TugboatOwner")
+                    b.HasOne("IBS.Models.MMSI.MasterFile.TugboatOwner", "TugboatOwner")
                         .WithMany()
                         .HasForeignKey("TugboatOwnerId")
                         .HasConstraintName("fk_mmsi_tugboats_mmsi_tugboat_owners_tugboat_owner_id");
@@ -4978,12 +4978,12 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("DeliveryReceipts");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.Collection", b =>
                 {
                     b.Navigation("PaidBills");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MMSIJobOrder", b =>
+            modelBuilder.Entity("IBS.Models.MMSI.JobOrder", b =>
                 {
                     b.Navigation("DispatchTickets");
                 });

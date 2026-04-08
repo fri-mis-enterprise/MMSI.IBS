@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class PortRepository : Repository<MMSIPort>, IPortRepository
+    public class PortRepository : Repository<Port>, IPortRepository
     {
         private readonly ApplicationDbContext _db;
 

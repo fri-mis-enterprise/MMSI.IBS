@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TariffTableRepository : Repository<MMSITariffRate>, ITariffTableRepository
+    public class TariffTableRepository : Repository<TariffRate>, ITariffTableRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.MMSI
             _db = db;
         }
 
-        public override async Task<MMSITariffRate?> GetAsync(Expression<Func<MMSITariffRate, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<TariffRate?> GetAsync(Expression<Func<TariffRate, bool>> filter, CancellationToken cancellationToken = default)
         {
             var model =  await dbSet
                 .Include(t => t.Terminal).ThenInclude(t => t!.Port)
@@ -28,9 +28,9 @@ namespace IBS.DataAccess.Repository.MMSI
             return model;
         }
 
-        public override async Task<IEnumerable<MMSITariffRate>> GetAllAsync(Expression<Func<MMSITariffRate, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<TariffRate>> GetAllAsync(Expression<Func<TariffRate, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSITariffRate> query = dbSet
+            IQueryable<TariffRate> query = dbSet
                 .Include(t => t.Customer)
                 .Include(t => t.Terminal).ThenInclude(t => t!.Port)
                 .Include(t => t.Service);

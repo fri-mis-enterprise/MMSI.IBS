@@ -54,13 +54,13 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var model = new MMSITariffRate();
+            var model = new TariffRate();
             model = await GetSelectLists(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSITariffRate model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(TariffRate model, CancellationToken cancellationToken = default)
         {
             model = await GetSelectLists(model, cancellationToken);
             if (!ModelState.IsValid)
@@ -135,7 +135,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSITariffRate model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(TariffRate model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -188,7 +188,7 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(terminalsList);
         }
 
-        public async Task<MMSITariffRate> GetSelectLists(MMSITariffRate model, CancellationToken cancellationToken = default)
+        public async Task<TariffRate> GetSelectLists(TariffRate model, CancellationToken cancellationToken = default)
         {
             var companyClaims = await GetCompanyClaimAsync();
             model.Customers = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);

@@ -29,19 +29,19 @@ namespace IBS.Models.MMSI.ViewModels
 
         public int? PrincipalId { get; set; }
         [ForeignKey(nameof(PrincipalId))]
-        public MMSIPrincipal? Principal { get; set; }
+        public Principal? Principal { get; set; }
 
         public int? VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
-        public MMSIVessel? Vessel { get; set; }
+        public Vessel? Vessel { get; set; }
 
         public int? PortId { get; set; }
         [ForeignKey(nameof(PortId))]
-        public MMSIPort? Port { get; set; }
+        public Port? Port { get; set; }
 
         public int? TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
-        public MMSITerminal? Terminal { get; set; }
+        public Terminal? Terminal { get; set; }
 
         public decimal ApOtherTug { get; set; }
 
@@ -66,12 +66,12 @@ namespace IBS.Models.MMSI.ViewModels
         public List<string>? ToBillDispatchTickets { get; set; }
 
         [NotMapped]
-        public List<MMSIDispatchTicket>? PaidDispatchTickets { get; set; }
+        public List<DispatchTicket>? PaidDispatchTickets { get; set; }
 
         public int? CollectionId { get; set; }
 
         [NotMapped]
-        public MMSICollection? Collection { get; set; }
+        public Collection? Collection { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CustomerPrincipal { get; set; }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class ServiceRequestRepository : Repository<MMSIDispatchTicket>, IServiceRequestRepository
+    public class ServiceRequestRepository : Repository<DispatchTicket>, IServiceRequestRepository
     {
         private readonly ApplicationDbContext _db;
 

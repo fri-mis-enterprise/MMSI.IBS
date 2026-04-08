@@ -47,6 +47,6 @@ namespace IBS.Models.MMSI.ViewModels
         public List<SelectListItem>? Ports { get; set; }
         public List<SelectListItem>? Terminals { get; set; }
         
-        public List<MMSIDispatchTicket> DispatchTickets { get; set; } = new();
+        public List<DispatchTicket> DispatchTickets { get; set; } = new();
     }
 }

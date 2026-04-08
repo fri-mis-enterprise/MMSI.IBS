@@ -22,7 +22,7 @@ using System.Text;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class MsapImportController : MmsiBaseController
+    public class MsapImportController : BaseController
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
@@ -361,7 +361,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(c => c.PortNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
-            var newRecords = new List<MMSIPort>();
+            var newRecords = new List<Port>();
             using var reader = new StreamReader(portCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -375,7 +375,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSIPort newRecord = new MMSIPort();
+                Port newRecord = new Port();
                 newRecord.PortNumber = padded;
                 newRecord.PortName = GetString(record, "name");
 
@@ -397,7 +397,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(p => new { p.PortId, p.PortNumber }).ToList();
 
             var currentBatch = new HashSet<object>();
-            var newRecords = new List<MMSITerminal>();
+            var newRecords = new List<Terminal>();
             using var reader = new StreamReader(terminalCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -419,7 +419,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSITerminal newRecord = new MMSITerminal();
+                Terminal newRecord = new Terminal();
                 var port = existingPorts.FirstOrDefault(p => p.PortNumber == paddedPortNumber);
                 if (port == null) { continue; }
                 newRecord.PortId = port.PortId;
@@ -443,7 +443,7 @@ namespace IBSWeb.Areas.User.Controllers
             var mmsiCustomers = await _unitOfWork.Customer
                 .GetAllAsync(c => c.Company == "MMSI", cancellationToken);
 
-            var newRecords = new List<MMSIPrincipal>();
+            var newRecords = new List<Principal>();
             using var reader = new StreamReader(principalCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -489,7 +489,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSIPrincipal newRecord = new MMSIPrincipal();
+                Principal newRecord = new Principal();
 
                 switch (GetString(record, "terms"))
                 {
@@ -532,7 +532,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(c => c.ServiceNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
-            var newRecords = new List<MMSIService>();
+            var newRecords = new List<Service>();
             using var reader = new StreamReader(serviceCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -546,7 +546,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSIService newRecord = new MMSIService();
+                Service newRecord = new Service();
                 newRecord.ServiceNumber = padded;
                 newRecord.ServiceName = GetString(record, "desc") ?? "UNKNOWN";
 
@@ -567,7 +567,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(c => new { c.TugboatOwnerId, c.TugboatOwnerNumber }).ToList();
 
             var currentBatch = new HashSet<string>();
-            var newRecords = new List<MMSITugboat>();
+            var newRecords = new List<Tugboat>();
             using var reader = new StreamReader(tugboatCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -584,7 +584,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSITugboat newRecord = new MMSITugboat();
+                Tugboat newRecord = new Tugboat();
                 if (owner != null) newRecord.TugboatOwnerId = owner.TugboatOwnerId;
                 newRecord.TugboatNumber = padded;
                 newRecord.TugboatName = GetString(record, "name") ?? "UNKNOWN";
@@ -605,7 +605,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(c => c.TugboatOwnerNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
-            var newRecords = new List<MMSITugboatOwner>();
+            var newRecords = new List<TugboatOwner>();
             using var reader = new StreamReader(tugboatOwnerCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -619,7 +619,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSITugboatOwner newRecord = new MMSITugboatOwner();
+                TugboatOwner newRecord = new TugboatOwner();
                 newRecord.TugboatOwnerNumber = padded;
                 newRecord.TugboatOwnerName = GetString(record, "name") ?? "UNKNOWN";
 
@@ -638,7 +638,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(c => c.TugMasterNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
-            var newRecords = new List<MMSITugMaster>();
+            var newRecords = new List<TugMaster>();
             using var reader = new StreamReader(tugMasterCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -651,7 +651,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSITugMaster newRecord = new MMSITugMaster();
+                TugMaster newRecord = new TugMaster();
                 newRecord.TugMasterNumber = empNo;
                 newRecord.TugMasterName = GetString(record, "name") ?? "UNKNOWN";
                 newRecord.IsActive = ParseBool(record, "active");
@@ -671,7 +671,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(c => c.VesselNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
-            var newRecords = new List<MMSIVessel>();
+            var newRecords = new List<Vessel>();
             using var reader = new StreamReader(vesselCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSIVessel newRecord = new MMSIVessel();
+                Vessel newRecord = new Vessel();
                 newRecord.VesselNumber = padded;
                 newRecord.VesselName = GetString(record, "name") ?? "UNKNOWN";
                 newRecord.VesselType = GetString(record, "type") == "L" ? "LOCAL" : "FOREIGN";
@@ -736,7 +736,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .ToListAsync(cancellationToken);
 
             var currentBatch = new HashSet<object>();
-            var newRecords = new List<MMSITariffRate>();
+            var newRecords = new List<TariffRate>();
 
             foreach (var record in records)
             {
@@ -778,7 +778,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSITariffRate newRecord = new MMSITariffRate();
+                TariffRate newRecord = new TariffRate();
                 newRecord.CustomerId = customer.CustomerId;
                 newRecord.TerminalId = terminal.TerminalId;
                 newRecord.ServiceId = service.ServiceId;
@@ -851,7 +851,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .ToListAsync(cancellationToken);
 
             var currentBatch = new HashSet<object>();
-            var newRecords = new List<MMSIDispatchTicket>();
+            var newRecords = new List<DispatchTicket>();
 
             using var reader = new StreamReader(dispatchTicketCSVPath);
             using var csv = new CsvReader(reader, _csvConfig);
@@ -875,7 +875,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSIDispatchTicket newRecord = new MMSIDispatchTicket();
+                DispatchTicket newRecord = new DispatchTicket();
 
                 string portTerminalOriginal = GetString(record, "terminal") ?? string.Empty;
                 string portNumber = string.Empty;
@@ -995,7 +995,7 @@ namespace IBSWeb.Areas.User.Controllers
             using var csv = new CsvReader(reader, _csvConfig);
 
             var records = csv.GetRecords<dynamic>().ToList();
-            var newRecords = new List<MMSIBilling>();
+            var newRecords = new List<Billing>();
 
             var existingIdentifier = await _dbContext.MMSIBillings
                 .AsNoTracking()
@@ -1049,7 +1049,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var vessel = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum);
                 if (vessel == null) continue;
 
-                MMSIBilling newRecord = new MMSIBilling();
+                Billing newRecord = new Billing();
                 newRecord.VesselId = vessel.VesselId;
 
                 string? custNo = GetString(record, "custno");
@@ -1155,7 +1155,7 @@ namespace IBSWeb.Areas.User.Controllers
             using var csv = new CsvReader(reader, _csvConfig);
 
             var records = csv.GetRecords<dynamic>().ToList();
-            var newRecords = new List<MMSICollection>();
+            var newRecords = new List<Collection>();
 
             var existingIdentifier = await _dbContext.MMSICollections
                 .AsNoTracking()
@@ -1177,7 +1177,7 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                MMSICollection newRecord = new MMSICollection();
+                Collection newRecord = new Collection();
                 string? custNo = GetString(record, "custno");
                 var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == custNo);
                 if (msapCustomer == null) continue;

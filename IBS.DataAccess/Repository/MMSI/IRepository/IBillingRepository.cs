@@ -6,17 +6,17 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface IBillingRepository : IRepository<MMSIBilling>
+    public interface IBillingRepository : IRepository<Billing>
     {
         Task SaveAsync(CancellationToken cancellationToken);
 
-        Task PostAsync(MMSIBilling billing, CancellationToken cancellationToken = default);
+        Task PostAsync(Billing billing, CancellationToken cancellationToken = default);
 
         Task<List<string>?> GetToBillDispatchTicketListAsync(int billingId, CancellationToken cancellationToken = default);
 
         Task<List<string>?> GetUniqueTugboatsListAsync(int billingId, CancellationToken cancellationToken = default);
 
-        Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default);
+        Task<List<DispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken = default);
 
@@ -30,6 +30,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default);
 
-        MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default);
+        Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default);
     }
 }

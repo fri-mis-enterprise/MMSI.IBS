@@ -10,7 +10,7 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class BillingRepository : Repository<MMSIBilling>, IBillingRepository
+    public class BillingRepository : Repository<Billing>, IBillingRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -24,7 +24,7 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task PostAsync(MMSIBilling billing, CancellationToken cancellationToken = default)
+        public async Task PostAsync(Billing billing, CancellationToken cancellationToken = default)
         {
             #region --Sales Book Recording
 
@@ -64,9 +64,9 @@ namespace IBS.DataAccess.Repository.MMSI
             #endregion --Sales Book Recording
         }
 
-        public override async Task<IEnumerable<MMSIBilling>> GetAllAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<Billing>> GetAllAsync(Expression<Func<Billing, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIBilling> query = dbSet
+            IQueryable<Billing> query = dbSet
                 .Include(a => a.Terminal)
                 .Include(a => a.Vessel)
                 .Include(a => a.Customer)
@@ -80,9 +80,9 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<MMSIBilling?> GetAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<Billing?> GetAsync(Expression<Func<Billing, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIBilling> query = dbSet
+            IQueryable<Billing> query = dbSet
                 .Include(b => b.Terminal)
                 .ThenInclude(t => t!.Port)
                 .Include(b => b.Vessel)
@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default)
+        public async Task<List<DispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default)
         {
             return await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == billingId)
@@ -227,7 +227,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return "BL" + (parsed.ToString("D8"));
         }
 
-        public MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
+        public Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default)
         {
             // Splitting the address for the view
             var words = model.PrincipalId != null

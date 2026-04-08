@@ -81,7 +81,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IDispatchTicketRepository DispatchTicket { get; }
         IBillingRepository Billing { get; }
         ICollectionRepository Collection { get; }
-        IMMSIReportRepository MMSIReport { get; }
+        IReportRepository Report { get; }
         MMSI.IRepository.IServiceRepository Service { get; }
         ITariffTableRepository TariffTable { get; }
         IPortRepository Port { get; }

@@ -1324,7 +1324,7 @@ namespace IBSWeb.Areas.User.Controllers
             viewModel.Date         = jobOrder.Date;
 
             if (jobOrder.TerminalId.HasValue)
-                viewModel.Terminal = new MMSITerminal { PortId = jobOrder.PortId ?? 0 };
+                viewModel.Terminal = new Terminal { PortId = jobOrder.PortId ?? 0 };
 
             return viewModel;
         }
@@ -1333,7 +1333,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// FIX: Hours calculation (including PHIL-CEB rounding) was duplicated
         /// verbatim in Create POST and EditTicket POST. Extracted here.
         /// </summary>
-        private static decimal CalculateTotalHours(MMSIDispatchTicket model)
+        private static decimal CalculateTotalHours(DispatchTicket model)
         {
             var dateTimeLeft    = model.DateLeft!.Value.ToDateTime(model.TimeLeft!.Value);
             var dateTimeArrived = model.DateArrived!.Value.ToDateTime(model.TimeArrived!.Value);
@@ -1360,7 +1360,7 @@ namespace IBSWeb.Areas.User.Controllers
             string username, string company, string activity, string documentType) =>
             new AuditTrail(username, activity, documentType, company);
 
-        private async Task GenerateSignedUrl(MMSIDispatchTicket model)
+        private async Task GenerateSignedUrl(DispatchTicket model)
         {
             if (!string.IsNullOrWhiteSpace(model.ImageName))
                 model.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(model.ImageName);
@@ -1437,7 +1437,7 @@ namespace IBSWeb.Areas.User.Controllers
         //      Changed to private static; they don't touch any instance state.
         // ════════════════════════════════════════════════════════════════════════
 
-        private static MMSIDispatchTicket ServiceRequestVmToDispatchTicket(ServiceRequestViewModel vm) =>
+        private static DispatchTicket ServiceRequestVmToDispatchTicket(ServiceRequestViewModel vm) =>
             new()
             {
                 DispatchTicketId = vm.DispatchTicketId ?? 0,
@@ -1463,7 +1463,7 @@ namespace IBSWeb.Areas.User.Controllers
                 JobOrderId         = vm.JobOrderId
             };
 
-        private static MMSIDispatchTicket TariffVmToDispatchTicket(TariffViewModel vm) =>
+        private static DispatchTicket TariffVmToDispatchTicket(TariffViewModel vm) =>
             new()
             {
                 DispatchTicketId       = vm.DispatchTicketId,
@@ -1481,7 +1481,7 @@ namespace IBSWeb.Areas.User.Controllers
                 ApOtherTugs            = vm.ApOtherTugs ?? 0
             };
 
-        private static ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(MMSIDispatchTicket model) =>
+        private static ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(DispatchTicket model) =>
             new()
             {
                 Date             = model.Date,
@@ -1509,7 +1509,7 @@ namespace IBSWeb.Areas.User.Controllers
                 JobOrderId       = model.JobOrderId
             };
 
-        private static TariffViewModel DispatchTicketModelToTariffVm(MMSIDispatchTicket model) =>
+        private static TariffViewModel DispatchTicketModelToTariffVm(DispatchTicket model) =>
             new()
             {
                 DispatchTicketId      = model.DispatchTicketId,

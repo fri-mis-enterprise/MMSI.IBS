@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var tugboat = new MMSITugboat
+            var tugboat = new Tugboat
             {
                 CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken)
             };
@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSITugboat model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(Tugboat model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -124,7 +124,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSITugboat model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(Tugboat model, CancellationToken cancellationToken)
         {
             model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
             if (!ModelState.IsValid)

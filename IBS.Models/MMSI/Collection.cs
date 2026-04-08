@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI
 {
-    public class MMSICollection : BaseEntity
+    public class Collection : BaseEntity
     {
         [Key]
         public int MMSICollectionId { get; set; }
@@ -96,7 +96,7 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(CustomerId))]
         public Customer? Customer { get; set; }
 
-        public List<MMSIBilling>? PaidBills { get; set; }
+        public List<Billing>? PaidBills { get; set; }
 
         #endregion
 

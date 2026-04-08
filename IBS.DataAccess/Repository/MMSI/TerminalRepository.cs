@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TerminalRepository : Repository<MMSITerminal>, ITerminalRepository
+    public class TerminalRepository : Repository<Terminal>, ITerminalRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -23,7 +23,7 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public override async Task<MMSITerminal?> GetAsync(Expression<Func<MMSITerminal, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<Terminal?> GetAsync(Expression<Func<Terminal, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet
                 .Include(t => t.Port)
@@ -31,9 +31,9 @@ namespace IBS.DataAccess.Repository.MMSI
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<MMSITerminal>> GetAllAsync(Expression<Func<MMSITerminal, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<Terminal>> GetAllAsync(Expression<Func<Terminal, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSITerminal> query = dbSet
+            IQueryable<Terminal> query = dbSet
                 .Include(a => a.Port)
                 .OrderBy(t => t.TerminalName);
 
@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSITerminalsById(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSITerminalsById(DispatchTicket model, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> terminals;
 
@@ -90,7 +90,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>?> GetMMSITerminalsSelectList(int? portId, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSITerminal> query = dbSet;
+            IQueryable<Terminal> query = dbSet;
 
             if (portId != 0)
             {

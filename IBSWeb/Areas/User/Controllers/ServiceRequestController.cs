@@ -875,9 +875,9 @@ namespace IBSWeb.Areas.User.Controllers
             throw new Exception("Upload name invalid.");
         }
 
-        public MMSIDispatchTicket ServiceRequestVmToDispatchTicketModel(ServiceRequestViewModel vm)
+        public DispatchTicket ServiceRequestVmToDispatchTicketModel(ServiceRequestViewModel vm)
         {
-            return new MMSIDispatchTicket
+            return new DispatchTicket
             {
                 DispatchTicketId = vm.DispatchTicketId ?? 0,
                 Date = vm.Date,
@@ -902,7 +902,7 @@ namespace IBSWeb.Areas.User.Controllers
             };
         }
 
-        public ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(MMSIDispatchTicket model)
+        public ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(DispatchTicket model)
         {
             var viewModel = new ServiceRequestViewModel
             {

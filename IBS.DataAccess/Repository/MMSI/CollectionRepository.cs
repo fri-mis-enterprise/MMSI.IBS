@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class CollectionRepository : Repository<MMSICollection>, ICollectionRepository
+    public class CollectionRepository : Repository<Collection>, ICollectionRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -27,7 +27,7 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public override async Task<MMSICollection?> GetAsync(Expression<Func<MMSICollection, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<Collection?> GetAsync(Expression<Func<Collection, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(c => c.Customer)
@@ -36,9 +36,9 @@ namespace IBS.DataAccess.Repository.MMSI
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<MMSICollection>> GetAllAsync(Expression<Func<MMSICollection, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<Collection>> GetAllAsync(Expression<Func<Collection, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSICollection> query = dbSet
+            IQueryable<Collection> query = dbSet
                 .Include(c => c.Customer)
                 .Include(c => c.BankAccount);
 
@@ -129,7 +129,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return billingsList;
         }
 
-        public async Task PostAsync(MMSICollection collection, List<Offsettings> offsettings, CancellationToken cancellationToken = default)
+        public async Task PostAsync(Collection collection, List<Offsettings> offsettings, CancellationToken cancellationToken = default)
         {
             var ledgers = new List<GeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
@@ -460,7 +460,7 @@ namespace IBS.DataAccess.Repository.MMSI
             #endregion Cash Receipt Book Recording
         }
 
-        public async Task DepositAsync(MMSICollection collection, CancellationToken cancellationToken = default)
+        public async Task DepositAsync(Collection collection, CancellationToken cancellationToken = default)
         {
             var ledgers = new List<GeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
@@ -545,7 +545,7 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task RedepositAsync(MMSICollection collection, CancellationToken cancellationToken = default)
+        public async Task RedepositAsync(Collection collection, CancellationToken cancellationToken = default)
         {
             // Similar logic to PostAsync but focused on redepositing a previously returned check
             // For now, let's mirror Filpride's RedepositAsync logic

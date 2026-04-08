@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIPort model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(Port model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIPort model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(Port model, CancellationToken cancellationToken)
         {
             var currentModel = await _unitOfWork.Port.GetAsync(p => p.PortId == model.PortId, cancellationToken);
 

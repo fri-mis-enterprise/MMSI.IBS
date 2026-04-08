@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI.MasterFile
 {
-    public class MMSITugboat
+    public class Tugboat
     {
         [Key]
         public int TugboatId { get; set; }
@@ -22,7 +22,7 @@ namespace IBS.Models.MMSI.MasterFile
         public int? TugboatOwnerId { get; set; }
 
         [ForeignKey(nameof(TugboatOwnerId))]
-        public MMSITugboatOwner? TugboatOwner { get; set; }
+        public TugboatOwner? TugboatOwner { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CompanyList { get; set; }

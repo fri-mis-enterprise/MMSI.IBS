@@ -36,7 +36,7 @@ namespace IBS.Models.MMSI.ViewModels
         public int? TerminalId { get; set; }
 
         [ForeignKey(nameof(TerminalId))]
-        public MMSITerminal? Terminal { get; set; }
+        public Terminal? Terminal { get; set; }
 
         public int? PortId { get; set; }
 

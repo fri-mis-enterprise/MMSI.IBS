@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface ICollectionRepository : IRepository<MMSICollection>
+    public interface ICollectionRepository : IRepository<Collection>
     {
         Task SaveAsync(CancellationToken cancellationToken);
 
@@ -24,13 +24,13 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
         Task<string> GenerateCollectionNumber(CancellationToken cancellationToken = default);
 
         // Accounting Methods
-        Task PostAsync(MMSICollection collection, List<Offsettings> offsettings, CancellationToken cancellationToken = default);
+        Task PostAsync(Collection collection, List<Offsettings> offsettings, CancellationToken cancellationToken = default);
 
-        Task DepositAsync(MMSICollection collection, CancellationToken cancellationToken = default);
+        Task DepositAsync(Collection collection, CancellationToken cancellationToken = default);
 
         Task ReturnedCheck(string collectionNo, string company, string userName, CancellationToken cancellationToken = default);
 
-        Task RedepositAsync(MMSICollection collection, CancellationToken cancellationToken = default);
+        Task RedepositAsync(Collection collection, CancellationToken cancellationToken = default);
 
         Task UpdateBillingPayment(int billingId, decimal paidAmount, CancellationToken cancellationToken = default);
 

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class VesselRepository : Repository<MMSIVessel>, IVesselRepository
+    public class VesselRepository : Repository<Vessel>, IVesselRepository
     {
         private readonly ApplicationDbContext _db;
 

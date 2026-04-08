@@ -12,6 +12,7 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Enum = System.Enum;
 
 namespace IBSWeb.Areas.User.Controllers
 {

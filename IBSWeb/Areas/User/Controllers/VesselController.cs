@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIVessel model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(Vessel model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIVessel model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(Vessel model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {

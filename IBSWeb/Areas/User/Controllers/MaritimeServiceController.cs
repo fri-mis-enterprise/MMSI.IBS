@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIService model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(Service model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIService model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(Service model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {

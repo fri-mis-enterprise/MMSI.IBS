@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class ServiceRepository : Repository<MMSIService>, IServiceRepository
+    public class ServiceRepository : Repository<Service>, IServiceRepository
     {
         private readonly ApplicationDbContext _db;
 

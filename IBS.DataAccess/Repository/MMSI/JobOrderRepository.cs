@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class JobOrderRepository : Repository<MMSIJobOrder>, IJobOrderRepository
+    public class JobOrderRepository : Repository<JobOrder>, IJobOrderRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -14,7 +14,7 @@ namespace IBS.DataAccess.Repository.MMSI
             _db = db;
         }
 
-        public async Task<IEnumerable<MMSIJobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<JobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken)
         {
             return await _db.MMSIJobOrders
                 .Include(j => j.Customer)
@@ -25,7 +25,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<MMSIJobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken)
+        public async Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await _db.MMSIJobOrders
                 .Include(j => j.Customer)

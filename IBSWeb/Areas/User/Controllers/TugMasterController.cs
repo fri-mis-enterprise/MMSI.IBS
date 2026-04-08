@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSITugMaster model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(TugMaster model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -109,7 +109,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSITugMaster model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(TugMaster model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {

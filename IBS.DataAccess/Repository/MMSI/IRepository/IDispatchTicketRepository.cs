@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface IDispatchTicketRepository : IRepository<MMSIDispatchTicket>
+    public interface IDispatchTicketRepository : IRepository<DispatchTicket>
     {
         Task SaveAsync(CancellationToken cancellationToken);
 
-        Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default);
+        Task<DispatchTicket> GetDispatchTicketLists(DispatchTicket model, CancellationToken cancellationToken = default);
     }
 }

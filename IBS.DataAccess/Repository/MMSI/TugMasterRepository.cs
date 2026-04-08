@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TugMasterRepository : Repository<MMSITugMaster>, ITugMasterRepository
+    public class TugMasterRepository : Repository<TugMaster>, ITugMasterRepository
     {
         private readonly ApplicationDbContext _db;
 

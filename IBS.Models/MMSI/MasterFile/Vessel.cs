@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.MMSI.MasterFile
 {
-    public class MMSIVessel
+    public class Vessel
     {
         [Key]
         public int VesselId { get; set; }

@@ -79,25 +79,25 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #region --MMSI
-        public DbSet<MMSIBilling> MMSIBillings { get; set; }
-        public DbSet<MMSICollection> MMSICollections { get; set; }
-        public DbSet<MMSIDispatchTicket> MMSIDispatchTickets { get; set; }
-        public DbSet<MMSIJobOrder> MMSIJobOrders { get; set; }
-        public DbSet<MMSITariffRate> MMSITariffRates { get; set; }
+        public DbSet<Billing> MMSIBillings { get; set; }
+        public DbSet<Collection> MMSICollections { get; set; }
+        public DbSet<DispatchTicket> MMSIDispatchTickets { get; set; }
+        public DbSet<JobOrder> MMSIJobOrders { get; set; }
+        public DbSet<TariffRate> MMSITariffRates { get; set; }
 
         #endregion
 
         #region --Master File Entity
 
-        public DbSet<MMSIService> MMSIServices { get; set; }
-        public DbSet<MMSITugboatOwner> MMSITugboatOwners { get; set; }
-        public DbSet<MMSIPort> MMSIPorts { get; set; }
-        public DbSet<MMSIPrincipal> MMSIPrincipals { get; set; }
-        public DbSet<MMSITerminal> MMSITerminals { get; set; }
-        public DbSet<MMSITugboat> MMSITugboats { get; set; }
-        public DbSet<MMSITugMaster> MMSITugMasters { get; set; }
-        public DbSet<MMSIUserAccess> MMSIUserAccesses { get; set; }
-        public DbSet<MMSIVessel> MMSIVessels { get; set; }
+        public DbSet<Service> MMSIServices { get; set; }
+        public DbSet<TugboatOwner> MMSITugboatOwners { get; set; }
+        public DbSet<Port> MMSIPorts { get; set; }
+        public DbSet<Principal> MMSIPrincipals { get; set; }
+        public DbSet<Terminal> MMSITerminals { get; set; }
+        public DbSet<Tugboat> MMSITugboats { get; set; }
+        public DbSet<TugMaster> MMSITugMasters { get; set; }
+        public DbSet<UserAccess> MMSIUserAccesses { get; set; }
+        public DbSet<Vessel> MMSIVessels { get; set; }
 
         #endregion --Master File Entities
 
@@ -367,13 +367,13 @@ namespace IBS.DataAccess.Data
 
             #region --MMSI
 
-            builder.Entity<MMSIBilling>(b =>
+            builder.Entity<Billing>(b =>
             {
                 b.HasIndex(x => new { x.MMSIBillingNumber, x.Company }).IsUnique();
                 b.HasIndex(x => x.Date);
             });
 
-            builder.Entity<MMSICollection>(c =>
+            builder.Entity<Collection>(c =>
             {
                 c.HasIndex(x => new { x.MMSICollectionNumber, x.Company }).IsUnique();
                 c.HasIndex(x => x.Date);

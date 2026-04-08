@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class PrincipalRepository : Repository<MMSIPrincipal>, IPrincipalRepository
+    public class PrincipalRepository : Repository<Principal>, IPrincipalRepository
     {
         private readonly ApplicationDbContext _dbContext;
 
@@ -22,9 +22,9 @@ namespace IBS.DataAccess.Repository.MMSI
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<MMSIPrincipal>> GetAllAsync(Expression<Func<MMSIPrincipal, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<Principal>> GetAllAsync(Expression<Func<Principal, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIPrincipal> query = dbSet.Include(p => p.Customer);
+            IQueryable<Principal> query = dbSet.Include(p => p.Customer);
 
             if (filter != null)
             {

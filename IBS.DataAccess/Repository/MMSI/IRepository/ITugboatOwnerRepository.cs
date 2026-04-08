@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface ITugboatOwnerRepository : IRepository<MMSITugboatOwner>
+    public interface ITugboatOwnerRepository : IRepository<TugboatOwner>
     {
     }
 }

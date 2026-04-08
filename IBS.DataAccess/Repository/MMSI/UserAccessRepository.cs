@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class UserAccessRepository : Repository<MMSIUserAccess>, IUserAccessRepository
+    public class UserAccessRepository : Repository<UserAccess>, IUserAccessRepository
     {
         private readonly ApplicationDbContext _db;
 
@@ -21,9 +21,9 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<MMSIUserAccess>> GetAllAsync(Expression<Func<MMSIUserAccess, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<UserAccess>> GetAllAsync(Expression<Func<UserAccess, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIUserAccess> query = dbSet
+            IQueryable<UserAccess> query = dbSet
                 .OrderBy(ua => ua.UserName);
 
             if (filter != null)

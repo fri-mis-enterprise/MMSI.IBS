@@ -5,7 +5,7 @@ using IBS.Models.MMSI.MasterFile;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TugboatOwnerRepository : Repository<MMSITugboatOwner>, ITugboatOwnerRepository
+    public class TugboatOwnerRepository : Repository<TugboatOwner>, ITugboatOwnerRepository
     {
         private readonly ApplicationDbContext _db;
 

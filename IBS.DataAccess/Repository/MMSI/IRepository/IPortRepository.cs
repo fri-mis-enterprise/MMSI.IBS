@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
-    public interface IPortRepository : IRepository<MMSIPort>
+    public interface IPortRepository : IRepository<Port>
     {
         Task SaveAsync(CancellationToken cancellationToken);
 

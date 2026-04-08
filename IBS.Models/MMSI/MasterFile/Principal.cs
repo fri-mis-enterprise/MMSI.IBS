@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI.MasterFile
 {
-    public class MMSIPrincipal
+    public class Principal
     {
         [Key]
         public int PrincipalId { get; set; }
