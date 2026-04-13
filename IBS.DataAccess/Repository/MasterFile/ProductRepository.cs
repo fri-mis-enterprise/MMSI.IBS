@@ -6,14 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class ProductRepository : Repository<Product>, IProductRepository
+    public class ProductRepository(ApplicationDbContext db): Repository<Product>(db), IProductRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public ProductRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<bool> IsProductExist(string product, CancellationToken cancellationToken = default)
         {

@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.Models;
 
 namespace IBS.DataAccess.Repository.IRepository

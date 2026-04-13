@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Utility.Constants;
@@ -9,25 +8,15 @@ using Quartz;
 
 namespace IBS.Services
 {
-    public class StartOfTheMonthService : IJob
+    public class StartOfTheMonthService(
+        IUnitOfWork unitOfWork,
+        ILogger<StartOfTheMonthService> logger,
+        ApplicationDbContext dbContext)
+        : IJob
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<StartOfTheMonthService> _logger;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        public StartOfTheMonthService(IUnitOfWork unitOfWork,
-            ILogger<StartOfTheMonthService> logger, ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _dbContext = dbContext;
-        }
-
         public async Task Execute(IJobExecutionContext context)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try
             {
@@ -41,7 +30,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                logger.LogError(ex, ex.Message);
                 await transaction.RollbackAsync();
                 throw;
             }
@@ -51,14 +40,14 @@ namespace IBS.Services
         {
             try
             {
-                var hasUnliftedDrs = await _dbContext.DeliveryReceipts
+                var hasUnliftedDrs = await dbContext.DeliveryReceipts
                     .AnyAsync(x => x.Date.Month == previousMonthDate.Month
                                    && x.Date.Year == previousMonthDate.Year
                                    && !x.HasReceivingReport);
 
                 if (hasUnliftedDrs)
                 {
-                    var users = await _dbContext.ApplicationUsers
+                    var users = await dbContext.ApplicationUsers
                         .Where(u => u.Department == SD.Department_TradeAndSupply
                                     || u.Department == SD.Department_ManagementAccounting)
                         .Select(u => u.Id)
@@ -68,9 +57,9 @@ namespace IBS.Services
                                   $"Please ensure the lifting dates for the remaining DRs are recorded to avoid issues during the month-end closing. " +
                                   $"CC: Management Accounting";
 
-                    await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+                    await unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
 
-                    await _dbContext.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
                 }
             }
             catch (Exception ex)

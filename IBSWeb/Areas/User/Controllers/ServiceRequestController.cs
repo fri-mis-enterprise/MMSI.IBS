@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
@@ -24,57 +21,47 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class ServiceRequestController : Controller
+    public class ServiceRequestController(
+        ApplicationDbContext dbContext,
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager,
+        ICloudStorageService cloudStorageService,
+        ILogger<ServiceRequestController> logger,
+        IUserAccessService userAccessService)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ICloudStorageService _cloudStorageService;
-        private readonly IUserAccessService _userAccessService;
-        private readonly ILogger<ServiceRequestController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
-
-        public ServiceRequestController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ICloudStorageService cloudStorageService,
-            ILogger<ServiceRequestController> logger, IUserAccessService userAccessService)
-        {
-            _dbContext = dbContext;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-            _cloudStorageService = cloudStorageService;
-            _logger = logger;
-            _userAccessService = userAccessService;
-        }
 
         private async Task UpdateFilterTypeClaim(string filterType)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
             if (user != null)
             {
-                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                var existingClaim = (await userManager.GetClaimsAsync(user))
                     .FirstOrDefault(c => c.Type == FilterTypeClaimType);
 
                 if (existingClaim != null)
                 {
-                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                    await userManager.RemoveClaimAsync(user, existingClaim);
                 }
 
                 if (!string.IsNullOrEmpty(filterType))
                 {
-                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                    await userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
                 }
             }
         }
 
         private async Task<string?> GetCurrentFilterType()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
         }
 
@@ -86,8 +73,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var dispatchTickets = await _unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == "For Posting" || dt.Status == "Incomplete", cancellationToken);
-            var currentUser = await _userManager.GetUserAsync(User);
+            var dispatchTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == "For Posting" || dt.Status == "Incomplete", cancellationToken);
+            var currentUser = await userManager.GetUserAsync(User);
 
             if (User.IsInRole("PortCoordinator"))
             {
@@ -113,7 +100,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -121,8 +108,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
             var viewModel = new ServiceRequestViewModel();
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
             ViewData["PortId"] = 0;
             return View(viewModel);
         }
@@ -130,10 +117,10 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -149,19 +136,19 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (model.CustomerId != null)
                 {
-                    model.Customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                    model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
                 }
 
                 if (imageFile != null && imageFile.Length > 0)
                 {
                     model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
-                    model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
+                    model.ImageSavedUrl = await cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
                 }
 
                 if (videoFile != null && videoFile.Length > 0)
                 {
                     model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
-                    model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
+                    model.VideoSavedUrl = await cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
                 }
 
                 if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
@@ -217,7 +204,7 @@ namespace IBSWeb.Areas.User.Controllers
                     model.Status = "For Posting";
                 }
 
-                await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
+                await unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail
 
@@ -228,7 +215,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 );
 
-                await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -239,7 +226,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to create service request.");
+                logger.LogError(ex, "Failed to create service request.");
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
@@ -248,14 +235,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
             }
 
             var companyClaims = await GetCompanyClaimAsync();
-            var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+            var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
             if (model == null)
             {
@@ -263,8 +250,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var viewModel = DispatchTicketModelToServiceRequestVm(model);
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
 
             if (!string.IsNullOrEmpty(viewModel.ImageName))
             {
@@ -284,16 +271,16 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
             }
 
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -303,7 +290,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 var model = ServiceRequestVmToDispatchTicketModel(viewModel);
-                var currentModel = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
+                var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                 if (currentModel == null)
                 {
@@ -315,7 +302,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (model.CustomerId != null)
                 {
-                    model.Customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                    model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
                 }
 
                 if (imageFile != null)
@@ -323,11 +310,11 @@ namespace IBSWeb.Areas.User.Controllers
                     // delete existing before replacing
                     if (!string.IsNullOrEmpty(currentModel.ImageName))
                     {
-                        await _cloudStorageService.DeleteFileAsync(currentModel.ImageName);
+                        await cloudStorageService.DeleteFileAsync(currentModel.ImageName);
                     }
 
                     model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
-                    model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
+                    model.ImageSavedUrl = await cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
                 }
 
                 if (videoFile != null)
@@ -335,11 +322,11 @@ namespace IBSWeb.Areas.User.Controllers
                     // delete existing before replacing
                     if (!string.IsNullOrEmpty(currentModel.VideoName))
                     {
-                        await _cloudStorageService.DeleteFileAsync(currentModel.VideoName);
+                        await cloudStorageService.DeleteFileAsync(currentModel.VideoName);
                     }
 
                     model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
-                    model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
+                    model.VideoSavedUrl = await cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
                 }
 
                 if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
@@ -452,7 +439,7 @@ namespace IBSWeb.Areas.User.Controllers
                     currentModel.VideoSavedUrl = model.VideoSavedUrl;
                 }
 
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #endregion -- Apply changes
 
@@ -469,7 +456,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 );
 
-                await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -480,7 +467,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to edit service request.");
+                logger.LogError(ex, "Failed to edit service request.");
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
@@ -489,7 +476,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken = default)
         {
-            var terminals = await _unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
+            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
 
             var terminalsList = terminals.Select(t => new SelectListItem
             {
@@ -503,13 +490,13 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUser = await userManager.GetUserAsync(User);
 
             try
             {
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = await _dbContext.MMSIDispatchTickets
+                var queried = await dbContext.MMSIDispatchTickets
                     .Include(dt => dt.Service)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt!.Port)
@@ -649,7 +636,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to dispatch tickets.");
+                logger.LogError(ex, "Failed to dispatch tickets.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index));
@@ -660,24 +647,24 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await _cloudStorageService.DeleteFileAsync(model.ImageName!);
+                await cloudStorageService.DeleteFileAsync(model.ImageName!);
                 model.ImageName = null;
                 model.ImageSignedUrl = null;
                 model.ImageSavedUrl = null;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
                 return RedirectToAction(nameof(Edit), new { id = model.DispatchTicketId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete image.");
+                logger.LogError(ex, "Failed to delete image.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Edit), new { id });
             }
@@ -687,24 +674,24 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await _cloudStorageService.DeleteFileAsync(model.VideoName!);
+                await cloudStorageService.DeleteFileAsync(model.VideoName!);
                 model.VideoName = null;
                 model.VideoSignedUrl = null;
                 model.VideoSavedUrl = null;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Video Deleted Successfully!";
                 return RedirectToAction(nameof(Edit), new { id = model.DispatchTicketId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete video.");
+                logger.LogError(ex, "Failed to delete video.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Edit), new { id });
             }
@@ -713,7 +700,7 @@ namespace IBSWeb.Areas.User.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.PostServiceRequest, cancellationToken))
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.PostServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -725,7 +712,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -735,7 +722,7 @@ namespace IBSWeb.Areas.User.Controllers
                 foreach (var recordId in recordList!)
                 {
                     int idToFind = int.Parse(recordId);
-                    var recordToUpdate = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind, cancellationToken);
+                    var recordToUpdate = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind, cancellationToken);
 
                     if (recordToUpdate != null)
                     {
@@ -744,7 +731,7 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail
 
@@ -759,7 +746,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 );
 
-                await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -770,7 +757,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to post selected requests.");
+                logger.LogError(ex, "Failed to post selected requests.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -778,7 +765,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -790,7 +777,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -800,7 +787,7 @@ namespace IBSWeb.Areas.User.Controllers
                 foreach (var recordId in recordList!)
                 {
                     var idToFind = int.Parse(recordId);
-                    var recordToUpdate = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind, cancellationToken);
+                    var recordToUpdate = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind, cancellationToken);
 
                     if (recordToUpdate != null)
                     {
@@ -809,7 +796,7 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail
 
@@ -824,7 +811,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 );
 
-                await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -835,7 +822,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel selected entries.");
+                logger.LogError(ex, "Failed to cancel selected entries.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -850,19 +837,19 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         private async Task<string?> GetUserNameAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
             return user?.UserName;
         }
 
@@ -870,7 +857,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!string.IsNullOrWhiteSpace(uploadName))
             {
-                return await _cloudStorageService.GetSignedUrlAsync(uploadName);
+                return await cloudStorageService.GetSignedUrlAsync(uploadName);
             }
             throw new Exception("Upload name invalid.");
         }
@@ -939,9 +926,9 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<bool> HasServiceRequestAccessAsync(CancellationToken cancellationToken)
         {
-            var userId = _userManager.GetUserId(User)!;
-            var hasCreateAccess = await _userAccessService.CheckAccess(userId, ProcedureEnum.CreateServiceRequest, cancellationToken);
-            var hasPostAccess = await _userAccessService.CheckAccess(userId, ProcedureEnum.PostServiceRequest, cancellationToken);
+            var userId = userManager.GetUserId(User)!;
+            var hasCreateAccess = await userAccessService.CheckAccess(userId, ProcedureEnum.CreateServiceRequest, cancellationToken);
+            var hasPostAccess = await userAccessService.CheckAccess(userId, ProcedureEnum.PostServiceRequest, cancellationToken);
 
             return hasCreateAccess || hasPostAccess;
         }

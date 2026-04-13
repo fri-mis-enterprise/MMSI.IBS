@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -14,24 +11,16 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class TerminalController : Controller
+    public class TerminalController(
+        ApplicationDbContext dbContext,
+        IUnitOfWork unitOfWork,
+        ILogger<TerminalController> logger,
+        UserManager<ApplicationUser> userManager)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<TerminalController> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public TerminalController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<TerminalController> logger, UserManager<ApplicationUser> userManager)
-        {
-            _dbContext = dbContext;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-        }
-
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var terminals = await _unitOfWork.Terminal.GetAllAsync(null, cancellationToken);
+            var terminals = await unitOfWork.Terminal.GetAllAsync(null, cancellationToken);
             return View(terminals);
         }
 
@@ -40,7 +29,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             Terminal model = new()
             {
-                Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
+                Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
 
             return View(model);
@@ -55,17 +44,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                await _unitOfWork.Terminal.AddAsync(model, cancellationToken);
+                await unitOfWork.Terminal.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Create new Terminal #{model.TerminalNumber}", "Terminal", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -77,7 +66,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to create terminal.");
+                logger.LogError(ex, "Failed to create terminal.");
                 return View(model);
             }
         }
@@ -86,20 +75,20 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.Terminal.GetAsync(i => i.TerminalId == id, cancellationToken);
+                var model = await unitOfWork.Terminal.GetAsync(i => i.TerminalId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await _unitOfWork.Terminal.RemoveAsync(model, cancellationToken);
+                await unitOfWork.Terminal.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete terminal.");
+                logger.LogError(ex, "Failed to delete terminal.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -108,14 +97,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.Terminal.GetAsync(a => a.TerminalId == id, cancellationToken);
+            var model = await unitOfWork.Terminal.GetAsync(a => a.TerminalId == id, cancellationToken);
 
             if (model == null)
             {
                 return NotFound();
             }
 
-            model.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            model.Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             return View(model);
         }
 
@@ -128,7 +117,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
+            var currentModel = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -136,23 +125,23 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Edited Terminal #{currentModel.TerminalNumber} => {model.TerminalNumber}", "Terminal", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
                 currentModel.TerminalNumber = model.TerminalNumber;
                 currentModel.TerminalName = model.TerminalName;
                 currentModel.PortId = model.PortId;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
@@ -160,7 +149,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to delete terminal.");
+                logger.LogError(ex, "Failed to delete terminal.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

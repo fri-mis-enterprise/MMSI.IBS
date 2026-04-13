@@ -1,6 +1,4 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Repository.Integrated.IRepository;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.Enums;

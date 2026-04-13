@@ -9,14 +9,9 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class CustomerRepository : Repository<Customer>, ICustomerRepository
+    public class CustomerRepository(ApplicationDbContext db): Repository<Customer>(db), ICustomerRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public CustomerRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default)
         {
@@ -49,7 +44,9 @@ namespace IBS.DataAccess.Repository.MasterFile
         public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
         {
             if (tin == "000-000-000-00000")
+            {
                 return false;
+            }
 
             return await _db.Customers
                 .AnyAsync(c =>

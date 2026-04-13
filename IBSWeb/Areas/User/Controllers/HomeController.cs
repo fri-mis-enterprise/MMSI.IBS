@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.DataAccess.Data;
 using IBS.Models;
 using IBS.Models.Enums;
@@ -14,36 +11,31 @@ using System.Diagnostics;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class HomeController : Controller
+    public class HomeController(
+        ILogger<HomeController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _dbContext;
-
-        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
-        {
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
+        private readonly ILogger<HomeController> _logger = logger;
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return string.Empty;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public async Task<IActionResult> Index()
         {
-            var findUser = await _dbContext.ApplicationUsers
-                .Where(user => user.Id == _userManager.GetUserId(this.User))
+            var findUser = await dbContext.ApplicationUsers
+                .Where(user => user.Id == userManager.GetUserId(this.User))
                 .FirstOrDefaultAsync();
 
             ViewBag.GetUserDepartment = findUser?.Department;
@@ -53,19 +45,19 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 #region -- Filpride
 
-                SupplierAppointmentCount = await _dbContext.CustomerOrderSlips
+                SupplierAppointmentCount = await dbContext.CustomerOrderSlips
                         .Where(cos =>
                             (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created))
                             && cos.Company == companyClaims)
                         .CountAsync(),
 
-                HaulerAppointmentCount = await _dbContext.CustomerOrderSlips
+                HaulerAppointmentCount = await dbContext.CustomerOrderSlips
                         .Where(cos =>
                         (cos.Status == nameof(CosStatus.SupplierAppointed) || cos.Status == nameof(CosStatus.Created))
                             && cos.Company == companyClaims)
                         .CountAsync(),
 
-                ATLBookingCount = await _dbContext.CustomerOrderSlips
+                ATLBookingCount = await dbContext.CustomerOrderSlips
                         .Where(cos => !cos.IsCosAtlFinalized
                                       && !string.IsNullOrEmpty(cos.Depot)
                                       && cos.Status != nameof(CosStatus.Closed)
@@ -74,37 +66,37 @@ namespace IBSWeb.Areas.User.Controllers
                                       && cos.Company == companyClaims)
                         .CountAsync(),
 
-                OMApprovalCOSCount = await _dbContext.CustomerOrderSlips
+                OMApprovalCOSCount = await dbContext.CustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM)
                                       && cos.Company == companyClaims)
                         .CountAsync(),
 
-                OMApprovalDRCount = await _dbContext.DeliveryReceipts
+                OMApprovalDRCount = await dbContext.DeliveryReceipts
                         .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM)
                                      && dr.Company == companyClaims)
                         .CountAsync(),
 
-                CNCApprovalCount = await _dbContext.CustomerOrderSlips
+                CNCApprovalCount = await dbContext.CustomerOrderSlips
                     .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC)
                                   && cos.Company == companyClaims)
                     .CountAsync(),
 
-                FMApprovalCount = await _dbContext.CustomerOrderSlips
+                FMApprovalCount = await dbContext.CustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM)
                                       && cos.Company == companyClaims)
                         .CountAsync(),
 
-                DRCount = await _dbContext.CustomerOrderSlips
+                DRCount = await dbContext.CustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForDR)
                                       && cos.Company == companyClaims)
                         .CountAsync(),
 
-                InTransitCount = await _dbContext.DeliveryReceipts
+                InTransitCount = await dbContext.DeliveryReceipts
                         .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery)
                                      && dr.Company == companyClaims)
                         .CountAsync(),
 
-                ForInvoiceCount = await _dbContext.DeliveryReceipts
+                ForInvoiceCount = await dbContext.DeliveryReceipts
                         .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing)
                                      && dr.Company == companyClaims)
                         .CountAsync(),
@@ -113,23 +105,23 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- MMSI
 
-                MMSIServiceRequestForPosting = await _dbContext.MMSIDispatchTickets
+                MMSIServiceRequestForPosting = await dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Posting")
                         .CountAsync(),
 
-                MMSIDispatchTicketForTariff = await _dbContext.MMSIDispatchTickets
+                MMSIDispatchTicketForTariff = await dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Tariff")
                         .CountAsync(),
 
-                MMSIDispatchTicketForApproval = await _dbContext.MMSIDispatchTickets
+                MMSIDispatchTicketForApproval = await dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Approval")
                         .CountAsync(),
 
-                MMSIDispatchTicketForBilling = await _dbContext.MMSIDispatchTickets
+                MMSIDispatchTicketForBilling = await dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Billing")
                         .CountAsync(),
 
-                MMSIBillingForCollection = await _dbContext.MMSIBillings
+                MMSIBillingForCollection = await dbContext.MMSIBillings
                         .Where(po => po.Status == "For Collection")
                         .CountAsync(),
 
@@ -148,7 +140,7 @@ namespace IBSWeb.Areas.User.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Maintenance()
         {
-            if (await _dbContext.AppSettings
+            if (await dbContext.AppSettings
                     .Where(s => s.SettingKey == "MaintenanceMode")
                     .Select(s => s.Value == "true")
                     .FirstOrDefaultAsync())

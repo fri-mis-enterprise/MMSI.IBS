@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.Models.Integrated;
@@ -8,14 +7,10 @@ using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Integrated
 {
-    public class AuthorityToLoadRepository : Repository<AuthorityToLoad>, IAuthorityToLoadRepository
+    public class AuthorityToLoadRepository(ApplicationDbContext db)
+        : Repository<AuthorityToLoad>(db), IAuthorityToLoadRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public AuthorityToLoadRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<string> GenerateAtlNo(string company, CancellationToken cancellationToken)
         {

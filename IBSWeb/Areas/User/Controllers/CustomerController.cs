@@ -1,7 +1,4 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -16,24 +13,13 @@ using OfficeOpenXml;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class CustomerController : Controller
+    public class CustomerController(
+        IUnitOfWork unitOfWork,
+        ILogger<CustomerController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<CustomerController> _logger;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        public CustomerController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -42,20 +28,20 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            IEnumerable<Customer> customer = await _unitOfWork.Customer
+            IEnumerable<Customer> customer = await unitOfWork.Customer
                 .GetAllAsync(null, cancellationToken);
 
             if (view == nameof(DynamicView.Customer))
@@ -77,9 +63,9 @@ namespace IBSWeb.Areas.User.Controllers
             var model = new Customer()
             {
 
-                PaymentTerms = await _unitOfWork.Terms
+                PaymentTerms = await unitOfWork.Terms
                     .GetTermsListAsyncByCode(cancellationToken),
-                Commissionees = await _unitOfWork.GetCommissioneeListAsyncById(companyClaims, cancellationToken),
+                Commissionees = await unitOfWork.GetCommissioneeListAsyncById(companyClaims, cancellationToken),
             };
             return View(model);
         }
@@ -101,10 +87,10 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            model.PaymentTerms = await _unitOfWork.Terms
+            model.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);
 
-            var isTinExist = await _unitOfWork.Customer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
+            var isTinExist = await unitOfWork.Customer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
 
             if (isTinExist)
             {
@@ -112,21 +98,21 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.Company = companyClaims;
-                model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType, cancellationToken);
+                model.CustomerCode = await unitOfWork.Customer.GenerateCodeAsync(model.CustomerType, cancellationToken);
                 model.CreatedBy = GetUserFullName();
-                await _unitOfWork.Customer.AddAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.Customer.AddAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording
 
                 AuditTrail auditTrailBook = new(model.CreatedBy!,
                     $"Created new Customer #{model.CustomerCode}", "Customer", model.Company);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -136,7 +122,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -151,7 +137,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == id, cancellationToken);
+            var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == id, cancellationToken);
             var companyClaims = await GetCompanyClaimAsync();
             if (companyClaims == null)
             {
@@ -160,9 +146,9 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (customer != null)
             {
-                customer.PaymentTerms = await _unitOfWork.Terms
+                customer.PaymentTerms = await unitOfWork.Terms
                     .GetTermsListAsyncByCode(cancellationToken);
-                customer.Commissionees = await _unitOfWork.GetCommissioneeListAsyncById(companyClaims, cancellationToken);
+                customer.Commissionees = await unitOfWork.GetCommissioneeListAsyncById(companyClaims, cancellationToken);
                 return View(customer);
             }
 
@@ -178,21 +164,21 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            model.PaymentTerms = await _unitOfWork.Terms
+            model.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.EditedBy = GetUserFullName();
-                await _unitOfWork.Customer.UpdateAsync(model, cancellationToken);
+                await unitOfWork.Customer.UpdateAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (model.EditedBy,
                     $"Edited Customer #{model.CustomerCode}", "Customer", model.Company );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -203,7 +189,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to edit customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit customer master file. Created by: {UserName}", userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
             }
@@ -214,7 +200,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var query = await _unitOfWork.Customer
+                var query = await unitOfWork.Customer
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -258,7 +244,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get customer.");
+                logger.LogError(ex, "Failed to get customer.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -272,7 +258,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var customer = await _unitOfWork
+            var customer = await unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -281,7 +267,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            customer.PaymentTerms = await _unitOfWork.Terms
+            customer.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);
 
             return View(customer);
@@ -295,7 +281,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var customer = await _unitOfWork
+            var customer = await unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -304,23 +290,23 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            customer.PaymentTerms = await _unitOfWork.Terms
+            customer.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 customer.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 var user = GetUserFullName();
                 AuditTrail auditTrailBook = new(
-                    user!, $"Activated Customer #{customer.CustomerCode}",
+                    user, $"Activated Customer #{customer.CustomerCode}",
                     "Customer", customer.Company);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -330,7 +316,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to activate customer master file. Activated by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to activate customer master file. Activated by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Activate), new { id = id });
@@ -345,13 +331,13 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var customer = await _unitOfWork
+            var customer = await unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
-                customer.PaymentTerms = await _unitOfWork.Terms
+                customer.PaymentTerms = await unitOfWork.Terms
                     .GetTermsListAsyncByCode(cancellationToken);
 
                 return View(customer);
@@ -368,7 +354,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var customer = await _unitOfWork
+            var customer = await unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -377,21 +363,21 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            customer.PaymentTerms = await _unitOfWork.Terms
+            customer.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 customer.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Deactivated Customer #{customer.CustomerCode}", "Customer", customer.Company);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -401,7 +387,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to deactivate customer master file. Deactivated by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to deactivate customer master file. Deactivated by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });
@@ -418,7 +404,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var customers = await _unitOfWork.Customer
+                var customers = await unitOfWork.Customer
                     .GetAllAsync(null, cancellationToken);
 
                 // Apply date range filter if provided (using CreatedDate)
@@ -440,99 +426,98 @@ namespace IBSWeb.Areas.User.Controllers
 
                 // Apply search filter if provided
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
-        {
-            var searchValue = parameters.Search.Value.ToLower();
-            
-            customers = customers
-                .Where(s =>
-                    (s.CustomerCode != null && s.CustomerCode.ToLower().Contains(searchValue)) ||
-                    (s.CustomerName != null && s.CustomerName.ToLower().Contains(searchValue)) ||
-                    (s.CustomerTin != null && s.CustomerTin.ToLower().Contains(searchValue)) ||
-                    (s.BusinessStyle != null && s.BusinessStyle.ToLower().Contains(searchValue)) ||
-                    (s.CustomerTerms != null && s.CustomerTerms.ToLower().Contains(searchValue)) ||
-                    (s.CustomerType != null && s.CustomerType.ToLower().Contains(searchValue)) ||
-                    s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
-                )
-                .ToList();
-        }
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
 
-        // Apply sorting if provided
-        if (parameters.Order?.Count > 0)
-        {
-            var orderColumn = parameters.Order[0];
-            var columnName = parameters.Columns[orderColumn.Column].Data;
-            var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    customers = customers
+                        .Where(s =>
+                            (s.CustomerCode != null && s.CustomerCode.ToLower().Contains(searchValue)) ||
+                            (s.CustomerName != null && s.CustomerName.ToLower().Contains(searchValue)) ||
+                            (s.CustomerTin != null && s.CustomerTin.ToLower().Contains(searchValue)) ||
+                            (s.BusinessStyle != null && s.BusinessStyle.ToLower().Contains(searchValue)) ||
+                            (s.CustomerTerms != null && s.CustomerTerms.ToLower().Contains(searchValue)) ||
+                            (s.CustomerType != null && s.CustomerType.ToLower().Contains(searchValue)) ||
+                            s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
+                        )
+                        .ToList();
+                }
 
-            // Map frontend column names to actual entity property names
-            var columnMapping = new Dictionary<string, string>
+                // Apply sorting if provided
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    // Map frontend column names to actual entity property names
+                    var columnMapping = new Dictionary<string, string>
+                    {
+                        { "customerCode", "CustomerCode" },
+                        { "customerName", "CustomerName" },
+                        { "customerTin", "CustomerTin" },
+                        { "businessStyle", "BusinessStyle" },
+                        { "customerTerms", "CustomerTerms" },
+                        { "customerType", "CustomerType" },
+                        { "createdDate", "CreatedDate" }
+                    };
+
+                    // Get the actual property name
+                    var actualColumnName = columnMapping.TryGetValue(columnName, out string? value)
+                        ? value : columnName;
+
+                    customers = customers
+                        .AsQueryable()
+                        .OrderBy($"{actualColumnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = customers.Count();
+
+                // Apply pagination - HANDLE -1 FOR "ALL"
+                IEnumerable<Customer> pagedCustomers;
+
+                if (parameters.Length == -1)
+                {
+                    // "All" selected - return all records
+                    pagedCustomers = customers;
+                }
+                else
+                {
+                    // Normal pagination
+                    pagedCustomers = customers
+                        .Skip(parameters.Start)
+                        .Take(parameters.Length);
+                }
+
+                var pagedData = pagedCustomers
+                    .Select(x => new
+                    {
+                        x.CustomerId,
+                        x.CustomerCode,
+                        x.CustomerName,
+                        x.CustomerTin,
+                        x.BusinessStyle,
+                        x.CustomerTerms,
+                        x.CustomerType,
+                        x.CreatedDate
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
             {
-                { "customerCode", "CustomerCode" },
-                { "customerName", "CustomerName" },
-                { "customerTin", "CustomerTin" },
-                { "businessStyle", "BusinessStyle" },
-                { "customerTerms", "CustomerTerms" },
-                { "customerType", "CustomerType" },
-                { "createdDate", "CreatedDate" }
-            };
-
-            // Get the actual property name
-            var actualColumnName = columnMapping.ContainsKey(columnName) 
-                ? columnMapping[columnName] 
-                : columnName;
-
-            customers = customers
-                .AsQueryable()
-                .OrderBy($"{actualColumnName} {sortDirection}")
-                .ToList();
-        }
-
-        var totalRecords = customers.Count();
-
-        // Apply pagination - HANDLE -1 FOR "ALL"
-        IEnumerable<Customer> pagedCustomers;
-        
-        if (parameters.Length == -1)
-        {
-            // "All" selected - return all records
-            pagedCustomers = customers;
-        }
-        else
-        {
-            // Normal pagination
-            pagedCustomers = customers
-                .Skip(parameters.Start)
-                .Take(parameters.Length);
-        }
-
-        var pagedData = pagedCustomers
-            .Select(x => new
-            {
-                x.CustomerId,
-                x.CustomerCode,
-                x.CustomerName,
-                x.CustomerTin,
-                x.BusinessStyle,
-                x.CustomerTerms,
-                x.CustomerType,
-                x.CreatedDate
-            })
-            .ToList();
-
-        return Json(new
-        {
-            draw = parameters.Draw,
-            recordsTotal = totalRecords,
-            recordsFiltered = totalRecords,
-            data = pagedData
-        });
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Failed to get customers. Error: {ErrorMessage}, Stack: {StackTrace}.",
-            ex.Message, ex.StackTrace);
-        TempData["error"] = ex.Message;
-        return RedirectToAction(nameof(Index));
-    }
+                logger.LogError(ex, "Failed to get customers. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
 }
 
         //Download as .xlsx file.(Export)
@@ -551,7 +536,7 @@ namespace IBSWeb.Areas.User.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             // Retrieve the selected invoices from the database
-            var selectedList = await _unitOfWork.Customer
+            var selectedList = await unitOfWork.Customer
                 .GetAllAsync(c => recordIds.Contains(c.CustomerId));
 
             // Create the Excel package
@@ -609,7 +594,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult GetAllCustomerIds()
         {
-            var customerIds = _dbContext.Customers
+            var customerIds = dbContext.Customers
                 .Select(c => c.CustomerId)
                 .ToList();
 

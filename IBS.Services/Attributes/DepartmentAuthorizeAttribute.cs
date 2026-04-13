@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -8,15 +7,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace IBS.Services.Attributes
 {
-    public class DepartmentAuthorizeAttribute : AuthorizeAttribute, IAuthorizationFilter
+    public class DepartmentAuthorizeAttribute(params string[] departments): AuthorizeAttribute, IAuthorizationFilter
     {
-        private readonly string[] _departments;
-
-        public DepartmentAuthorizeAttribute(params string[] departments)
-        {
-            _departments = departments;
-        }
-
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             var userManager = context.HttpContext.RequestServices.GetService(typeof(UserManager<ApplicationUser>)) as UserManager<ApplicationUser>;
@@ -32,7 +24,7 @@ namespace IBS.Services.Attributes
                     .Select(u => u.Department)
                     .FirstOrDefault();
 
-                if (userDepartment == null || !_departments.Contains(userDepartment))
+                if (userDepartment == null || !departments.Contains(userDepartment))
                 {
                     context.Result = new ForbidResult();
                 }

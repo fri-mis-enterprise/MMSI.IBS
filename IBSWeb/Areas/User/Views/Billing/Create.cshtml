@@ -1,4 +1,3 @@
-@using IBS.Utility.Constants
 @model CreateBillingViewModel
 
 @{
@@ -341,7 +340,7 @@
 
             function fetchPrincipals(customerId, selectedPrincipalId = null) {
                 return $.ajax({
-                    url: '@Url.Action("GetPrincipalsJSON", "Billing", new { area = "User" })',
+                    url: '@Url.Action("GetPrincipalsJson", "Billing", new { area = "User" })',
                     type: "GET",
                     data: { customerId: customerId },
                     success: function (data) {

@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using System.Drawing;
 using IBS.DataAccess.Data;
@@ -18,22 +15,13 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class MaritimeReportController : Controller
+    public class MaritimeReportController(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager,
+        IUnitOfWork unitOfWork,
+        ILogger<MaritimeReportController> logger)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<MaritimeReportController> _logger;
-
-        public MaritimeReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork,
-            ILogger<MaritimeReportController> logger)
-        {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-        }
-
         public IActionResult SalesReport()
         {
             return View();
@@ -44,7 +32,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var salesReport = await _unitOfWork.Report.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
+                var salesReport = await unitOfWork.Report.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
 
                 if (salesReport.Count == 0)
                 {
@@ -127,12 +115,12 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var forPnlUseColStart = detailsOfTripOfTugboatsColEnd + 1;
 
-                var mmsiTugboats = await _dbContext.MMSITugboats
+                var mmsiTugboats = await dbContext.MMSITugboats
                     .Where(t => t.IsCompanyOwned)
                     .OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
 
-                var mmsiCustomers = await _dbContext.Customers
+                var mmsiCustomers = await dbContext.Customers
                     .Where(t => t.IsActive && t.IsMMSI)
                     .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
@@ -180,7 +168,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- AP Ledger --
 
                 var apLedgerColStart = col + 1;
-                var tugboatOwners = await _dbContext.MMSITugboatOwners
+                var tugboatOwners = await dbContext.MMSITugboatOwners
                     .OrderBy(t => t.TugboatOwnerName)
                     .ToListAsync(cancellationToken);
                 foreach (var tugboatOwner in tugboatOwners)
@@ -216,7 +204,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- AR Ledger --
 
                 var arLedgerColStart = col + 1;
-                var customers = await _dbContext.Customers
+                var customers = await dbContext.Customers
                     .Where(c => c.IsMMSI && c.IsActive)
                     .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
@@ -337,7 +325,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- Number of Tending Hours --
 
-                var numberOfTendingHoursColStart = col + 1; await _dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
+                var numberOfTendingHoursColStart = col + 1; await dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
                 var numberOfTendingHoursCategories = new List<string> { "LOCAL", "FOREIGN" };
 
@@ -743,8 +731,8 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Error generating sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                ex.Message, ex.StackTrace, _userManager.GetUserAsync(User));
+                logger.LogError(ex, "Error generating sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                ex.Message, ex.StackTrace, userManager.GetUserAsync(User));
                 return RedirectToAction(nameof(SalesReport));
             }
         }

@@ -4,13 +4,8 @@ using IBS.Models;
 
 namespace IBS.DataAccess.Repository
 {
-    public class AuditTrailRepository : Repository<AuditTrail>, IAuditTrailRepository
+    public class AuditTrailRepository(ApplicationDbContext db): Repository<AuditTrail>(db), IAuditTrailRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public AuditTrailRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
     }
 }

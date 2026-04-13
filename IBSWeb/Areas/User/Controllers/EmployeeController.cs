@@ -1,47 +1,32 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class EmployeeController : Controller
+    public class EmployeeController(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager,
+        IUnitOfWork unitOfWork,
+        ILogger<EmployeeController> logger)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<EmployeeController> _logger;
-
-        public EmployeeController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<EmployeeController> logger)
-        {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-        }
-
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -53,7 +38,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public IActionResult Index()
         {
-            var getEmployeeModel = _dbContext.Employees
+            var getEmployeeModel = dbContext.Employees
                 .Where(x => x.IsActive)
                 .ToList();
             return View(getEmployeeModel);
@@ -77,18 +62,18 @@ namespace IBSWeb.Areas.User.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.Company = companyClaims;
-                await _unitOfWork.Employee.AddAsync(model, cancellationToken);
+                await unitOfWork.Employee.AddAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Created new Employee #{model.EmployeeNumber}", "Employee", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -98,7 +83,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}", ex.Message, ex.StackTrace, User.Identity!.Name);
+                logger.LogError(ex, "Failed to create employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}", ex.Message, ex.StackTrace, User.Identity!.Name);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -110,7 +95,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.Employee
+                var queried = await unitOfWork.Employee
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -158,7 +143,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get employee.");
+                logger.LogError(ex, "Failed to get employee.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -167,7 +152,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var existingEmployee = await _unitOfWork.Employee
+            var existingEmployee = await unitOfWork.Employee
                 .GetAsync(x => x.EmployeeId == id, cancellationToken);
 
             return View(existingEmployee);
@@ -183,7 +168,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var existingModel = await _unitOfWork.Employee
+            var existingModel = await unitOfWork.Employee
                 .GetAsync(x => x.EmployeeId == model.EmployeeId, cancellationToken);
 
             if (existingModel == null)
@@ -191,7 +176,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -199,7 +184,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Employee #{existingModel.EmployeeNumber} => {model.EmployeeNumber}", "Employee", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -227,7 +212,7 @@ namespace IBSWeb.Areas.User.Controllers
                 existingModel.IsActive = model.IsActive;
                 existingModel.Status = model.Status;
                 existingModel.Address = model.Address;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #endregion -- Saving Default
 
@@ -237,7 +222,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit employee. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}", ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit employee. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}", ex.Message, ex.StackTrace, userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -14,24 +11,16 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class TugboatController : Controller
+    public class TugboatController(
+        ApplicationDbContext dbContext,
+        IUnitOfWork unitOfWork,
+        ILogger<TugboatController> logger,
+        UserManager<ApplicationUser> userManager)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<TugboatController> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public TugboatController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<TugboatController> logger, UserManager<ApplicationUser> userManager)
-        {
-            _dbContext = dbContext;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-        }
-
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var tugboat = await _unitOfWork.Tugboat.GetAllAsync(null, cancellationToken);
+            var tugboat = await unitOfWork.Tugboat.GetAllAsync(null, cancellationToken);
             return View(tugboat);
         }
 
@@ -40,7 +29,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var tugboat = new Tugboat
             {
-                CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken)
+                CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken)
             };
 
             return View(tugboat);
@@ -55,7 +44,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -64,13 +53,13 @@ namespace IBSWeb.Areas.User.Controllers
                     model.TugboatOwnerId = null;
                 }
 
-                await _unitOfWork.Tugboat.AddAsync(model, cancellationToken);
+                await unitOfWork.Tugboat.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Created new Tugboat #{model.TugboatNumber}", "Tugboat", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -80,7 +69,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create tugboat.");
+                logger.LogError(ex, "Failed to create tugboat.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -90,20 +79,20 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.Tugboat.GetAsync(i => i.TugboatId == id, cancellationToken);
+                var model = await unitOfWork.Tugboat.GetAsync(i => i.TugboatId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await _unitOfWork.Tugboat.RemoveAsync(model, cancellationToken);
+                await unitOfWork.Tugboat.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete tugboat.");
+                logger.LogError(ex, "Failed to delete tugboat.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -112,28 +101,28 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.Tugboat.GetAsync(a => a.TugboatId == id, cancellationToken);
+            var model = await unitOfWork.Tugboat.GetAsync(a => a.TugboatId == id, cancellationToken);
 
             if (model == null)
             {
                 return NotFound();
             }
 
-            model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(Tugboat model, CancellationToken cancellationToken)
         {
-            model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
-            var currentModel = await _unitOfWork.Tugboat.GetAsync(t => t.TugboatId == model.TugboatId, cancellationToken);
+            var currentModel = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == model.TugboatId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -141,15 +130,15 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Edited Tugboat #{currentModel.TugboatNumber} => {model.TugboatNumber}", "Tugboat", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -157,14 +146,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.IsCompanyOwned = model.IsCompanyOwned;
                 currentModel.TugboatNumber = model.TugboatNumber;
                 currentModel.TugboatName = model.TugboatName;
-                await _unitOfWork.Tugboat.SaveAsync(cancellationToken);
+                await unitOfWork.Tugboat.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit tugboat.");
+                logger.LogError(ex, "Failed to edit tugboat.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

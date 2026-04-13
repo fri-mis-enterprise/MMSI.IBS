@@ -1,23 +1,16 @@
 using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
-using IBS.Models;
 using IBS.Models.MMSI;
-using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class BillingRepository : Repository<Billing>, IBillingRepository
+    public class BillingRepository(ApplicationDbContext db): Repository<Billing>(db), IBillingRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public BillingRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {

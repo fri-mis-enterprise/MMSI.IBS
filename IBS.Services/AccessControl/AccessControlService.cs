@@ -1,7 +1,6 @@
 using IBS.Models;
 using IBS.Models.Enums;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
 
 namespace IBS.Services.AccessControl
 {
@@ -16,16 +15,10 @@ namespace IBS.Services.AccessControl
         Task<Dictionary<ProcedureEnum, bool>> GetAccessMapAsync(string userId, params ProcedureEnum[] procedures);
     }
 
-    public class AccessControlService : IAccessControlService
+    public class AccessControlService(UserManager<ApplicationUser> userManager, IUserAccessService userAccessService)
+        : IAccessControlService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserAccessService _userAccessService;
-
-        public AccessControlService(UserManager<ApplicationUser> userManager, IUserAccessService userAccessService)
-        {
-            _userManager = userManager;
-            _userAccessService = userAccessService;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
 
         /// <summary>
         /// Check if user has access to ANY of the specified procedures
@@ -33,12 +26,16 @@ namespace IBS.Services.AccessControl
         public async Task<bool> HasAnyAccessAsync(string userId, params ProcedureEnum[] procedures)
         {
             if (procedures == null || procedures.Length == 0)
+            {
                 return false;
+            }
 
             foreach (var procedure in procedures)
             {
-                if (await _userAccessService.CheckAccess(userId, procedure, default))
+                if (await userAccessService.CheckAccess(userId, procedure, default))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -50,12 +47,16 @@ namespace IBS.Services.AccessControl
         public async Task<bool> HasAllAccessAsync(string userId, params ProcedureEnum[] procedures)
         {
             if (procedures == null || procedures.Length == 0)
+            {
                 return false;
+            }
 
             foreach (var procedure in procedures)
             {
-                if (!await _userAccessService.CheckAccess(userId, procedure, default))
+                if (!await userAccessService.CheckAccess(userId, procedure, default))
+                {
                     return false;
+                }
             }
 
             return true;
@@ -78,7 +79,7 @@ namespace IBS.Services.AccessControl
 
             foreach (var procedure in procedures)
             {
-                accessMap[procedure] = await _userAccessService.CheckAccess(userId, procedure, default);
+                accessMap[procedure] = await userAccessService.CheckAccess(userId, procedure, default);
             }
 
             return accessMap;

@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 namespace IBS.DataAccess.Repository.IRepository
 {
     public interface IHubConnectionRepository

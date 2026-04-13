@@ -1,6 +1,4 @@
-using IBS.Models.Books;
 using IBS.Models.MMSI;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
 {

@@ -5,15 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository
 {
-    public class HubConnectionRepository : IHubConnectionRepository
+    public class HubConnectionRepository(ApplicationDbContext dbContext): IHubConnectionRepository
     {
-        private readonly ApplicationDbContext _dbContext;
-
-        public HubConnectionRepository(ApplicationDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-
         public async Task SaveConnectionAsync(string username, string connectionId)
         {
             var connection = new HubConnection
@@ -22,29 +15,29 @@ namespace IBS.DataAccess.Repository
                 ConnectionId = connectionId
             };
 
-            _dbContext.HubConnections.Add(connection);
-            await _dbContext.SaveChangesAsync();
+            dbContext.HubConnections.Add(connection);
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task RemoveConnectionAsync(string connectionId)
         {
-            var connection = await _dbContext.HubConnections
+            var connection = await dbContext.HubConnections
                 .FirstOrDefaultAsync(c => c.ConnectionId == connectionId);
 
             if (connection != null)
             {
-                _dbContext.HubConnections.Remove(connection);
-                await _dbContext.SaveChangesAsync();
+                dbContext.HubConnections.Remove(connection);
+                await dbContext.SaveChangesAsync();
             }
         }
 
         public async Task RemoveConnectionsByUsernameAsync(string username)
         {
-            await _dbContext.HubConnections
+            await dbContext.HubConnections
                 .Where(c => c.UserName == username)
                 .ExecuteDeleteAsync(); 
 
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
     }
 }

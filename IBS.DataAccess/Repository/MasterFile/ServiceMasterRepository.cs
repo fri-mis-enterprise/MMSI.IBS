@@ -5,14 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class ServiceMasterRepository : Repository<ServiceMaster>, IServiceMasterRepository
+    public class ServiceMasterRepository(ApplicationDbContext db)
+        : Repository<ServiceMaster>(db), IServiceMasterRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public ServiceMasterRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<string> GetLastNumber(CancellationToken cancellationToken = default)
         {

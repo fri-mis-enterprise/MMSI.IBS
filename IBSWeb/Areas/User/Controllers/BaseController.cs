@@ -8,16 +8,11 @@ namespace IBSWeb.Areas.User.Controllers
     /// <summary>
     /// Base controller for all MSAP controllers with centralized access control
     /// </summary>
-    public abstract class BaseController : Controller
+    public abstract class BaseController(IAccessControlService accessControl, UserManager<ApplicationUser> userManager)
+        : Controller
     {
-        protected readonly IAccessControlService AccessControl;
-        protected readonly UserManager<ApplicationUser> UserManager;
-
-        protected BaseController(IAccessControlService accessControl, UserManager<ApplicationUser> userManager)
-        {
-            AccessControl = accessControl;
-            UserManager = userManager;
-        }
+        protected readonly IAccessControlService AccessControl = accessControl;
+        protected readonly UserManager<ApplicationUser> UserManager = userManager;
 
         protected string GetUserId() => UserManager.GetUserId(User)!;
 

@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -14,24 +11,16 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class TugboatOwnerController : Controller
+    public class TugboatOwnerController(
+        ApplicationDbContext dbContext,
+        ILogger<TugboatOwnerController> logger,
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly ILogger<TugboatOwnerController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public TugboatOwnerController(ApplicationDbContext dbContext, ILogger<TugboatOwnerController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
-        {
-            _dbContext = dbContext;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-        }
-
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var companyOwners = await _unitOfWork.TugboatOwner.GetAllAsync(null, cancellationToken);
+            var companyOwners = await unitOfWork.TugboatOwner.GetAllAsync(null, cancellationToken);
             return View(companyOwners);
         }
 
@@ -50,17 +39,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                await _unitOfWork.TugboatOwner.AddAsync(model, cancellationToken);
+                await unitOfWork.TugboatOwner.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Created new Tugboat Owner #{model.TugboatOwnerNumber}", "Tugboat Owner", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -70,7 +59,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create tugboat owner.");
+                logger.LogError(ex, "Failed to create tugboat owner.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -80,14 +69,14 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.TugboatOwner.GetAsync(i => i.TugboatOwnerId == id, cancellationToken);
+                var model = await unitOfWork.TugboatOwner.GetAsync(i => i.TugboatOwnerId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await _unitOfWork.TugboatOwner.RemoveAsync(model, cancellationToken);
+                await unitOfWork.TugboatOwner.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -100,14 +89,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.TugboatOwner.GetAsync(a => a.TugboatOwnerId == id, cancellationToken);
+            var model = await unitOfWork.TugboatOwner.GetAsync(a => a.TugboatOwnerId == id, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(TugboatOwner model, CancellationToken cancellationToken)
         {
-            var currentModel = await _unitOfWork.TugboatOwner.GetAsync(t => t.TugboatOwnerId == model.TugboatOwnerId, cancellationToken);
+            var currentModel = await unitOfWork.TugboatOwner.GetAsync(t => t.TugboatOwnerId == model.TugboatOwnerId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -115,29 +104,29 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Edited Tugboat Owner #{currentModel.TugboatOwnerNumber} => {model.TugboatOwnerNumber}", "Tugboat Owner", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
                 currentModel.TugboatOwnerNumber = model.TugboatOwnerNumber;
                 currentModel.TugboatOwnerName = model.TugboatOwnerName;
                 currentModel.FixedRate = model.FixedRate;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit tugboat owner.");
+                logger.LogError(ex, "Failed to edit tugboat owner.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

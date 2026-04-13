@@ -1,5 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
@@ -14,34 +12,23 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [Authorize]
-    public class CompanyController : Controller
+    public class CompanyController(
+        IUnitOfWork unitOfWork,
+        ILogger<CompanyController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<CompanyController> _logger;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        public CompanyController(IUnitOfWork unitOfWork, ILogger<CompanyController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
-
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -53,7 +40,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Company> companies = await _unitOfWork
+            IEnumerable<Company> companies = await unitOfWork
                 .Company
                 .GetAllAsync();
             return View(companies);
@@ -74,7 +61,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            bool companyExist = await _unitOfWork
+            bool companyExist = await unitOfWork
                 .Company
                 .IsCompanyExistAsync(model.CompanyName, cancellationToken);
 
@@ -84,7 +71,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            bool tinNoExist = await _unitOfWork
+            bool tinNoExist = await unitOfWork
                 .Company
                 .IsTinNoExistAsync(model.CompanyTin, cancellationToken);
 
@@ -94,23 +81,23 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                model.CompanyCode = await _unitOfWork.Company
+                model.CompanyCode = await unitOfWork.Company
                     .GenerateCodeAsync(cancellationToken);
 
                 model.CreatedBy = GetUserFullName();
-                await _unitOfWork.Company.AddAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.Company.AddAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Created Company {model.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -120,7 +107,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create company master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create company master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -132,7 +119,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.Company
+                var queried = await unitOfWork.Company
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -176,7 +163,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get company.");
+                logger.LogError(ex, "Failed to get company.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -190,7 +177,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var company = await _unitOfWork
+            var company = await unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -210,19 +197,19 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.EditedBy = GetUserFullName();
-                await _unitOfWork.Company.UpdateAsync(model, cancellationToken);
+                await unitOfWork.Company.UpdateAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Edited Company {model.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -232,7 +219,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in updating company");
+                logger.LogError(ex, "Error in updating company");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
@@ -247,7 +234,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var company = await _unitOfWork
+            var company = await unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -267,7 +254,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var company = await _unitOfWork.Company
+            var company = await unitOfWork.Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
             if (company == null)
@@ -275,19 +262,19 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 company.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Activated Company {company.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -297,7 +284,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch(Exception ex)
             {
-                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Activate), new { id = id });
@@ -312,7 +299,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var company = await _unitOfWork
+            var company = await unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -332,7 +319,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var company = await _unitOfWork
+            var company = await unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -341,19 +328,19 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 company.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Deactivated Company {company.CompanyCode}",
                     "Company", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -363,7 +350,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });

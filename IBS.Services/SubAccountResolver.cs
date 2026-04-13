@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DTOs;
 using IBS.Models.Enums;
@@ -16,15 +15,8 @@ namespace IBS.Services
             CancellationToken cancellationToken = default);
     }
 
-    public class SubAccountResolver : ISubAccountResolver
+    public class SubAccountResolver(ApplicationDbContext context): ISubAccountResolver
     {
-        private readonly ApplicationDbContext _context;
-
-        public SubAccountResolver(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
         public async Task<SubAccountInfoDto?> ResolveAsync(SubAccountType type,
             int subAccountId,
             CancellationToken cancellationToken = default)
@@ -32,7 +24,7 @@ namespace IBS.Services
             switch (type)
             {
                 case SubAccountType.Customer:
-                    var customer = await _context.Customers
+                    var customer = await context.Customers
                         .Where(c => c.CustomerId == subAccountId)
                         .Select(c => new SubAccountInfoDto
                         {
@@ -44,7 +36,7 @@ namespace IBS.Services
                     return customer;
 
                 case SubAccountType.Supplier:
-                    var supplier = await _context.Suppliers
+                    var supplier = await context.Suppliers
                         .Where(s => s.SupplierId == subAccountId)
                         .Select(s => new SubAccountInfoDto
                         {
@@ -56,7 +48,7 @@ namespace IBS.Services
                     return supplier;
 
                 case SubAccountType.Employee:
-                    var employee = await _context.Employees
+                    var employee = await context.Employees
                         .Where(e => e.EmployeeId == subAccountId)
                         .Select(e => new SubAccountInfoDto
                         {
@@ -68,7 +60,7 @@ namespace IBS.Services
                     return employee;
 
                 case SubAccountType.BankAccount:
-                    var bank = await _context.BankAccounts
+                    var bank = await context.BankAccounts
                         .Where(b => b.BankAccountId == subAccountId)
                         .Select(b => new SubAccountInfoDto
                         {
@@ -80,7 +72,7 @@ namespace IBS.Services
                     return bank;
 
                 case SubAccountType.Company:
-                    var company = await _context.Companies
+                    var company = await context.Companies
                         .Where(c => c.CompanyId == subAccountId)
                         .Select(c => new SubAccountInfoDto
                         {
@@ -102,15 +94,15 @@ namespace IBS.Services
         {
             return type switch
             {
-                SubAccountType.Customer => await _context.Customers
+                SubAccountType.Customer => await context.Customers
                     .AnyAsync(c => c.CustomerId == subAccountId, cancellationToken),
-                SubAccountType.Supplier => await _context.Suppliers
+                SubAccountType.Supplier => await context.Suppliers
                     .AnyAsync(s => s.SupplierId == subAccountId, cancellationToken),
-                SubAccountType.Employee => await _context.Employees
+                SubAccountType.Employee => await context.Employees
                     .AnyAsync(e => e.EmployeeId == subAccountId, cancellationToken),
-                SubAccountType.BankAccount => await _context.BankAccounts
+                SubAccountType.BankAccount => await context.BankAccounts
                     .AnyAsync(b => b.BankAccountId == subAccountId, cancellationToken),
-                SubAccountType.Company => await _context.Companies
+                SubAccountType.Company => await context.Companies
                     .AnyAsync(c => c.CompanyId == subAccountId, cancellationToken),
                 _ => false
             };

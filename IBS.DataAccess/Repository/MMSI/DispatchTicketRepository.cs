@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
@@ -8,14 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class DispatchTicketRepository : Repository<DispatchTicket>, IDispatchTicketRepository
+    public class DispatchTicketRepository(ApplicationDbContext db)
+        : Repository<DispatchTicket>(db), IDispatchTicketRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public DispatchTicketRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {

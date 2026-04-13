@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;

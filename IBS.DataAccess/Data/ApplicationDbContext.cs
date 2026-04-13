@@ -9,12 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext(DbContextOptions options): IdentityDbContext<ApplicationUser>(options)
     {
-        public ApplicationDbContext(DbContextOptions options) : base(options)
-        {
-        }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSnakeCaseNamingConvention();

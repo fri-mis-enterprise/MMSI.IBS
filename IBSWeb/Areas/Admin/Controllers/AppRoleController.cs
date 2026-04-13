@@ -8,20 +8,12 @@ namespace IBSWeb.Areas.Admin.Controllers
 {
     [Area(nameof(Admin))]
     [Authorize(Roles = "Admin")]
-    public class AppRoleController : Controller
+    public class AppRoleController(RoleManager<IdentityRole> roleManager, ILogger<AppRoleController> logger)
+        : Controller
     {
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ILogger<AppRoleController> _logger;
-
-        public AppRoleController(RoleManager<IdentityRole> roleManager, ILogger<AppRoleController> logger)
-        {
-            _roleManager = roleManager;
-            _logger = logger;
-        }
-
         public IActionResult Index()
         {
-            var roles = _roleManager.Roles;
+            var roles = roleManager.Roles;
             return View(roles);
         }
 
@@ -34,9 +26,9 @@ namespace IBSWeb.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(IdentityRole model)
         {
-            if (!await _roleManager.RoleExistsAsync(model.Name!))
+            if (!await roleManager.RoleExistsAsync(model.Name!))
             {
-                await _roleManager.CreateAsync(new IdentityRole(model.Name!));
+                await roleManager.CreateAsync(new IdentityRole(model.Name!));
             }
 
             return RedirectToAction(nameof(Index));
@@ -47,7 +39,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         {
             try
             {
-                var queried = _roleManager.Roles;
+                var queried = roleManager.Roles;
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -91,7 +83,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get roles.");
+                logger.LogError(ex, "Failed to get roles.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

@@ -8,14 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class TermsRepository : Repository<Terms>, ITermsRepository
+    public class TermsRepository(ApplicationDbContext db): Repository<Terms>(db), ITermsRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public TermsRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public override async Task<IEnumerable<Terms>> GetAllAsync(Expression<Func<Terms, bool>>? filter, CancellationToken cancellationToken = default)
         {

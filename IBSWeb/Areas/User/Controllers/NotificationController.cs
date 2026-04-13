@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -14,28 +11,16 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [Authorize]
-    public class NotificationController : Controller
+    public class NotificationController(
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext,
+        ILogger<NotificationController> logger)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        private readonly ILogger<NotificationController> _logger;
-
-        public NotificationController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext,
-            ILogger<NotificationController> logger)
-        {
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-            _dbContext = dbContext;
-            _logger = logger;
-        }
-
         public async Task<IActionResult> Index()
         {
-            var notifications = await _unitOfWork.Notifications.GetUserNotificationsAsync(_userManager.GetUserId(User)!);
+            var notifications = await unitOfWork.Notifications.GetUserNotificationsAsync(userManager.GetUserId(User)!);
             return View(notifications);
         }
 
@@ -43,21 +28,21 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsRead(Guid userNotificationId)
         {
-            await _unitOfWork.Notifications.MarkAsReadAsync(userNotificationId);
+            await unitOfWork.Notifications.MarkAsReadAsync(userNotificationId);
             return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
         public async Task<IActionResult> GetNotificationCount()
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = userManager.GetUserId(User);
 
             if (userId == null)
             {
                 return Json(0);
             }
 
-            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(userId);
+            var count = await unitOfWork.Notifications.GetUnreadNotificationCountAsync(userId);
 
             return Json(count);
         }
@@ -66,7 +51,7 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Archive(Guid userNotificationId)
         {
-            await _unitOfWork.Notifications.ArchiveAsync(userNotificationId);
+            await unitOfWork.Notifications.ArchiveAsync(userNotificationId);
             return RedirectToAction(nameof(Index));
         }
 
@@ -79,20 +64,20 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest("Response cannot be null or empty.");
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try
             {
                 if (response.Equals("yes", StringComparison.OrdinalIgnoreCase))
                 {
-                    var userNotification = await _dbContext.UserNotifications.FindAsync(userNotificationId);
+                    var userNotification = await dbContext.UserNotifications.FindAsync(userNotificationId);
 
                     if (userNotification == null)
                     {
                         return NotFound($"Notification with ID {userNotificationId} not found.");
                     }
 
-                    var relatedUserNotifications = await _dbContext.UserNotifications
+                    var relatedUserNotifications = await dbContext.UserNotifications
                         .Where(un => un.NotificationId == userNotification.NotificationId)
                         .ToListAsync();
 
@@ -102,7 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
                         notification.IsRead = true;
                     }
 
-                    var lockDrAppSetting = await _dbContext.AppSettings
+                    var lockDrAppSetting = await dbContext.AppSettings
                         .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
 
                     if (lockDrAppSetting != null)
@@ -110,7 +95,7 @@ namespace IBSWeb.Areas.User.Controllers
                         lockDrAppSetting.Value = "false";
                     }
 
-                    await _dbContext.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
                     await transaction.CommitAsync();
                 }
                 else
@@ -121,7 +106,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "An error occurred while responding to notification.");
+                logger.LogError(ex, "An error occurred while responding to notification.");
                 TempData["error"] = "An error occurred while processing your request.";
                 return RedirectToAction(nameof(Index));
             }
@@ -134,14 +119,14 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellation)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = userManager.GetUserId(User);
 
             if (userId == null)
             {
                 return BadRequest();
             }
 
-            await _unitOfWork.Notifications.MarkAllAsReadAsync(userId, cancellation);
+            await unitOfWork.Notifications.MarkAllAsReadAsync(userId, cancellation);
             return RedirectToAction(nameof(Index));
         }
 
@@ -149,14 +134,14 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ArchiveAll(CancellationToken cancellation)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = userManager.GetUserId(User);
 
             if (userId == null)
             {
                 return BadRequest();
             }
 
-            await _unitOfWork.Notifications.ArchiveAllAsync(userId, cancellation);
+            await unitOfWork.Notifications.ArchiveAllAsync(userId, cancellation);
             return RedirectToAction(nameof(Index));
         }
     }

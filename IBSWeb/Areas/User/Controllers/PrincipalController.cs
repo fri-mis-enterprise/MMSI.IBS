@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -14,33 +11,28 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class PrincipalController : Controller
+    public class PrincipalController(
+        ApplicationDbContext dbContext,
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager,
+        ILogger<PrincipalController> logger)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<PrincipalController> _logger;
-
-        public PrincipalController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-            UserManager<ApplicationUser> userManager, ILogger<PrincipalController> logger)
-        {
-            _dbContext = dbContext;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-            _logger = logger;
-        }
-
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return null;
-            var claims = await _userManager.GetClaimsAsync(user);
+            var user = await userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var principals = await _unitOfWork.Principal.GetAllAsync(null, cancellationToken);
+            var principals = await unitOfWork.Principal.GetAllAsync(null, cancellationToken);
             return View(principals);
         }
 
@@ -50,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var model = new Principal
             {
-                CustomerSelectList = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
+                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
             };
             return View(model);
         }
@@ -64,20 +56,20 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var customer = await _unitOfWork.Customer
+                var customer = await unitOfWork.Customer
                     .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException("Customer not found");
                 model.CustomerId = customer.CustomerId;
-                await _unitOfWork.Principal.AddAsync(model, cancellationToken);
+                await unitOfWork.Principal.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Created new Principal #{model.PrincipalNumber}", "Principal", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -87,7 +79,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create principal.");
+                logger.LogError(ex, "Failed to create principal.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -98,18 +90,22 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.Principal
+                var model = await unitOfWork.Principal
                     .GetAsync(p => p.PrincipalId == id, cancellationToken);
 
-                if (model == null) return NotFound();
-                await _unitOfWork.Principal.RemoveAsync(model, cancellationToken);
-                await _unitOfWork.Principal.SaveAsync(cancellationToken);
+                if (model == null)
+                {
+                    return NotFound();
+                }
+
+                await unitOfWork.Principal.RemoveAsync(model, cancellationToken);
+                await unitOfWork.Principal.SaveAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete principal.");
+                logger.LogError(ex, "Failed to delete principal.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -119,9 +115,13 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var model = await _unitOfWork.Principal.GetAsync(p => p.PrincipalId == id, cancellationToken);
-            if (model == null) return NotFound();
-            model.CustomerSelectList = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            var model = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == id, cancellationToken);
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
             return View(model);
         }
 
@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await _unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken);
+            var currentModel = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -142,15 +142,15 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Edited Principal #{currentModel.PrincipalNumber} => {model.PrincipalNumber}", "Principal", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -168,7 +168,7 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.IsVatable = model.IsVatable;
                 currentModel.IsActive = model.IsActive;
                 currentModel.CustomerId = model.CustomerId;
-                await _unitOfWork.Principal.SaveAsync(cancellationToken);
+                await unitOfWork.Principal.SaveAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
@@ -176,7 +176,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit principal.");
+                logger.LogError(ex, "Failed to edit principal.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

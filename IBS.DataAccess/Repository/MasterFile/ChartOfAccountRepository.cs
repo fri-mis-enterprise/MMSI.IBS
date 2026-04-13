@@ -9,14 +9,10 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class ChartOfAccountRepository : Repository<ChartOfAccount>, IChartOfAccountRepository
+    public class ChartOfAccountRepository(ApplicationDbContext db)
+        : Repository<ChartOfAccount>(db), IChartOfAccountRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public ChartOfAccountRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<ChartOfAccount> GenerateAccount(ChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default)
         {

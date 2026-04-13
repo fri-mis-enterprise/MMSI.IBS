@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
@@ -18,28 +17,29 @@ namespace IBS.Services
         Task DeleteFileAsync(string? fileId);
     }
 
-    public class GoogleDriveService : IGoogleDriveService
+    public class GoogleDriveService(IOptions<GCSConfigOptions> options, ILogger<GoogleDriveService> logger)
+        : IGoogleDriveService
     {
-        private readonly GCSConfigOptions _options;
-        private readonly ILogger<GoogleDriveService> _logger;
+        private readonly GCSConfigOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        private readonly ILogger<GoogleDriveService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private DriveService? _driveService;
         private readonly string[] _scopes = new[] { DriveService.Scope.DriveFile };
         private const string ApplicationName = "IBS Application";
         private readonly object _lock = new();
 
-        public GoogleDriveService(IOptions<GCSConfigOptions> options, ILogger<GoogleDriveService> logger)
-        {
-            _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
         private void EnsureInitialized()
         {
-            if (_driveService != null) return;
+            if (_driveService != null)
+            {
+                return;
+            }
 
             lock (_lock)
             {
-                if (_driveService != null) return;
+                if (_driveService != null)
+                {
+                    return;
+                }
 
                 try
                 {

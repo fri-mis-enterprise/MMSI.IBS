@@ -13,25 +13,13 @@ namespace IBSWeb.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
-    public class UserController : Controller
+    public class UserController(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        ApplicationDbContext dbContext,
+        ILogger<UserController> logger)
+        : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ApplicationDbContext _dbContext;
-        private readonly ILogger<UserController> _logger;
-
-        public UserController(
-            UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
-            ApplicationDbContext dbContext,
-            ILogger<UserController> logger)
-        {
-            _userManager = userManager;
-            _roleManager = roleManager;
-            _dbContext = dbContext;
-            _logger = logger;
-        }
-
         public IActionResult Index()
         {
             return View();
@@ -44,12 +32,12 @@ namespace IBSWeb.Areas.Admin.Controllers
         {
             try
             {
-                var users = await _userManager.Users.ToListAsync();
+                var users = await userManager.Users.ToListAsync();
                 var userList = new List<object>();
 
                 foreach (var user in users)
                 {
-                    var roles = await _userManager.GetRolesAsync(user);
+                    var roles = await userManager.GetRolesAsync(user);
                     userList.Add(new
                     {
                         id = user.Id,
@@ -68,7 +56,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving users list. Error: {ErrorMessage}", ex.Message);
+                logger.LogError(ex, "Error retrieving users list. Error: {ErrorMessage}", ex.Message);
                 return Json(new { data = new List<object>() });
             }
         }
@@ -83,13 +71,13 @@ namespace IBSWeb.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Invalid user id" });
                 }
 
-                var user = await _userManager.FindByIdAsync(id);
+                var user = await userManager.FindByIdAsync(id);
                 if (user == null)
                 {
                     return Json(new { success = false, message = "User not found" });
                 }
 
-                var roles = await _userManager.GetRolesAsync(user);
+                var roles = await userManager.GetRolesAsync(user);
                 var userData = new
                 {
                     id = user.Id,
@@ -104,7 +92,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user. Error: {ErrorMessage}", ex.Message);
+                logger.LogError(ex, "Error retrieving user. Error: {ErrorMessage}", ex.Message);
                 return Json(new { success = false, message = "Error retrieving user data" });
             }
         }
@@ -114,7 +102,9 @@ namespace IBSWeb.Areas.Admin.Controllers
         public async Task<IActionResult> Upsert([FromBody] UserUpsertModel model)
         {
             if (model == null)
+            {
                 return Json(new { success = false, message = "Invalid request payload" });
+            }
 
             if (string.IsNullOrWhiteSpace(model.Username) ||
                 string.IsNullOrWhiteSpace(model.Name) ||
@@ -146,15 +136,15 @@ namespace IBSWeb.Areas.Admin.Controllers
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                     };
 
-                    var result = await _userManager.CreateAsync(newUser, model.Password!);
+                    var result = await userManager.CreateAsync(newUser, model.Password!);
 
                     if (result.Succeeded)
                     {
-                        var addRoleResult = await _userManager.AddToRoleAsync(newUser, model.Role);
+                        var addRoleResult = await userManager.AddToRoleAsync(newUser, model.Role);
                         if (!addRoleResult.Succeeded)
                         {
                             // If role assignment failed, remove the newly created user and return error
-                            await _userManager.DeleteAsync(newUser);
+                            await userManager.DeleteAsync(newUser);
                             var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
                             return Json(new { success = false, message = errors, errors = addRoleResult.Errors.Select(e => e.Description) });
                         }
@@ -171,7 +161,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                             .Replace("\r", string.Empty)
                             .Replace("\n", string.Empty);
 
-                        _logger.LogInformation("User {Username} created successfully by {CurrentUser}", safeUsername, currentUser);
+                        logger.LogInformation("User {Username} created successfully by {CurrentUser}", safeUsername, currentUser);
                         return Json(new { success = true, message = "User created successfully" });
                     }
                     else
@@ -183,7 +173,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                 else
                 {
                     // UPDATE EXISTING USER
-                    var user = await _userManager.FindByIdAsync(model.Id);
+                    var user = await userManager.FindByIdAsync(model.Id);
                     if (user == null)
                     {
                         return Json(new { success = false, message = "User not found" });
@@ -191,16 +181,27 @@ namespace IBSWeb.Areas.Admin.Controllers
 
                     // Track changes for audit
                     var changes = new List<string>();
-                    if (user.Name != model.Name) changes.Add($"Name: {user.Name} → {model.Name}");
-                    if (user.Department != model.Department) changes.Add($"Department: {user.Department} → {model.Department}");
-                    if (user.IsActive != model.IsActive) changes.Add($"Status: {(user.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
+                    if (user.Name != model.Name)
+                    {
+                        changes.Add($"Name: {user.Name} → {model.Name}");
+                    }
+
+                    if (user.Department != model.Department)
+                    {
+                        changes.Add($"Department: {user.Department} → {model.Department}");
+                    }
+
+                    if (user.IsActive != model.IsActive)
+                    {
+                        changes.Add($"Status: {(user.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
+                    }
 
                     // Update role if changed
-                    var currentRoles = await _userManager.GetRolesAsync(user);
+                    var currentRoles = await userManager.GetRolesAsync(user);
                     if (!currentRoles.Contains(model.Role))
                     {
                         // Remove existing roles
-                        var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                        var removeResult = await userManager.RemoveFromRolesAsync(user, currentRoles);
                         if (!removeResult.Succeeded)
                         {
                             var errors = string.Join(", ", removeResult.Errors.Select(e => e.Description));
@@ -208,16 +209,16 @@ namespace IBSWeb.Areas.Admin.Controllers
                         }
 
                         // Add new role
-                        var addRoleResult = await _userManager.AddToRoleAsync(user, model.Role);
+                        var addRoleResult = await userManager.AddToRoleAsync(user, model.Role);
                         if (!addRoleResult.Succeeded)
                         {
                             // Try to restore previous roles if possible
                             if (currentRoles.Any())
                             {
-                                var restoreResult = await _userManager.AddToRolesAsync(user, currentRoles);
+                                var restoreResult = await userManager.AddToRolesAsync(user, currentRoles);
                                 if (!restoreResult.Succeeded)
                                 {
-                                    _logger.LogError("Failed to restore roles for user {Username} after AddToRole failure: {Errors}", user.UserName, string.Join(", ", restoreResult.Errors.Select(e => e.Description)));
+                                    logger.LogError("Failed to restore roles for user {Username} after AddToRole failure: {Errors}", user.UserName, string.Join(", ", restoreResult.Errors.Select(e => e.Description)));
                                 }
                             }
 
@@ -235,7 +236,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                     user.ModifiedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     user.ModifiedBy = currentUser;
 
-                    var result = await _userManager.UpdateAsync(user);
+                    var result = await userManager.UpdateAsync(user);
 
                     if (result.Succeeded)
                     {
@@ -252,7 +253,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                             .Replace("\r", string.Empty)
                             .Replace("\n", string.Empty);
 
-                        _logger.LogInformation("User {safeUsername} updated successfully by {CurrentUser}", safeUsername, currentUser);
+                        logger.LogInformation("User {safeUsername} updated successfully by {CurrentUser}", safeUsername, currentUser);
                         return Json(new { success = true, message = "User updated successfully" });
                     }
                     else
@@ -264,7 +265,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving user. Error: {ErrorMessage}", ex.Message);
+                logger.LogError(ex, "Error saving user. Error: {ErrorMessage}", ex.Message);
                 return Json(new { success = false, message = "An error occurred while saving the user" });
             }
         }
@@ -281,7 +282,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                 }
                 var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
                 var company = User.FindFirstValue("Company") ?? "System";
-                var user = await _userManager.FindByIdAsync(id);
+                var user = await userManager.FindByIdAsync(id);
 
                 if (user == null)
                 {
@@ -297,7 +298,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                 user.ModifiedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 user.ModifiedBy = currentUser;
 
-                var result = await _userManager.UpdateAsync(user);
+                var result = await userManager.UpdateAsync(user);
 
                 if (result.Succeeded)
                 {
@@ -313,7 +314,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                         .Replace("\r", string.Empty)
                         .Replace("\n", string.Empty);
 
-                    _logger.LogInformation("User {safeUsername} {Action} by {CurrentUser}", safeUsername, action, currentUser);
+                    logger.LogInformation("User {safeUsername} {Action} by {CurrentUser}", safeUsername, action, currentUser);
                     return Json(new { success = true, message = $"User {action} successfully" });
                 }
 
@@ -321,7 +322,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error toggling user status. Error: {ErrorMessage}", ex.Message);
+                logger.LogError(ex, "Error toggling user status. Error: {ErrorMessage}", ex.Message);
                 return Json(new { success = false, message = "An error occurred" });
             }
         }
@@ -334,7 +335,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             {
                 var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
                 var company = User.FindFirstValue("Company") ?? "System";
-                var user = await _userManager.FindByIdAsync(model.UserId);
+                var user = await userManager.FindByIdAsync(model.UserId);
 
                 if (user == null)
                 {
@@ -342,17 +343,17 @@ namespace IBSWeb.Areas.Admin.Controllers
                 }
 
                 // Remove old password
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+                var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await userManager.ResetPasswordAsync(user, token, model.NewPassword);
 
                 if (result.Succeeded)
                 {
                     user.ModifiedDate = DateTime.Now;
                     user.ModifiedBy = currentUser;
-                    var updateResult = await _userManager.UpdateAsync(user);
+                    var updateResult = await userManager.UpdateAsync(user);
                     if (!updateResult.Succeeded)
                     {
-                        _logger.LogWarning("Failed to update audit fields for user {Username} after password reset", user.UserName);
+                        logger.LogWarning("Failed to update audit fields for user {Username} after password reset", user.UserName);
                     }
 
                     await LogAuditTrail(
@@ -366,7 +367,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                         .Replace("\r", string.Empty)
                         .Replace("\n", string.Empty);
 
-                    _logger.LogInformation("Password reset for user {Username} by {CurrentUser}", safeUsername, currentUser);
+                    logger.LogInformation("Password reset for user {Username} by {CurrentUser}", safeUsername, currentUser);
                     return Json(new { success = true, message = "Password reset successfully" });
                 }
 
@@ -375,7 +376,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error resetting password. Error: {ErrorMessage}", ex.Message);
+                logger.LogError(ex, "Error resetting password. Error: {ErrorMessage}", ex.Message);
                 return Json(new { success = false, message = "An error occurred while resetting password" });
             }
         }
@@ -387,8 +388,8 @@ namespace IBSWeb.Areas.Admin.Controllers
         private async Task LogAuditTrail(string username, string activity, string documentType, string company)
         {
             var auditTrail = new AuditTrail(username, activity, documentType, company);
-            await _dbContext.AuditTrails.AddAsync(auditTrail);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.AuditTrails.AddAsync(auditTrail);
+            await dbContext.SaveChangesAsync();
         }
 
         #endregion
@@ -398,7 +399,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetRoles()
         {
-            var roles = _roleManager.Roles
+            var roles = roleManager.Roles
                 // .Where(r => r.Name != "Admin") // Exclude Admin role
                 .Select(r => new SelectListItem
                 {

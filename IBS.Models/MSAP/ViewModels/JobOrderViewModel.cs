@@ -1,5 +1,3 @@
-using IBS.Models.MasterFile;
-using IBS.Models.MMSI.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 

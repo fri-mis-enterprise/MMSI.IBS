@@ -16,22 +16,13 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class JobOrderController : BaseController
+    public class JobOrderController(
+        IAccessControlService accessControl,
+        UserManager<ApplicationUser> userManager,
+        IUnitOfWork unitOfWork,
+        ILogger<JobOrderController> logger)
+        : BaseController(accessControl, userManager)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<JobOrderController> _logger;
-
-        public JobOrderController(
-            IAccessControlService accessControl,
-            UserManager<ApplicationUser> userManager,
-            IUnitOfWork unitOfWork,
-            ILogger<JobOrderController> logger)
-            : base(accessControl, userManager)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-        }
-
         #region Index
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -42,7 +33,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var jobOrders = await _unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
+            var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
 
             // Populate create modal view model if user has create access
             if (await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.CreateJobOrder))
@@ -65,7 +56,9 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> CreateModal(CancellationToken cancellationToken)
         {
             if (!await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.CreateJobOrder))
+            {
                 return PartialView("_ErrorModal", new { message = "You don't have permission to create Job Orders." });
+            }
 
             var viewModel = new JobOrderViewModel();
             await PopulateSelectListsAsync(viewModel, cancellationToken);
@@ -104,26 +97,26 @@ namespace IBSWeb.Areas.User.Controllers
                     VoyageNumber   = viewModel.VoyageNumber,
                     Remarks        = viewModel.Remarks,
                     Status         = JobOrderStatus.Open,
-                    JobOrderNumber = await _unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken),
+                    JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken),
                     CreatedBy      = currentUser.UserName ?? "Unknown",
                     CreatedDate    = DateTimeHelper.GetCurrentPhilippineTime()
                 };
 
-                await _unitOfWork.JobOrder.AddAsync(jobOrder, cancellationToken);
+                await unitOfWork.JobOrder.AddAsync(jobOrder, cancellationToken);
 
                 await RecordAuditAsync(
                     activity: $"Created Job Order #{jobOrder.JobOrderNumber}",
                     username: currentUser.UserName!,
                     cancellationToken: cancellationToken);
 
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 TempData["success"] = "Job Order created successfully.";
                 return Json(new { success = true, redirectUrl = Url.Action("Details", new { id = jobOrder.JobOrderId }) });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating Job Order");
+                logger.LogError(ex, "Error creating Job Order");
                 TempData["error"] = "Error creating Job Order.";
             }
 
@@ -143,9 +136,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
+            {
                 return NotFound();
+            }
 
             var companyClaim = await GetCompanyClaimAsync();
 
@@ -161,8 +156,8 @@ namespace IBSWeb.Areas.User.Controllers
                 Date         = jobOrder.Date
             };
 
-            ticketViewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(ticketViewModel, cancellationToken);
-            ticketViewModel.Customers = await _unitOfWork.GetCustomerListAsyncById(companyClaim!, cancellationToken);
+            ticketViewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(ticketViewModel, cancellationToken);
+            ticketViewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaim!, cancellationToken);
 
             var viewModel = new JobOrderViewModel
             {
@@ -202,9 +197,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var jobOrder = await _unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == id, cancellationToken);
+            var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == id, cancellationToken);
             if (jobOrder == null)
+            {
                 return NotFound();
+            }
 
             var viewModel = MapToViewModel(jobOrder);
             await PopulateSelectListsAsync(viewModel, cancellationToken);
@@ -216,11 +213,15 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> EditModal(int id, CancellationToken cancellationToken)
         {
             if (!await AccessControl.HasAccessAsync(GetUserId(), ProcedureEnum.EditJobOrder))
+            {
                 return PartialView("_ErrorModal", new { message = "You don't have permission to edit this Job Order." });
+            }
 
-            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
+            {
                 return NotFound();
+            }
 
             var viewModel = MapToViewModel(jobOrder);
             await PopulateSelectListsAsync(viewModel, cancellationToken);
@@ -264,9 +265,11 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                var jobOrder = await _unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == viewModel.JobOrderId, cancellationToken);
+                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == viewModel.JobOrderId, cancellationToken);
                 if (jobOrder == null)
+                {
                     return NotFound();
+                }
 
                 var currentUser = await GetCurrentUserAsync();
 
@@ -286,14 +289,14 @@ namespace IBSWeb.Areas.User.Controllers
                     username: currentUser.UserName!,
                     cancellationToken: cancellationToken);
 
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 TempData["success"] = "Job Order updated successfully.";
                 return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating Job Order {JobOrderId}", viewModel.JobOrderId);
+                logger.LogError(ex, "Error updating Job Order {JobOrderId}", viewModel.JobOrderId);
                 TempData["error"] = "Error updating Job Order.";
             }
 
@@ -314,9 +317,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return PermissionDenied("You don't have permission to cancel Job Orders.");
             }
 
-            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
+            {
                 return NotFound();
+            }
 
             if (jobOrder.Status == JobOrderStatus.Cancelled)
             {
@@ -340,11 +345,19 @@ namespace IBSWeb.Areas.User.Controllers
             // Build warning message
             var warnings = new List<string>();
             if (ticketsForApproval > 0)
+            {
                 warnings.Add($"{ticketsForApproval} ticket(s) pending approval will be affected");
+            }
+
             if (ticketsDisapproved > 0)
+            {
                 warnings.Add($"{ticketsDisapproved} disapproved ticket(s) need attention");
+            }
+
             if (ticketsWithoutTariff > 0)
+            {
                 warnings.Add($"{ticketsWithoutTariff} ticket(s) without tariff will be orphaned");
+            }
 
             ViewData["HasTickets"] = jobOrder.DispatchTickets.Any();
             ViewData["TicketsForBilling"] = ticketsForBillingOrBilled;
@@ -376,9 +389,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return PermissionDenied("You don't have permission to cancel Job Orders.");
             }
 
-            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
+            {
                 return NotFound();
+            }
 
             if (jobOrder.Status == JobOrderStatus.Cancelled)
             {
@@ -411,15 +426,23 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var warnings = new List<string>();
                 if (ticketsForApproval > 0)
+                {
                     warnings.Add($"{ticketsForApproval} ticket(s) pending approval will be affected");
+                }
+
                 if (ticketsDisapproved > 0)
+                {
                     warnings.Add($"{ticketsDisapproved} disapproved ticket(s) need attention");
+                }
+
                 if (ticketsWithoutTariff > 0)
+                {
                     warnings.Add($"{ticketsWithoutTariff} ticket(s) without tariff will be orphaned");
+                }
 
                 TempData["warning"] = "<strong>Warning: Affected Tickets</strong><br/>" +
-                    string.Join("<br/>• ", warnings) +
-                    "<br/><br/>Are you sure you want to proceed?";
+                                      string.Join("<br/>• ", warnings) +
+                                      "<br/><br/>Are you sure you want to proceed?";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -429,9 +452,20 @@ namespace IBSWeb.Areas.User.Controllers
 
             // Build detailed audit message
             var auditDetails = new List<string>();
-            if (ticketsForApproval > 0) auditDetails.Add($"{ticketsForApproval} for approval");
-            if (ticketsDisapproved > 0) auditDetails.Add($"{ticketsDisapproved} disapproved");
-            if (ticketsWithoutTariff > 0) auditDetails.Add($"{ticketsWithoutTariff} without tariff");
+            if (ticketsForApproval > 0)
+            {
+                auditDetails.Add($"{ticketsForApproval} for approval");
+            }
+
+            if (ticketsDisapproved > 0)
+            {
+                auditDetails.Add($"{ticketsDisapproved} disapproved");
+            }
+
+            if (ticketsWithoutTariff > 0)
+            {
+                auditDetails.Add($"{ticketsWithoutTariff} without tariff");
+            }
 
             var auditMessage = $"Cancelled Job Order #{jobOrder.JobOrderNumber}";
             if (auditDetails.Any())
@@ -444,7 +478,7 @@ namespace IBSWeb.Areas.User.Controllers
                 username: currentUser.UserName!,
                 cancellationToken: cancellationToken);
 
-            await _unitOfWork.SaveAsync(cancellationToken);
+            await unitOfWork.SaveAsync(cancellationToken);
 
             TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} has been cancelled.";
             return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
@@ -464,9 +498,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            var jobOrder = await _unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
             if (jobOrder == null)
+            {
                 return NotFound();
+            }
 
             if (jobOrder.Status == JobOrderStatus.Closed)
             {
@@ -517,7 +553,7 @@ namespace IBSWeb.Areas.User.Controllers
                 username: currentUser.UserName!,
                 cancellationToken: cancellationToken);
 
-            await _unitOfWork.SaveAsync(cancellationToken);
+            await unitOfWork.SaveAsync(cancellationToken);
 
             TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} has been closed.";
             return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
@@ -530,7 +566,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
-            var terminals = await _unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
+            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
 
             var list = terminals
                 .OrderBy(t => t.TerminalName)
@@ -546,9 +582,11 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTicketDetails(int id, CancellationToken cancellationToken)
         {
-            var ticket = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+            var ticket = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (ticket == null)
+            {
                 return NotFound();
+            }
 
             return Json(new
             {
@@ -624,7 +662,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var audit = new AuditTrail(username, activity, "Job Order", companyClaim);
 
-            await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
+            await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
         }
 
         private static JobOrderViewModel MapToViewModel(JobOrder jobOrder) => new()
@@ -646,9 +684,9 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var companyClaim = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsyncById(companyClaim!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaim!, cancellationToken);
 
-            var vessels = await _unitOfWork.Vessel.GetAllAsync(cancellationToken: cancellationToken);
+            var vessels = await unitOfWork.Vessel.GetAllAsync(cancellationToken: cancellationToken);
             viewModel.Vessels = vessels
                 .OrderBy(v => v.VesselName)
                 .Select(v => new SelectListItem
@@ -658,7 +696,7 @@ namespace IBSWeb.Areas.User.Controllers
                 })
                 .ToList();
 
-            var ports = await _unitOfWork.Port.GetAllAsync(cancellationToken: cancellationToken);
+            var ports = await unitOfWork.Port.GetAllAsync(cancellationToken: cancellationToken);
             viewModel.Ports = ports
                 .OrderBy(p => p.PortName)
                 .Select(p => new SelectListItem
@@ -669,7 +707,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .ToList();
 
             viewModel.Terminals = viewModel.PortId.HasValue
-                ? (await _unitOfWork.Terminal.GetAllAsync(t => t.PortId == viewModel.PortId, cancellationToken: cancellationToken))
+                ? (await unitOfWork.Terminal.GetAllAsync(t => t.PortId == viewModel.PortId, cancellationToken: cancellationToken))
                     .OrderBy(t => t.TerminalName)
                     .Select(t => new SelectListItem
                     {

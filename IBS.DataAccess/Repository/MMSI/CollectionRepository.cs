@@ -4,23 +4,16 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.Enums;
 using IBS.Models;
-using IBS.Models.Integrated;
 using IBS.Models.MMSI;
-using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class CollectionRepository : Repository<Collection>, ICollectionRepository
+    public class CollectionRepository(ApplicationDbContext db): Repository<Collection>(db), ICollectionRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public CollectionRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {

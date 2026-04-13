@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Http;
@@ -7,15 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IBS.Services
 {
-    public class MaintenanceMiddleware
+    public class MaintenanceMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public MaintenanceMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
         public async Task InvokeAsync(HttpContext context, IServiceProvider serviceProvider)
         {
             // Get the DbContext (or use your repository/unit of work)
@@ -36,7 +28,7 @@ namespace IBS.Services
                 }
             }
 
-            await _next(context);
+            await next(context);
         }
     }
 }

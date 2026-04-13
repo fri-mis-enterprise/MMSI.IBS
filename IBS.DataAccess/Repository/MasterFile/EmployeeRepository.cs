@@ -4,13 +4,8 @@ using IBS.Models.MasterFile;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
+    public class EmployeeRepository(ApplicationDbContext db): Repository<Employee>(db), IEmployeeRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public EmployeeRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
     }
 }

@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -14,24 +11,16 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class MaritimeServiceController : Controller
+    public class MaritimeServiceController(
+        ApplicationDbContext dbContext,
+        ILogger<ServiceController> logger,
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly ILogger<ServiceController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public MaritimeServiceController(ApplicationDbContext dbContext, ILogger<ServiceController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
-        {
-            _dbContext = dbContext;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-        }
-
         public IActionResult Index()
         {
-            var activitiesServices = _dbContext.MMSIServices.ToList();
+            var activitiesServices = dbContext.MMSIServices.ToList();
             return View(activitiesServices);
         }
 
@@ -50,17 +39,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                await _unitOfWork.Service.AddAsync(model, cancellationToken);
+                await unitOfWork.Service.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Created new Service #{model.ServiceNumber}", "Service", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -71,7 +60,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create service.");
+                logger.LogError(ex, "Failed to create service.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -82,19 +71,22 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.Service.GetAsync( i => i.ServiceId == id, cancellationToken);
+                var model = await unitOfWork.Service.GetAsync( i => i.ServiceId == id, cancellationToken);
 
-                if (model == null) return NotFound();
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
-                _dbContext.MMSIServices.Remove(model);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                dbContext.MMSIServices.Remove(model);
+                await dbContext.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
 
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete service.");
+                logger.LogError(ex, "Failed to delete service.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -103,7 +95,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.Service.GetAsync(a => a.ServiceId == id, cancellationToken);
+            var model = await unitOfWork.Service.GetAsync(a => a.ServiceId == id, cancellationToken);
             return View(model);
         }
 
@@ -116,25 +108,28 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await _unitOfWork.Service.GetAsync(s => s.ServiceId == model.ServiceId, cancellationToken);
+            var currentModel = await unitOfWork.Service.GetAsync(s => s.ServiceId == model.ServiceId, cancellationToken);
 
-            if (currentModel == null) return NotFound();
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Edited Service #{currentModel.ServiceNumber} => {model.ServiceNumber}", "Service", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
                 currentModel.ServiceNumber = model.ServiceNumber;
                 currentModel.ServiceName = model.ServiceName;
-                await _unitOfWork.Service.SaveAsync(cancellationToken);
+                await unitOfWork.Service.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
@@ -142,7 +137,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit service.");
+                logger.LogError(ex, "Failed to edit service.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI.MasterFile;
@@ -7,14 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class ServiceRepository : Repository<Service>, IServiceRepository
+    public class ServiceRepository(ApplicationDbContext db): Repository<Service>(db), IServiceRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public ServiceRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {

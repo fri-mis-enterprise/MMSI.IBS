@@ -1,14 +1,10 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,24 +15,13 @@ using OfficeOpenXml;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class ServiceController : Controller
+    public class ServiceController(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager,
+        IUnitOfWork unitOfWork,
+        ILogger<ServiceController> logger)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<ServiceController> _logger;
-
-        public ServiceController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<ServiceController> logger)
-        {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -45,20 +30,20 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var services = await _dbContext.Services.ToListAsync(cancellationToken);
+            var services = await dbContext.Services.ToListAsync(cancellationToken);
 
             if (view == nameof(DynamicView.ServiceMaster))
             {
@@ -73,7 +58,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var viewModel = new ServiceMaster
             {
-                CurrentAndPreviousTitles = await _dbContext.ChartOfAccounts
+                CurrentAndPreviousTitles = await dbContext.ChartOfAccounts
                     .Where(coa => coa.Level == 4 || coa.Level == 5)
                     .OrderBy(coa => coa.AccountId)
                     .Select(s => new SelectListItem
@@ -82,7 +67,7 @@ namespace IBSWeb.Areas.User.Controllers
                         Text = s.AccountNumber + " " + s.AccountName
                     })
                     .ToListAsync(cancellationToken),
-                UnearnedTitles = await _dbContext.ChartOfAccounts
+                UnearnedTitles = await dbContext.ChartOfAccounts
                     .Where(coa => coa.Level == 4 || coa.Level == 5)
                     .OrderBy(coa => coa.AccountId)
                     .Select(s => new SelectListItem
@@ -100,7 +85,7 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ServiceMaster services, CancellationToken cancellationToken)
         {
-            services.CurrentAndPreviousTitles = await _dbContext.ChartOfAccounts
+            services.CurrentAndPreviousTitles = await dbContext.ChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -110,7 +95,7 @@ namespace IBSWeb.Areas.User.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            services.UnearnedTitles = await _dbContext.ChartOfAccounts
+            services.UnearnedTitles = await dbContext.ChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -132,20 +117,20 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (await _unitOfWork.ServiceMaster.IsServicesExist(services.Name, companyClaims, cancellationToken))
+                if (await unitOfWork.ServiceMaster.IsServicesExist(services.Name, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("Name", "Services already exist!");
                     return View(services);
                 }
 
-                var currentAndPrevious = await _unitOfWork.ChartOfAccount
+                var currentAndPrevious = await unitOfWork.ChartOfAccount
                     .GetAsync(x => x.AccountId == services.CurrentAndPreviousId, cancellationToken);
 
-                var unearned = await _unitOfWork.ChartOfAccount
+                var unearned = await unitOfWork.ChartOfAccount
                     .GetAsync(x => x.AccountId == services.UnearnedId, cancellationToken);
 
                 services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
@@ -154,14 +139,14 @@ namespace IBSWeb.Areas.User.Controllers
                 services.UnearnedTitle = unearned.AccountName;
                 services.Company = companyClaims;
                 services.CreatedBy = GetUserFullName();
-                services.ServiceNo = await _unitOfWork.ServiceMaster.GetLastNumber(cancellationToken);
-                await _unitOfWork.ServiceMaster.AddAsync(services, cancellationToken);
+                services.ServiceNo = await unitOfWork.ServiceMaster.GetLastNumber(cancellationToken);
+                await unitOfWork.ServiceMaster.AddAsync(services, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Create ServiceMaster #{services.ServiceNo}", "ServiceMaster", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -171,7 +156,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(services);
@@ -183,7 +168,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var query = await _unitOfWork.ServiceMaster
+                var query = await unitOfWork.ServiceMaster
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -228,7 +213,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get services.");
+                logger.LogError(ex, "Failed to get services.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -242,7 +227,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var services = await _unitOfWork.ServiceMaster
+            var services = await unitOfWork.ServiceMaster
                 .GetAsync(x => x.ServiceId == id, cancellationToken);
 
             if (services == null)
@@ -261,7 +246,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(services);
             }
 
-            var existingModel =  await _unitOfWork.ServiceMaster
+            var existingModel =  await unitOfWork.ServiceMaster
                 .GetAsync(x => x.ServiceId == services.ServiceId, cancellationToken);
 
             if (existingModel == null)
@@ -269,20 +254,20 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 existingModel.Name = services.Name;
                 existingModel.Percent = services.Percent;
                 existingModel.IsFilpride = services.IsFilpride;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited ServiceMaster #{existingModel.ServiceNo}", "ServiceMaster", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -292,7 +277,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -305,7 +290,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var services = (await _dbContext.Services.ToListAsync(cancellationToken))
+                var services = (await dbContext.Services.ToListAsync(cancellationToken))
                     .Select(x => new
                     {
                         x.ServiceId,
@@ -344,7 +329,7 @@ namespace IBSWeb.Areas.User.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             // Retrieve the selected invoices from the database
-            var selectedList = await _dbContext.Services
+            var selectedList = await dbContext.Services
                 .Where(service => recordIds.Contains(service.ServiceId))
                 .OrderBy(service => service.ServiceId)
                 .ToListAsync();
@@ -396,7 +381,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult GetAllServiceIds()
         {
-            var serviceIds = _dbContext.Services
+            var serviceIds = dbContext.Services
                 .Select(s => s.ServiceId)
                 .ToList();
 

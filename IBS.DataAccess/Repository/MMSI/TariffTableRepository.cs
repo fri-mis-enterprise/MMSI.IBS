@@ -1,21 +1,14 @@
-using IBS.Models.Books;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TariffTableRepository : Repository<TariffRate>, ITariffTableRepository
+    public class TariffTableRepository(ApplicationDbContext db): Repository<TariffRate>(db), ITariffTableRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public TariffTableRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public override async Task<TariffRate?> GetAsync(Expression<Func<TariffRate, bool>> filter, CancellationToken cancellationToken = default)
         {

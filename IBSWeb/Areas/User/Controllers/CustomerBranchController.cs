@@ -1,7 +1,4 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -13,24 +10,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class CustomerBranchController : Controller
+    public class CustomerBranchController(
+        IUnitOfWork unitOfWork,
+        ILogger<CustomerController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<CustomerController> _logger;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        public CustomerBranchController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -49,7 +35,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var model = new CustomerBranch
             {
-                CustomerSelectList = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
+                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
             };
 
             return View(model);
@@ -65,15 +51,15 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 model.CustomerSelectList =
-                    await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var customer = await _unitOfWork.Customer
+                var customer = await unitOfWork.Customer
                     .GetAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
 
                 if (customer == null)
@@ -82,13 +68,13 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 customer.HasBranch = true;
-                await _unitOfWork.CustomerBranch.AddAsync(model, cancellationToken);
+                await unitOfWork.CustomerBranch.AddAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Created Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -98,10 +84,10 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                model.CustomerSelectList = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
                 return View(model);
             }
         }
@@ -115,14 +101,14 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var branch = await _unitOfWork.CustomerBranch.GetAsync(b => b.Id == id, cancellationToken);
+            var branch = await unitOfWork.CustomerBranch.GetAsync(b => b.Id == id, cancellationToken);
 
             if (branch == null)
             {
                 return NotFound();
             }
 
-            branch.CustomerSelectList = await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            branch.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
             return View(branch);
         }
 
@@ -136,21 +122,21 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 model.CustomerSelectList =
-                    await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                await _unitOfWork.CustomerBranch.UpdateAsync(model, cancellationToken);
+                await unitOfWork.CustomerBranch.UpdateAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -160,25 +146,25 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 await transaction.RollbackAsync(cancellationToken);
                 model.CustomerSelectList =
-                    await _unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
                 return View(model);
             }
         }
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -187,7 +173,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var query = await _unitOfWork.CustomerBranch
+                var query = await unitOfWork.CustomerBranch
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -239,7 +225,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get customer branches.");
+                logger.LogError(ex, "Failed to get customer branches.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -250,7 +236,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var customer = await _unitOfWork.Customer
+                var customer = await unitOfWork.Customer
                     .GetAsync(c => c.CustomerId == customerId, cancellationToken);
 
                 if (customer == null)
@@ -266,7 +252,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get dispatch tickets.");
+                logger.LogError(ex, "Failed to get dispatch tickets.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

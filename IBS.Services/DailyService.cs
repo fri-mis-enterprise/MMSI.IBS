@@ -1,9 +1,7 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,28 +10,20 @@ using Quartz;
 
 namespace IBS.Services
 {
-    public class DailyService : IJob
+    public class DailyService(
+        ApplicationDbContext dbContext,
+        ILogger<DailyService> logger,
+        UserManager<ApplicationUser> userManager,
+        IUnitOfWork unitOfWork)
+        : IJob
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
 
-        private readonly ILogger<DailyService> _logger;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly IUnitOfWork _unitOfWork;
-
-        public DailyService(ApplicationDbContext dbContext, ILogger<DailyService> logger,
-            UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork)
-        {
-            _dbContext = dbContext;
-            _logger = logger;
-            _userManager = userManager;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task Execute(IJobExecutionContext context)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try
             {
@@ -47,13 +37,13 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, ex.Message);
+                logger.LogError(ex, ex.Message);
             }
         }
 
         private async Task CosExpiration(DateOnly today)
         {
-            var cosList = await _dbContext.CustomerOrderSlips
+            var cosList = await dbContext.CustomerOrderSlips
                 .Where(cos => cos.ExpirationDate <= today
                               && cos.Status != nameof(CosStatus.Completed)
                               && cos.Status != nameof(CosStatus.Expired)
@@ -78,7 +68,7 @@ namespace IBS.Services
                 cos.Remarks = $"Previous status: [{previousStatus}] updated to Expired on {today}. {cos.Remarks}";
             }
 
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
     }
 }

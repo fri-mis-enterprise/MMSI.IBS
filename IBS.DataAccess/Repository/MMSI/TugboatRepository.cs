@@ -1,21 +1,14 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
-using IBS.Models.MMSI;
 using IBS.Models.MMSI.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TugboatRepository : Repository<Tugboat>, ITugboatRepository
+    public class TugboatRepository(ApplicationDbContext db): Repository<Tugboat>(db), ITugboatRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public TugboatRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {

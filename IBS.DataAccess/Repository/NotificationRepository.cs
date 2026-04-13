@@ -6,15 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository
 {
-    public class NotificationRepository : INotificationRepository
+    public class NotificationRepository(ApplicationDbContext db): INotificationRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public NotificationRepository(ApplicationDbContext db)
-        {
-            _db = db;
-        }
-
         public async Task AddNotificationAsync(string userId, string message, bool requiresResponse = false)
         {
             var notification = new Notification
@@ -23,8 +16,8 @@ namespace IBS.DataAccess.Repository
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
             };
 
-            await _db.Notifications.AddAsync(notification);
-            await _db.SaveChangesAsync();
+            await db.Notifications.AddAsync(notification);
+            await db.SaveChangesAsync();
 
             var userNotification = new UserNotification
             {
@@ -34,8 +27,8 @@ namespace IBS.DataAccess.Repository
                 RequiresResponse = requiresResponse
             };
 
-            await _db.UserNotifications.AddAsync(userNotification);
-            await _db.SaveChangesAsync();
+            await db.UserNotifications.AddAsync(userNotification);
+            await db.SaveChangesAsync();
         }
 
         public async Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false)
@@ -46,8 +39,8 @@ namespace IBS.DataAccess.Repository
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
             };
 
-            await _db.Notifications.AddAsync(notification);
-            await _db.SaveChangesAsync();
+            await db.Notifications.AddAsync(notification);
+            await db.SaveChangesAsync();
 
             var userNotifications = userIds.Select(userId => new UserNotification
             {
@@ -57,29 +50,29 @@ namespace IBS.DataAccess.Repository
                 RequiresResponse = requiresResponse
             }).ToList();
 
-            await _db.UserNotifications.AddRangeAsync(userNotifications);
-            await _db.SaveChangesAsync();
+            await db.UserNotifications.AddRangeAsync(userNotifications);
+            await db.SaveChangesAsync();
         }
 
         public async Task ArchiveAsync(Guid userNotificationId)
         {
-            var userNotification = await _db.UserNotifications.FindAsync(userNotificationId);
+            var userNotification = await db.UserNotifications.FindAsync(userNotificationId);
 
             if (userNotification != null)
             {
                 userNotification.IsArchived = true;
-                await _db.SaveChangesAsync();
+                await db.SaveChangesAsync();
             }
         }
 
         public async Task<int> GetUnreadNotificationCountAsync(string userId)
         {
-            return await _db.UserNotifications.CountAsync(n => n.UserId == userId && !n.IsRead && !n.IsArchived);
+            return await db.UserNotifications.CountAsync(n => n.UserId == userId && !n.IsRead && !n.IsArchived);
         }
 
         public async Task<List<UserNotification>> GetUserNotificationsAsync(string userId)
         {
-            return await _db.UserNotifications
+            return await db.UserNotifications
                 .Include(un => un.Notification)
                 .Where(un => un.UserId == userId && !un.IsArchived)
                 .OrderByDescending(un => un.Notification.CreatedDate)
@@ -88,17 +81,17 @@ namespace IBS.DataAccess.Repository
 
         public async Task MarkAsReadAsync(Guid userNotificationId)
         {
-            var userNotification = await _db.UserNotifications.FindAsync(userNotificationId);
+            var userNotification = await db.UserNotifications.FindAsync(userNotificationId);
             if (userNotification != null)
             {
                 userNotification.IsRead = true;
-                await _db.SaveChangesAsync();
+                await db.SaveChangesAsync();
             }
         }
 
         public async Task MarkAllAsReadAsync(string userId, CancellationToken cancellation = default)
         {
-            await _db.UserNotifications
+            await db.UserNotifications
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(n => n.IsRead, true), cancellation);
@@ -106,7 +99,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task ArchiveAllAsync(string userId, CancellationToken cancellation = default)
         {
-            await _db.UserNotifications
+            await db.UserNotifications
                 .Where(n => n.UserId == userId && !n.IsArchived)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(n => n.IsArchived, true), cancellation);

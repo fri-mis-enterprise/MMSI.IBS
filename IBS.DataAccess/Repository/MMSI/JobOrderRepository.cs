@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class JobOrderRepository : Repository<JobOrder>, IJobOrderRepository
+    public class JobOrderRepository(ApplicationDbContext db): Repository<JobOrder>(db), IJobOrderRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public JobOrderRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<IEnumerable<JobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken)
         {

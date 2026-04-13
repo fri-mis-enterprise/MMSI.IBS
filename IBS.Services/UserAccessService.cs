@@ -1,10 +1,5 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
-using IBS.Models;
 using IBS.Models.Enums;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.Services
@@ -14,18 +9,11 @@ namespace IBS.Services
         Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default);
     }
 
-    public class UserAccessService : IUserAccessService
+    public class UserAccessService(ApplicationDbContext dbContext): IUserAccessService
     {
-        private readonly ApplicationDbContext _dbContext;
-
-        public UserAccessService(ApplicationDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-
         public async Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default)
         {
-            var userAccess = await _dbContext.MMSIUserAccesses
+            var userAccess = await dbContext.MMSIUserAccesses
                 .FirstOrDefaultAsync(a => a.UserId == id, cancellationToken);
 
             if (userAccess == null)

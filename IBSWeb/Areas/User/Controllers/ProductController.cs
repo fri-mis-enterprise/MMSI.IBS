@@ -1,5 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
@@ -17,24 +15,13 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [Authorize]
-    public class ProductController : Controller
+    public class ProductController(
+        IUnitOfWork unitOfWork,
+        ILogger<ProductController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<ProductController> _logger;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -43,7 +30,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(string? view)
         {
-            IEnumerable<Product> products = await _unitOfWork
+            IEnumerable<Product> products = await unitOfWork
                 .Product
                 .GetAllAsync();
 
@@ -57,14 +44,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -83,7 +70,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            bool IsProductExist = await _unitOfWork
+            bool IsProductExist = await unitOfWork
                 .Product
                 .IsProductExist(model.ProductName, cancellationToken);
 
@@ -93,20 +80,20 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.CreatedBy = GetUserFullName();
-                await _unitOfWork.Product.AddAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.Product.AddAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Created Product {model.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -116,7 +103,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create product master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create product master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return View(model);
@@ -128,7 +115,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.Product
+                var queried = await unitOfWork.Product
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -171,7 +158,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get products.");
+                logger.LogError(ex, "Failed to get products.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -185,7 +172,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork.Product.GetAsync(c => c.ProductId == id, cancellationToken);
+            var product = await unitOfWork.Product.GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product != null)
             {
@@ -203,26 +190,26 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var existing = await _unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
+            var existing = await unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
 
             if (existing == null)
             {
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.EditedBy = GetUserFullName();
-                await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
+                await unitOfWork.Product.UpdateAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Edited Product {existing.ProductCode} => {model.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -232,7 +219,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in updating product.");
+                logger.LogError(ex, "Error in updating product.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
@@ -247,7 +234,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork
+            var product = await unitOfWork
                 .Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -267,7 +254,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork.Product
+            var product = await unitOfWork.Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product == null)
@@ -275,19 +262,19 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 product.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Activated Product #{product.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -297,7 +284,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to activate product master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to activate product master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Activate), new { id = id });
@@ -312,7 +299,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork
+            var product = await unitOfWork
                 .Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -332,7 +319,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork.Product
+            var product = await unitOfWork.Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product == null)
@@ -340,19 +327,19 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 product.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
                     GetUserFullName(), $"Deactivated Product #{product.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -362,7 +349,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to deactivate product master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to deactivate product master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Deactivate), new { id = id });
@@ -372,7 +359,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult GetAllProductIds()
         {
-            var productIds = _dbContext.Products
+            var productIds = dbContext.Products
                                      .Select(p => p.ProductId) // Assuming Id is the primary key
                                      .ToList();
 
@@ -384,7 +371,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var products = (await _unitOfWork
+                var products = (await unitOfWork
                     .Product
                     .GetAllAsync())
                     .Select(x => new
@@ -423,7 +410,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
-            var selectedList = await _unitOfWork.Product
+            var selectedList = await unitOfWork.Product
                 .GetAllAsync(p => recordIds.Contains(p.ProductId));
 
             // Create the Excel package

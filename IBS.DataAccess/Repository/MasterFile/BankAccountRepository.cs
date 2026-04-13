@@ -6,14 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class BankAccountRepository : Repository<BankAccount>, IBankAccountRepository
+    public class BankAccountRepository(ApplicationDbContext db): Repository<BankAccount>(db), IBankAccountRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public BankAccountRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<List<SelectListItem>> GetBankAccountListAsync(string company, CancellationToken cancellationToken = default)
         {

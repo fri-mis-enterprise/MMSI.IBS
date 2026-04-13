@@ -1,7 +1,4 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -15,24 +12,13 @@ using Microsoft.EntityFrameworkCore;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class PaymentTermController : Controller
+    public class PaymentTermController(
+        IUnitOfWork unitOfWork,
+        ILogger<SupplierController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<SupplierController> _logger;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _dbContext;
-
-        public PaymentTermController(IUnitOfWork unitOfWork,
-            ILogger<SupplierController> logger,
-            UserManager<ApplicationUser> userManager,
-            ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -41,14 +27,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -62,7 +48,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.Terms
+                var queried = await unitOfWork.Terms
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -105,7 +91,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get suppliers.");
+                logger.LogError(ex, "Failed to get suppliers.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -137,7 +123,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -147,14 +133,14 @@ namespace IBSWeb.Areas.User.Controllers
                 model.CreatedBy = getUserFullName;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.EditedBy = string.Empty;
-                await _unitOfWork.Terms.AddAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.Terms.AddAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(getUserFullName,
                     $"Create new Terms #{model.TermsCode}", "Terms", companyClaims);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -164,7 +150,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create terms master file. Created by: {UserName}", getUserFullName);
+                logger.LogError(ex, "Failed to create terms master file. Created by: {UserName}", getUserFullName);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
@@ -179,7 +165,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork.Terms.GetAsync(c => c.TermsCode == code, cancellationToken);
+            var supplier = await unitOfWork.Terms.GetAsync(c => c.TermsCode == code, cancellationToken);
 
             if (supplier == null)
             {
@@ -207,18 +193,18 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.EditedBy = getUserFullName;
-                await _unitOfWork.Terms.UpdateAsync(model, cancellationToken);
+                await unitOfWork.Terms.UpdateAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new (getUserFullName,
                     $"Edited Terms #{model.TermsCode}", "Terms", companyClaims);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -228,7 +214,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
@@ -251,22 +237,22 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var existingTerms = await _dbContext.Terms
+                var existingTerms = await dbContext.Terms
                                         .FirstOrDefaultAsync(x => x.TermsCode == code, cancellationToken)
                                     ?? throw new InvalidOperationException("Terms with code not found.");
 
-                _dbContext.Remove(existingTerms);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                dbContext.Remove(existingTerms);
+                await dbContext.SaveChangesAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new (getUserFullName,
                     $"Deleted Terms #{code}", "Terms", companyClaims);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -276,7 +262,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete terms master file. Deleted by: {UserName}", getUserFullName);
+                logger.LogError(ex, "Failed to delete terms master file. Deleted by: {UserName}", getUserFullName);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(nameof(Index));

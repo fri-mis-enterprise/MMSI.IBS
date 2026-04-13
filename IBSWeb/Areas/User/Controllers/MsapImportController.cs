@@ -1,7 +1,4 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
@@ -9,7 +6,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Models.MMSI.MasterFile;
-using IBS.Services;
 using IBS.Services.AccessControl;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
@@ -22,29 +18,20 @@ using System.Text;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class MsapImportController : BaseController
+    public class MsapImportController(
+        IUnitOfWork unitOfWork,
+        ApplicationDbContext dbContext,
+        IAccessControlService accessControl,
+        UserManager<ApplicationUser> userManager,
+        ILogger<MsapImportController> logger)
+        : BaseController(accessControl, userManager)
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<MsapImportController> _logger;
+        private readonly ILogger<MsapImportController> _logger = logger;
 
         private readonly CsvConfiguration _csvConfig = new(CultureInfo.InvariantCulture)
         {
             PrepareHeaderForMatch = args => args.Header.ToLower(),
         };
-
-        public MsapImportController(
-            IUnitOfWork unitOfWork,
-            ApplicationDbContext dbContext,
-            IAccessControlService accessControl,
-            UserManager<ApplicationUser> userManager,
-            ILogger<MsapImportController> logger)
-            : base(accessControl, userManager)
-        {
-            _dbContext = dbContext;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-        }
 
         private string GetUserFullName()
         {
@@ -115,7 +102,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<string> ImportFromCSV(string field, CancellationToken cancellationToken = default)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -243,7 +230,11 @@ namespace IBSWeb.Areas.User.Controllers
         private static bool ParseBool(dynamic record, string propertyName)
         {
             string? val = GetString(record, propertyName);
-            if (string.IsNullOrEmpty(val)) return false;
+            if (string.IsNullOrEmpty(val))
+            {
+                return false;
+            }
+
             val = val.Trim().ToLower();
             return val == "t" || val == "true";
         }
@@ -251,7 +242,11 @@ namespace IBSWeb.Areas.User.Controllers
         private static decimal ParseDecimal(dynamic record, string propertyName)
         {
             string? val = GetString(record, propertyName);
-            if (string.IsNullOrEmpty(val)) return 0;
+            if (string.IsNullOrEmpty(val))
+            {
+                return 0;
+            }
+
             if (decimal.TryParse(val, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal result))
             {
                 return result;
@@ -262,7 +257,11 @@ namespace IBSWeb.Areas.User.Controllers
         private static DateOnly? ParseDateOnly(dynamic record, string propertyName)
         {
             string? val = GetString(record, propertyName);
-            if (string.IsNullOrEmpty(val)) return null;
+            if (string.IsNullOrEmpty(val))
+            {
+                return null;
+            }
+
             if (DateOnly.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
             {
                 return result;
@@ -273,7 +272,11 @@ namespace IBSWeb.Areas.User.Controllers
         private static DateTime? ParseDateTime(dynamic record, string propertyName)
         {
             string? val = GetString(record, propertyName);
-            if (string.IsNullOrEmpty(val)) return null;
+            if (string.IsNullOrEmpty(val))
+            {
+                return null;
+            }
+
             if (DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
             {
                 return result;
@@ -283,7 +286,11 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string PadNumber(string? value, int width)
         {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
             return int.TryParse(value, out var n)
                 ? n.ToString($"D{width}")
                 : value.PadLeft(width, '0');
@@ -295,7 +302,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<string> ImportMsapCustomers(string customerCSVPath, CancellationToken cancellationToken)
         {
-            var existingNames = (await _unitOfWork.Customer.GetAllAsync(c => c.Company == "MMSI", cancellationToken))
+            var existingNames = (await unitOfWork.Customer.GetAllAsync(c => c.Company == "MMSI", cancellationToken))
                 .Select(c => c.CustomerName).ToHashSet();
 
             var currentBatchNames = new HashSet<string>();
@@ -325,7 +332,7 @@ namespace IBSWeb.Areas.User.Controllers
                     default: newCustomer.CustomerTerms = "COD"; break;
                 }
 
-                newCustomer.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync("Industrial", cancellationToken);
+                newCustomer.CustomerCode = await unitOfWork.Customer.GenerateCodeAsync("Industrial", cancellationToken);
                 newCustomer.CustomerName = customerName;
                 string? addr1 = GetString(record, "address1");
                 string? addr2 = GetString(record, "address2");
@@ -350,14 +357,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatchNames.Add(customerName);
             }
 
-            await _dbContext.Customers.AddRangeAsync(customerList, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.Customers.AddRangeAsync(customerList, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Customers imported successfully, {customerList.Count} new records";
         }
 
         public async Task<string> ImportMsapPorts(string portCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSIPorts.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSIPorts.ToListAsync(cancellationToken))
                 .Select(c => c.PortNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
@@ -383,17 +390,17 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(padded);
             }
 
-            await _dbContext.MMSIPorts.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSIPorts.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Ports imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapTerminals(string terminalCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSITerminals.Include(t => t.Port).ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSITerminals.Include(t => t.Port).ToListAsync(cancellationToken))
                 .Select(c => new { PortNumber = (string?)c.Port!.PortNumber, TerminalNumber = (string?)c.TerminalNumber }).ToHashSet();
 
-            var existingPorts = (await _dbContext.MMSIPorts.ToListAsync(cancellationToken))
+            var existingPorts = (await dbContext.MMSIPorts.ToListAsync(cancellationToken))
                 .Select(p => new { p.PortId, p.PortNumber }).ToList();
 
             var currentBatch = new HashSet<object>();
@@ -430,17 +437,17 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(identity);
             }
 
-            await _dbContext.MMSITerminals.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSITerminals.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Terminals imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapPrincipals(string principalCSVPath, string customerCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSIPrincipals.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSIPrincipals.ToListAsync(cancellationToken))
                 .Select(c => new { PrincipalNumber = c.PrincipalNumber, PrincipalName = c.PrincipalName, CustomerId = c.CustomerId }).ToHashSet();
 
-            var mmsiCustomers = await _unitOfWork.Customer
+            var mmsiCustomers = await unitOfWork.Customer
                 .GetAllAsync(c => c.Company == "MMSI", cancellationToken);
 
             var newRecords = new List<Principal>();
@@ -475,7 +482,10 @@ namespace IBSWeb.Areas.User.Controllers
                 string paddedCustomerNumber = PadNumber(GetString(record, "agent"), 4);
                 
                 var agent = customersList.FirstOrDefault(c => c?.CustomerNumber == paddedCustomerNumber);
-                if (agent == null) continue;
+                if (agent == null)
+                {
+                    continue;
+                }
 
                 var identity = new
                 {
@@ -521,14 +531,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(identity);
             }
 
-            await _dbContext.MMSIPrincipals.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSIPrincipals.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Principals imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapServices(string serviceCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSIServices.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSIServices.ToListAsync(cancellationToken))
                 .Select(c => c.ServiceNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
@@ -554,16 +564,16 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(padded);
             }
 
-            await _dbContext.MMSIServices.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSIServices.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Services imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapTugboats(string tugboatCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSITugboats.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSITugboats.ToListAsync(cancellationToken))
                 .Select(c => c.TugboatNumber).ToHashSet();
-            var existingTugboatOwners = (await _dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
+            var existingTugboatOwners = (await dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
                 .Select(c => new { c.TugboatOwnerId, c.TugboatOwnerNumber }).ToList();
 
             var currentBatch = new HashSet<string>();
@@ -585,7 +595,11 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 Tugboat newRecord = new Tugboat();
-                if (owner != null) newRecord.TugboatOwnerId = owner.TugboatOwnerId;
+                if (owner != null)
+                {
+                    newRecord.TugboatOwnerId = owner.TugboatOwnerId;
+                }
+
                 newRecord.TugboatNumber = padded;
                 newRecord.TugboatName = GetString(record, "name") ?? "UNKNOWN";
                 newRecord.IsCompanyOwned = ParseBool(record, "companyown");
@@ -594,14 +608,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(padded);
             }
 
-            await _dbContext.MMSITugboats.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSITugboats.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Tugboats imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapTugboatOwners(string tugboatOwnerCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSITugboatOwners.ToListAsync(cancellationToken))
                 .Select(c => c.TugboatOwnerNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
@@ -627,14 +641,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(padded);
             }
 
-            await _dbContext.MMSITugboatOwners.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSITugboatOwners.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Tugboat Owners imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapTugMasters(string tugMasterCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSITugMasters.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSITugMasters.ToListAsync(cancellationToken))
                 .Select(c => c.TugMasterNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
@@ -660,14 +674,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(empNo);
             }
 
-            await _dbContext.MMSITugMasters.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSITugMasters.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Tug Masters imported successfully, {newRecords.Count} new records";
         }
 
         public async Task<string> ImportMsapVessels(string vesselCSVPath, CancellationToken cancellationToken)
         {
-            var existingIdentifier = (await _dbContext.MMSIVessels.ToListAsync(cancellationToken))
+            var existingIdentifier = (await dbContext.MMSIVessels.ToListAsync(cancellationToken))
                 .Select(c => c.VesselNumber).ToHashSet();
 
             var currentBatch = new HashSet<string>();
@@ -694,8 +708,8 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(padded);
             }
 
-            await _dbContext.MMSIVessels.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSIVessels.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Vessels imported successfully, {newRecords.Count} new records";
         }
 
@@ -714,23 +728,23 @@ namespace IBSWeb.Areas.User.Controllers
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>().ToList();
 
-            var existingIdentifier = await _dbContext.MMSITariffRates
+            var existingIdentifier = await dbContext.MMSITariffRates
                 .AsNoTracking()
                 .Select(t => new { CustomerId = t.CustomerId, TerminalId = t.TerminalId, ServiceId = t.ServiceId, AsOfDate = t.AsOfDate })
                 .ToHashSetAsync(cancellationToken);
 
-            var ibsCustomerList = await _dbContext.Customers
+            var ibsCustomerList = await dbContext.Customers
                 .Where(c => c.Company == "MMSI")
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            var existingTerminals = await _dbContext.MMSITerminals
+            var existingTerminals = await dbContext.MMSITerminals
                 .AsNoTracking()
                 .Include(t => t.Port)
                 .Select(t => new { TerminalNumber = t.TerminalNumber, TerminalId = t.TerminalId, PortNumber = t.Port!.PortNumber })
                 .ToListAsync(cancellationToken);
 
-            var existingServices = await _dbContext.MMSIServices
+            var existingServices = await dbContext.MMSIServices
                 .AsNoTracking()
                 .Select(s => new { ServiceNumber = s.ServiceNumber, ServiceId = s.ServiceId })
                 .ToListAsync(cancellationToken);
@@ -741,29 +755,49 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var record in records)
             {
                 DateOnly? asOfDateNullable = ParseDateOnly(record, "date");
-                if (asOfDateNullable == null) continue;
+                if (asOfDateNullable == null)
+                {
+                    continue;
+                }
+
                 DateOnly asOfDate = asOfDateNullable.Value;
 
                 string? custNo = GetString(record, "custno");
                 var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == custNo);
-                if (msapCustomer == null) continue;
+                if (msapCustomer == null)
+                {
+                    continue;
+                }
 
                 var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == msapCustomer.name?.Trim());
-                if (customer == null) continue;
+                if (customer == null)
+                {
+                    continue;
+                }
 
                 string terminalRaw = GetString(record, "terminal") ?? string.Empty;
-                if (terminalRaw.Length < 6) continue;
+                if (terminalRaw.Length < 6)
+                {
+                    continue;
+                }
+
                 var portPart = terminalRaw.Substring(0, 3);
                 var terminalPart = terminalRaw.Substring(terminalRaw.Length - 3, 3);
                 string paddedPortNum = PadNumber(portPart, 3);
                 string paddedTerminalNum = PadNumber(terminalPart, 3);
 
                 var terminal = existingTerminals.FirstOrDefault(t => t.TerminalNumber == paddedTerminalNum && t.PortNumber == paddedPortNum);
-                if (terminal == null) continue;
+                if (terminal == null)
+                {
+                    continue;
+                }
 
                 string paddedServiceNum = PadNumber(GetString(record, "service"), 3);
                 var service = existingServices.FirstOrDefault(s => s.ServiceNumber == paddedServiceNum);
-                if (service == null) continue;
+                if (service == null)
+                {
+                    continue;
+                }
 
                 var identity = new
                 {
@@ -792,8 +826,8 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(identity);
             }
 
-            await _dbContext.MMSITariffRates.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSITariffRates.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Tariff Rates imported successfully, {newRecords.Count} new records";
         }
 
@@ -810,42 +844,42 @@ namespace IBSWeb.Areas.User.Controllers
                 name = (string?)GetString(c, "name")
             }).ToList();
 
-            var existingIdentifier = await _dbContext.MMSIDispatchTickets
+            var existingIdentifier = await dbContext.MMSIDispatchTickets
                 .AsNoTracking()
                 .Select(dt => new { DispatchNumber = dt.DispatchNumber, CreatedDate = dt.CreatedDate })
                 .ToHashSetAsync(cancellationToken);
 
-            var existingVessels = await _dbContext.MMSIVessels
+            var existingVessels = await dbContext.MMSIVessels
                 .AsNoTracking()
                 .Select(v => new { VesselNumber = v.VesselNumber, VesselId = v.VesselId })
                 .ToListAsync(cancellationToken);
 
-            var existingTerminals = await _dbContext.MMSITerminals
+            var existingTerminals = await dbContext.MMSITerminals
                 .Include(t => t.Port)
                 .Select(dt => new { TerminalNumber = dt.TerminalNumber, TerminalId = dt.TerminalId, PortNumber = dt.Port!.PortNumber, PortId = dt.Port.PortId })
                 .ToListAsync(cancellationToken);
 
-            var existingTugboats = await _dbContext.MMSITugboats
+            var existingTugboats = await dbContext.MMSITugboats
                 .AsNoTracking()
                 .Select(dt => new { TugboatNumber = dt.TugboatNumber, TugboatId = dt.TugboatId })
                 .ToListAsync(cancellationToken);
 
-            var existingTugMasters = await _dbContext.MMSITugMasters
+            var existingTugMasters = await dbContext.MMSITugMasters
                 .AsNoTracking()
                 .Select(dt => new { TugMasterNumber = dt.TugMasterNumber, TugMasterId = dt.TugMasterId })
                 .ToListAsync(cancellationToken);
 
-            var existingServices = await _dbContext.MMSIServices
+            var existingServices = await dbContext.MMSIServices
                 .AsNoTracking()
                 .Select(dt => new { ServiceNumber = dt.ServiceNumber, ServiceId = dt.ServiceId })
                 .ToListAsync(cancellationToken);
 
-            var ibsCustomerList = await _dbContext.Customers
+            var ibsCustomerList = await dbContext.Customers
                 .Where(c => c.Company == "MMSI")
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            var existingBilling = await _dbContext.MMSIBillings
+            var existingBilling = await dbContext.MMSIBillings
                 .AsNoTracking()
                 .Select(b => new { MMSIBillingNumber = b.MMSIBillingNumber, MMSIBillingId = b.MMSIBillingId, CustomerId = (int?)b.CustomerId })
                 .ToListAsync(cancellationToken);
@@ -860,7 +894,11 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var record in records)
             {
                 DateTime? entryDateNullable = ParseDateTime(record, "entrydate");
-                if (entryDateNullable == null) continue;
+                if (entryDateNullable == null)
+                {
+                    continue;
+                }
+
                 DateTime entryDate = entryDateNullable.Value;
 
                 string dispatchNumber = GetString(record, "number")?.Trim() ?? "";
@@ -901,7 +939,10 @@ namespace IBSWeb.Areas.User.Controllers
                 if (msapCustomer != null)
                 {
                     var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == msapCustomer.name?.Trim());
-                    if (customer != null) newRecord.CustomerId = customer.CustomerId;
+                    if (customer != null)
+                    {
+                        newRecord.CustomerId = customer.CustomerId;
+                    }
                     else if (!string.IsNullOrEmpty(GetString(record, "billnum")))
                     {
                         string? billNum = GetString(record, "billnum");
@@ -950,8 +991,14 @@ namespace IBSWeb.Areas.User.Controllers
                 newRecord.DispatchChargeType = ParseBool(record, "perhour") ? "Per hour" : "Per move";
                 newRecord.BAFChargeType = "Per move";
 
-                if (ParseBool(record, "approved")) newRecord.Status = string.IsNullOrEmpty(billNumberStr) ? "For Billing" : "Billed";
-                else newRecord.Status = "For Tariff";
+                if (ParseBool(record, "approved"))
+                {
+                    newRecord.Status = string.IsNullOrEmpty(billNumberStr) ? "For Billing" : "Billed";
+                }
+                else
+                {
+                    newRecord.Status = "For Tariff";
+                }
 
                 if (newRecord.DateLeft.HasValue && newRecord.DateArrived.HasValue && newRecord.TimeLeft.HasValue && newRecord.TimeArrived.HasValue)
                 {
@@ -964,9 +1011,18 @@ namespace IBSWeb.Areas.User.Controllers
                     {
                         var wholeHours = Math.Truncate(totalHours);
                         var fractionalPart = totalHours - wholeHours;
-                        if (fractionalPart >= 0.75m) totalHours = wholeHours + 1.0m;
-                        else if (fractionalPart >= 0.25m) totalHours = wholeHours + 0.5m;
-                        else totalHours = wholeHours;
+                        if (fractionalPart >= 0.75m)
+                        {
+                            totalHours = wholeHours + 1.0m;
+                        }
+                        else if (fractionalPart >= 0.25m)
+                        {
+                            totalHours = wholeHours + 0.5m;
+                        }
+                        else
+                        {
+                            totalHours = wholeHours;
+                        }
                     }
                     newRecord.TotalHours = totalHours;
                 }
@@ -975,8 +1031,8 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(identity);
             }
 
-            await _dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Dispatch Tickets imported successfully, {newRecords.Count} new records";
         }
 
@@ -997,38 +1053,38 @@ namespace IBSWeb.Areas.User.Controllers
             var records = csv.GetRecords<dynamic>().ToList();
             var newRecords = new List<Billing>();
 
-            var existingIdentifier = await _dbContext.MMSIBillings
+            var existingIdentifier = await dbContext.MMSIBillings
                 .AsNoTracking()
                 .Select(b => b.MMSIBillingNumber)
                 .ToHashSetAsync(cancellationToken);
 
-            var existingVessels = await _dbContext.MMSIVessels
+            var existingVessels = await dbContext.MMSIVessels
                 .AsNoTracking()
                 .Select(v => new { VesselNumber = v.VesselNumber, VesselId = v.VesselId })
                 .ToListAsync(cancellationToken);
 
-            var existingPorts = await _dbContext.MMSIPorts
+            var existingPorts = await dbContext.MMSIPorts
                 .AsNoTracking()
                 .Select(p => new { PortNumber = p.PortNumber, PortId = p.PortId })
                 .ToListAsync(cancellationToken);
 
-            var existingTerminals = await _dbContext.MMSITerminals
+            var existingTerminals = await dbContext.MMSITerminals
                 .AsNoTracking()
                 .Include(t => t.Port)
                 .Select(p => new { TerminalNumber = p.TerminalNumber, TerminalId = p.TerminalId, PortNumber = p.Port!.PortNumber })
                 .ToListAsync(cancellationToken);
 
-            var existingPrincipals = await _dbContext.MMSIPrincipals
+            var existingPrincipals = await dbContext.MMSIPrincipals
                 .AsNoTracking()
                 .Select(p => new { PrincipalId = p.PrincipalId, CustomerId = p.CustomerId, PrincipalNumber = p.PrincipalNumber })
                 .ToListAsync(cancellationToken);
 
-            var existingCollection = await _dbContext.MMSICollections
+            var existingCollection = await dbContext.MMSICollections
                 .AsNoTracking()
                 .Select(c => new { MMSICollectionId = c.MMSICollectionId, MMSICollectionNumber = c.MMSICollectionNumber })
                 .ToListAsync(cancellationToken);
 
-            var ibsCustomerList = await _dbContext.Customers
+            var ibsCustomerList = await dbContext.Customers
                 .Where(c => c.Company == "MMSI")
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
@@ -1044,10 +1100,16 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 string paddedVesselNum = PadNumber(GetString(record, "vesselnum"), 4);
-                if (paddedVesselNum == string.Empty) continue;
+                if (paddedVesselNum == string.Empty)
+                {
+                    continue;
+                }
 
                 var vessel = existingVessels.FirstOrDefault(v => v.VesselNumber == paddedVesselNum);
-                if (vessel == null) continue;
+                if (vessel == null)
+                {
+                    continue;
+                }
 
                 Billing newRecord = new Billing();
                 newRecord.VesselId = vessel.VesselId;
@@ -1057,7 +1119,10 @@ namespace IBSWeb.Areas.User.Controllers
                 if (msapCustomer != null)
                 {
                     var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == msapCustomer.name?.Trim());
-                    if (customer != null) newRecord.CustomerId = customer.CustomerId;
+                    if (customer != null)
+                    {
+                        newRecord.CustomerId = customer.CustomerId;
+                    }
                 }
 
                 newRecord.MMSIBillingNumber = billingNumber;
@@ -1109,9 +1174,15 @@ namespace IBSWeb.Areas.User.Controllers
                         newRecord.CollectionId = collection.MMSICollectionId;
                         newRecord.Status = "Collected";
                     }
-                    else newRecord.Status = "For Collection";
+                    else
+                    {
+                        newRecord.Status = "For Collection";
+                    }
                 }
-                else newRecord.Status = "For Collection";
+                else
+                {
+                    newRecord.Status = "For Collection";
+                }
 
                 newRecord.CollectionNumber = string.IsNullOrEmpty(crNum) ? null : crNum;
                 newRecord.IsVatable = ParseBool(record, "vat");
@@ -1120,7 +1191,11 @@ namespace IBSWeb.Areas.User.Controllers
                 if (!string.IsNullOrEmpty(paddedPrincipalNum))
                 {
                     var principal = existingPrincipals.FirstOrDefault(p => p.PrincipalNumber == paddedPrincipalNum && p.CustomerId == newRecord.CustomerId);
-                    if (principal != null) newRecord.PrincipalId = principal.PrincipalId;
+                    if (principal != null)
+                    {
+                        newRecord.PrincipalId = principal.PrincipalId;
+                    }
+
                     newRecord.BilledTo = "PRINCIPAL";
                     newRecord.IsPrincipal = true;
                 }
@@ -1135,8 +1210,8 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(billingNumber);
             }
 
-            await _dbContext.MMSIBillings.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSIBillings.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Billings imported successfully, {newRecords.Count} new records";
         }
 
@@ -1157,12 +1232,12 @@ namespace IBSWeb.Areas.User.Controllers
             var records = csv.GetRecords<dynamic>().ToList();
             var newRecords = new List<Collection>();
 
-            var existingIdentifier = await _dbContext.MMSICollections
+            var existingIdentifier = await dbContext.MMSICollections
                 .AsNoTracking()
                 .Select(b => b.MMSICollectionNumber)
                 .ToHashSetAsync(cancellationToken);
 
-            var ibsCustomerList = await _dbContext.Customers
+            var ibsCustomerList = await dbContext.Customers
                 .Where(c => c.Company == "MMSI")
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
@@ -1180,11 +1255,17 @@ namespace IBSWeb.Areas.User.Controllers
                 Collection newRecord = new Collection();
                 string? custNo = GetString(record, "custno");
                 var msapCustomer = msapCustomerRecords.FirstOrDefault(mc => mc.number == custNo);
-                if (msapCustomer == null) continue;
+                if (msapCustomer == null)
+                {
+                    continue;
+                }
 
                 var customer = ibsCustomerList.FirstOrDefault(c => c.CustomerName.Trim() == msapCustomer.name?.Trim());
-                if (customer == null) continue;
-                
+                if (customer == null)
+                {
+                    continue;
+                }
+
                 newRecord.CustomerId = customer.CustomerId;
                 newRecord.MMSICollectionNumber = crNum;
                 newRecord.CheckNumber = GetString(record, "checkno");
@@ -1214,8 +1295,8 @@ namespace IBSWeb.Areas.User.Controllers
                 currentBatch.Add(crNum);
             }
 
-            await _dbContext.MMSICollections.AddRangeAsync(newRecords, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.MMSICollections.AddRangeAsync(newRecords, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return $"Collection import successful, {newRecords.Count} new records";
         }
     }

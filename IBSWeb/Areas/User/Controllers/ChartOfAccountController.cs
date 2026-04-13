@@ -1,7 +1,4 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -17,27 +14,14 @@ using OfficeOpenXml;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class ChartOfAccountController : Controller
+    public class ChartOfAccountController(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager,
+        ILogger<ChartOfAccountController> logger,
+        IUnitOfWork unitOfWork,
+        ICacheService cacheService)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<ChartOfAccountController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ICacheService _cacheService;
-
-        public ChartOfAccountController(ApplicationDbContext dbContext,
-            UserManager<ApplicationUser> userManager,
-            ILogger<ChartOfAccountController> logger,
-            IUnitOfWork unitOfWork,
-            ICacheService cacheService)
-        {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _cacheService = cacheService;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -46,14 +30,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -64,7 +48,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View("ExportIndex");
             }
 
-            var level1 = await _unitOfWork.ChartOfAccount
+            var level1 = await unitOfWork.ChartOfAccount
                 .GetAllAsync(cancellationToken : cancellationToken);
 
             return View(level1.Where(c => c.Level == 1)
@@ -74,11 +58,11 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var parentAccount = await _unitOfWork.ChartOfAccount
+                var parentAccount = await unitOfWork.ChartOfAccount
                     .GetAsync(c => c.AccountId == parentId, cancellationToken);
 
                 if (parentAccount == null)
@@ -86,7 +70,7 @@ namespace IBSWeb.Areas.User.Controllers
                     throw new InvalidOperationException("Parent Account not found");
                 }
 
-                var lastAccount = (await _unitOfWork.ChartOfAccount
+                var lastAccount = (await unitOfWork.ChartOfAccount
                         .GetAllAsync(c => c.ParentAccountId == parentId, cancellationToken: cancellationToken))
                     .OrderByDescending(c => c.AccountNumber)
                     .FirstOrDefault();
@@ -117,15 +101,15 @@ namespace IBSWeb.Areas.User.Controllers
                         break;
                 }
 
-                await _unitOfWork.ChartOfAccount.AddAsync(newAccount, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
+                await unitOfWork.ChartOfAccount.AddAsync(newAccount, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -135,7 +119,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -145,7 +129,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
-            var existingAccount = await _unitOfWork.ChartOfAccount
+            var existingAccount = await unitOfWork.ChartOfAccount
                 .GetAsync(x => x.AccountId == accountId, cancellationToken);
 
             if (existingAccount == null)
@@ -153,21 +137,21 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 existingAccount.AccountName = accountName;
                 existingAccount.EditedBy = GetUserFullName();
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await _unitOfWork.SaveAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -177,7 +161,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -194,7 +178,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var chartOfAccounts = await _unitOfWork.ChartOfAccount
+                var chartOfAccounts = await unitOfWork.ChartOfAccount
                     .GetAllAsync(cancellationToken: cancellationToken);
 
                 // Apply date range filter if provided (using CreatedDate)
@@ -300,7 +284,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get chart of accounts. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                logger.LogError(ex, "Failed to get chart of accounts. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -319,13 +303,13 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
                 var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
                 // Retrieve the selected invoices from the database
-                var selectedList = (await _unitOfWork.ChartOfAccount
+                var selectedList = (await unitOfWork.ChartOfAccount
                     .GetAllAsync(coa => recordIds.Contains(coa.AccountId), cancellationToken))
                     .OrderBy(coa => coa.AccountId)
                     .ToList();
@@ -397,7 +381,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllChartOfAccountIds(CancellationToken cancellationToken)
         {
-            var coaIds = await _dbContext.ChartOfAccounts
+            var coaIds = await dbContext.ChartOfAccounts
                 .Select(coa => coa.AccountId) // Assuming Id is the primary key
                 .ToListAsync(cancellationToken);
             return Json(coaIds);

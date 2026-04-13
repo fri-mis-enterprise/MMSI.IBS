@@ -6,14 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class CompanyRepository : Repository<Company>, ICompanyRepository
+    public class CompanyRepository(ApplicationDbContext db): Repository<Company>(db), ICompanyRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public CompanyRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {

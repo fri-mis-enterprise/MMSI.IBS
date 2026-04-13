@@ -11,26 +11,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using IBS.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
-    public class LoginModel : PageModel
+    public class LoginModel(
+        SignInManager<ApplicationUser> signInManager,
+        ILogger<LoginModel> logger,
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager)
+        : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly ILogger<LoginModel> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
-        {
-            _signInManager = signInManager;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -125,34 +118,34 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
 
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             if (ModelState.IsValid)
             {
                 // Check if user exists and is active BEFORE attempting password sign in
-                var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
+                var user = await signInManager.UserManager.FindByNameAsync(Input.Username);
                 
                 if (user != null && !user.IsActive)
                 {
-                    _logger.LogWarning("Deactivated user attempted login: {Username}", Input.Username);
+                    logger.LogWarning("Deactivated user attempted login: {Username}", Input.Username);
                     ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact the administrator.");
                     await LoadPageData(returnUrl);
                     return Page();
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 
                 if (result.Succeeded)
                 {
                     // User is guaranteed to exist and be active at this point
-                    user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
+                    user = await signInManager.UserManager.FindByNameAsync(Input.Username);
 
                     // Remove existing dynamic claims
-                    var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
+                    var existingClaims = await signInManager.UserManager.GetClaimsAsync(user);
 
                     if (existingClaims.Any())
                     {
-                        await _signInManager.UserManager.RemoveClaimsAsync(user, existingClaims);
+                        await signInManager.UserManager.RemoveClaimsAsync(user, existingClaims);
                     }
 
                     // Add fresh dynamic claims based on user input
@@ -166,11 +159,11 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                         newClaims.Add(new Claim("StationCode", Input.StationCode));
                     }
 
-                    await _signInManager.UserManager.AddClaimsAsync(user, newClaims);
+                    await signInManager.UserManager.AddClaimsAsync(user, newClaims);
 
                     // Fetch updated claims and roles
-                    var updatedClaims = await _signInManager.UserManager.GetClaimsAsync(user);
-                    var roles = await _signInManager.UserManager.GetRolesAsync(user);
+                    var updatedClaims = await signInManager.UserManager.GetClaimsAsync(user);
+                    var roles = await signInManager.UserManager.GetRolesAsync(user);
 
                     var identity = new ClaimsIdentity("Identity.Application");
                     identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
@@ -193,7 +186,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     await HttpContext.SignOutAsync("Identity.Application");
                     await HttpContext.SignInAsync("Identity.Application", principal);
 
-                    _logger.LogInformation("User logged in.");
+                    logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
 
@@ -204,7 +197,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
 
@@ -219,10 +212,10 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
         private async Task LoadPageData(string returnUrl)
         {
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-            Companies = await _unitOfWork.GetCompanyListAsyncByName();
-            Users = await _unitOfWork.GetCashierListAsyncByUsernameAsync();
-            StationAccess = await _unitOfWork.GetCashierListAsyncByStationAsync();
+            ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            Companies = await unitOfWork.GetCompanyListAsyncByName();
+            Users = await unitOfWork.GetCashierListAsyncByUsernameAsync();
+            StationAccess = await unitOfWork.GetCashierListAsyncByStationAsync();
             ReturnUrl = returnUrl;
         }
 

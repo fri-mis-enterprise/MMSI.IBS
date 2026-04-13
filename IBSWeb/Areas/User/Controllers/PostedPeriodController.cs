@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.Models;
@@ -18,26 +15,14 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class PostedPeriodController : Controller
+    public class PostedPeriodController(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager,
+        ILogger<PostedPeriodController> logger,
+        ICacheService cacheService)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ILogger<PostedPeriodController> _logger;
-
-        private readonly ICacheService _cacheService;
-
-        public PostedPeriodController(ApplicationDbContext dbContext,
-            UserManager<ApplicationUser> userManager,
-            ILogger<PostedPeriodController> logger,
-            ICacheService cacheService)
-        {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _logger = logger;
-            _cacheService = cacheService;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
 
         public async Task<IActionResult> Index()
         {
@@ -59,7 +44,7 @@ namespace IBSWeb.Areas.User.Controllers
             var allModules = Enum.GetNames(typeof(Module)).ToList();
 
             // Get already posted modules for current period
-            var postedModules = await _dbContext.PostedPeriods
+            var postedModules = await dbContext.PostedPeriods
                 .Where(p => p.Month == currentMonth && p.Year == currentYear)
                 .Select(p => p.Module)
                 .ToListAsync();
@@ -72,7 +57,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<List<PostedPeriod>> GetPostedPeriodsAsync()
         {
-            return await _dbContext.PostedPeriods
+            return await dbContext.PostedPeriods
                 .OrderByDescending(p => p.Year)
                 .ThenByDescending(p => p.Month)
                 .ThenBy(p => p.Module)
@@ -97,7 +82,7 @@ namespace IBSWeb.Areas.User.Controllers
                 foreach (var module in request.SelectedModules)
                 {
                     // Check if period already exists
-                    var existingPeriod = await _dbContext.PostedPeriods
+                    var existingPeriod = await dbContext.PostedPeriods
                         .FirstOrDefaultAsync(p => p.Module == module &&
                                            p.Month == request.Month &&
                                            p.Year == request.Year, cancellationToken);
@@ -122,9 +107,9 @@ namespace IBSWeb.Areas.User.Controllers
                     postedPeriods.Add(postedPeriod);
                 }
 
-                await _dbContext.PostedPeriods.AddRangeAsync(postedPeriods,  cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{request.Company}", cancellationToken);
+                await dbContext.PostedPeriods.AddRangeAsync(postedPeriods,  cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+                await cacheService.RemoveAsync($"coa:{request.Company}", cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully posted {postedPeriods.Count} module(s) for period {request.Month}/{request.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -132,7 +117,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error posting periods: {ex.Message}";
-                _logger.LogError(ex, ex.Message);
+                logger.LogError(ex, ex.Message);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -144,16 +129,16 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var postedPeriod = await _dbContext.PostedPeriods.FindAsync(id, cancellationToken);
+                var postedPeriod = await dbContext.PostedPeriods.FindAsync(id, cancellationToken);
                 if (postedPeriod == null)
                 {
                     TempData["ErrorMessage"] = "Posted period not found.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                _dbContext.PostedPeriods.Remove(postedPeriod);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                await _cacheService.RemoveAsync($"coa:{postedPeriod.Company}", cancellationToken);
+                dbContext.PostedPeriods.Remove(postedPeriod);
+                await dbContext.SaveChangesAsync(cancellationToken);
+                await cacheService.RemoveAsync($"coa:{postedPeriod.Company}", cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully unposted {postedPeriod.Module} for period {postedPeriod.Month}/{postedPeriod.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -161,7 +146,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error unposting period: {ex.Message}";
-                _logger.LogError(ex, ex.Message);
+                logger.LogError(ex, ex.Message);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -175,7 +160,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var allModules = Enum.GetNames(typeof(Module)).ToList();
 
                 // Get already posted modules for specified period
-                var postedModules = await _dbContext.PostedPeriods
+                var postedModules = await dbContext.PostedPeriods
                     .Where(p => p.Month == month && p.Year == year)
                     .Select(p => p.Module)
                     .ToListAsync();

@@ -1,6 +1,3 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
-using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -14,24 +11,16 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     [CompanyAuthorize(SD.Company_MMSI)]
-    public class TugMasterController : Controller
+    public class TugMasterController(
+        ApplicationDbContext dbContext,
+        ILogger<TugMasterController> logger,
+        IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager)
+        : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly ILogger<TugMasterController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public TugMasterController(ApplicationDbContext dbContext, ILogger<TugMasterController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
-        {
-            _dbContext = dbContext;
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
-        }
-
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var tugMaster = await _unitOfWork.TugMaster.GetAllAsync(null, cancellationToken);
+            var tugMaster = await unitOfWork.TugMaster.GetAllAsync(null, cancellationToken);
             return View(tugMaster);
         }
 
@@ -50,18 +39,18 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                await _unitOfWork.TugMaster.AddAsync(model, cancellationToken);
-                await _unitOfWork.TugMaster.SaveAsync(cancellationToken);
+                await unitOfWork.TugMaster.AddAsync(model, cancellationToken);
+                await unitOfWork.TugMaster.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Created new Tug Master #{model.TugMasterNumber}", "Tug Master", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -71,7 +60,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create tug master.");
+                logger.LogError(ex, "Failed to create tug master.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -81,21 +70,21 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await _unitOfWork.TugMaster.GetAsync(i => i.TugMasterId == id, cancellationToken);
+                var model = await unitOfWork.TugMaster.GetAsync(i => i.TugMasterId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await _unitOfWork.TugMaster.RemoveAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.TugMaster.RemoveAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete tug master.");
+                logger.LogError(ex, "Failed to delete tug master.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -104,7 +93,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.TugMaster.GetAsync(a => a.TugMasterId == id, cancellationToken);
+            var model = await unitOfWork.TugMaster.GetAsync(a => a.TugMasterId == id, cancellationToken);
             return View(model);
         }
 
@@ -117,7 +106,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await _unitOfWork.TugMaster.GetAsync(t => t.TugMasterId == model.TugMasterId, cancellationToken);
+            var currentModel = await unitOfWork.TugMaster.GetAsync(t => t.TugMasterId == model.TugMasterId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -125,29 +114,29 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 #region -- Audit Trail Recording --
 
-                AuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
                     $"Edited Tug Master #{currentModel.TugMasterNumber} => {model.TugMasterNumber}", "Tug Master", SD.Company_MMSI);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
                 currentModel.TugMasterNumber = model.TugMasterNumber;
                 currentModel.TugMasterName = model.TugMasterName;
                 currentModel.IsActive = model.IsActive;
-                await _unitOfWork.TugMaster.SaveAsync(cancellationToken);
+                await unitOfWork.TugMaster.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit tug master.");
+                logger.LogError(ex, "Failed to edit tug master.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

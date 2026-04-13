@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
@@ -9,14 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class TerminalRepository : Repository<Terminal>, ITerminalRepository
+    public class TerminalRepository(ApplicationDbContext db): Repository<Terminal>(db), ITerminalRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public TerminalRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {

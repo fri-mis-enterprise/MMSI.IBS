@@ -10,25 +10,17 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace IBSWeb.Areas.Identity.Pages.Account
 {
-    public class LogoutModel : PageModel
+    public class LogoutModel(
+        SignInManager<ApplicationUser> signInManager,
+        ILogger<LogoutModel> logger,
+        IHubConnectionRepository hubConnectionRepository)
+        : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly ILogger<LogoutModel> _logger;
-        private readonly IHubConnectionRepository _hubConnectionRepository;
-
-        public LogoutModel(SignInManager<ApplicationUser> signInManager,
-            ILogger<LogoutModel> logger, IHubConnectionRepository hubConnectionRepository)
-        {
-            _signInManager = signInManager;
-            _logger = logger;
-            _hubConnectionRepository = hubConnectionRepository;
-        }
-
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
-            await _hubConnectionRepository.RemoveConnectionsByUsernameAsync(User.Identity!.Name!);
-            await _signInManager.SignOutAsync();
-            _logger.LogInformation("User logged out.");
+            await hubConnectionRepository.RemoveConnectionsByUsernameAsync(User.Identity!.Name!);
+            await signInManager.SignOutAsync();
+            logger.LogInformation("User logged out.");
             return returnUrl != null ? LocalRedirect(returnUrl) : RedirectToPage();
         }
 

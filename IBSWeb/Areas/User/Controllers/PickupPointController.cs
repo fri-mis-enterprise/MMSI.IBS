@@ -1,13 +1,9 @@
-using IBS.Models.Books;
-using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,24 +12,13 @@ using Microsoft.EntityFrameworkCore;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class PickupPointController : Controller
+    public class PickupPointController(
+        IUnitOfWork unitOfWork,
+        ILogger<PickupPointController> logger,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext)
+        : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly ILogger<PickupPointController> _logger;
-
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly ApplicationDbContext _dbContext;
-
-        public PickupPointController(IUnitOfWork unitOfWork, ILogger<PickupPointController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
-        {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _userManager = userManager;
-            _dbContext = dbContext;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -42,20 +27,20 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await userManager.GetUserAsync(User);
 
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await _userManager.GetClaimsAsync(user);
+            var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var pickupPoints = await _dbContext.PickUpPoints
+            var pickupPoints = await dbContext.PickUpPoints
                 .Include(p => p.Supplier)
                 .ToListAsync(cancellationToken);
 
@@ -74,7 +59,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var model = new PickUpPoint
             {
-                Suppliers = await _unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken),
                 Company = companyClaims
             };
 
@@ -94,25 +79,25 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (!ModelState.IsValid)
             {
-                model.Suppliers = await _unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                model.Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
                 model.CreatedBy = GetUserFullName();
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await _unitOfWork.PickUpPoint.AddAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.PickUpPoint.AddAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
                     $"Created Pickup Point #{model.Depot}","Pickup Point", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -122,7 +107,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create pickup point master file. Created by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to create pickup point master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -134,7 +119,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var query = await _unitOfWork.PickUpPoint
+                var query = await unitOfWork.PickUpPoint
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
@@ -182,7 +167,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get pickup points.");
+                logger.LogError(ex, "Failed to get pickup points.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -205,7 +190,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return BadRequest();
                 }
 
-                var model = await _unitOfWork.PickUpPoint
+                var model = await unitOfWork.PickUpPoint
                     .GetAsync(p => p.PickUpPointId == id, cancellationToken);
 
                 if (model == null)
@@ -213,7 +198,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return NotFound();
                 }
 
-                model.Suppliers = await _unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                model.Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
                 return View(model);
             }
@@ -233,7 +218,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var selected = await _unitOfWork.PickUpPoint
+            var selected = await unitOfWork.PickUpPoint
                 .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
 
             if (selected == null)
@@ -241,7 +226,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -249,14 +234,14 @@ namespace IBSWeb.Areas.User.Controllers
 
                 AuditTrail auditTrailBook = new(GetUserFullName(),
                     $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", model.Company);
-                await _unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording --
 
                 selected.Depot = model.Depot;
                 selected.SupplierId = model.SupplierId;
                 selected.IsFilpride = model.IsFilpride;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Pickup point updated successfully";
@@ -264,7 +249,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit pickup point master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                logger.LogError(ex, "Failed to edit pickup point master file. Edited by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);

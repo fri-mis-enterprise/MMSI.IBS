@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.Models.Enums;
@@ -12,14 +11,10 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Integrated
 {
-    public class CustomerOrderSlipRepository : Repository<CustomerOrderSlip>, ICustomerOrderSlipRepository
+    public class CustomerOrderSlipRepository(ApplicationDbContext db)
+        : Repository<CustomerOrderSlip>(db), ICustomerOrderSlipRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public CustomerOrderSlipRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {

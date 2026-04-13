@@ -1,17 +1,11 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.Models;
 
 namespace IBS.DataAccess.Repository.Integrated
 {
-    public class FreightRepository : Repository<Freight>, IFreightRepository
+    public class FreightRepository(ApplicationDbContext db): Repository<Freight>(db), IFreightRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public FreightRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
     }
 }

@@ -1,4 +1,3 @@
-using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -6,15 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class ReportRepository : IReportRepository
+    public class ReportRepository(ApplicationDbContext db): IReportRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public ReportRepository(ApplicationDbContext db)
-        {
-            _db = db;
-        }
-
         public async Task<List<DispatchTicket>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
@@ -22,7 +14,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var dispatchTickets = await _db.MMSIDispatchTickets
+            var dispatchTickets = await db.MMSIDispatchTickets
                 .Where(dt => dt.Date >= dateFrom
                              && dt.Date <= dateTo
                              && dt.Status != "For Posting"
@@ -41,7 +33,7 @@ namespace IBS.DataAccess.Repository.MMSI
             {
                 if (dispatchTicket.BillingId != null)
                 {
-                    dispatchTicket.Billing = await _db.MMSIBillings
+                    dispatchTicket.Billing = await db.MMSIBillings
                         .Where(b => b.MMSIBillingId == dispatchTicket.BillingId)
                         .Include(b => b.Customer)
                         .Include(b => b.Principal)
@@ -49,7 +41,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
                     if (dispatchTicket.Billing?.CollectionId != null)
                     {
-                        dispatchTicket.Billing.Collection = await _db.MMSICollections
+                        dispatchTicket.Billing.Collection = await db.MMSICollections
                             .Where(c => c.MMSICollectionId == dispatchTicket.Billing.CollectionId)
                             .FirstOrDefaultAsync(cancellationToken);
                     }
