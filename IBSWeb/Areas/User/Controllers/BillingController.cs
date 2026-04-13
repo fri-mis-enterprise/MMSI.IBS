@@ -92,14 +92,25 @@ namespace IBSWeb.Areas.User.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> CreateModal(CancellationToken cancellationToken)
+        {
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
+            {
+                return PartialView("_ErrorModal", new { message = "You don't have permission to create billings." });
+            }
+
+            var viewModel = await GetBillingSelectLists(new CreateBillingViewModel(), cancellationToken);
+            return PartialView("_CreateModal", viewModel);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create(CreateBillingViewModel viewModel, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
                 viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
-                TempData["warning"] = "Can't create entry, please review your input.";
-                return View(viewModel);
+                return Json(new { success = false, message = "Can't create entry, please review your input.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
             }
 
             try
@@ -197,23 +208,21 @@ namespace IBSWeb.Areas.User.Controllers
 
                 await unitOfWork.Billing.PostAsync(newModel, cancellationToken);
 
-                if (model.IsUndocumented)
-                {
-                    TempData["success"] = $"Billing was successfully created. Control Number: {newModel.MMSIBillingNumber}";
-                }
-                else
-                {
-                    TempData["success"] = $"Billing #{newModel.MMSIBillingNumber} was successfully created.";
-                }
+                string message = model.IsUndocumented
+                    ? $"Billing was successfully created. Control Number: {newModel.MMSIBillingNumber}"
+                    : $"Billing #{newModel.MMSIBillingNumber} was successfully created.";
 
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                return Json(new { success = true, message, redirectUrl = Url.Action(nameof(Index), new { filterType = await GetCurrentFilterType() }) });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to create billing.");
-                TempData["error"] = ex.Message;
-                viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
-                return View(viewModel);
+                var errorMsg = ex.InnerException?.Message ?? ex.Message;
+                if (errorMsg.Contains("unique") || errorMsg.Contains("23505"))
+                    return Json(new { success = false, message = "Billing number already exists. Please use a different number." });
+                if (errorMsg.Contains("foreign key") || errorMsg.Contains("23503"))
+                    return Json(new { success = false, message = "Invalid reference. Please check your selections." });
+                return Json(new { success = false, message = "Failed to save billing. Please try again or contact support." });
             }
         }
 
@@ -458,6 +467,51 @@ namespace IBSWeb.Areas.User.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditModal(int id, CancellationToken cancellationToken)
+        {
+            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
+            {
+                return PartialView("_ErrorModal", new { message = "You don't have permission to edit billings." });
+            }
+
+            var model = await unitOfWork.Billing
+                .GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return PartialView("_ErrorModal", new { message = "Billing not found." });
+            }
+
+            var viewModel = BillingModelToCreateBillingVm(model);
+            viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
+            viewModel.UnbilledDispatchTickets = await GetEditTickets(viewModel.CustomerId, viewModel.MMSIBillingId ?? 0, cancellationToken);
+            if (model.CustomerId != null)
+            {
+                viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
+            }
+
+            viewModel.Terminals = await unitOfWork.Terminal
+                .GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
+
+            viewModel.ToBillDispatchTickets = await unitOfWork.Billing
+                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
+
+            viewModel.Customers = await unitOfWork.Billing
+                .GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
+
+            if (viewModel.CustomerPrincipal?.Count == 0 || viewModel.CustomerPrincipal == null)
+            {
+                ViewData["HasPrincipal"] = false;
+            }
+            else
+            {
+                ViewData["HasPrincipal"] = true;
+            }
+
+            return PartialView("_EditModal", viewModel);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Edit(CreateBillingViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
@@ -601,20 +655,22 @@ namespace IBSWeb.Areas.User.Controllers
 
                     currentModel.Amount = totalAmount;
                     await unitOfWork.SaveAsync(cancellationToken);
-                    TempData["success"] = "Entry edited successfully!";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    return Json(new { success = true, message = "Entry edited successfully!", redirectUrl = Url.Action(nameof(Index), new { filterType = await GetCurrentFilterType() }) });
                 }
                 else
                 {
-                    TempData["warning"] = "Can't create entry, please review your input.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    return Json(new { success = false, message = "Can't update entry, please review your input.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
                 }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to edit billing.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                var errorMsg = ex.InnerException?.Message ?? ex.Message;
+                if (errorMsg.Contains("unique") || errorMsg.Contains("23505"))
+                    return Json(new { success = false, message = "Billing number already exists. Please use a different number." });
+                if (errorMsg.Contains("foreign key") || errorMsg.Contains("23503"))
+                    return Json(new { success = false, message = "Invalid reference. Please check your selections." });
+                return Json(new { success = false, message = "Failed to save changes. Please try again or contact support." });
             }
         }
 

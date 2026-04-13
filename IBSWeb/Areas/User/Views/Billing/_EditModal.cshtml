@@ -1,0 +1,574 @@
+@model CreateBillingViewModel
+
+<style>
+    .modal-lg {
+        max-width: 95% !important;
+    }
+
+    .section-header {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .modal-body table {
+        font-size: 10px !important;
+        table-layout: auto !important;
+    }
+
+    .modal-body table td {
+        font-size: 11px !important;
+        padding: 4px !important;
+    }
+
+    .totals-box {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .modal-body .form-floating > .form-control,
+    .modal-body .form-floating > .form-select {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .modal-body .form-floating > label {
+        padding-top: 0.5rem;
+    }
+</style>
+
+<div class="modal-header bg-secondary">
+    <h5 class="modal-title text-white">Edit Billing #@Model.MMSIBillingNumber</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body p-3">
+    <form id="billingEditForm" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input asp-for="MMSIBillingId" id="billingId" value="@Model.MMSIBillingId" type="hidden">
+
+        <!-- I. Customer & Settlement -->
+        <h6 class="section-header text-secondary"><i class="bi bi-person-check me-2"></i>I. Customer & Settlement</h6>
+        <div class="row">
+            <div class="form-group col-md-3 col-12 my-1" title="Customer can no longer be changed">
+                <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                    <option value="">Select Customer</option>
+                </select>
+                <input type="hidden" asp-for="CustomerId" />
+                <span asp-validation-for="CustomerId" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 col-12">
+                <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? == true ? "" : "d-none")">
+                    <div class="col-6">
+                        <div class="row">
+                            <div id="SelectDiv" class="form-group col-12 my-1 @(Model.PrincipalId.HasValue ? "" : "d-none")">
+                                <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
+                                <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                    <option value="">Select Principal</option>
+                                </select>
+                                <span asp-validation-for="PrincipalId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check col-6 ps-2 my-1 text-center d-flex align-items-center justify-content-start">
+                        <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
+                        <label class="form-check-label ps-1 m-0" for="UsePrincipalCheckbox">
+                            Use Principal
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-12 ps-2 my-1">
+                <div class="row">
+                    <div class="col text-start">
+                        <input asp-for="BilledTo" value="LOCAL" type="radio">
+                        <label class="ms-1">Billed To Local</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col text-start">
+                        <input asp-for="BilledTo" value="PRINCIPAL" type="radio">
+                        <label class="ms-1">Billed To Principal</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- II. Reference Information -->
+        <h6 class="section-header text-secondary"><i class="bi bi-info-circle me-2"></i>II. Reference Information</h6>
+        <div class="row">
+            <div class="form-floating col-md-3 col-12 my-1">
+                <input class="form-control border-0 shadow bg-light" id="Address" placeholder=" " readonly>
+                <label class="ms-2">Address</label>
+            </div>
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input class="form-control border-0 shadow bg-light" id="TIN" placeholder=" " readonly>
+                <label class="ms-2">TIN</label>
+            </div>
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input class="form-control border-0 shadow bg-light" id="BusinessStyle" placeholder=" " readonly>
+                <label class="ms-2">Business Style</label>
+            </div>
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input class="form-control border-0 shadow bg-light" id="Terms" placeholder=" " readonly>
+                <label class="ms-2">Terms</label>
+            </div>
+        </div>
+
+        <!-- III. Billing Details -->
+        <h6 class="section-header text-secondary"><i class="bi bi-receipt me-2"></i>III. Billing Details</h6>
+        <div class="row">
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow bg-light" id="billingNumber" placeholder=" " readonly>
+                <label asp-for="MMSIBillingNumber" for="billingNumber" class="ms-2">Billing Number</label>
+                <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
+            </div>
+            <div class="form-check col-md-3 col-6 ps-2 my-1 text-center d-flex align-items-center justify-content-start">
+                <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented" />
+                <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" checked="@Model.IsUndocumented" disabled>
+                <label class="form-check-label ps-1 m-0" for="isUndocumentedCheckbox">
+                    Undocumented
+                </label>
+            </div>
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder=" " required>
+                <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number<span class="required text-danger">*</span></label>
+                <span asp-validation-for="VoyageNumber" class="text-danger"></span>
+            </div>
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input asp-for="Date" type="date" id="Date" class="form-control border-0 shadow">
+                <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- IV. Operation Details -->
+        <h6 class="section-header text-secondary"><i class="bi bi-geo-alt me-2"></i>IV. Operation Details</h6>
+        <div class="row">
+            <div class="form-group col-md-3 col-6 my-1">
+                <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                    <option value="">Select Port</option>
+                </select>
+                <span asp-validation-for="PortId" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-3 col-6 my-1">
+                <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
+                <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                    <option value="">Select Terminal</option>
+                </select>
+                <span asp-validation-for="TerminalId" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-3 col-6 my-1">
+                <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
+                <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                    <option value="">Select Vessel</option>
+                </select>
+                <span asp-validation-for="VesselId" class="text-danger"></span>
+            </div>
+            <div class="form-floating col-md-3 col-6 my-1">
+                <input asp-for="ApOtherTug" step="0.01" type="number" class="form-control border-0 shadow" placeholder=" " min="0">
+                <label asp-for="ApOtherTug" class="ms-2">AP Other Tug</label>
+                <span asp-validation-for="ApOtherTug" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- V. Itemized Dispatch Tickets -->
+        <h6 class="section-header text-secondary"><i class="bi bi-list-check me-2"></i>V. Itemized Dispatch Tickets</h6>
+        <div class="row pt-1">
+            <div class="form-group col-12">
+                <label class="control-label mb-1">Choose dispatch tickets to bill:</label>
+                <select asp-for="ToBillDispatchTickets" id="DispatchTicketSelect" asp-items="@Model.UnbilledDispatchTickets" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 200px;">
+            <table id="dataTable" class="table table-striped table-bordered mt-2" style="width:100%">
+                <thead>
+                    <tr>
+                        <th class="text-center">DISPATCH#</th>
+                        <th class="text-center">TUGBOAT</th>
+                        <th class="text-center">SERVICE</th>
+                        <th class="text-center">TIME START</th>
+                        <th class="text-center">TIME END</th>
+                        <th class="text-center">HOUR</th>
+                        <th class="text-center">DISPATCH RATE</th>
+                        <th class="text-center">DISPATCH AMOUNT</th>
+                        <th class="text-center">BAF RATE</th>
+                        <th class="text-center">BAF AMOUNT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row py-2 justify-content-end d-flex">
+            <div class="col-md-6 col-12 totals-box shadow-sm">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <label class="fw-bold small text-muted text-uppercase">Total Dispatch</label><br />
+                        <span class="fw-bold">₱ <span id="DispatchAmountTotal">0.00</span></span>
+                    </div>
+                    <div class="col-4 border-start">
+                        <label class="fw-bold small text-muted text-uppercase">Total BAF</label><br />
+                        <span class="fw-bold">₱ <span id="BAFAmountTotal">0.00</span></span>
+                    </div>
+                    <div class="col-4 border-start">
+                        <label class="fw-bold small text-muted text-uppercase text-success">Total Amount</label><br />
+                        <span class="fw-bold text-success">₱ <span id="OverallTotal">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="button" class="btn btn-primary" id="submitEditBilling"><i class="bi bi-pencil-square"></i> Save Changes</button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        let multiSelectVar = $('.js-example-basic-multiple');
+        multiSelectVar.select2({
+            dropdownParent: $('#billingModal')
+        });
+
+        // Initialize select2 for all dropdowns within modal
+        $('#billingModal .js-select2').select2({
+            dropdownParent: $('#billingModal')
+        });
+
+        let table = initializeDataTable('#dataTable');
+        setupEventListeners();
+
+        // Initialize data on startup
+        fillDataOnStartup();
+        handleDispatchTicketsChange();
+
+        function initializeDataTable(selector) {
+            if ($.fn.DataTable.isDataTable(selector)) {
+                $(selector).DataTable().destroy();
+            }
+            return $(selector).DataTable({
+                paging: false,
+                info: false,
+                order: [[0, 'asc']],
+                lengthChange: false,
+                searching: false
+            });
+        }
+
+        function setupEventListeners() {
+            $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
+            $("#PrincipalSelect").on("change.select2", handlePrincipalChange);
+            $("#CustomerId").on("change", handleCustomerChange);
+            $("#PortSelect").on("change", handlePortChange);
+            $("#submitEditBilling").on("click", areYouSureToBill);
+            multiSelectVar.on('change', handleDispatchTicketsChange);
+        }
+
+        function handleUsePrincipalChange() {
+            const $checkbox = $("#UsePrincipalCheckbox");
+            const $selectDiv = $("#SelectDiv");
+            const $principal = $("#PrincipalSelect");
+            const customerId = $("#CustomerId").val();
+
+            if ($checkbox.is(":checked")) {
+                $principal.val("");
+                fetchPrincipals(customerId);
+                $selectDiv.removeClass("d-none");
+                $principal.prop("required", true);
+            } else {
+                $principal.val("");
+                fillDataOnStartup();
+                $selectDiv.addClass("d-none");
+                $principal.prop("required", false);
+            }
+        }
+
+        function fetchPrincipals(customerId) {
+            $.ajax({
+                url: '@Url.Action("GetPrincipalsJson", "Billing", new { area = "User" })',
+                type: "GET",
+                data: { customerId: customerId },
+                success: function (data) {
+                    const $principalSelect = $("#PrincipalSelect");
+                    $principalSelect.empty().append('<option value="">Select Principal</option>');
+                    if (Array.isArray(data) && data.length > 0) {
+                        $.each(data, function (index, item) {
+                            $principalSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    }
+                }
+            });
+        }
+
+        function handlePrincipalChange() {
+            const principalId = $("#PrincipalSelect").val();
+            $.ajax({
+                url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "User" })',
+                method: "GET",
+                data: { principalId: principalId },
+                success: function (data) {
+                    updateFields(data);
+                }
+            });
+        }
+
+        function handleCustomerChange() {
+            const customerId = $(this).val();
+            const billingId = $("#billingId").val();
+            const $principalDiv = $("#PrincipalDiv");
+            const $principalSelect = $("#PrincipalSelect");
+            const $selectDiv = $("#SelectDiv");
+            const $dispatchSelect = $("#DispatchTicketSelect");
+
+            $("#UsePrincipalCheckbox").prop("checked", false);
+            $principalDiv.removeClass("d-none");
+            $principalSelect.prop("required", false);
+            $selectDiv.addClass("d-none");
+
+            if (customerId) {
+                $dispatchSelect.prop("disabled", false);
+                $dispatchSelect.prop("required", true);
+
+                $.ajax({
+                    url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "User" })',
+                    method: "POST",
+                    data: { customerId: customerId },
+                    success: function (data) {
+                        updateFields(data);
+                        $principalDiv.toggleClass("d-none", !data.hasPrincipal);
+
+                        $.ajax({
+                            url: '@Url.Action("GetEditTickets", "Billing", new { area = "User" })',
+                            method: "POST",
+                            data: { customerId: customerId, billingId: billingId },
+                            success: function (data) {
+                                $dispatchSelect.empty();
+                                if (Array.isArray(data) && data.length > 0) {
+                                    $.each(data, function (index, item) {
+                                        $dispatchSelect.append($('<option>', {
+                                            value: item.value,
+                                            text: item.text
+                                        }));
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            } else {
+                $dispatchSelect.val("0").trigger("change");
+                $dispatchSelect.prop("disabled", true);
+                $selectDiv.addClass("d-none");
+                $principalDiv.addClass("d-none");
+            }
+        }
+
+        function updateFields(data) {
+            $("#Terms").val(data?.terms || '');
+            $("#Address").val(data?.address || '');
+            $("#TIN").val(data?.tinNo || '');
+            $("#BusinessStyle").val(data?.businessStyle || '');
+        }
+
+        function handlePortChange() {
+            const portId = $("#PortSelect").val();
+            $.ajax({
+                url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "User" })',
+                type: "GET",
+                data: { portId: portId },
+                success: function (data) {
+                    const $terminalSelect = $("#TerminalSelect");
+                    $terminalSelect.empty().append('<option value="">Select Terminal</option>');
+                    if (Array.isArray(data) && data.length > 0) {
+                        $.each(data, function (index, item) {
+                            $terminalSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    }
+                }
+            });
+        }
+
+        function handleDispatchTicketsChange() {
+            const selectedTickets = multiSelectVar.val();
+            $.ajax({
+                url: '@Url.Action("GetDispatchTickets", "Billing", new { area = "User" })',
+                type: 'POST',
+                data: { dispatchTicketIds: selectedTickets },
+                success: function (result) {
+                    updateDispatchTable(result.data);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        function updateDispatchTable(data) {
+            let totalDispatchAmount = 0;
+            let totalBAFAmount = 0;
+
+            table.destroy();
+            const $tbody = $('#dataTable tbody').empty();
+
+            $.each(data, function (index, value) {
+                totalDispatchAmount += value.dispatchNetRevenue;
+                totalBAFAmount += value.bafNetRevenue;
+                $tbody.append(`
+                    <tr>
+                        <td class="text-center align-middle">${value.dispatchNumber}</td>
+                        <td class="text-center align-middle">${value.tugboat?.tugboatName || '-'}</td>
+                        <td class="text-center align-middle">${value.service?.serviceName || '-'}</td>
+                        <td class="text-center align-middle">${value.dateLeft} ${value.timeLeft}</td>
+                        <td class="text-center align-middle">${value.dateArrived} ${value.timeArrived}</td>
+                        <td class="text-center align-middle">${(value.totalHours || 0).toFixed(2)}</td>
+                        <td class="text-center align-middle">₱ ${formatNumber(value.dispatchRate)} ${value.dispatchChargeType || ''}</td>
+                        <td class="text-center align-middle">₱ ${formatNumber(value.dispatchNetRevenue)}</td>
+                        <td class="text-center align-middle">₱ ${formatNumber(value.bafRate)} ${value.bafChargeType || ''}</td>
+                        <td class="text-center align-middle">₱ ${formatNumber(value.bafNetRevenue)}</td>
+                    </tr>
+                `);
+            });
+
+            let overallAmount = totalDispatchAmount + totalBAFAmount;
+            $("#DispatchAmountTotal").text(formatNumber(totalDispatchAmount));
+            $("#BAFAmountTotal").text(formatNumber(totalBAFAmount));
+            $("#OverallTotal").text(formatNumber(overallAmount));
+
+            table = initializeDataTable('#dataTable');
+        }
+
+        function fillDataOnStartup() {
+            let $principalId = $("#PrincipalSelect").val();
+            let $customerId = $("#CustomerId").val();
+
+            if (!$principalId) {
+                $.ajax({
+                    url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "User" })',
+                    method: "POST",
+                    data: { customerId: $customerId },
+                    success: function (data) {
+                        updateFields(data);
+                    }
+                });
+            }
+            else {
+                $.ajax({
+                    url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "User" })',
+                    method: "GET",
+                    data: { principalId: $principalId },
+                    success: function (data) {
+                        updateFields(data);
+                    }
+                });
+            }
+        }
+
+        function areYouSureToBill(event) {
+            event.preventDefault();
+            const form = document.getElementById("billingEditForm");
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const selectedTickets = $("#DispatchTicketSelect").val();
+            if (!selectedTickets || selectedTickets.length === 0) {
+                Swal.fire({
+                    title: "No Tickets Selected",
+                    text: "Please select at least one dispatch ticket to bill.",
+                    icon: "warning"
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: "Save changes to this billing?",
+                text: "You can edit this again before posting.",
+                showCancelButton: true,
+                confirmButtonText: "Yes",
+                cancelButtonText: "No"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitEditForm();
+                }
+            });
+        }
+
+        function submitEditForm() {
+            const form = $('#billingEditForm');
+            const formData = form.serialize();
+
+            $.ajax({
+                url: '@Url.Action("Edit", "Billing", new { area = "User" })',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.success) {
+                        $('#billingModal').modal('hide');
+                        Swal.fire({
+                            title: "Success!",
+                            text: response.message,
+                            icon: "success"
+                        }).then(() => {
+                            if (response.redirectUrl) {
+                                window.location.href = response.redirectUrl;
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: response.message || "Failed to update billing.",
+                            icon: "error"
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        title: "Error",
+                        text: "An error occurred while updating the billing.",
+                        icon: "error"
+                    });
+                }
+            });
+        }
+    });
+</script>

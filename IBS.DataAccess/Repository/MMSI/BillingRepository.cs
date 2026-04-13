@@ -205,8 +205,9 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default)
         {
+            // Get the highest BL-prefixed billing number across all billings
             var lastRecord = await _db.MMSIBillings
-                .Where(b => b.IsUndocumented == true && string.IsNullOrEmpty(b.MMSIBillingNumber))
+                .Where(b => !string.IsNullOrEmpty(b.MMSIBillingNumber) && b.MMSIBillingNumber.StartsWith("BL"))
                 .OrderByDescending(b => b.MMSIBillingNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -215,9 +216,14 @@ namespace IBS.DataAccess.Repository.MMSI
                 return "BL00000001";
             }
 
-            var lastSeries = lastRecord.MMSIBillingNumber.Substring(3);
-            var parsed = int.Parse(lastSeries) + 1;
-            return "BL" + (parsed.ToString("D8"));
+            var lastSeries = lastRecord.MMSIBillingNumber.Substring(2); // "BL" is 2 chars
+            if (int.TryParse(lastSeries, out int lastNumber))
+            {
+                return "BL" + ((lastNumber + 1).ToString("D8"));
+            }
+
+            // Fallback if parsing fails
+            return "BL" + (DateTime.Now.Ticks % 100000000).ToString("D8");
         }
 
         public Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default)
