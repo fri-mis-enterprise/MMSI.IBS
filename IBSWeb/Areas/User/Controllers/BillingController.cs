@@ -854,6 +854,55 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        public async Task<JsonResult> SearchCustomers(string term, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Length < 1)
+            {
+                return Json(new List<object>());
+            }
+
+            var customers = await unitOfWork.Customer
+                .GetAllAsync(c => c.CustomerName!.ToLower().Contains(term.ToLower()) ||
+                                  c.CustomerCode!.ToLower().Contains(term.ToLower()),
+                             cancellationToken);
+
+            var result = customers.Select(c => new
+            {
+                value = c.CustomerId,
+                name = c.CustomerName,
+                hasPrincipal = unitOfWork.Principal.GetAllAsync(p => p.CustomerId == c.CustomerId, cancellationToken).Result.Any(),
+                vatType = c.VatType,
+                isUndoc = c.Type
+            }).Take(10).ToList();
+
+            return Json(result);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> SearchPrincipals(string term, int customerId, CancellationToken cancellationToken)
+        {
+            var principals = await unitOfWork.Principal
+                .GetAllAsync(p => p.CustomerId == customerId, cancellationToken);
+
+            // Filter by search term if provided
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                principals = principals.Where(p =>
+                    p.PrincipalName!.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    p.PrincipalNumber!.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            var result = principals.Select(p => new
+            {
+                value = p.PrincipalId,
+                name = p.PrincipalName
+            }).Take(10).ToList();
+
+            return Json(result);
+        }
+
+        [HttpGet]
         public async Task<JsonResult> GetPrincipalDetails(int principalId)
         {
             var customerDetails = await unitOfWork.Principal
