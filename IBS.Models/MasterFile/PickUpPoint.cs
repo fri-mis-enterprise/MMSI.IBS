@@ -28,7 +28,5 @@ namespace IBS.Models.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? Suppliers { get; set; }
-
-        public bool IsFilpride { get; set; }
     }
 }

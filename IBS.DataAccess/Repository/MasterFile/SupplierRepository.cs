@@ -89,7 +89,6 @@ namespace IBS.DataAccess.Repository.MasterFile
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
             existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
             existingSupplier.ZipCode = model.ZipCode;
-            existingSupplier.IsFilpride = model.IsFilpride;
             existingSupplier.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
             existingSupplier.TradeName = model.TradeName;
             existingSupplier.WithholdingTaxTitle = model.WithholdingTaxTitle;
@@ -120,7 +119,7 @@ namespace IBS.DataAccess.Repository.MasterFile
         {
             return await _db.Suppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Category == "Trade" && s.IsFilpride)
+                .Where(s => s.IsActive && s.Category == "Trade")
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),

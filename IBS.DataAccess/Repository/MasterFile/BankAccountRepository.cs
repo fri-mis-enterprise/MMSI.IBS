@@ -13,7 +13,6 @@ namespace IBS.DataAccess.Repository.MasterFile
         public async Task<List<SelectListItem>> GetBankAccountListAsync(string company, CancellationToken cancellationToken = default)
         {
             return await _db.BankAccounts
-                 .Where(a => a.IsFilpride)
                  .Select(ba => new SelectListItem
                  {
                      Value = ba.BankAccountId.ToString(),

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class PaymentTermController(
+    public class PaymentTermsController(
         IUnitOfWork unitOfWork,
         ILogger<SupplierController> logger,
         UserManager<ApplicationUser> userManager,
