@@ -41,15 +41,12 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            IEnumerable<Customer> customer = await unitOfWork.Customer
-                .GetAllAsync(null, cancellationToken);
-
             if (view == nameof(DynamicView.Customer))
             {
                 return View("ExportIndex");
             }
 
-            return View(customer);
+            return View(Enumerable.Empty<Customer>());
         }
 
         [HttpGet]

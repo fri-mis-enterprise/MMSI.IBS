@@ -43,19 +43,15 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken = default)
         {
-            // FIX: was .Result — blocking call that can deadlock under load.
             if (!await HasDispatchTicketAccessAsync(cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var dispatchTickets = await unitOfWork.DispatchTicket
-                .GetAllAsync(dt => dt.Status != _statusForPosting && dt.Status != _statusCancelled, cancellationToken);
-
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
-            return View(dispatchTickets);
+            return View(Enumerable.Empty<DispatchTicket>());
         }
 
         // ════════════════════════════════════════════════════════════════════════

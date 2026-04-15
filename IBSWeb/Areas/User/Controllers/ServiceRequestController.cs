@@ -71,28 +71,9 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var dispatchTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == "For Posting" || dt.Status == "Incomplete", cancellationToken);
-            var currentUser = await userManager.GetUserAsync(User);
-
-            if (User.IsInRole("PortCoordinator"))
-            {
-                dispatchTickets = dispatchTickets.Where(t => t.CreatedBy == currentUser!.UserName)
-                    .ToList();
-            }
-
-            var mmsiDispatchTickets = dispatchTickets.ToList();
-            foreach (var dispatchTicket in mmsiDispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
-            {
-                dispatchTicket.ImageSignedUrl = await GenerateSignedUrl(dispatchTicket.ImageName!);
-            }
-            foreach (var dispatchTicket in mmsiDispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.VideoName)))
-            {
-                dispatchTicket.VideoSignedUrl = await GenerateSignedUrl(dispatchTicket.VideoName!);
-            }
-
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
-            return View(dispatchTickets);
+            return View(Enumerable.Empty<DispatchTicket>());
         }
 
         [HttpGet]

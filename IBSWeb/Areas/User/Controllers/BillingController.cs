@@ -37,10 +37,9 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            var model = await unitOfWork.Billing.GetAllAsync(null, cancellationToken);
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
-            return View(model);
+            return View(Enumerable.Empty<Billing>());
         }
 
         private async Task UpdateFilterTypeClaim(string filterType)
