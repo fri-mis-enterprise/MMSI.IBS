@@ -26,8 +26,8 @@
         - '--platform'
         - $_PLATFORM
         - '--labels'
-        - 'company=filpride'
-        
+        - 'company=mmsi'
+
 timeout: 1200s
 
 images:

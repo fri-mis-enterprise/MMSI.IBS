@@ -74,17 +74,17 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<DispatchTicket> GetDispatchTicketLists(DispatchTicket model, CancellationToken cancellationToken = default)
         {
-            model.Services = await GetMMSIActivitiesServicesById(cancellationToken);
-            model.Ports = await GetMMSIPortsById(cancellationToken);
-            model.Tugboats = await GetMMSITugboatsById(cancellationToken);
-            model.TugMasters = await GetMMSITugMastersById(cancellationToken);
-            model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
+            model.Services = await GetActivitiesServicesById(cancellationToken);
+            model.Ports = await GetPortsById(cancellationToken);
+            model.Tugboats = await GetTugboatsById(cancellationToken);
+            model.TugMasters = await GetTugMastersById(cancellationToken);
+            model.Vessels = await GetVesselsById(cancellationToken);
+            model.Terminals = await GetTerminalsById(model, cancellationToken);
 
             return model;
         }
 
-        private async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetActivitiesServicesById(CancellationToken cancellationToken = default)
         {
             var activitiesServices = await _db.MMSIServices
                 .OrderBy(s => s.ServiceNumber)
@@ -97,7 +97,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return activitiesServices;
         }
 
-        private async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetPortsById(CancellationToken cancellationToken = default)
         {
             var ports = await _db.MMSIPorts
                 .OrderBy(s => s.PortNumber)
@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return ports;
         }
 
-        private async Task<List<SelectListItem>> GetMMSITerminalsById(DispatchTicket model, CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetTerminalsById(DispatchTicket model, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> terminals;
 
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return terminals;
         }
 
-        private async Task<List<SelectListItem>> GetMMSITugboatsById(CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetTugboatsById(CancellationToken cancellationToken = default)
         {
             var tugBoats = await _db.MMSITugboats.OrderBy(s => s.TugboatNumber).Select(s => new SelectListItem
             {
@@ -150,7 +150,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return tugBoats;
         }
 
-        private async Task<List<SelectListItem>> GetMMSITugMastersById(CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetTugMastersById(CancellationToken cancellationToken = default)
         {
             var tugMasters = await _db.MMSITugMasters.OrderBy(s => s.TugMasterNumber).Select(s => new SelectListItem
             {
@@ -161,7 +161,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return tugMasters;
         }
 
-        private async Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetVesselsById(CancellationToken cancellationToken = default)
         {
             var vessels = await _db.MMSIVessels.OrderBy(s => s.VesselNumber).Select(s => new SelectListItem
             {
@@ -172,7 +172,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return vessels;
         }
 
-        private async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
+        private async Task<List<SelectListItem>> GetCustomersById(CancellationToken cancellationToken = default)
         {
             return await _db.Customers
                 .OrderBy(s => s.CustomerName)
