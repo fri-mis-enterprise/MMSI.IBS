@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.ViewModels.JobOrderViewModel
+@model IBS.Models.MMSI.JobOrder
 
 @{
     ViewData["Title"] = $"Job Order {Model.JobOrderNumber}";
@@ -98,11 +98,11 @@
                     <div class="row g-3 mb-3">
                         <div class="col-12">
                             <label class="text-muted small mb-1">Customer</label>
-                            <div class="fw-bold">@Model.CustomerName</div>
+                            <div class="fw-bold">@Model.Customer!.CustomerName</div>
                         </div>
                         <div class="col-12">
                             <label class="text-muted small mb-1">Vessel</label>
-                            <div class="fw-bold">@Model.VesselName</div>
+                            <div class="fw-bold">@Model.Vessel!.VesselName</div>
                         </div>
                     </div>
 
@@ -112,11 +112,11 @@
                     <div class="row g-3 mb-3">
                         <div class="col-6">
                             <label class="text-muted small mb-1">Port</label>
-                            <div>@(Model.PortName ?? "-")</div>
+                            <div>@(Model.Port!.PortName ?? "-")</div>
                         </div>
                         <div class="col-6">
                             <label class="text-muted small mb-1">Terminal</label>
-                            <div>@(Model.TerminalName ?? "-")</div>
+                            <div>@(Model.Terminal!.TerminalName ?? "-")</div>
                         </div>
                     </div>
 

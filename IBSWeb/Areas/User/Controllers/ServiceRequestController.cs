@@ -88,7 +88,7 @@ namespace IBSWeb.Areas.User.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var viewModel = new ServiceRequestViewModel();
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             ViewData["PortId"] = 0;
             return View(viewModel);
         }
@@ -230,7 +230,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var viewModel = DispatchTicketModelToServiceRequestVm(model);
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
 
             if (!string.IsNullOrEmpty(viewModel.ImageName))
             {

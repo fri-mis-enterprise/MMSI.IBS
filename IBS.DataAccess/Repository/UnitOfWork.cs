@@ -203,13 +203,12 @@ namespace IBS.DataAccess.Repository
             return x => true;
         }
 
-        public async Task<List<SelectListItem>> GetCustomerListAsyncById(string company, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetCustomerListAsyncById(CancellationToken cancellationToken = default)
         {
 
             return await _db.Customers
                 .OrderBy(c => c.CustomerId)
                 .Where(c => c.IsActive)
-                .Where(GetCompanyFilter<Customer>(company))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),

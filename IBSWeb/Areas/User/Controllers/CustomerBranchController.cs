@@ -35,7 +35,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var model = new CustomerBranch
             {
-                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
+                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
             };
 
             return View(model);
@@ -51,7 +51,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 model.CustomerSelectList =
-                    await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 return View(model);
             }
 
@@ -87,7 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 return View(model);
             }
         }
@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            branch.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            branch.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             return View(branch);
         }
 
@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 model.CustomerSelectList =
-                    await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 return View(model);
             }
 
@@ -150,7 +150,7 @@ namespace IBSWeb.Areas.User.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 await transaction.RollbackAsync(cancellationToken);
                 model.CustomerSelectList =
-                    await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 return View(model);
             }
         }

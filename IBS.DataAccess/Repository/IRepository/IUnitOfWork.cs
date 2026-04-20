@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository.IRepository
         ICustomerBranchRepository CustomerBranch { get; }
         ITermsRepository Terms { get; }
 
-        Task<List<SelectListItem>> GetCustomerListAsyncById(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetCustomerListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
 

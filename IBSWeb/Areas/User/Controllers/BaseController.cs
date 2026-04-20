@@ -17,36 +17,6 @@ namespace IBSWeb.Areas.User.Controllers
         protected string GetUserId() => UserManager.GetUserId(User)!;
 
         /// <summary>
-        /// Check if user has access to ANY of the specified procedures
-        /// </summary>
-        private async Task<bool> HasAccessAsync(params IBS.Models.Enums.ProcedureEnum[] procedures)
-        {
-            return await AccessControl.HasAnyAccessAsync(GetUserId(), procedures);
-        }
-
-        /// <summary>
-        /// Check if user has access to ALL the specified procedures
-        /// </summary>
-        protected async Task<bool> HasAllAccessAsync(params IBS.Models.Enums.ProcedureEnum[] procedures)
-        {
-            return await AccessControl.HasAllAccessAsync(GetUserId(), procedures);
-        }
-
-        /// <summary>
-        /// Redirect to home if user doesn't have access
-        /// </summary>
-        protected async Task<IActionResult> RequireAccessAsync(params IBS.Models.Enums.ProcedureEnum[] procedures)
-        {
-            if (!await HasAccessAsync(procedures))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction("Index", "Home", new { area = "User" });
-            }
-
-            return null!;
-        }
-
-        /// <summary>
         /// Returns a permission denied modal partial view
         /// </summary>
         protected IActionResult PermissionDenied(string? message = null, string? requiredPermission = null)

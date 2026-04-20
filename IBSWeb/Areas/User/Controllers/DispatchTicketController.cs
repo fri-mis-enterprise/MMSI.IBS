@@ -143,7 +143,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             viewModel = await unitOfWork.ServiceRequest
                 .GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
 
             ViewData["PortId"] = viewModel.Terminal?.Port?.PortId > 0
                 ? viewModel.Terminal.Port.PortId
@@ -195,7 +195,7 @@ namespace IBSWeb.Areas.User.Controllers
                     .GetDispatchTicketSelectLists(viewModel, cancellationToken);
             }
 
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             return View(viewModel);
         }
 
@@ -219,7 +219,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 viewModel = await unitOfWork.ServiceRequest
                     .GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 TempData["warning"] = "Can't create entry, please review your input.";
                 ViewData["PortId"] = viewModel.Terminal?.Port?.PortId ?? viewModel.PortId;
                 return View(viewModel);
@@ -253,7 +253,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await transaction.RollbackAsync(cancellationToken);
                     viewModel = await unitOfWork.ServiceRequest
                         .GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                    viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                    viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                     TempData["warning"] = "Start Date/Time should be earlier than End Date/Time!";
                     ViewData["PortId"] = model.Terminal?.Port?.PortId;
                     return View(viewModel);
@@ -312,7 +312,7 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to create dispatch ticket.");
                 viewModel = await unitOfWork.ServiceRequest
                     .GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+                viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 TempData["error"]   = ex.Message;
                 ViewData["PortId"]  = model.Terminal?.Port?.PortId;
                 return View(viewModel);
@@ -361,7 +361,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var viewModel     = DispatchTicketModelToTariffVm(model);
             var companyClaims = await GetCompanyClaimAsync();
-            viewModel.Customers     = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers     = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             ViewBag.FilterType      = await GetCurrentFilterType();
             return View(viewModel);
         }
@@ -466,7 +466,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var viewModel     = DispatchTicketModelToTariffVm(model);
             var companyClaims = await GetCompanyClaimAsync();
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             ViewBag.FilterType  = await GetCurrentFilterType();
             return View(viewModel);
         }
@@ -662,7 +662,7 @@ namespace IBSWeb.Areas.User.Controllers
             var viewModel     = DispatchTicketModelToServiceRequestVm(model);
             viewModel = await unitOfWork.ServiceRequest
                 .GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
 
             if (!string.IsNullOrEmpty(model.ImageName))
             {

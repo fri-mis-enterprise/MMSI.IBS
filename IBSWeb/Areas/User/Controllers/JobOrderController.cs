@@ -20,8 +20,6 @@ namespace IBSWeb.Areas.User.Controllers
         ILogger<JobOrderController> logger)
         : BaseController(accessControl, userManager)
     {
-        // FIX #1/#4: TempData keys used for server-side confirmation tracking.
-        // Never trust a client-supplied "confirmed" flag — store intent here instead.
         private const string _cancelConfirmKey = "JobOrder_PendingCancelId";
         private const string _closeConfirmKey  = "JobOrder_PendingCloseId";
 
@@ -142,8 +140,6 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var companyClaim = await GetCompanyClaimAsync();
-
             var ticketViewModel = new ServiceRequestViewModel
             {
                 JobOrderId   = jobOrder.JobOrderId,
@@ -157,31 +153,9 @@ namespace IBSWeb.Areas.User.Controllers
             };
 
             ticketViewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(ticketViewModel, cancellationToken);
-            ticketViewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaim!, cancellationToken);
-
-            var viewModel = new JobOrderViewModel
-            {
-                JobOrderId      = jobOrder.JobOrderId,
-                JobOrderNumber  = jobOrder.JobOrderNumber,
-                Date            = jobOrder.Date,
-                Status          = jobOrder.Status,
-                CustomerId      = jobOrder.CustomerId,
-                CustomerName    = jobOrder.Customer?.CustomerName,
-                VesselId        = jobOrder.VesselId,
-                VesselName      = jobOrder.Vessel?.VesselName,
-                PortId          = jobOrder.PortId,
-                PortName        = jobOrder.Port?.PortName,
-                TerminalId      = jobOrder.TerminalId,
-                TerminalName    = jobOrder.Terminal?.TerminalName,
-                COSNumber       = jobOrder.COSNumber,
-                VoyageNumber    = jobOrder.VoyageNumber,
-                Remarks         = jobOrder.Remarks,
-                DispatchTickets = jobOrder.DispatchTickets.ToList()
-            };
-
             ViewData["TicketViewModel"] = ticketViewModel;
 
-            return View(viewModel);
+            return View(jobOrder);
         }
 
         #endregion
@@ -733,7 +707,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var companyClaim = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(companyClaim!, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
 
             var vessels = await unitOfWork.Vessel.GetAllAsync(cancellationToken: cancellationToken);
             viewModel.Vessels = vessels

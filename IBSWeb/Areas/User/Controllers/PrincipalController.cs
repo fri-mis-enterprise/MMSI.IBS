@@ -40,7 +40,7 @@ namespace IBSWeb.Areas.User.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var model = new Principal
             {
-                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken)
+                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
             };
             return View(model);
         }
@@ -119,7 +119,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(companyClaims!, cancellationToken);
+            model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             return View(model);
         }
 
