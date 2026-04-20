@@ -51,6 +51,16 @@ function loadModal(url, contentContainerId, modalId, params = {}) {
         } else {
             contentContainer.html(data);
             new bootstrap.Modal(document.getElementById(modalId)).show();
+
+            // Re-initialize Select2 dropdowns after content loads
+            if (modalId === 'addTicketModal') {
+                contentContainer.find('.js-select2').each(function() {
+                    const $select = $(this);
+                    if ($select.data('select2')) {
+                        $select.select2('destroy');
+                    }
+                });
+            }
         }
     }).fail(function (xhr) {
         if (xhr.responseText && xhr.responseText.indexOf('permission-denied-content') !== -1) {
@@ -828,21 +838,13 @@ function checkForDefaultTariff() {
                 $('#BAFDiscount').val(result.bafDiscount);
                 calculateTariffInModal();
 
-                const toastHtml = `
-                    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-                        <div class="toast show align-items-center text-white bg-success border-0" role="alert">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    Default rates applied!
-                                    <div class="mt-1 small">Dispatch: ₱${result.dispatch} | BAF: ₱${result.baf}</div>
-                                </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                            </div>
-                        </div>
-                    </div>`;
-                $('body').append(toastHtml);
-                setTimeout(function () { $('.toast-container').remove(); }, 3000);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Default rates applied!',
+                    html: `Dispatch: ₱${result.dispatch}<br>BAF: ₱${result.baf}`,
+                    timer: 3000,
+                    showConfirmButton: false,
+                });
             }
         },
         error: function () {
