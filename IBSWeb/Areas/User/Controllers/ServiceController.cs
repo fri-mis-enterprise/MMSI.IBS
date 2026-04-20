@@ -119,17 +119,22 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                if (await unitOfWork.ServiceMaster.IsServicesExist(services.Name, companyClaims, cancellationToken))
+                if (await unitOfWork.ServiceMaster.IsServicesExist(services.Name,
+                        companyClaims,
+                        cancellationToken))
                 {
-                    ModelState.AddModelError("Name", "Services already exist!");
+                    ModelState.AddModelError("Name",
+                        "Services already exist!");
                     return View(services);
                 }
 
                 var currentAndPrevious = await unitOfWork.ChartOfAccount
-                    .GetAsync(x => x.AccountId == services.CurrentAndPreviousId, cancellationToken);
+                    .GetAsync(x => x.AccountId == services.CurrentAndPreviousId,
+                        cancellationToken);
 
                 var unearned = await unitOfWork.ChartOfAccount
-                    .GetAsync(x => x.AccountId == services.UnearnedId, cancellationToken);
+                    .GetAsync(x => x.AccountId == services.UnearnedId,
+                        cancellationToken);
 
                 services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
                 services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
@@ -138,13 +143,16 @@ namespace IBSWeb.Areas.User.Controllers
                 services.Company = companyClaims;
                 services.CreatedBy = GetUserFullName();
                 services.ServiceNo = await unitOfWork.ServiceMaster.GetLastNumber(cancellationToken);
-                await unitOfWork.ServiceMaster.AddAsync(services, cancellationToken);
+                await unitOfWork.ServiceMaster.AddAsync(services,
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Create ServiceMaster #{services.ServiceNo}", "ServiceMaster" );
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Create ServiceMaster #{services.ServiceNo}",
+                    "ServiceMaster");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -154,7 +162,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to create service master file. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(services);
@@ -167,7 +177,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var query = await unitOfWork.ServiceMaster
-                    .GetAllAsync(null, cancellationToken);
+                    .GetAllAsync(null,
+                        cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -211,7 +222,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get services.");
+                logger.LogError(ex,
+                    "Failed to get services.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -226,7 +238,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var services = await unitOfWork.ServiceMaster
-                .GetAsync(x => x.ServiceId == id, cancellationToken);
+                .GetAsync(x => x.ServiceId == id,
+                    cancellationToken);
 
             if (services == null)
             {
@@ -245,7 +258,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var existingModel =  await unitOfWork.ServiceMaster
-                .GetAsync(x => x.ServiceId == services.ServiceId, cancellationToken);
+                .GetAsync(x => x.ServiceId == services.ServiceId,
+                    cancellationToken);
 
             if (existingModel == null)
             {
@@ -263,8 +277,10 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited ServiceMaster #{existingModel.ServiceNo}", "ServiceMaster");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited ServiceMaster #{existingModel.ServiceNo}",
+                    "ServiceMaster");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -274,7 +290,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to edit service master file. Edited by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -350,15 +368,24 @@ namespace IBSWeb.Areas.User.Controllers
 
             foreach (var item in selectedList)
             {
-                worksheet.Cells[row, 1].Value = item.CurrentAndPreviousTitle;
-                worksheet.Cells[row, 2].Value = item.UnearnedTitle;
-                worksheet.Cells[row, 3].Value = item.Name;
-                worksheet.Cells[row, 4].Value = item.Percent;
-                worksheet.Cells[row, 5].Value = item.CreatedBy;
-                worksheet.Cells[row, 6].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
-                worksheet.Cells[row, 7].Value = item.CurrentAndPreviousNo;
-                worksheet.Cells[row, 8].Value = item.UnearnedNo;
-                worksheet.Cells[row, 9].Value = item.ServiceId;
+                worksheet.Cells[row,
+                    1].Value = item.CurrentAndPreviousTitle;
+                worksheet.Cells[row,
+                    2].Value = item.UnearnedTitle;
+                worksheet.Cells[row,
+                    3].Value = item.Name;
+                worksheet.Cells[row,
+                    4].Value = item.Percent;
+                worksheet.Cells[row,
+                    5].Value = item.CreatedBy;
+                worksheet.Cells[row,
+                    6].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
+                worksheet.Cells[row,
+                    7].Value = item.CurrentAndPreviousNo;
+                worksheet.Cells[row,
+                    8].Value = item.UnearnedNo;
+                worksheet.Cells[row,
+                    9].Value = item.ServiceId;
 
                 row++;
             }
@@ -370,7 +397,9 @@ namespace IBSWeb.Areas.User.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"ServiceList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

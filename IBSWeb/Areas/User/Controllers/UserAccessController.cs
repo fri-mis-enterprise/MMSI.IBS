@@ -21,7 +21,8 @@ namespace IBSWeb.Areas.User.Controllers
         // GET
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var model = await unitOfWork.UserAccess.GetAllAsync(null, cancellationToken);
+            var model = await unitOfWork.UserAccess.GetAllAsync(null,
+                cancellationToken);
             return View(model);
         }
 
@@ -45,7 +46,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var tempModel = await unitOfWork.UserAccess.GetAsync(ua => ua.UserId == model.UserId, cancellationToken);
+            var tempModel = await unitOfWork.UserAccess.GetAsync(ua => ua.UserId == model.UserId,
+                cancellationToken);
 
             if (tempModel != null)
             {
@@ -58,13 +60,16 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var selectedUser = dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
                 model.UserName = selectedUser!.UserName;
-                await unitOfWork.UserAccess.AddAsync(model, cancellationToken);
+                await unitOfWork.UserAccess.AddAsync(model,
+                    cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created User Access for {model.UserName}", "User Access");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created User Access for {model.UserName}",
+                    "User Access");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -74,7 +79,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create user access.");
+                logger.LogError(ex,
+                    "Failed to create user access.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 model.Users = await unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
@@ -85,7 +91,8 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = await unitOfWork.UserAccess.GetAsync(ua => ua.Id == id, cancellationToken);
+            var model = await unitOfWork.UserAccess.GetAsync(ua => ua.Id == id,
+                cancellationToken);
 
             if (model == null)
             {
@@ -109,7 +116,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                var tempModel = await unitOfWork.UserAccess.GetAsync(ua => ua.Id == model.Id, cancellationToken);
+                var tempModel = await unitOfWork.UserAccess.GetAsync(ua => ua.Id == model.Id,
+                    cancellationToken);
 
                 if (tempModel == null)
                 {
@@ -119,8 +127,10 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited User Access for {model.UserName}", "User Access");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited User Access for {model.UserName}",
+                    "User Access");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -158,7 +168,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit user access.");
+                logger.LogError(ex,
+                    "Failed to edit user access.");
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
                 model.Users = await unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);

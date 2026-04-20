@@ -66,17 +66,20 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                ModelState.AddModelError("",
+                    "Make sure to fill all the required details.");
                 return View(model);
             }
 
             bool IsProductExist = await unitOfWork
                 .Product
-                .IsProductExist(model.ProductName, cancellationToken);
+                .IsProductExist(model.ProductName,
+                    cancellationToken);
 
             if (IsProductExist)
             {
-                ModelState.AddModelError("ProductName", "Product name already exist.");
+                ModelState.AddModelError("ProductName",
+                    "Product name already exist.");
                 return View(model);
             }
 
@@ -85,15 +88,18 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 model.CreatedBy = GetUserFullName();
-                await unitOfWork.Product.AddAsync(model, cancellationToken);
+                await unitOfWork.Product.AddAsync(model,
+                    cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new (
-                    GetUserFullName(), $"Created Product {model.ProductCode}",
-                    "Product" );
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    GetUserFullName(),
+                    $"Created Product {model.ProductCode}",
+                    "Product");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -103,7 +109,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create product master file. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to create product master file. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return View(model);
@@ -116,7 +124,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var queried = await unitOfWork.Product
-                    .GetAllAsync(null, cancellationToken);
+                    .GetAllAsync(null,
+                        cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -158,7 +167,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get products.");
+                logger.LogError(ex,
+                    "Failed to get products.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -172,7 +182,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await unitOfWork.Product.GetAsync(c => c.ProductId == id, cancellationToken);
+            var product = await unitOfWork.Product.GetAsync(c => c.ProductId == id,
+                cancellationToken);
 
             if (product != null)
             {
@@ -190,7 +201,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var existing = await unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
+            var existing = await unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId,
+                cancellationToken);
 
             if (existing == null)
             {
@@ -202,14 +214,17 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 model.EditedBy = GetUserFullName();
-                await unitOfWork.Product.UpdateAsync(model, cancellationToken);
+                await unitOfWork.Product.UpdateAsync(model,
+                    cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new (
-                    GetUserFullName(), $"Edited Product {existing.ProductCode} => {model.ProductCode}",
-                    "Product" );
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    GetUserFullName(),
+                    $"Edited Product {existing.ProductCode} => {model.ProductCode}",
+                    "Product");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -219,7 +234,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in updating product.");
+                logger.LogError(ex,
+                    "Error in updating product.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
@@ -236,7 +252,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             var product = await unitOfWork
                 .Product
-                .GetAsync(c => c.ProductId == id, cancellationToken);
+                .GetAsync(c => c.ProductId == id,
+                    cancellationToken);
 
             if (product != null)
             {
@@ -255,7 +272,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var product = await unitOfWork.Product
-                .GetAsync(c => c.ProductId == id, cancellationToken);
+                .GetAsync(c => c.ProductId == id,
+                    cancellationToken);
 
             if (product == null)
             {
@@ -272,9 +290,11 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
-                    GetUserFullName(), $"Activated Product #{product.ProductCode}",
+                    GetUserFullName(),
+                    $"Activated Product #{product.ProductCode}",
                     "Product");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -284,10 +304,16 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to activate product master file. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to activate product master file. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Activate), new { id = id });
+                return RedirectToAction(nameof(Activate),
+                    new
+                    {
+                        id = id
+                    });
             }
         }
 
@@ -301,7 +327,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             var product = await unitOfWork
                 .Product
-                .GetAsync(c => c.ProductId == id, cancellationToken);
+                .GetAsync(c => c.ProductId == id,
+                    cancellationToken);
 
             if (product != null)
             {
@@ -320,7 +347,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var product = await unitOfWork.Product
-                .GetAsync(c => c.ProductId == id, cancellationToken);
+                .GetAsync(c => c.ProductId == id,
+                    cancellationToken);
 
             if (product == null)
             {
@@ -337,9 +365,11 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (
-                    GetUserFullName(), $"Deactivated Product #{product.ProductCode}",
+                    GetUserFullName(),
+                    $"Deactivated Product #{product.ProductCode}",
                     "Product");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -349,10 +379,16 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to deactivate product master file. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to deactivate product master file. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Deactivate), new { id = id });
+                return RedirectToAction(nameof(Deactivate),
+                    new
+                    {
+                        id = id
+                    });
             }
         }
 
@@ -429,12 +465,18 @@ namespace IBSWeb.Areas.User.Controllers
 
             foreach (var item in selectedList)
             {
-                worksheet.Cells[row, 1].Value = item.ProductCode;
-                worksheet.Cells[row, 2].Value = item.ProductName;
-                worksheet.Cells[row, 3].Value = item.ProductUnit;
-                worksheet.Cells[row, 4].Value = item.CreatedBy;
-                worksheet.Cells[row, 5].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
-                worksheet.Cells[row, 6].Value = item.ProductId;
+                worksheet.Cells[row,
+                    1].Value = item.ProductCode;
+                worksheet.Cells[row,
+                    2].Value = item.ProductName;
+                worksheet.Cells[row,
+                    3].Value = item.ProductUnit;
+                worksheet.Cells[row,
+                    4].Value = item.CreatedBy;
+                worksheet.Cells[row,
+                    5].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
+                worksheet.Cells[row,
+                    6].Value = item.ProductId;
 
                 row++;
             }
@@ -442,7 +484,9 @@ namespace IBSWeb.Areas.User.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ProductList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+            return File(excelBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"ProductList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

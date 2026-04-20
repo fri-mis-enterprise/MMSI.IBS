@@ -30,7 +30,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var principals = await unitOfWork.Principal.GetAllAsync(null, cancellationToken);
+            var principals = await unitOfWork.Principal.GetAllAsync(null,
+                cancellationToken);
             return View(principals);
         }
 
@@ -59,15 +60,19 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var customer = await unitOfWork.Customer
-                    .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException("Customer not found");
+                    .GetAsync(c => c.CustomerId == model.CustomerId,
+                        cancellationToken) ?? throw new NullReferenceException("Customer not found");
                 model.CustomerId = customer.CustomerId;
-                await unitOfWork.Principal.AddAsync(model, cancellationToken);
+                await unitOfWork.Principal.AddAsync(model,
+                    cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Principal #{model.PrincipalNumber}", "Principal");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created new Principal #{model.PrincipalNumber}",
+                    "Principal");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -77,7 +82,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create principal.");
+                logger.LogError(ex,
+                    "Failed to create principal.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -89,21 +95,24 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var model = await unitOfWork.Principal
-                    .GetAsync(p => p.PrincipalId == id, cancellationToken);
+                    .GetAsync(p => p.PrincipalId == id,
+                        cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await unitOfWork.Principal.RemoveAsync(model, cancellationToken);
+                await unitOfWork.Principal.RemoveAsync(model,
+                    cancellationToken);
                 await unitOfWork.Principal.SaveAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete principal.");
+                logger.LogError(ex,
+                    "Failed to delete principal.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -113,7 +122,8 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             await GetCompanyClaimAsync();
-            var model = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == id, cancellationToken);
+            var model = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == id,
+                cancellationToken);
             if (model == null)
             {
                 return NotFound();
@@ -132,7 +142,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken);
+            var currentModel = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId,
+                cancellationToken);
 
             if (currentModel == null)
             {
@@ -147,8 +158,10 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Principal #{currentModel.PrincipalNumber} => {model.PrincipalNumber}", "Principal");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited Principal #{currentModel.PrincipalNumber} => {model.PrincipalNumber}",
+                    "Principal");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -174,7 +187,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit principal.");
+                logger.LogError(ex,
+                    "Failed to edit principal.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

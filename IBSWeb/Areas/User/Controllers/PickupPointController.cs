@@ -59,7 +59,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             var model = new PickUpPoint
             {
-                Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims,
+                    cancellationToken),
                 Company = companyClaims
             };
 
@@ -79,8 +80,10 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (!ModelState.IsValid)
             {
-                model.Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                model.Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims,
+                    cancellationToken);
+                ModelState.AddModelError("",
+                    "Make sure to fill all the required details.");
                 return View(model);
             }
 
@@ -90,14 +93,17 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 model.CreatedBy = GetUserFullName();
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await unitOfWork.PickUpPoint.AddAsync(model, cancellationToken);
+                await unitOfWork.PickUpPoint.AddAsync(model,
+                    cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created Pickup Point #{model.Depot}","Pickup Point" );
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created Pickup Point #{model.Depot}",
+                    "Pickup Point");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -107,7 +113,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create pickup point master file. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to create pickup point master file. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -120,7 +128,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var query = await unitOfWork.PickUpPoint
-                    .GetAllAsync(null, cancellationToken);
+                    .GetAllAsync(null,
+                        cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -167,7 +176,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get pickup points.");
+                logger.LogError(ex,
+                    "Failed to get pickup points.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -191,14 +201,16 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 var model = await unitOfWork.PickUpPoint
-                    .GetAsync(p => p.PickUpPointId == id, cancellationToken);
+                    .GetAsync(p => p.PickUpPointId == id,
+                        cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                model.Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                model.Suppliers = await unitOfWork.Supplier.GetTradeSupplierListAsyncById(companyClaims,
+                    cancellationToken);
 
                 return View(model);
             }
@@ -219,7 +231,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             var selected = await unitOfWork.PickUpPoint
-                .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
+                .GetAsync(p => p.PickUpPointId == model.PickUpPointId,
+                    cancellationToken);
 
             if (selected == null)
             {
@@ -233,8 +246,10 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(GetUserFullName(),
-                    $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited pickup point {selected.Depot} to {model.Depot}",
+                    "Customer");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording --
 
@@ -248,7 +263,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit pickup point master file. Edited by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to edit pickup point master file. Edited by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);

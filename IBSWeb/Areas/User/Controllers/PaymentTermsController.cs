@@ -262,7 +262,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete terms master file. Deleted by: {UserName}", getUserFullName);
+                logger.LogError(ex,                    "Failed to delete terms master file. Deleted by: {UserName}",
+                    getUserFullName);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(nameof(Index));

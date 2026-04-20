@@ -63,7 +63,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var parentAccount = await unitOfWork.ChartOfAccount
-                    .GetAsync(c => c.AccountId == parentId, cancellationToken);
+                    .GetAsync(c => c.AccountId == parentId,
+                        cancellationToken);
 
                 if (parentAccount == null)
                 {
@@ -71,7 +72,8 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 var lastAccount = (await unitOfWork.ChartOfAccount
-                        .GetAllAsync(c => c.ParentAccountId == parentId, cancellationToken: cancellationToken))
+                        .GetAllAsync(c => c.ParentAccountId == parentId,
+                            cancellationToken: cancellationToken))
                     .OrderByDescending(c => c.AccountNumber)
                     .FirstOrDefault();
 
@@ -101,25 +103,36 @@ namespace IBSWeb.Areas.User.Controllers
                         break;
                 }
 
-                await unitOfWork.ChartOfAccount.AddAsync(newAccount, cancellationToken);
+                await unitOfWork.ChartOfAccount.AddAsync(newAccount,
+                    cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
-                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
+                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}",
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created new Account #{newAccount.AccountNumber}",
+                    "Chart of Accounts");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Account #{newAccount.AccountNumber} Created Successfully";
-                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "User" }) });
+                return Json(new { redirectUrl = Url.Action("Index",
+                    "ChartOfAccount",
+                    new
+                    {
+                        area = "User"
+                    }) });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to create chart of account. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -130,7 +143,8 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
             var existingAccount = await unitOfWork.ChartOfAccount
-                .GetAsync(x => x.AccountId == accountId, cancellationToken);
+                .GetAsync(x => x.AccountId == accountId,
+                    cancellationToken);
 
             if (existingAccount == null)
             {
@@ -145,23 +159,33 @@ namespace IBSWeb.Areas.User.Controllers
                 existingAccount.EditedBy = GetUserFullName();
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await unitOfWork.SaveAsync(cancellationToken);
-                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}", cancellationToken);
+                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}",
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited Account #{existingAccount.AccountNumber}",
+                    "Chart of Accounts");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Account Edited Successfully";
-                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "User" }) });
+                return Json(new { redirectUrl = Url.Action("Index",
+                    "ChartOfAccount",
+                    new
+                    {
+                        area = "User"
+                    }) });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to edit chart of account. Edited by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -280,8 +304,10 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get chart of accounts. Error: {ErrorMessage}, Stack: {StackTrace}.",
-                    ex.Message, ex.StackTrace);
+                logger.LogError(ex,
+                    "Failed to get chart of accounts. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message,
+                    ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -306,7 +332,8 @@ namespace IBSWeb.Areas.User.Controllers
 
                 // Retrieve the selected invoices from the database
                 var selectedList = (await unitOfWork.ChartOfAccount
-                    .GetAllAsync(coa => recordIds.Contains(coa.AccountId), cancellationToken))
+                    .GetAllAsync(coa => recordIds.Contains(coa.AccountId),
+                        cancellationToken))
                     .OrderBy(coa => coa.AccountId)
                     .ToList();
 
@@ -333,19 +360,32 @@ namespace IBSWeb.Areas.User.Controllers
 
                 foreach (var item in selectedList)
                 {
-                    worksheet.Cells[row, 1].Value = item.IsMain;
-                    worksheet.Cells[row, 2].Value = item.AccountNumber;
-                    worksheet.Cells[row, 3].Value = item.AccountName;
-                    worksheet.Cells[row, 4].Value = item.AccountType;
-                    worksheet.Cells[row, 5].Value = item.NormalBalance;
-                    worksheet.Cells[row, 6].Value = item.Level;
-                    worksheet.Cells[row, 7].Value = item.CreatedBy;
-                    worksheet.Cells[row, 8].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
-                    worksheet.Cells[row, 9].Value = item.EditedBy;
-                    worksheet.Cells[row, 10].Value = item.EditedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
-                    worksheet.Cells[row, 11].Value = item.HasChildren;
-                    worksheet.Cells[row, 12].Value = item.ParentAccountId;
-                    worksheet.Cells[row, 13].Value = item.AccountId;
+                    worksheet.Cells[row,
+                        1].Value = item.IsMain;
+                    worksheet.Cells[row,
+                        2].Value = item.AccountNumber;
+                    worksheet.Cells[row,
+                        3].Value = item.AccountName;
+                    worksheet.Cells[row,
+                        4].Value = item.AccountType;
+                    worksheet.Cells[row,
+                        5].Value = item.NormalBalance;
+                    worksheet.Cells[row,
+                        6].Value = item.Level;
+                    worksheet.Cells[row,
+                        7].Value = item.CreatedBy;
+                    worksheet.Cells[row,
+                        8].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
+                    worksheet.Cells[row,
+                        9].Value = item.EditedBy;
+                    worksheet.Cells[row,
+                        10].Value = item.EditedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
+                    worksheet.Cells[row,
+                        11].Value = item.HasChildren;
+                    worksheet.Cells[row,
+                        12].Value = item.ParentAccountId;
+                    worksheet.Cells[row,
+                        13].Value = item.AccountId;
 
                     row++;
                 }
@@ -361,13 +401,19 @@ namespace IBSWeb.Areas.User.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ChartOfAccountList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"ChartOfAccountList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index), new { view = DynamicView.ChartOfAccount });
+                return RedirectToAction(nameof(Index),
+                    new
+                    {
+                        view = DynamicView.ChartOfAccount
+                    });
             }
 
         }

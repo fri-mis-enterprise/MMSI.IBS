@@ -33,7 +33,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var tariffRates = await unitOfWork.TariffTable.GetAllAsync(null, cancellationToken);
+            var tariffRates = await unitOfWork.TariffTable.GetAllAsync(null,
+                cancellationToken);
             return View(tariffRates);
         }
 
@@ -41,14 +42,16 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var model = new TariffRate();
-            model = await GetSelectLists(model, cancellationToken);
+            model = await GetSelectLists(model,
+                cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(TariffRate model, CancellationToken cancellationToken = default)
         {
-            model = await GetSelectLists(model, cancellationToken);
+            model = await GetSelectLists(model,
+                cancellationToken);
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "Invalid entry, please try again.";
@@ -70,7 +73,8 @@ namespace IBSWeb.Areas.User.Controllers
                     .GetAsync(t => t.AsOfDate == model.AsOfDate &&
                                    t.CustomerId == model.CustomerId &&
                                    t.TerminalId == model.TerminalId &&
-                                   t.ServiceId == model.ServiceId, cancellationToken);
+                                   t.ServiceId == model.ServiceId,
+                        cancellationToken);
 
                 if (existingModel != null)
                 {
@@ -88,7 +92,8 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     model.CreatedBy = user?.UserName;
                     model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    await unitOfWork.TariffTable.AddAsync(model, cancellationToken);
+                    await unitOfWork.TariffTable.AddAsync(model,
+                        cancellationToken);
                     TempData["success"] = "Tariff rate created successfully.";
                 }
 
@@ -98,10 +103,13 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex, "Failed to create tariff rate.");
+                logger.LogError(ex,
+                    "Failed to create tariff rate.");
                 TempData["error"] = ex.Message;
-                model = await GetSelectLists(model, cancellationToken);
-                model.Terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
+                model = await GetSelectLists(model,
+                    cancellationToken);
+                model.Terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
+                    cancellationToken);
                 return View(model);
             }
         }
@@ -109,14 +117,16 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == id, cancellationToken);
+            var model = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == id,
+                cancellationToken);
 
             if (model == null)
             {
                 return NotFound();
             }
 
-            model = await GetSelectLists(model, cancellationToken);
+            model = await GetSelectLists(model,
+                cancellationToken);
             return View(model);
         }
 
@@ -129,7 +139,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == model.TariffRateId, cancellationToken);
+            var currentModel = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == model.TariffRateId,
+                cancellationToken);
 
             if (currentModel == null)
             {
@@ -154,7 +165,8 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex, "Failed to update tariff rate.");
+                logger.LogError(ex,
+                    "Failed to update tariff rate.");
                 TempData["error"] = ex.Message;
                 return View(model);
             }
@@ -163,7 +175,8 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken = default)
         {
-            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
+            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId,
+                cancellationToken);
 
             var terminalsList = terminals.Select(t => new SelectListItem
             {
@@ -185,8 +198,10 @@ namespace IBSWeb.Areas.User.Controllers
                 return model;
             }
 
-            model.Terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
-            model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal!.PortId, cancellationToken);
+            model.Terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
+                cancellationToken);
+            model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal!.PortId,
+                cancellationToken);
             return model;
         }
 
@@ -194,7 +209,12 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<bool> CheckIfExisting(DateOnly date, int customerId, int terminalId, int activityServiceId, decimal dispatch, decimal baf, CancellationToken cancellationToken = default)
         {
             var model = await unitOfWork.TariffTable
-                .GetAsync(t => t.AsOfDate == date && t.CustomerId == customerId && t.TerminalId == terminalId && t.ServiceId == activityServiceId, cancellationToken);
+                .GetAsync(t =>
+                        t.AsOfDate == date &&
+                        t.CustomerId == customerId &&
+                        t.TerminalId == terminalId &&
+                        t.ServiceId == activityServiceId,
+                    cancellationToken);
             return (model != null);
         }
     }

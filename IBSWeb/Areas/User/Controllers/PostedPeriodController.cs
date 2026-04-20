@@ -82,8 +82,9 @@ namespace IBSWeb.Areas.User.Controllers
                     // Check if period already exists
                     var existingPeriod = await dbContext.PostedPeriods
                         .FirstOrDefaultAsync(p => p.Module == module &&
-                                           p.Month == request.Month &&
-                                           p.Year == request.Year, cancellationToken);
+                                                  p.Month == request.Month &&
+                                                  p.Year == request.Year,
+                            cancellationToken);
 
                     if (existingPeriod != null)
                     {
@@ -105,9 +106,11 @@ namespace IBSWeb.Areas.User.Controllers
                     postedPeriods.Add(postedPeriod);
                 }
 
-                await dbContext.PostedPeriods.AddRangeAsync(postedPeriods,  cancellationToken);
+                await dbContext.PostedPeriods.AddRangeAsync(postedPeriods,
+                    cancellationToken);
                 await dbContext.SaveChangesAsync(cancellationToken);
-                await cacheService.RemoveAsync($"coa:{request.Company}", cancellationToken);
+                await cacheService.RemoveAsync($"coa:{request.Company}",
+                    cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully posted {postedPeriods.Count} module(s) for period {request.Month}/{request.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -115,7 +118,8 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error posting periods: {ex.Message}";
-                logger.LogError(ex, ex.Message);
+                logger.LogError(ex,
+                    ex.Message);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -127,7 +131,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var postedPeriod = await dbContext.PostedPeriods.FindAsync(id, cancellationToken);
+                var postedPeriod = await dbContext.PostedPeriods.FindAsync(id,
+                    cancellationToken);
                 if (postedPeriod == null)
                 {
                     TempData["ErrorMessage"] = "Posted period not found.";
@@ -136,7 +141,8 @@ namespace IBSWeb.Areas.User.Controllers
 
                 dbContext.PostedPeriods.Remove(postedPeriod);
                 await dbContext.SaveChangesAsync(cancellationToken);
-                await cacheService.RemoveAsync($"coa:{postedPeriod.Company}", cancellationToken);
+                await cacheService.RemoveAsync($"coa:{postedPeriod.Company}",
+                    cancellationToken);
 
                 TempData["SuccessMessage"] = $"Successfully unposted {postedPeriod.Module} for period {postedPeriod.Month}/{postedPeriod.Year}.";
                 return RedirectToAction(nameof(Index));
@@ -144,7 +150,8 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error unposting period: {ex.Message}";
-                logger.LogError(ex, ex.Message);
+                logger.LogError(ex,
+                    ex.Message);
                 return RedirectToAction(nameof(Index));
             }
         }

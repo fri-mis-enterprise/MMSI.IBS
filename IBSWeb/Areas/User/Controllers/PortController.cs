@@ -18,7 +18,8 @@ namespace IBSWeb.Areas.User.Controllers
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var ports = await unitOfWork.Port.GetAllAsync(null, cancellationToken);
+            var ports = await unitOfWork.Port.GetAllAsync(null,
+                cancellationToken);
             return View(ports);
         }
 
@@ -41,13 +42,16 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                await unitOfWork.Port.AddAsync(model, cancellationToken);
+                await unitOfWork.Port.AddAsync(model,
+                    cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Port #{model.PortNumber}", "Port");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created new Port #{model.PortNumber}",
+                    "Port");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -57,7 +61,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create port.");
+                logger.LogError(ex,
+                    "Failed to create port.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -66,7 +71,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Port.GetAsync(i => i.PortId == id, cancellationToken);
+            var model = await unitOfWork.Port.GetAsync(i => i.PortId == id,
+                cancellationToken);
             if (model == null)
             {
                 return NotFound();
@@ -76,7 +82,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                await unitOfWork.Port.RemoveAsync(model, cancellationToken);
+                await unitOfWork.Port.RemoveAsync(model,
+                    cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
@@ -84,7 +91,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete port.");
+                logger.LogError(ex,
+                    "Failed to delete port.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -94,14 +102,16 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Port.GetAsync(a => a.PortId == id, cancellationToken);
+            var model = await unitOfWork.Port.GetAsync(a => a.PortId == id,
+                cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(Port model, CancellationToken cancellationToken)
         {
-            var currentModel = await unitOfWork.Port.GetAsync(p => p.PortId == model.PortId, cancellationToken);
+            var currentModel = await unitOfWork.Port.GetAsync(p => p.PortId == model.PortId,
+                cancellationToken);
 
             if (currentModel == null)
             {
@@ -115,8 +125,10 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Port #{currentModel.PortNumber} => {model.PortNumber}", "Port");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited Port #{currentModel.PortNumber} => {model.PortNumber}",
+                    "Port");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -130,7 +142,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit port.");
+                logger.LogError(ex,
+                    "Failed to edit port.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

@@ -46,7 +46,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                ModelState.AddModelError("",
+                    "Make sure to fill all the required details.");
                 model.CustomerSelectList =
                     await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 return View(model);
@@ -57,7 +58,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var customer = await unitOfWork.Customer
-                    .GetAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
+                    .GetAsync(x => x.CustomerId == model.CustomerId,
+                        cancellationToken);
 
                 if (customer == null)
                 {
@@ -65,13 +67,16 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 customer.HasBranch = true;
-                await unitOfWork.CustomerBranch.AddAsync(model, cancellationToken);
+                await unitOfWork.CustomerBranch.AddAsync(model,
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created Customer Branch #{model.Id}", "Customer Branch" );
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created Customer Branch #{model.Id}",
+                    "Customer Branch");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -81,7 +86,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to create customer branch master file. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
@@ -97,7 +104,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var branch = await unitOfWork.CustomerBranch.GetAsync(b => b.Id == id, cancellationToken);
+            var branch = await unitOfWork.CustomerBranch.GetAsync(b => b.Id == id,
+                cancellationToken);
 
             if (branch == null)
             {
@@ -116,7 +124,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                ModelState.AddModelError("",
+                    "Make sure to fill all the required details.");
                 model.CustomerSelectList =
                     await unitOfWork.GetCustomerListAsyncById(cancellationToken);
                 return View(model);
@@ -126,13 +135,16 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                await unitOfWork.CustomerBranch.UpdateAsync(model, cancellationToken);
+                await unitOfWork.CustomerBranch.UpdateAsync(model,
+                    cancellationToken);
 
                 #region --Audit Trail Recording
 
                 AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Customer Branch #{model.Id}", "Customer Branch" );
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited Customer Branch #{model.Id}",
+                    "Customer Branch");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -142,7 +154,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", userManager.GetUserName(User));
+                logger.LogError(ex,
+                    "Failed to edit customer branch. Created by: {UserName}",
+                    userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 await transaction.RollbackAsync(cancellationToken);
                 model.CustomerSelectList =
@@ -170,7 +184,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var query = await unitOfWork.CustomerBranch
-                    .GetAllAsync(null, cancellationToken);
+                    .GetAllAsync(null,
+                        cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -221,7 +236,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get customer branches.");
+                logger.LogError(ex,
+                    "Failed to get customer branches.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -233,7 +249,8 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var customer = await unitOfWork.Customer
-                    .GetAsync(c => c.CustomerId == customerId, cancellationToken);
+                    .GetAsync(c => c.CustomerId == customerId,
+                        cancellationToken);
 
                 if (customer == null)
                 {
@@ -248,7 +265,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get dispatch tickets.");
+                logger.LogError(ex,
+                    "Failed to get dispatch tickets.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

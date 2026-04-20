@@ -19,7 +19,8 @@ namespace IBSWeb.Areas.User.Controllers
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var vessels = await unitOfWork.Vessel.GetAllAsync(null, cancellationToken);
+            var vessels = await unitOfWork.Vessel.GetAllAsync(null,
+                cancellationToken);
             return View(vessels);
         }
 
@@ -42,13 +43,16 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                await unitOfWork.Vessel.AddAsync(model, cancellationToken);
+                await unitOfWork.Vessel.AddAsync(model,
+                    cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Vessel #{model.VesselNumber}", "Vessel");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created new Vessel #{model.VesselNumber}",
+                    "Vessel");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -58,7 +62,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create vessel.");
+                logger.LogError(ex,
+                    "Failed to create vessel.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -69,20 +74,23 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var model = await unitOfWork.Vessel.GetAsync(i => i.VesselId == id, cancellationToken);
+                var model = await unitOfWork.Vessel.GetAsync(i => i.VesselId == id,
+                    cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                await unitOfWork.Vessel.RemoveAsync(model, cancellationToken);
+                await unitOfWork.Vessel.RemoveAsync(model,
+                    cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete vessel.");
+                logger.LogError(ex,
+                    "Failed to delete vessel.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -91,7 +99,8 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Vessel.GetAsync(a => a.VesselId == id, cancellationToken);
+            var model = await unitOfWork.Vessel.GetAsync(a => a.VesselId == id,
+                cancellationToken);
             return View(model);
         }
 
@@ -104,7 +113,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
+            var currentModel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId,
+                cancellationToken);
 
             if (currentModel == null)
             {
@@ -118,8 +128,10 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Audit Trail Recording --
 
                 AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Vessel #{currentModel.VesselNumber} => {model.VesselNumber}", "Vessel");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited Vessel #{currentModel.VesselNumber} => {model.VesselNumber}",
+                    "Vessel");
+                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
+                    cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -133,7 +145,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit vessel.");
+                logger.LogError(ex,
+                    "Failed to edit vessel.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);

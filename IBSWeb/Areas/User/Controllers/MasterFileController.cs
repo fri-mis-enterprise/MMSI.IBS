@@ -49,21 +49,15 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var extractedBy = GetUserFullName();
-                var companyClaims = await GetCompanyClaimAsync();
-
-                if (companyClaims == null)
-                {
-                    return BadRequest("Company claim not found");
-                }
-
                 // Generate Excel based on master file type
                 var result = masterFileType.ToLower() switch
                 {
-                    "customer" => await GenerateCustomerExcel(extractedBy, companyClaims, cancellationToken),
-                    "supplier" => await GenerateSupplierExcel(extractedBy, companyClaims, cancellationToken),
-                    "bankaccount" => await GenerateBankAccountExcel(extractedBy, companyClaims, cancellationToken),
-                    "service" => await GenerateServiceExcel(extractedBy, companyClaims, cancellationToken),
-                    "employee" => await GenerateEmployeeExcel(extractedBy, companyClaims, cancellationToken),
+                    "customer" => await GenerateCustomerExcel(extractedBy,
+                        cancellationToken),
+                    "supplier" => await GenerateSupplierExcel(extractedBy,cancellationToken),
+                    "bankaccount" => await GenerateBankAccountExcel(extractedBy,  cancellationToken),
+                    "service" => await GenerateServiceExcel(extractedBy,  cancellationToken),
+                    "employee" => await GenerateEmployeeExcel(extractedBy,  cancellationToken),
                     _ => throw new ArgumentException($"Invalid master file type: {masterFileType}")
                 };
 
@@ -102,12 +96,10 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<(MemoryStream? stream, string fileName)> GenerateCustomerExcel(
             string extractedBy,
-            string company,
             CancellationToken cancellationToken)
         {
             // Fetch customers
             var customersEnumerable = await unitOfWork.Customer.GetAllAsync(
-                filter: c => c.Company == company,
                 cancellationToken: cancellationToken);
 
             var customers = customersEnumerable.ToList();
@@ -174,7 +166,6 @@ namespace IBSWeb.Areas.User.Controllers
                 "Customer",
                 "CUSTOMER MASTER FILE",
                 extractedBy,
-                company,
                 customerColumns,
                 customerWidths,
                 2
@@ -203,7 +194,7 @@ namespace IBSWeb.Areas.User.Controllers
                     "Branches",
                     "CUSTOMER BRANCHES",
                     extractedBy,
-                    company,
+
                     branchColumns,
                     branchWidths,
                     2
@@ -225,11 +216,10 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<(MemoryStream? stream, string fileName)> GenerateSupplierExcel(
                    string extractedBy,
-                   string company,
+
                    CancellationToken cancellationToken)
         {
             var suppliers = await unitOfWork.Supplier.GetAllAsync(
-                filter: s => s.Company == company,
                 cancellationToken: cancellationToken);
 
             var suppliersList = suppliers.ToList();
@@ -266,7 +256,7 @@ namespace IBSWeb.Areas.User.Controllers
                 "Suppliers",
                 "Supplier_MasterFile",
                 extractedBy,
-                company,
+
                 columns,
                 customWidths,
                 2,
@@ -278,11 +268,10 @@ namespace IBSWeb.Areas.User.Controllers
         #region -- Bank Account Master File --
         private async Task<(MemoryStream? stream, string fileName)> GenerateBankAccountExcel(
             string extractedBy,
-            string company,
+
             CancellationToken cancellationToken)
         {
             var bankAccounts = await unitOfWork.BankAccount.GetAllAsync(
-                filter: b => b.Company == company,
                 cancellationToken: cancellationToken);
 
             var bankAccountsList = bankAccounts.ToList();
@@ -311,7 +300,7 @@ namespace IBSWeb.Areas.User.Controllers
                 "Bank Accounts",
                 "BankAccount_MasterFile",
                 extractedBy,
-                company,
+
                 columns,
                 customWidths,
                 2,
@@ -324,7 +313,7 @@ namespace IBSWeb.Areas.User.Controllers
         #region -- ServiceMaster Master File --
         private async Task<(MemoryStream? stream, string fileName)> GenerateServiceExcel(
             string extractedBy,
-            string company,
+
             CancellationToken cancellationToken)
         {
             var services = await unitOfWork.ServiceMaster.GetAllAsync(
@@ -353,7 +342,7 @@ namespace IBSWeb.Areas.User.Controllers
                 "Services",
                 "Service_MasterFile",
                 extractedBy,
-                company,
+
                 columns,
                 customWidths,
                 2,
@@ -366,7 +355,7 @@ namespace IBSWeb.Areas.User.Controllers
         #region -- Employee Master File --
         private async Task<(MemoryStream? stream, string fileName)> GenerateEmployeeExcel(
             string extractedBy,
-            string company,
+
             CancellationToken cancellationToken)
         {
 
@@ -413,7 +402,7 @@ namespace IBSWeb.Areas.User.Controllers
                 "Employees",
                 "Employee_MasterFile",
                 extractedBy,
-                company,
+
                 columns,
                 customWidths,
                 2,
@@ -431,7 +420,7 @@ namespace IBSWeb.Areas.User.Controllers
             string worksheetName,
             string reportTitle,
             string extractedBy,
-            string company,
+
             List<ColumnDefinition> columns,
             Dictionary<string, double>? customColumnWidths,
             int freezeAtColumn) where T : class
@@ -449,8 +438,6 @@ namespace IBSWeb.Areas.User.Controllers
             // Set metadata
             worksheet.Cells["A2"].Value = "Extracted By: ";
             worksheet.Cells["B2"].Value = extractedBy;
-            worksheet.Cells["A3"].Value = "Company: ";
-            worksheet.Cells["B3"].Value = company;
             worksheet.Cells["A4"].Value = "Date Generated: ";
             worksheet.Cells["B4"].Value = DateTimeHelper.GetCurrentPhilippineTime();
             worksheet.Cells["B4"].Style.Numberformat.Format = "mm/dd/yyyy";
@@ -537,7 +524,7 @@ namespace IBSWeb.Areas.User.Controllers
             string reportTitle,
             string fileNamePrefix,
             string extractedBy,
-            string company,
+
             List<ColumnDefinition> columns,
             Dictionary<string, double>? customColumnWidths,
             int freezeAtColumn,
@@ -551,7 +538,7 @@ namespace IBSWeb.Areas.User.Controllers
                 reportTitle.Replace(" ", ""),
                 reportTitle.ToUpper(),
                 extractedBy,
-                company,
+
                 columns,
                 customColumnWidths,
                 freezeAtColumn
