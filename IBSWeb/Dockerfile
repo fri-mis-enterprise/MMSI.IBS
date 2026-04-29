@@ -13,7 +13,7 @@ COPY ["IBS.Models/IBS.Models.csproj", "IBS.Models/"]
 COPY ["IBS.Utility/IBS.Utility.csproj", "IBS.Utility/"]
 COPY ["IBS.Services/IBS.Services.csproj", "IBS.Services/"]
 
-RUN dotnet restore "./IBSWeb/IBSWeb.csproj"
+RUN dotnet restore "./IBSWeb/IBSWeb.csproj" -p:NuGetAudit=false
 COPY . .
 
 WORKDIR "/src/IBSWeb"
