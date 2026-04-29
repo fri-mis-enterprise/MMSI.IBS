@@ -1,34 +1,34 @@
-﻿@if (TempData["success"] != null)
+@if (TempData["success"] != null)
 {
     <script>
-        Swal.fire('Success', '@TempData["success"]', 'success');
+        Swal.fire('Success', @Html.Raw(Json.Serialize(TempData["success"])), 'success');
     </script>
 }
 
 @if (TempData["error"] != null)
 {
     <script>
-        Swal.fire('Error', '@TempData["error"]', 'error');
+        Swal.fire('Error', @Html.Raw(Json.Serialize(TempData["error"])), 'error');
     </script>
 }
 
 @if (TempData["Denied"] != null)
 {
     <script>
-        Swal.fire('Oops...', '@TempData["Denied"]', 'error');
+        Swal.fire('Oops...', @Html.Raw(Json.Serialize(TempData["Denied"])), 'error');
     </script>
 }
 
 @if (TempData["warning"] != null)
 {
     <script>
-        Swal.fire('Warning', '@TempData["warning"]', 'warning');
+        Swal.fire('Warning', @Html.Raw(Json.Serialize(TempData["warning"])), 'warning');
     </script>
 }
 
 @if (TempData["info"] != null)
 {
     <script>
-        Swal.fire('Info', '@TempData["info"]', 'info');
+        Swal.fire('Info', @Html.Raw(Json.Serialize(TempData["info"])), 'info');
     </script>
 }

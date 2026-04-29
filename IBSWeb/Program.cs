@@ -57,6 +57,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Razor
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 
 // Repositories + DI
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -133,6 +136,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseMiddleware<MaintenanceMiddleware>();
 
+app.UseSession();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

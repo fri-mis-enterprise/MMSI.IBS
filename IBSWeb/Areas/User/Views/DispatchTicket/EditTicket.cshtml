@@ -264,20 +264,12 @@
                 <div class="text-center" style="width: 150px">
                     <button class="btn btn-primary custom-btn col-12 align-content-center selected-options shadow" type="submit" id="submitButton"><i class="bi bi-check-circle"></i> Save</button>
                 </div>
-                <div class="text-center" style="width: 150px">
-                    @if (Model.JobOrderId.HasValue)
-                    {
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value">
-                            <i class="bi bi-arrow-90deg-left"></i> Back to Job Order
-                        </a>
-                    }
-                    else
-                    {
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="DispatchTicket" asp-action="Index" asp-route-filterType="@filterType">
-                            <i class="bi bi-arrow-90deg-left"></i> Go Back
-                        </a>
-                    }
-                </div>
+                @if (!Model.JobOrderId.HasValue)
+                {
+                    <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="DispatchTicket" asp-action="Index" asp-route-filterType="@filterType">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                }
             </div>
         </form>
     </div>
