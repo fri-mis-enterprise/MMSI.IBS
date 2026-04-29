@@ -15,10 +15,9 @@
 @if (TempData["Denied"] != null)
 {
     <script>
-        Swal.fire('Oops...', @Html.Raw(Json.Serialize(TempData["Denied"])), 'error');
+        Swal.fire('Sorry...', @Html.Raw(Json.Serialize(TempData["Denied"])), 'error');
     </script>
 }
-
 @if (TempData["warning"] != null)
 {
     <script>

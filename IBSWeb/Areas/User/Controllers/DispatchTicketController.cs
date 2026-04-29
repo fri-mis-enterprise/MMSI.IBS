@@ -6,6 +6,8 @@ using IBS.Models.MMSI;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
+using IBS.Services.AccessControl;
+using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +22,11 @@ namespace IBSWeb.Areas.User.Controllers
     public class DispatchTicketController(
         ApplicationDbContext dbContext,
         IUnitOfWork unitOfWork,
+        IAccessControlService accessControl,
         UserManager<ApplicationUser> userManager,
         ICloudStorageService cloudStorageService,
-        ILogger<DispatchTicketController> logger,
-        IUserAccessService userAccessService)
-        : Controller
+        ILogger<DispatchTicketController> logger)
+        : BaseController(accessControl, userManager)
     {
         private const string _filterTypeClaimType = "DispatchTicket.FilterType";
 
@@ -41,19 +43,13 @@ namespace IBSWeb.Areas.User.Controllers
         // INDEX
         // ════════════════════════════════════════════════════════════════════════
 
+        [RequireAnyAccess(
+            "Access denied. You don't have permission to access Dispatch Tickets.",
+            ProcedureEnum.CreateDispatchTicket,
+            ProcedureEnum.EditDispatchTicket,
+            ProcedureEnum.CancelDispatchTicket)]
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken = default)
         {
-            if (!await HasDispatchTicketAccessAsync(cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction("Index",
-                    "Home",
-                    new
-                    {
-                        area = "User"
-                    });
-            }
-
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(Enumerable.Empty<DispatchTicket>());
@@ -65,17 +61,9 @@ namespace IBSWeb.Areas.User.Controllers
         // ════════════════════════════════════════════════════════════════════════
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
         public async Task<IActionResult> Create(int? jobOrderId, CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.CreateDispatchTicket,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             await GetCompanyClaimAsync();
             var viewModel = new ServiceRequestViewModel();
             ViewData["PortId"] = 0;
@@ -115,6 +103,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
         public async Task<IActionResult> Create(
             ServiceRequestViewModel viewModel,
             IFormFile? imageFile,
@@ -187,7 +176,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 // FIX: resolved user once; username is taken from user.UserName below.
-                var user = await userManager.GetUserAsync(User)
+                var user = await UserManager.GetUserAsync(User)
                     ?? throw new InvalidOperationException("Current user could not be resolved.");
 
                 model.CreatedBy   = user.UserName!;
@@ -286,17 +275,9 @@ namespace IBSWeb.Areas.User.Controllers
         // ════════════════════════════════════════════════════════════════════════
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.")]
         public async Task<IActionResult> SetTariff(int id, CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.SetTariff,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var model = await unitOfWork.DispatchTicket
                 .GetAsync(dt => dt.DispatchTicketId == id,
                     cancellationToken);
@@ -313,6 +294,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.")]
         public async Task<IActionResult> SetTariff(
             TariffViewModel vm, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
@@ -339,7 +321,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             // FIX: user is resolved once; UserName is used directly in the audit block below.
-            var user = await userManager.GetUserAsync(User)
+            var user = await UserManager.GetUserAsync(User)
                 ?? throw new InvalidOperationException("Current user could not be resolved.");
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -414,17 +396,9 @@ namespace IBSWeb.Areas.User.Controllers
         // ════════════════════════════════════════════════════════════════════════
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.")]
         public async Task<IActionResult> EditTariff(int id, CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.SetTariff,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var model = await unitOfWork.DispatchTicket
                 .GetAsync(dt => dt.DispatchTicketId == id,
                     cancellationToken);
@@ -441,6 +415,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.")]
         public async Task<IActionResult> EditTariff(
             TariffViewModel viewModel, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
@@ -467,7 +442,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             // FIX: user resolved once.
-            var user = await userManager.GetUserAsync(User)
+            var user = await UserManager.GetUserAsync(User)
                 ?? throw new InvalidOperationException("Current user could not be resolved.");
 
             var model        = TariffVmToDispatchTicket(viewModel);
@@ -624,18 +599,10 @@ namespace IBSWeb.Areas.User.Controllers
         // ════════════════════════════════════════════════════════════════════════
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.")]
         public async Task<IActionResult> EditTicket(
             int id, int? jobOrderId, CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.EditDispatchTicket,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             // Guard: Check if parent JobOrder is editable
             if (!await IsTicketJobOrderEditableAsync(id,
                     cancellationToken))
@@ -678,21 +645,13 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.")]
         public async Task<IActionResult> EditTicket(
             ServiceRequestViewModel viewModel,
             IFormFile? imageFile,
             IFormFile? videoFile,
             CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.EditDispatchTicket,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             // Guard: Check if parent JobOrder is editable
             if (!await IsTicketJobOrderEditableAsync(viewModel.DispatchTicketId!.Value,
                     cancellationToken))
@@ -718,7 +677,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             var model = ServiceRequestVmToDispatchTicket(viewModel);
-            var user  = await userManager.GetUserAsync(User)
+            var user  = await UserManager.GetUserAsync(User)
                 ?? throw new InvalidOperationException("Current user could not be resolved.");
 
             try
@@ -979,6 +938,7 @@ namespace IBSWeb.Areas.User.Controllers
         // ════════════════════════════════════════════════════════════════════════
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public Task<IActionResult> Approve(int id, CancellationToken cancellationToken) =>
             ChangeTicketStatusAsync(
                 id,
@@ -990,6 +950,7 @@ namespace IBSWeb.Areas.User.Controllers
                 cancellationToken: cancellationToken);
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public Task<IActionResult> RevokeApproval(int id, CancellationToken cancellationToken) =>
             ChangeTicketStatusAsync(
                 id,
@@ -1001,6 +962,7 @@ namespace IBSWeb.Areas.User.Controllers
                 cancellationToken: cancellationToken);
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public Task<IActionResult> Disapprove(int id, CancellationToken cancellationToken) =>
             ChangeTicketStatusAsync(
                 id,
@@ -1011,6 +973,7 @@ namespace IBSWeb.Areas.User.Controllers
                 permission:      ProcedureEnum.ApproveTariff,
                 cancellationToken: cancellationToken);
 
+        [RequireAccess(ProcedureEnum.CancelDispatchTicket, "Access denied. You don't have permission to cancel Dispatch Tickets.")]
         public Task<IActionResult> Cancel(int id, CancellationToken cancellationToken) =>
             ChangeTicketStatusAsync(
                 id,
@@ -1310,16 +1273,9 @@ namespace IBSWeb.Areas.User.Controllers
         // ════════════════════════════════════════════════════════════════════════
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public async Task<IActionResult> ApproveTariff(int id, CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.ApproveTariff,
-                    cancellationToken))
-            {
-                return Json(new { success = false, message = "Access denied" });
-            }
-
             // Guard: Check if parent JobOrder is editable
             if (!await IsTicketJobOrderEditableAsync(id,
                     cancellationToken))
@@ -1341,7 +1297,7 @@ namespace IBSWeb.Areas.User.Controllers
                 model.Status = _statusForBilling;
                 await unitOfWork.SaveAsync(cancellationToken);
 
-                var user          = await userManager.GetUserAsync(User);
+                var user          = await UserManager.GetUserAsync(User);
 
                 var audit = BuildAudit(
                     user!.UserName!,
@@ -1363,17 +1319,10 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public async Task<IActionResult> DisapproveTariff(
             int id, string reason, CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    ProcedureEnum.ApproveTariff,
-                    cancellationToken))
-            {
-                return Json(new { success = false, message = "Access denied" });
-            }
-
             // Guard: Check if parent JobOrder is editable
             if (!await IsTicketJobOrderEditableAsync(id,
                     cancellationToken))
@@ -1403,7 +1352,7 @@ namespace IBSWeb.Areas.User.Controllers
                     : $"{model.Remarks} | Disapproved: {reason}";
                 await unitOfWork.SaveAsync(cancellationToken);
 
-                var user          = await userManager.GetUserAsync(User);
+                var user          = await UserManager.GetUserAsync(User);
                 var audit = BuildAudit(
                     user!.UserName!,
                     $"Disapproved tariff for dispatch ticket #{model.DispatchNumber}. Reason: {reason}",
@@ -1441,15 +1390,6 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum permission,
             CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(
-                    userManager.GetUserId(User)!,
-                    permission,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             // Guard: Check if parent JobOrder is editable
             if (!await IsTicketJobOrderEditableAsync(id,
                     cancellationToken))
@@ -1481,7 +1421,7 @@ namespace IBSWeb.Areas.User.Controllers
                 model.Status = newStatus;
                 await unitOfWork.SaveAsync(cancellationToken);
 
-                var user          = await userManager.GetUserAsync(User);
+                var user          = await UserManager.GetUserAsync(User);
                 _ = await GetCompanyClaimAsync()
                     ?? throw new InvalidOperationException("Company claim missing.");
                 var audit = BuildAudit(
@@ -1618,35 +1558,35 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCompanyClaimAsync()
         {
-            var user = await userManager.GetUserAsync(User);
+            var user = await UserManager.GetUserAsync(User);
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await userManager.GetClaimsAsync(user);
+            var claims = await UserManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         private async Task UpdateFilterTypeClaim(string filterType)
         {
-            var user = await userManager.GetUserAsync(User);
+            var user = await UserManager.GetUserAsync(User);
             if (user == null)
             {
                 return;
             }
 
-            var existing = (await userManager.GetClaimsAsync(user))
+            var existing = (await UserManager.GetClaimsAsync(user))
                 .FirstOrDefault(c => c.Type == _filterTypeClaimType);
             if (existing != null)
             {
-                await userManager.RemoveClaimAsync(user,
+                await UserManager.RemoveClaimAsync(user,
                     existing);
             }
 
             if (!string.IsNullOrEmpty(filterType))
             {
-                await userManager.AddClaimAsync(user,
+                await UserManager.AddClaimAsync(user,
                     new Claim(_filterTypeClaimType,
                         filterType));
             }
@@ -1654,13 +1594,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string?> GetCurrentFilterType()
         {
-            var user = await userManager.GetUserAsync(User);
+            var user = await UserManager.GetUserAsync(User);
             if (user == null)
             {
                 return null;
             }
 
-            var claims = await userManager.GetClaimsAsync(user);
+            var claims = await UserManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == _filterTypeClaimType)?.Value;
         }
 
@@ -1669,23 +1609,6 @@ namespace IBSWeb.Areas.User.Controllers
             var name = Path.GetFileNameWithoutExtension(incomingFileName);
             var ext  = Path.GetExtension(incomingFileName);
             return $"{name}-{type}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{ext}";
-        }
-
-        private async Task<bool> HasDispatchTicketAccessAsync(CancellationToken cancellationToken)
-        {
-            var userId = userManager.GetUserId(User)!;
-            // FIX: three independent permission checks — run in parallel.
-            var (hasCreate, hasEdit, hasCancel) = (
-                await userAccessService.CheckAccess(userId,
-                    ProcedureEnum.CreateDispatchTicket,
-                    cancellationToken),
-                await userAccessService.CheckAccess(userId,
-                    ProcedureEnum.EditDispatchTicket,
-                    cancellationToken),
-                await userAccessService.CheckAccess(userId,
-                    ProcedureEnum.CancelDispatchTicket,
-                    cancellationToken));
-            return hasCreate || hasEdit || hasCancel;
         }
 
         // ════════════════════════════════════════════════════════════════════════
