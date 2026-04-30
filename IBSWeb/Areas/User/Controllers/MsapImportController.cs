@@ -21,10 +21,8 @@ namespace IBSWeb.Areas.User.Controllers
     public class MsapImportController(
         IUnitOfWork unitOfWork,
         ApplicationDbContext dbContext,
-        IAccessControlService accessControl,
-        UserManager<ApplicationUser> userManager,
         ILogger<MsapImportController> logger)
-        : BaseController(accessControl, userManager)
+        : Controller
     {
         private readonly ILogger<MsapImportController> _logger = logger;
 
@@ -40,41 +38,18 @@ namespace IBSWeb.Areas.User.Controllers
                     ?? "Unknown";
         }
 
-        private async Task<string?> GetCompanyClaimAsync()
-        {
-            var user = await UserManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await UserManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (!await HasMsapImportAccessAsync())
-            {
+
                 TempData["error"] = "Access denied.";
                 return RedirectToAction("Index", "Home", new { area = "User" });
-            }
-
-            return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(List<string> fieldList)
         {
-            if (!await HasMsapImportAccessAsync())
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction("Index", "Home", new { area = "User" });
-            }
-
             try
             {
                 if (fieldList == null || fieldList.Count == 0)
@@ -348,7 +323,6 @@ namespace IBSWeb.Areas.User.Controllers
                 newCustomer.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 newCustomer.VatType = newCustomer.WithHoldingVat ? "Vatable" : "Zero-Rated";
                 newCustomer.IsActive = ParseBool(record, "active");
-                newCustomer.Company = await GetCompanyClaimAsync() ?? "MMSI";
                 newCustomer.ZipCode = "0000";
                 newCustomer.Type = "Documented";
 

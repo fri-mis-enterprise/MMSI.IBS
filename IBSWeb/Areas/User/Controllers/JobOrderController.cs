@@ -3,26 +3,20 @@ using IBS.Models.Enums;
 using IBS.Models.MMSI;
 using IBS.Models.MMSI.ViewModels;
 using IBS.Models;
-using IBS.Services.AccessControl;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class JobOrderController(
-        IAccessControlService accessControl,
-        UserManager<ApplicationUser> userManager,
         IUnitOfWork unitOfWork,
-        ILogger<JobOrderController> logger)
-        : BaseController(accessControl,
-            userManager)
+        ILogger<JobOrderController> logger) : Controller
     {
-        private const string _cancelConfirmKey = "JobOrder_PendingCancelId";
         private const string _closeConfirmKey  = "JobOrder_PendingCloseId";
 
         #region Index
@@ -37,14 +31,10 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
 
-            if (await AccessControl.HasAccessAsync(GetUserId(),
-                    ProcedureEnum.CreateJobOrder))
-            {
-                var createViewModel = new JobOrderViewModel();
-                await PopulateSelectListsAsync(createViewModel,
-                    cancellationToken);
-                ViewBag.CreateViewModel = createViewModel;
-            }
+            var createViewModel = new JobOrderViewModel();
+            await PopulateSelectListsAsync(createViewModel,
+                cancellationToken);
+            ViewBag.CreateViewModel = createViewModel;
 
             return View(jobOrders
                 .OrderByDescending(j => j.JobOrderNumber)
@@ -92,7 +82,7 @@ namespace IBSWeb.Areas.User.Controllers
                     Remarks        = viewModel.Remarks,
                     Status         = JobOrderStatus.Open,
                     JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken),
-                    CreatedBy      = CurrentUsername,
+                    CreatedBy      = User.Identity?.Name ?? "Unknown",
                     CreatedDate    = DateTimeHelper.GetCurrentPhilippineTime()
                 };
 
@@ -101,7 +91,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 await RecordAuditAsync(
                     activity: $"Created Job Order #{jobOrder.JobOrderNumber}",
-                    username: CurrentUsername,
+                    username: User.Identity?.Name ?? "Unknown",
                     cancellationToken: cancellationToken);
 
                 await unitOfWork.SaveAsync(cancellationToken);
@@ -228,12 +218,12 @@ namespace IBSWeb.Areas.User.Controllers
                 jobOrder.COSNumber    = viewModel.COSNumber;
                 jobOrder.VoyageNumber = viewModel.VoyageNumber;
                 jobOrder.Remarks      = viewModel.Remarks;
-                jobOrder.EditedBy     = CurrentUsername;
+                jobOrder.EditedBy     = User.Identity?.Name ?? "Unknown";
                 jobOrder.EditedDate   = DateTimeHelper.GetCurrentPhilippineTime();
 
                 await RecordAuditAsync(
                     activity: $"Edited Job Order #{jobOrder.JobOrderNumber}",
-                    username: CurrentUsername,
+                    username: User.Identity?.Name ?? "Unknown",
                     cancellationToken: cancellationToken);
 
                 await unitOfWork.SaveAsync(cancellationToken);
@@ -310,7 +300,7 @@ namespace IBSWeb.Areas.User.Controllers
             jobOrder.Status = JobOrderStatus.Cancelled;
 
             await RecordAuditAsync($"Cancelled Job Order #{jobOrder.JobOrderNumber}",
-                CurrentUsername,
+                User.Identity?.Name ?? "Unknown",
                 cancellationToken);
 
             await unitOfWork.SaveAsync(cancellationToken);
@@ -407,7 +397,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             await RecordAuditAsync(
                 activity: $"Closed Job Order #{jobOrder.JobOrderNumber}",
-                username: CurrentUsername,
+                username: User.Identity?.Name ?? "Unknown",
                 cancellationToken: cancellationToken);
 
             await unitOfWork.SaveAsync(cancellationToken);
