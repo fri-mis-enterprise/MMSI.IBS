@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using IBS.Services.Attributes;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -21,36 +22,26 @@ namespace IBSWeb.Areas.User.Controllers
         IUnitOfWork unitOfWork,
         ApplicationDbContext dbContext,
         UserManager<ApplicationUser> userManager,
-        ILogger<BillingController> logger,
-        IUserAccessService userAccessService)
+        ILogger<BillingController> logger)
         : Controller
     {
+        [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
-            if (!await HasBillingAccessAsync(cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction("Index", "Home", new { area = "User" });
-            }
-
             ViewBag.FilterType = filterType;
             return View(Enumerable.Empty<Billing>());
         }
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var viewModel = await GetBillingSelectLists(new CreateBillingViewModel(), cancellationToken);
             return View(viewModel);
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Create(CreateBillingViewModel viewModel, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -199,6 +190,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetDispatchTickets(List<string> dispatchTicketIds)
         {
             try
@@ -226,6 +218,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> GetBillingList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -314,14 +307,9 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.EditBilling)]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var model = await unitOfWork.Billing
                 .GetAsync(b => b.MMSIBillingId == id, cancellationToken) ?? throw new NullReferenceException();
 
@@ -363,6 +351,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAccess(ProcedureEnum.EditBilling)]
         public async Task<IActionResult> Edit(CreateBillingViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -466,6 +455,7 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(new { success = false, message = finalMessage, errors });
         }
 
+        [RequireAccess(ProcedureEnum.DeleteBilling)]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
@@ -493,6 +483,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
             var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
@@ -515,6 +506,7 @@ namespace IBSWeb.Areas.User.Controllers
             return View(model);
         }
 
+        [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
             try
@@ -616,6 +608,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> GetCustomerDetails(int customerId)
         {
             var customerDetails = await unitOfWork.Customer
@@ -646,6 +639,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
         {
             var query = dbContext.Customers.AsNoTracking();
@@ -689,6 +683,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchPrincipals(string? term, int customerId, CancellationToken cancellationToken)
         {
             var query = dbContext.MMSIPrincipals.AsNoTracking().Where(p => p.CustomerId == customerId);
@@ -714,6 +709,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> GetPrincipalDetails(int principalId)
         {
             var customerDetails = await unitOfWork.Principal
@@ -736,6 +732,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchJobOrders(string? term, int customerId, CancellationToken cancellationToken)
         {
             var query = dbContext.MMSIJobOrders.AsNoTracking()
@@ -763,6 +760,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> GetDispatchTicketsByJobOrder(int jobOrderId, CancellationToken cancellationToken)
         {
             var tickets = await unitOfWork.DispatchTicket
@@ -806,6 +804,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetPrincipalsJson(string customerId, CancellationToken cancellationToken)
         {
             var principalsList = await GetPrincipals(customerId, cancellationToken);
@@ -833,6 +832,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetDispatchTicketsByCustomer(string customerId, CancellationToken cancellationToken)
         {
             //order by dispatch number
@@ -880,12 +880,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             return viewModel;
-        }
-
-        private async Task<bool> HasBillingAccessAsync(CancellationToken cancellationToken)
-        {
-            var userId = userManager.GetUserId(User)!;
-            return await userAccessService.CheckAccess(userId, ProcedureEnum.CreateBilling, cancellationToken);
         }
     }
 }

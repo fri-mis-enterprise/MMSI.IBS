@@ -21,6 +21,8 @@ namespace IBS.Models.Enums
         SetTariff,
         ApproveTariff,
         CreateBilling,
+        EditBilling,
+        DeleteBilling,
         CreateCollection,
         CreateJobOrder,
         EditJobOrder,
