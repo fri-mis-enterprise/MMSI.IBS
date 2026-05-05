@@ -1,6 +1,4 @@
-using IBS.Utility.Constants;
 using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -27,8 +25,6 @@ namespace IBSWeb.Areas.User.Controllers
         IUserAccessService userAccessService)
         : Controller
     {
-        private const string _filterTypeClaimType = "DispatchTicket.FilterType";
-
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
             if (!await HasBillingAccessAsync(cancellationToken))
@@ -37,43 +33,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction("Index", "Home", new { area = "User" });
             }
 
-            await UpdateFilterTypeClaim(filterType);
-            ViewBag.FilterType = await GetCurrentFilterType();
+            ViewBag.FilterType = filterType;
             return View(Enumerable.Empty<Billing>());
-        }
-
-        private async Task UpdateFilterTypeClaim(string filterType)
-        {
-            var user = await userManager.GetUserAsync(User);
-
-            if (user != null)
-            {
-                var existingClaim = (await userManager.GetClaimsAsync(user))
-                    .FirstOrDefault(c => c.Type == _filterTypeClaimType);
-
-                if (existingClaim != null)
-                {
-                    await userManager.RemoveClaimAsync(user, existingClaim);
-                }
-
-                if (!string.IsNullOrEmpty(filterType))
-                {
-                    await userManager.AddClaimAsync(user, new Claim(_filterTypeClaimType, filterType));
-                }
-            }
-        }
-
-        private async Task<string?> GetCurrentFilterType()
-        {
-            var user = await userManager.GetUserAsync(User);
-
-            if (user != null)
-            {
-                var claims = await userManager.GetClaimsAsync(user);
-                return claims.FirstOrDefault(c => c.Type == _filterTypeClaimType)?.Value;
-            }
-
-            return null;
         }
 
         [HttpGet]
@@ -94,7 +55,6 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
                 return Failure(message: "Can't create entry, please review your input.", data: new { errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
             }
 
@@ -102,10 +62,13 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var model = CreateBillingVmToBillingModel(viewModel);
 
-                if (model.CustomerId == null) throw new InvalidOperationException("Customer is required.");
+                if (model.CustomerId == null)
+                {
+                    throw new InvalidOperationException("Customer is required.");
+                }
 
                 model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken)
-                    ?? throw new InvalidOperationException("Customer not found.");
+                                 ?? throw new InvalidOperationException("Customer not found.");
 
                 model.IsVatable = model.Customer.VatType == "Vatable";
                 model.Status = "For Collection";
@@ -117,7 +80,10 @@ namespace IBSWeb.Areas.User.Controllers
                     ? (await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken))?.Terms
                     : model.Customer?.CustomerTerms;
 
-                if (string.IsNullOrEmpty(model.Terms)) model.Terms = "COD";
+                if (string.IsNullOrEmpty(model.Terms))
+                {
+                    model.Terms = "COD";
+                }
 
                 model.DueDate = await unitOfWork.Billing.ComputeDueDateAsync(model.Terms, model.Date, cancellationToken);
 
@@ -127,11 +93,18 @@ namespace IBSWeb.Areas.User.Controllers
                 }
                 else
                 {
-                    if (string.IsNullOrWhiteSpace(viewModel.MMSIBillingNumber)) throw new InvalidOperationException("Billing Number is required.");
+                    if (string.IsNullOrWhiteSpace(viewModel.MMSIBillingNumber))
+                    {
+                        throw new InvalidOperationException("Billing Number is required.");
+                    }
+
                     model.MMSIBillingNumber = viewModel.MMSIBillingNumber;
                 }
 
-                if (model.ToBillDispatchTickets == null || !model.ToBillDispatchTickets.Any()) throw new InvalidOperationException("At least one dispatch ticket must be selected.");
+                if (model.ToBillDispatchTickets == null || !model.ToBillDispatchTickets.Any())
+                {
+                    throw new InvalidOperationException("At least one dispatch ticket must be selected.");
+                }
 
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
 
@@ -160,8 +133,8 @@ namespace IBSWeb.Areas.User.Controllers
                 await unitOfWork.SaveAsync(cancellationToken);
                 await unitOfWork.Billing.PostAsync(model, cancellationToken);
 
-                return Success(model.IsUndocumented ? $"Created. Control No: {model.MMSIBillingNumber}" : $"Billing #{model.MMSIBillingNumber} created.", 
-                    new { redirectUrl = Url.Action(nameof(Index), new { filterType = await GetCurrentFilterType() }) });
+                return Success(model.IsUndocumented ? $"Created. Control No: {model.MMSIBillingNumber}" : $"Billing #{model.MMSIBillingNumber} created.",
+                    new { redirectUrl = Url.Action(nameof(Index)) });
             }
             catch (Exception ex)
             {
@@ -257,41 +230,12 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var filterTypeClaim = await GetCurrentFilterType();
-
                 var queried = dbContext.Billings
                     .Include(b => b.Customer)
                     .Include(b => b.Terminal)
                     .ThenInclude(b => b!.Port)
                     .Include(b => b.Vessel)
                     .Where(b => b.Status != "For Posting" && b.Status != "Cancelled");
-
-                if (!string.IsNullOrEmpty(filterTypeClaim))
-                {
-                    switch (filterTypeClaim)
-                    {
-                        case "ForPosting":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Posting");
-                            break;
-                        case "ForTariff":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Tariff");
-                            break;
-                        case "TariffPending":
-                            queried = queried.Where(dt =>
-                                dt.Status == "Tariff Pending");
-                            break;
-                        case "ForBilling":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Billing");
-                            break;
-                        case "ForCollection":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Collection");
-                            break;
-                    }
-                }
 
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
@@ -365,7 +309,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 logger.LogError(ex, "Failed to get billings.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -407,12 +351,12 @@ namespace IBSWeb.Areas.User.Controllers
             // Customer Details for display
             if (model.Customer != null)
             {
-                ViewData["CustomerAddress"] = model.Customer.CustomerAddress ?? "-";
-                ViewData["CustomerTIN"] = model.Customer.CustomerTin ?? "-";
-                ViewData["CustomerTerms"] = model.Customer.CustomerTerms ?? "-";
+                ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
+                ViewData["CustomerTIN"] = model.Customer.CustomerTin;
+                ViewData["CustomerTerms"] = model.Customer.CustomerTerms;
                 ViewData["CustomerBusinessStyle"] = model.Customer.BusinessStyle ?? "-";
-                ViewData["CustomerVatType"] = model.Customer.VatType ?? "-";
-                ViewData["CustomerType"] = model.Customer.Type ?? "-";
+                ViewData["CustomerVatType"] = model.Customer.VatType;
+                ViewData["CustomerType"] = model.Customer.Type;
             }
 
             return View(viewModel);
@@ -479,7 +423,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(await GetUserNameAsync() ?? "System", $"Edit billing #{currentModel.MMSIBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
-                return Success("Entry edited successfully!", new { redirectUrl = Url.Action(nameof(Index), new { filterType = await GetCurrentFilterType() }) });
+                return Success("Entry edited successfully!", new { redirectUrl = Url.Action(nameof(Index)) });
             }
             catch (Exception ex)
             {
@@ -495,18 +439,27 @@ namespace IBSWeb.Areas.User.Controllers
 
         private JsonResult Failure(Exception? ex = null, string? message = null, object? data = null)
         {
-            if (ex != null) logger.LogError(ex, message ?? "An error occurred.");
+            if (ex != null)
+            {
+                logger.LogError(ex, message ?? "An error occurred.");
+            }
 
             var finalMessage = message ?? "Operation failed.";
             if (ex != null)
             {
                 var errorMsg = ex.InnerException?.Message ?? ex.Message;
                 if (errorMsg.Contains("unique") || errorMsg.Contains("23505"))
+                {
                     finalMessage = "Billing number already exists.";
+                }
                 else if (errorMsg.Contains("foreign key") || errorMsg.Contains("23503"))
+                {
                     finalMessage = "Invalid reference selected.";
+                }
                 else
+                {
                     finalMessage = ex.Message;
+                }
             }
 
             var errors = data?.GetType().GetProperty("errors")?.GetValue(data);
@@ -524,19 +477,19 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
                     TempData["success"] = "Billing deleted successfully!";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    return RedirectToAction(nameof(Index));
                 }
                 else
                 {
                     TempData["error"] = "Can't find entry.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    return RedirectToAction(nameof(Index));
                 }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to delete billing.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -700,7 +653,7 @@ namespace IBSWeb.Areas.User.Controllers
             if (!string.IsNullOrWhiteSpace(term))
             {
                 var lowerTerm = term.ToLower();
-                query = query.Where(c => c.CustomerName!.ToLower().Contains(lowerTerm) ||
+                query = query.Where(c => c.CustomerName.ToLower().Contains(lowerTerm) ||
                                          c.CustomerCode!.ToLower().Contains(lowerTerm));
             }
 
@@ -743,8 +696,8 @@ namespace IBSWeb.Areas.User.Controllers
             if (!string.IsNullOrWhiteSpace(term))
             {
                 var lowerTerm = term.ToLower();
-                query = query.Where(p => p.PrincipalName!.ToLower().Contains(lowerTerm) ||
-                                         p.PrincipalNumber!.ToLower().Contains(lowerTerm));
+                query = query.Where(p => p.PrincipalName.ToLower().Contains(lowerTerm) ||
+                                         p.PrincipalNumber.ToLower().Contains(lowerTerm));
             }
 
             var result = await query
@@ -786,7 +739,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<JsonResult> SearchJobOrders(string? term, int customerId, CancellationToken cancellationToken)
         {
             var query = dbContext.MMSIJobOrders.AsNoTracking()
-                .Where(j => j.CustomerId == customerId && 
+                .Where(j => j.CustomerId == customerId &&
                             j.DispatchTickets.Any(dt => dt.Status == "For Billing" && dt.BillingId == null));
 
             if (!string.IsNullOrWhiteSpace(term))
