@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.MasterFile
 {
@@ -15,11 +16,13 @@ namespace IBS.Models.MasterFile
         [StringLength(100)]
         public string CreatedBy { get; set; } = string.Empty;
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
 
         [StringLength(100)]
         public string EditedBy { get; set; } = string.Empty;
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime EditedDate { get; set; }
     }
 }

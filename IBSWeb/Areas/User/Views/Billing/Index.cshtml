@@ -51,9 +51,9 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <button type="button" class="btn btn-light" id="btnCreateBilling">
+        <a class="btn btn-light" asp-area="User" asp-controller="Billing" asp-action="Create">
             <i class="bi bi-plus-circle"></i> Create Billing
-        </button>
+        </a>
     </div>
 
     <div class="card shadow border-0 mt-3">
@@ -80,13 +80,6 @@
                 </table>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Billing Modal -->
-<div class="modal fade" id="billingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content" id="billingModalContent"></div>
     </div>
 </div>
 
@@ -191,7 +184,7 @@
                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                         <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
                                             <li><a class="dropdown-item" href="${previewUrl}?id=${row.mmsiBillingId}"><i class="bi bi-eye-fill"></i> View</a></li>
-                                            <li><button class="dropdown-item btn-edit-billing" data-id="${row.mmsiBillingId}"><i class="bi bi-pencil-square"></i> Edit</button></li>
+                                            <li><a class="dropdown-item" href="${editUrl}?id=${row.mmsiBillingId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
                                         </ul>
                                     </div>`
                             }
@@ -200,19 +193,6 @@
                         }
                     }
                 ]
-            });
-
-            // Modal handlers
-            $('#btnCreateBilling').on('click', function() {
-                $('#billingModalContent').load('@Url.Action("CreateModal", "Billing")', function() {
-                    $('#billingModal').modal('show');
-                });
-            });
-            $(document).on('click', '.btn-edit-billing', function() {
-                var id = $(this).data('id');
-                $('#billingModalContent').load('@Url.Action("EditModal", "Billing")?id=' + id, function() {
-                    $('#billingModal').modal('show');
-                });
             });
 
             $('#filterAll').on('click', function() {

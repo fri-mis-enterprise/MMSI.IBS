@@ -23,7 +23,7 @@
         font-weight: 600;
         color: #374151;
         text-transform: uppercase;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         letter-spacing: 0.025em;
     }
 
@@ -35,230 +35,254 @@
         background-color: rgba(59, 130, 246, 0.05);
     }
 
-    table {
-        font-size: 10px !important;
-        table-layout: auto !important;
-    }
-
-    table td {
-        font-size: 12px !important;
-        padding-left: 10px !important;
-    }
-
-    .card-body {
-        margin: 5px !important;
-        padding: 5px !important;
-    }
-
     .totals-box {
         background-color: #f8f9fa;
         border-radius: 0.5rem;
         padding: 1rem;
         border: 1px solid #dee2e6;
     }
+    
+    #CustomerSearchResults, #PrincipalSearchResults, #JobOrderSearchResults {
+        z-index: 1050;
+        max-height: 200px;
+        overflow-y: auto;
+    }
 </style>
 
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="card shadow mt-4">
-
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center">
             <h2 class="text-white py-2">@ViewData["Title"]</h2>
         </div>
     </div>
     
-    <div class="card-body">
-        <form id="myForm" method="post" enctype="multipart/form-data">
+    <div class="card-body p-4">
+        <form id="myForm" method="post">
+            @Html.AntiForgeryToken()
             <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 
-                <!-- I. Customer & Settlement -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-person-check me-2"></i>I. Customer & Settlement</h5>
-                <div class="row">
-                    <div class="form-group col-md-3 col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                <!-- I. Customer Selection -->
+                <div class="mb-4 position-relative">
+                    <h5 class="section-header text-secondary border-bottom"><i class="bi bi-person-check me-2"></i>I. Customer Selection</h5>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Customer <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 shadow-sm"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="CustomerSearch" class="form-control border-0 shadow-sm" placeholder="Type to search customers..." autocomplete="off">
+                                <input type="hidden" asp-for="CustomerId" id="CustomerId" />
+                                <div class="input-group-text d-none bg-white border-0 shadow-sm" id="PrincipalCheckboxContainer">
+                                    <input class="form-check-input mt-0 me-1" type="checkbox" id="UsePrincipalCheckbox">
+                                    <label class="small mb-0" for="UsePrincipalCheckbox">Bill to Principal</label>
+                                </div>
+                            </div>
+                            <div id="CustomerSearchResults" class="list-group position-absolute w-100 shadow d-none"></div>
+                            <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                        </div>
                     </div>
-                    <div class="col-md-6 col-12">
-                        <div id="PrincipalDiv" class="d-none row">
-                            <div class="col-6" style="height: 72px;">
-                                <div class="row">
-                                    <div id="SelectDiv" class="form-group col-12 my-2 d-none">
-                                        <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
-                                        <select asp-for="PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                                            <option value="">Select Principal</option>
+                </div>
+
+                <!-- Customer Details Display -->
+                <div id="CustomerDetailsSection" class="d-none mb-4">
+                    <div class="card border-0 bg-light shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="row g-3 small">
+                                <div class="col-md-6">
+                                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Address:</span><br>
+                                    <span id="CustomerAddress" class="fw-semibold">-</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">TIN:</span><br>
+                                    <span id="CustomerTIN" class="fw-semibold">-</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Terms:</span><br>
+                                    <span id="CustomerTerms" class="fw-semibold">-</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Business Style:</span><br>
+                                    <span id="CustomerBusinessStyle" class="fw-semibold">-</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">VAT Type:</span><br>
+                                    <span id="CustomerVatType" class="fw-semibold">-</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Type:</span><br>
+                                    <span id="CustomerType" class="fw-semibold">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Principal Section (Inline) -->
+                <div class="row g-3 mb-4 d-none" id="PrincipalSection">
+                    <div class="col-md-8 position-relative">
+                        <label class="form-label fw-bold small text-secondary">Principal</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-0 shadow-sm"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="PrincipalSearch" class="form-control border-0 shadow-sm" placeholder="Search principals..." autocomplete="off">
+                            <input type="hidden" asp-for="PrincipalId" id="PrincipalId" />
+                        </div>
+                        <div id="PrincipalSearchResults" class="list-group position-absolute w-100 shadow d-none"></div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="d-none w-100" id="BilledToContainer">
+                            <label class="form-label fw-bold small text-secondary d-block">Billed To</label>
+                            <div class="btn-group w-100 shadow-sm" role="group">
+                                <input type="radio" class="btn-check" asp-for="BilledTo" value="LOCAL" id="billLocal" checked autocomplete="off">
+                                <label class="btn btn-outline-primary" for="billLocal">Local</label>
+                                <input type="radio" class="btn-check" asp-for="BilledTo" value="PRINCIPAL" id="billPrincipal" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="billPrincipal">Principal</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Column Layout for Operation Details and Tickets -->
+                <div class="row g-4">
+                    <!-- Left Column: Operation Configuration -->
+                    <div class="col-12 col-xl-4">
+                        <div class="card h-100 border-0 bg-light shadow-sm">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-gear-fill me-2"></i>Operation Details</h6>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label asp-for="MMSIBillingNumber" class="form-label fw-bold small">Billing Number <span class="text-danger" id="billingNumberRequired">*</span></label>
+                                        <div class="input-group">
+                                            <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow-sm" id="billingNumber" placeholder="B000000">
+                                            <div class="input-group-text border-0 shadow-sm bg-white">
+                                                <input type="hidden" asp-for="IsUndocumented" />
+                                                <input class="form-check-input mt-0" type="checkbox" id="isUndocumentedCheckbox">
+                                                <label class="small ms-1 mb-0" for="isUndocumentedCheckbox">Undoc</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="VoyageNumber" class="form-label fw-bold small">Voyage Number <span class="text-danger">*</span></label>
+                                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow-sm" id="VoyageNumber" required>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label asp-for="Date" class="form-label fw-bold small">Date Created</label>
+                                        <input asp-for="Date" type="date" class="form-control border-0 shadow-sm" value="@(Model.Date != default ? Model.Date.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))">
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="PortId" class="form-label fw-bold small">Port <span class="text-danger">*</span></label>
+                                        <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="form-select js-select2 border-0 shadow-sm" required style="width: 100%;">
+                                            <option value="">-- Select Port --</option>
                                         </select>
-                                        <span asp-validation-for="PrincipalId" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="TerminalId" class="form-label fw-bold small">Terminal <span class="text-danger">*</span></label>
+                                        <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="form-select js-select2 border-0 shadow-sm" required style="width: 100%;">
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="VesselId" class="form-label fw-bold small">Vessel <span class="text-danger">*</span></label>
+                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow-sm" required style="width: 100%;">
+                                            <option value="">-- Select Vessel --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="ApOtherTug" class="form-label fw-bold small">AP Other Tug</label>
+                                        <input asp-for="ApOtherTug" step="0.01" type="number" class="form-control border-0 shadow-sm" min="0" placeholder="0.00">
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="form-check col-6 ps-2 my-2 text-center d-flex align-items-center justify-content-start">
-                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
-                                <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox" style="font-size: 20px;">
-                                    Use Principal
-                                </label>
-                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3 col-12 ps-2 my-2 d-none hiddenDiv">
-                        <div class="row">
-                            <div class="col text-start">
-                                <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio">
-                                <label style="font-size: 20px;" class="ms-1" asp-for="BilledTo">Billed To Local</label>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col text-start">
-                                <input asp-for="BilledTo" class="isExempt" value="PRINCIPAL" type="radio">
-                                <label style="font-size: 20px;" class="ms-1" asp-for="BilledTo">Billed To Principal</label>
+                    <!-- Right Column: Job Order & Ticket Selection -->
+                    <div class="col-12 col-xl-8">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-briefcase me-2"></i>Job Order & Dispatch Tickets</h6>
+                                <span class="badge bg-info shadow-sm" id="selectedTicketCount">0 selected</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                            <div class="card-body pt-0">
+                                <!-- Job Order Search -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small text-muted">Select Job Order</label>
+                                    <div class="position-relative">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-0 shadow-sm"><i class="bi bi-hash text-muted"></i></span>
+                                            <input type="text" id="JobOrderSearch" class="form-control border-0 shadow-sm" placeholder="Search job order number..." autocomplete="off" disabled>
+                                        </div>
+                                        <input type="hidden" asp-for="JobOrderId" id="JobOrderId" />
+                                        <div id="JobOrderSearchResults" class="list-group position-absolute w-100 shadow d-none"></div>
+                                    </div>
+                                    <small class="text-muted ps-1">Tickets are filtered by Job Order</small>
+                                </div>
 
-                <!-- II. Reference Information -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-info-circle me-2"></i>II. Reference Information</h5>
-                <div class="row">
-                    <div class="form-floating col-md-3 col-12 my-2">
-                        <input class="form-control border-0 shadow bg-light" id="Address" placeholder=" " readonly>
-                        <label class="ms-2">Address</label>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input class="form-control border-0 shadow bg-light" id="TIN" placeholder=" " readonly>
-                        <label class="ms-2">TIN</label>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input class="form-control border-0 shadow bg-light" id="BusinessStyle" placeholder=" " readonly>
-                        <label class="ms-2">Business Style</label>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input class="form-control border-0 shadow bg-light" id="Terms" placeholder=" " readonly>
-                        <label class="ms-2">Terms</label>
-                    </div>
-                </div>
-                
-                <!-- III. Billing Details -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-receipt me-2"></i>III. Billing Details</h5>
-                <div class="row">
-                    <div class="form-floating col-md-3 col-6 my-3">
-                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder=" ">
-                        <label asp-for="MMSIBillingNumber" for="billingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-check col-md-3 col-6 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
-                        <input type="hidden" asp-for="IsUndocumented" />
-                        <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" @(Model.IsUndocumented ? "checked" : "")>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox" style="font-size: 20px;">
-                            Undocumented
-                        </label>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-3">
-                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder=" " required>
-                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-3">
-                        <input asp-for="Date" type="date" value="@(Model.Date != default ? Model.Date.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="form-control border-0 shadow">
-                        <label asp-for="Date" class="ms-2">Date Created</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
-                    </div>
-                </div>
-                
-                <!-- IV. Operation Details -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-geo-alt me-2"></i>IV. Operation Details</h5>
-                <div class="row">
-                    <div class="form-group col-md-3 col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                        <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Port</option>
-                        </select>
-                        <span asp-validation-for="PortId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-md-3 col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
-                        <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Terminal</option>
-                        </select>
-                        <span asp-validation-for="TerminalId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-md-3 col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
-                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Vessel</option>
-                        </select>
-                        <span asp-validation-for="VesselId" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input asp-for="ApOtherTug" step="0.01" type="number" class="form-control border-0 shadow" placeholder=" " min="0">
-                        <label asp-for="ApOtherTug" class="ms-2">AP Other Tug</label>
-                        <span asp-validation-for="ApOtherTug" class="text-danger"></span>
-                    </div>
-                </div>
+                                <!-- Tickets Table -->
+                                <div class="table-responsive border rounded" style="max-height: 400px;">
+                                    <table id="ticketsTable" class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="text-center" style="width: 40px;">
+                                                    <input type="checkbox" id="selectAllTickets" class="form-check-input">
+                                                </th>
+                                                <th class="text-center">Dispatch#</th>
+                                                <th class="text-center">Tugboat</th>
+                                                <th class="text-center">Service</th>
+                                                <th class="text-center">Hours</th>
+                                                <th class="text-end pe-3">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="text-muted">
+                                                <td colspan="6" class="text-center py-4">
+                                                    <i class="bi bi-info-circle me-2"></i>Select a customer and job order to load available tickets
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                <!-- V. Itemized Dispatch Tickets -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-list-check me-2"></i>V. Itemized Dispatch Tickets</h5>
-                <div class="row pt-1">
-                    <div class="form-group col-12">
-                        <label class="control-label mb-2">Choose dispatch tickets to bill:</label>
-                        <select asp-for="ToBillDispatchTickets" id="DispatchTicketSelect" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" disabled>
-                        </select>
-                    </div>
-                </div>
+                                <!-- Hidden select for form submission -->
+                                <select asp-for="ToBillDispatchTickets" id="DispatchTicketSelect" name="ToBillDispatchTickets" multiple="multiple" class="d-none">
+                                </select>
 
-                <div class="table-responsive">
-                    <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
-                        <thead>
-                        <tr>
-                            <th class="text-center align-content-center">DISPATCH#</th>
-                            <th class="text-center align-middle">TUGBOAT</th>
-                            <th class="text-center align-middle">SERVICE</th>
-                            <th class="text-center align-middle">TIME START</th>
-                            <th class="text-center align-middle">TIME END</th>
-                            <th class="text-center align-middle">HOUR</th>
-                            <th class="text-center align-middle">DISPATCH RATE</th>
-                            <th class="text-center align-middle">DISPATCH AMOUNT</th>
-                            <th class="text-center align-middle">BAF RATE</th>
-                            <th class="text-center align-middle">BAF AMOUNT</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="row py-3 justify-content-end d-flex">
-                    <div class="col-md-6 col-12 totals-box shadow-sm">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <label class="fw-bold small text-muted text-uppercase">Total Dispatch</label><br/>
-                                <span class="fw-bold">₱ <span id="DispatchAmountTotal">0.00</span></span>
-                            </div>
-                            <div class="col-4 border-start">
-                                <label class="fw-bold small text-muted text-uppercase">Total BAF</label><br/>
-                                <span class="fw-bold">₱ <span id="BAFAmountTotal">0.00</span></span>
-                            </div>
-                            <div class="col-4 border-start">
-                                <label class="fw-bold small text-muted text-uppercase text-success">Total Amount</label><br/>
-                                <span class="fw-bold text-success" style="font-size: 1.1rem;">₱ <span id="OverallTotal">0.00</span></span>
+                                <!-- Totals Display -->
+                                <div class="totals-box mt-4 shadow-sm border-0">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total Dispatch</span><br>
+                                            <strong class="text-primary fs-5">₱<span id="DispatchAmountTotal">0.00</span></strong>
+                                        </div>
+                                        <div class="col-4 border-start">
+                                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total BAF</span><br>
+                                            <strong class="text-primary fs-5">₱<span id="BAFAmountTotal">0.00</span></strong>
+                                        </div>
+                                        <div class="col-4 border-start">
+                                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Overall Total</span><br>
+                                            <strong class="text-success fs-4">₱<span id="OverallTotal">0.00</span></strong>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row col-12 justify-content-end my-4 gap-2">
-                    <div class="text-center" style="width: 200px">
-                        <button class="btn btn-primary custom-btn w-100 shadow" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                    </div>
-                    <div class="text-center" style="width: 200px">
-                        <a class="btn btn-outline-primary w-100 shadow" asp-controller="Billing" asp-action="Index">
-                            <i class="bi bi-arrow-90deg-left"></i> Go Back
+                <!-- Form Actions -->
+                <div class="row mt-5 mb-3 justify-content-end gap-2">
+                    <div class="col-auto">
+                        <a class="btn btn-outline-secondary shadow-sm px-4" asp-controller="Billing" asp-action="Index">
+                            <i class="bi bi-arrow-left-circle me-2"></i>Cancel & Back
                         </a>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary bg-gradient shadow-sm px-5" type="submit" id="submitButton">
+                            <i class="bi bi-check-circle me-2"></i>Submit Billing
+                        </button>
                     </div>
                 </div>
             </div>
@@ -269,300 +293,356 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            let multiSelectVariable = $('.js-example-basic-multiple');
-            multiSelectVariable.select2();
+            // Initialize Select2
+            $('.js-select2').select2({
+                placeholder: "-- Select --",
+                allowClear: true
+            });
 
-            let table = initializeDataTable('#dataTable');
-
+            let currentCustomerId = null;
             setupEventListeners();
-            
-            // Startup logic
             handleCheckboxChange();
-            if ($("#CustomerId").val()) {
-                handleCustomerStartup();
-            }
-
-            function initializeDataTable(selector) {
-                if ($.fn.DataTable.isDataTable(selector)) {
-                    $(selector).DataTable().destroy();
-                }
-                return $(selector).DataTable({
-                    paging: false,
-                    info: false,
-                    order: [[0, 'asc']],
-                    lengthChange: false,
-                    searching: false
-                });
-            }
 
             function setupEventListeners() {
                 $("#isUndocumentedCheckbox").on("change", handleCheckboxChange);
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
-                $("#PrincipalSelect").on("change.select2", handlePrincipalChange);
-                $("#CustomerId").on("change", handleCustomerChange);
                 $("#PortSelect").on("change", handlePortChange);
                 $("#submitButton").on("click", areYouSureToBill);
-                multiSelectVariable.on('change', handleDispatchTicketsChange);
             }
 
             function handleCheckboxChange() {
                 const $checkbox = $("#isUndocumentedCheckbox");
                 const $inputField = $("#billingNumber");
-                const $status = $("#status");
+                const $required = $("#billingNumberRequired");
                 const $hiddenInput = $("#IsUndocumented");
 
                 $hiddenInput.val($checkbox.is(":checked") ? "true" : "false");
-                
+
                 if ($checkbox.is(":checked")) {
-                    $status.text("Undocumented");
-                    $inputField.prop("required", false).prop("disabled", true);
-                    $inputField.val("");
+                    $required.hide();
+                    $inputField.prop("required", false).prop("disabled", true).val("").attr("placeholder", "Auto-generated");
                 } else {
-                    $status.html("Billing Number<span class=\"required text-danger\">*</span>");
-                    $inputField.prop("required", true).prop("disabled", false);
+                    $required.show();
+                    $inputField.prop("required", true).prop("disabled", false).attr("placeholder", "B000000");
                 }
             }
 
             function handleUsePrincipalChange() {
-                let customerIdVariable = $("#CustomerId");
-                const $checkbox = $("#UsePrincipalCheckbox");
-                const $selectDiv = $("#SelectDiv");
-                const customerId = customerIdVariable.val();
-
-                if ($checkbox.is(":checked")) {
-                    fetchPrincipals(customerId);
-                    $selectDiv.removeClass("d-none");
+                const isChecked = $("#UsePrincipalCheckbox").is(":checked");
+                if (isChecked) {
+                    $("#PrincipalSection").removeClass("d-none");
+                    $("#BilledToContainer").removeClass("d-none");
+                    setTimeout(() => $("#PrincipalSearch").focus(), 100);
                 } else {
-                    $selectDiv.addClass("d-none");
-                    handleCustomerChange(); // Re-trigger normal customer data fetch
+                    $("#PrincipalSection").addClass("d-none");
+                    $("#PrincipalSearch").val("");
+                    $("#PrincipalId").val("");
+                    $("#BilledToContainer").addClass("d-none");
+                    $("#billLocal").prop("checked", true);
                 }
             }
 
-            function fetchPrincipals(customerId, selectedPrincipalId = null) {
-                return $.ajax({
-                    url: '@Url.Action("GetPrincipalsJson", "Billing", new { area = "User" })',
-                    type: "GET",
-                    data: { customerId: customerId },
-                    success: function (data) {
-                        const $principalSelect = $("#PrincipalSelect");
-                        $principalSelect.empty().append('<option value="">Select Principal</option>');
-                        if (Array.isArray(data) && data.length > 0) {
-                            $.each(data, function (index, item) {
-                                $principalSelect.append($('<option>', {
-                                    value: item.value,
-                                    text: item.text,
-                                    selected: item.value == selectedPrincipalId
-                                }));
-                            });
-                        }
+            // ── Customer search ──────────────────────────────────────────────
+            let customerSearchTimeout;
+            const $customerSearch = $("#CustomerSearch");
+            const $customerResults = $("#CustomerSearchResults");
+            const $customerId = $("#CustomerId");
+
+            async function performCustomerSearch(searchTerm) {
+                try {
+                    const res = await fetch(`@Url.Action("SearchCustomers", "Billing", new { area = "User" })?term=${encodeURIComponent(searchTerm)}`);
+                    const data = await res.json();
+                    $customerResults.empty();
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(item => {
+                            $customerResults.append(
+                                $('<a href="#" class="list-group-item list-group-item-action py-2">')
+                                    .data('customer', item)
+                                    .html(`<span>${item.name}</span>${item.hasPrincipal ? ' <span class="badge bg-info ms-1">Has Principal</span>' : ''}`)
+                            );
+                        });
+                    } else {
+                        $customerResults.append($('<div class="list-group-item py-2 text-muted"><em>No customers found</em></div>'));
                     }
-                });
+                    $customerResults.removeClass('d-none');
+                } catch {
+                    $customerResults.empty().addClass('d-none');
+                }
             }
 
-            function handlePrincipalChange() {
-                const principalId = $("#PrincipalSelect").val();
-                if (!principalId) return;
-                $.ajax({
-                    url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "User" })',
-                    method: "GET",
-                    data: { principalId: principalId },
-                    success: function (data) {
-                        updateFields(data);
-                    }
-                });
-            }
+            $customerSearch.on('input', function () {
+                clearTimeout(customerSearchTimeout);
+                const searchTerm = $(this).val().trim();
+                if (searchTerm.length === 0) $customerId.val('');
+                customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
+            });
 
-            function handleCustomerChange() {
-                const customerId = $("#CustomerId").val();
-                const $principalDiv = $("#PrincipalDiv");
-                const $selectDiv = $("#SelectDiv");
-                const $dispatchSelect = $("#DispatchTicketSelect");
-                const $hiddenDiv = $(".hiddenDiv");
-                const $isUndocCheckbox = $("#isUndocumentedCheckbox");
-                
-                $principalDiv.addClass("d-none");
-                $selectDiv.addClass("d-none");
+            $customerSearch.on('focus', function () {
+                performCustomerSearch($(this).val().trim());
+            });
+
+            $customerResults.on('click', 'a', async function (e) {
+                e.preventDefault();
+                const customer = $(this).data('customer');
+                if (!customer) return;
+
+                $customerSearch.val(customer.name);
+                $customerId.val(customer.value);
+                $customerResults.empty().addClass('d-none');
+                currentCustomerId = customer.value;
+
+                try {
+                    const res = await fetch('@Url.Action("GetCustomerDetails", "Billing", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `customerId=${encodeURIComponent(customer.value)}`
+                    });
+                    handleCustomerSelected(await res.json());
+                } catch {
+                    console.error('Failed to load customer details');
+                }
+            });
+
+            function handleCustomerSelected(customer) {
                 $("#UsePrincipalCheckbox").prop("checked", false);
-
-                if (customerId) {
-                    $dispatchSelect.prop("disabled", false);
-                    $dispatchSelect.val(null).trigger("change");
-                    $hiddenDiv.removeClass("d-none");
-                    
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "User" })',
-                        method: "POST",
-                        data: { customerId: customerId },
-                        success: function (data) {
-                            updateFields(data);
-                            $principalDiv.toggleClass("d-none", !data.hasPrincipal);
-                            $(".isVatable").prop("checked", data.vatType === "@SD.VatType_Vatable");
-                            $(".isExempt").prop("checked", data.vatType === "@SD.VatType_Exempt");
-                            $isUndocCheckbox.prop("checked", data.isUndoc === "Undocumented");
-                            handleCheckboxChange();
-                        }
-                    });
-                    
-                    fetchDispatchTickets(customerId);
-                } else {
-                    $hiddenDiv.addClass("d-none");
-                    $dispatchSelect.val(null).trigger("change").prop("disabled", true);
-                }
-            }
-
-            async function handleCustomerStartup() {
-                const customerId = $("#CustomerId").val();
-                const $principalDiv = $("#PrincipalDiv");
-                const $selectDiv = $("#SelectDiv");
-                const $dispatchSelect = $("#DispatchTicketSelect");
-                const $hiddenDiv = $(".hiddenDiv");
+                $("#PrincipalSection, #BilledToContainer").addClass("d-none");
+                $("#PrincipalSearch").val("");
+                $("#PrincipalId").val("");
                 
-                if (customerId) {
-                    $dispatchSelect.prop("disabled", false);
-                    $hiddenDiv.removeClass("d-none");
-                    
-                    // 1. Fetch Basic Customer Details
-                    await $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "User" })',
-                        method: "POST",
-                        data: { customerId: customerId },
-                        success: function (data) {
-                            $principalDiv.toggleClass("d-none", !data.hasPrincipal);
-                            if (!$("#UsePrincipalCheckbox").is(":checked")) {
-                                updateFields(data);
-                            }
-                        }
-                    });
+                $("#CustomerDetailsSection").removeClass("d-none");
+                $("#CustomerAddress").text(customer.address || '-');
+                $("#CustomerTIN").text(customer.tinNo || '-');
+                $("#CustomerTerms").text(customer.terms || '-');
+                $("#CustomerBusinessStyle").text(customer.businessStyle || '-');
+                $("#CustomerVatType").text(customer.vatType || '-');
+                $("#CustomerType").text(customer.type || '-');
 
-                    // 2. If using principal, fetch its details
-                    const principalId = '@Model.PrincipalId';
-                    if ($("#UsePrincipalCheckbox").is(":checked") && principalId) {
-                        $selectDiv.removeClass("d-none");
-                        await fetchPrincipals(customerId, principalId);
-                        handlePrincipalChange();
+                $("#PrincipalCheckboxContainer").toggleClass("d-none", !customer.hasPrincipal);
+                
+                $(customer.vatType === "Vatable" ? "#billLocal" : "#billPrincipal").prop("checked", true);
+                $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
+                handleCheckboxChange();
+
+                $jobOrderSearch.val('').prop('disabled', false);
+                $jobOrderId.val('');
+                $jobOrderResults.empty().addClass('d-none');
+                $ticketsTableBody.html('<tr class="text-muted"><td colspan="6" class="text-center py-4"><em>Select a job order to view tickets</em></td></tr>');
+                $dispatchSelect.empty();
+                updateTotals();
+            }
+
+            // ── Job Order search ─────────────────────────────────────────────
+            let jobOrderSearchTimeout;
+            const $jobOrderSearch = $("#JobOrderSearch");
+            const $jobOrderResults = $("#JobOrderSearchResults");
+            const $jobOrderId = $("#JobOrderId");
+            const $ticketsTableBody = $("#ticketsTable tbody");
+            const $dispatchSelect = $("#DispatchTicketSelect");
+
+            async function performJobOrderSearch(searchTerm) {
+                if (!currentCustomerId) return;
+                try {
+                    const res = await fetch(`@Url.Action("SearchJobOrders", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}&term=${encodeURIComponent(searchTerm)}`);
+                    const data = await res.json();
+                    $jobOrderResults.empty();
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(item => {
+                            $jobOrderResults.append(
+                                $('<a href="#" class="list-group-item list-group-item-action py-2">')
+                                    .data('jobOrder', item)
+                                    .html(`<strong>${item.name}</strong><br><small class="text-muted">${item.description || ''}</small>`)
+                            );
+                        });
+                    } else {
+                        $jobOrderResults.append($('<div class="list-group-item py-2 text-muted"><em>No job orders found</em></div>'));
                     }
-
-                    // 3. Fetch tickets list and then update the table for already selected ones
-                    await fetchDispatchTickets(customerId, @Html.Raw(Json.Serialize(Model.ToBillDispatchTickets)));
+                    $jobOrderResults.removeClass('d-none');
+                } catch {
+                    $jobOrderResults.empty().addClass('d-none');
                 }
             }
 
-            function fetchDispatchTickets(customerId, selectedIds = null) {
-                return $.ajax({
-                    url: '@Url.Action("GetDispatchTicketsByCustomer", "Billing", new { area = "User" })',
-                    method: "GET",
-                    data: { customerId: customerId },
-                    success: function (data) {
-                        const $dispatchSelect = $("#DispatchTicketSelect");
-                        $dispatchSelect.empty();
-                        if (Array.isArray(data) && data.length > 0) {
-                            $.each(data, function (index, item) {
-                                let selected = selectedIds && selectedIds.includes(parseInt(item.value));
-                                $dispatchSelect.append($('<option>', {
-                                    value: item.value,
-                                    text: item.text,
-                                    selected: selected
-                                }));
-                            });
-                        }
-                        $dispatchSelect.trigger("change");
-                    }
-                });
-            }
+            $jobOrderSearch.on('input', function () {
+                clearTimeout(jobOrderSearchTimeout);
+                const searchTerm = $(this).val().trim();
+                jobOrderSearchTimeout = setTimeout(() => performJobOrderSearch(searchTerm), 150);
+            });
 
-            function updateFields(data) {
-                $("#Terms").val(data?.terms || '');
-                $("#Address").val(data?.address || '');
-                $("#TIN").val(data?.tinNo || '');
-                $("#BusinessStyle").val(data?.businessStyle || '');
-            }
+            $jobOrderSearch.on('focus click', function () {
+                performJobOrderSearch($(this).val().trim());
+            });
 
-            function handlePortChange() {
-                const portId = $("#PortSelect").val();
-                $.ajax({
-                    url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "User" })',
-                    type: "GET",
-                    data: { portId: portId },
-                    success: function (data) {
-                        const $terminalSelect = $("#TerminalSelect");
-                        $terminalSelect.empty().append('<option value="">Select Terminal</option>');
-                        if (Array.isArray(data)) {
-                            $.each(data, function (index, item) {
-                                $terminalSelect.append($('<option>', { value: item.value, text: item.text }));
-                            });
-                        }
-                    }
-                });
-            }
+            $jobOrderResults.on('click', 'a', async function (e) {
+                e.preventDefault();
+                const jobOrder = $(this).data('jobOrder');
+                $jobOrderSearch.val(jobOrder.name);
+                $jobOrderId.val(jobOrder.value);
+                $jobOrderResults.empty().addClass('d-none');
+                try {
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrder.value)}`);
+                    renderTicketsTable(await res.json());
+                } catch {
+                    $ticketsTableBody.html('<tr class="text-danger"><td colspan="6" class="text-center py-4"><em>Error loading tickets</em></td></tr>');
+                }
+            });
 
-            function handleDispatchTicketsChange() {
-                const selectedTickets = $("#DispatchTicketSelect").val();
-                if (!selectedTickets || selectedTickets.length === 0) {
-                    updateDispatchTable([]);
+            function renderTicketsTable(tickets) {
+                $ticketsTableBody.empty();
+                $dispatchSelect.empty();
+                if (!tickets?.length) {
+                    $ticketsTableBody.html('<tr class="text-muted"><td colspan="6" class="text-center py-4"><em>No tickets available for billing in this job order</em></td></tr>');
+                    updateTotals();
                     return;
                 }
-                $.ajax({
-                    url: '@Url.Action("GetDispatchTickets", "Billing", new { area = "User" })',
-                    type: 'POST',
-                    data: { dispatchTicketIds: selectedTickets },
-                    success: function (result) {
-                        updateDispatchTable(result.data);
-                    }
-                });
-            }
-
-            function updateDispatchTable(data) {
-                let totalDispatchAmount = 0;
-                let totalBAFAmount = 0;
-
-                table.destroy();
-                const $tbody = $('#dataTable tbody').empty();
-
-                $.each(data || [], function (index, value) {
-                    totalDispatchAmount += value.dispatchNetRevenue;
-                    totalBAFAmount += value.bafNetRevenue;
-                    $tbody.append(`
-                        <tr>
-                            <td class="text-center align-middle">${value.dispatchNumber}</td>
-                            <td class="text-center align-middle">${value.tugboat?.tugboatName || '-'}</td>
-                            <td class="text-center align-middle">${value.service?.serviceName || '-'}</td>
-                            <td class="text-center align-middle">${value.dateLeft} ${value.timeLeft}</td>
-                            <td class="text-center align-middle">${value.dateArrived} ${value.timeArrived}</td>
-                            <td class="text-center align-middle">${(value.totalHours || 0).toFixed(2)}</td>
-                            <td class="text-center align-middle">₱ ${formatNumber(value.dispatchRate)}</td>
-                            <td class="text-center align-middle">₱ ${formatNumber(value.dispatchNetRevenue)}</td>
-                            <td class="text-center align-middle">₱ ${formatNumber(value.bafRate)}</td>
-                            <td class="text-center align-middle">₱ ${formatNumber(value.bafNetRevenue)}</td>
+                tickets.forEach(ticket => {
+                    $ticketsTableBody.append(`
+                        <tr data-ticket-id="${ticket.dispatchTicketId}">
+                            <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked></td>
+                            <td class="text-center fw-bold">${ticket.dispatchNo}</td>
+                            <td class="text-center">${ticket.tugboat}</td>
+                            <td class="text-center">${ticket.service}</td>
+                            <td class="text-center">${ticket.duration.toFixed(2)}</td>
+                            <td class="text-end pe-3">₱${formatNumber(ticket.totalAmount)}</td>
                         </tr>
                     `);
+                    $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
                 });
-
-                $("#DispatchAmountTotal").text(formatNumber(totalDispatchAmount));
-                $("#BAFAmountTotal").text(formatNumber(totalBAFAmount));
-                $("#OverallTotal").text(formatNumber(totalDispatchAmount + totalBAFAmount));
-
-                table = initializeDataTable('#dataTable');
+                updateTotals();
+                $('#selectAllTickets').prop('checked', true);
             }
 
-            function areYouSureToBill (event) {
+            $ticketsTableBody.on('change', '.ticket-checkbox', function () {
+                const ticketId = $(this).val();
+                const $option = $dispatchSelect.find(`option[value="${ticketId}"]`);
+                if ($(this).is(':checked')) {
+                    if (!$option.length) $dispatchSelect.append($('<option>').val(ticketId).prop('selected', true));
+                    else $option.prop('selected', true);
+                } else {
+                    $option.prop('selected', false);
+                }
+                updateTotals();
+            });
+
+            $('#selectAllTickets').on('change', function () {
+                $ticketsTableBody.find('.ticket-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
+            });
+
+            function updateTotals() {
+                let dispatch = 0, baf = 0;
+                $ticketsTableBody.find('.ticket-checkbox:checked').each(function () {
+                    const total = parseFloat($(this).closest('tr').find('td:eq(5)').text().replace(/[^0-9.-]+/g, '')) || 0;
+                    dispatch += total * 0.8;
+                    baf += total * 0.2;
+                });
+                const count = $ticketsTableBody.find('.ticket-checkbox:checked').length;
+                $('#DispatchAmountTotal').text(formatNumber(dispatch));
+                $('#BAFAmountTotal').text(formatNumber(baf));
+                $('#OverallTotal').text(formatNumber(dispatch + baf));
+                $('#selectedTicketCount').text(`${count} selected`);
+            }
+
+            // ── Principal search ─────────────────────────────────────────────
+            let principalSearchTimeout;
+            const $principalSearch = $("#PrincipalSearch");
+            const $principalResults = $("#PrincipalSearchResults");
+            const $principalId = $("#PrincipalId");
+
+            async function performPrincipalSearch(searchTerm) {
+                if (!currentCustomerId) return;
+                try {
+                    const params = new URLSearchParams({ customerId: currentCustomerId });
+                    params.set('term', searchTerm);
+                    const res = await fetch(`@Url.Action("SearchPrincipals", "Billing", new { area = "User" })?${params}`);
+                    const data = await res.json();
+                    $principalResults.empty();
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(item => {
+                            $principalResults.append(
+                                $('<a href="#" class="list-group-item list-group-item-action py-2">')
+                                    .data('principal', item)
+                                    .html(`<span>${item.name}</span>`)
+                            );
+                        });
+                    } else {
+                        $principalResults.append($('<div class="list-group-item py-2 text-muted"><em>No principals found</em></div>'));
+                    }
+                    $principalResults.removeClass('d-none');
+                } catch {
+                    $principalResults.empty().addClass('d-none');
+                }
+            }
+
+            $principalSearch.on('input', function () {
+                clearTimeout(principalSearchTimeout);
+                const searchTerm = $(this).val().trim();
+                if (searchTerm.length === 0) $principalId.val('');
+                principalSearchTimeout = setTimeout(() => performPrincipalSearch(searchTerm), 150);
+            });
+
+            $principalSearch.on('focus', function () {
+                performPrincipalSearch($(this).val().trim());
+            });
+
+            $principalResults.on('click', 'a', function (e) {
+                e.preventDefault();
+                const principal = $(this).data('principal');
+                $principalSearch.val(principal.name);
+                $principalId.val(principal.value);
+                $principalResults.empty().addClass('d-none');
+            });
+
+            // ── Global click ────────────────────────────────────────────────
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('#CustomerSearch, #CustomerSearchResults, #PrincipalSearch, #PrincipalSearchResults, #JobOrderSearch, #JobOrderSearchResults').length) {
+                    $customerResults.addClass('d-none');
+                    $principalResults.addClass('d-none');
+                    $jobOrderResults.addClass('d-none');
+                }
+            });
+
+            // ── Port → Terminal cascade ──────────────────────────────────────
+            async function handlePortChange() {
+                try {
+                    const res = await fetch(`@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "User" })?portId=${encodeURIComponent($("#PortSelect").val())}`);
+                    const data = await res.json();
+                    const $terminalSelect = $("#TerminalSelect");
+                    $terminalSelect.empty().append('<option value="">Select Terminal</option>');
+                    if (Array.isArray(data)) data.forEach(item => $terminalSelect.append($('<option>').val(item.value).text(item.text)));
+                } catch {
+                    console.error('Failed to load terminals');
+                }
+            }
+
+            // ── Submit ───────────────────────────────────────────────────────
+            function areYouSureToBill(event) {
                 event.preventDefault();
                 const form = document.getElementById("myForm");
-                if (!form.checkValidity()) {
-                    form.reportValidity();
+                if (!form.checkValidity()) { form.reportValidity(); return; }
+                if (!$("#DispatchTicketSelect").val()?.length) {
+                    Swal.fire({ title: "No Tickets Selected", text: "Please select at least one dispatch ticket to bill.", icon: "warning" });
                     return;
                 }
-                
-                Swal.fire({
-                    title: "Submit Billing?",
-                    text: "Review all details before proceeding.",
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, submit"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
+                Swal.fire({ title: "Submit Billing?", text: "Review all details before proceeding.", icon: "question", showCancelButton: true, confirmButtonText: "Yes, submit" })
+                    .then(result => { if (result.isConfirmed) submitCreateForm(); });
+            }
+
+            async function submitCreateForm() {
+                try {
+                    const res = await fetch('@Url.Action("Create", "Billing", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams(new FormData(document.getElementById('myForm'))).toString()
+                    });
+                    const response = await res.json();
+                    if (response.success) {
+                        Swal.fire({ title: "Success!", text: response.message, icon: "success" })
+                            .then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
+                    } else {
+                        Swal.fire({ title: "Error", text: response.message || "Failed to create billing.", icon: "error" });
                     }
-                })
+                } catch {
+                    Swal.fire({ title: "Error", text: "An error occurred while creating the billing.", icon: "error" });
+                }
             }
         });
     </script>
