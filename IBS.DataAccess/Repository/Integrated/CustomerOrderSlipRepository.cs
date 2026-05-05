@@ -1,7 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.Models.Enums;
-using IBS.Models;
 using IBS.Models.Integrated;
 using IBS.Models.ViewModels;
 using IBS.Utility.Helpers;
