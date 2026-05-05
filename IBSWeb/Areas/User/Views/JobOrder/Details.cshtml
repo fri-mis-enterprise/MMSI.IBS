@@ -209,7 +209,9 @@
                                             else if (ticket.Status == "For Approval")
                                             {
                                                 <li>
-                                                    <button type="button" class="dropdown-item text-success" onclick="confirmApprove(@ticket.DispatchTicketId)">
+                                                    <button type="button" class="dropdown-item text-success"
+                                                            data-approve-url="@Url.Action("Approve", "DispatchTicket", new { id = ticket.DispatchTicketId })"
+                                                            onclick="confirmApprove(this)">
                                                         <i class="bi bi-check-circle"></i> Approve Tariff
                                                     </button>
                                                 </li>
@@ -269,8 +271,8 @@
             status: '@Model.Status',
             hasTickets: @(Model.DispatchTickets.Any() ? "true" : "false"),
             messages: {
-                error: @(TempData.Peek("error") != null ? $"'{Html.Raw(TempData.Peek("error"))}'" : "null"),
-                success: @(TempData.Peek("success") != null ? $"'{TempData.Peek("success")}'" : "null")
+                error:   @Json.Serialize(TempData.Peek("error")),
+                success: @Json.Serialize(TempData.Peek("success"))
             }
         };
 
@@ -360,7 +362,8 @@
             });
         }
 
-        function confirmApprove(id) {
+        function confirmApprove(btn) {
+            const url = btn.getAttribute('data-approve-url');
             Swal.fire({
                 title: 'Approve Tariff?',
                 text: "This ticket will be marked for billing.",
@@ -370,7 +373,7 @@
                 confirmButtonText: 'Yes, approve it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `@Url.Action("Approve", "DispatchTicket", new { area = "User" })/${id}`;
+                    window.location.href = url;
                 }
             });
         }
@@ -399,7 +402,7 @@
                     formData.append('reason', reason);
                     formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
 
-                    return fetch(`@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })`, {
+                    return fetch('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
                         body: new URLSearchParams(formData)
                     })
@@ -434,7 +437,7 @@
                 confirmButtonText: 'Yes, cancel it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `@Url.Action("Cancel", "DispatchTicket", new { area = "User" })/${id}`;
+                    window.location.href = '@Url.Action("Cancel", "DispatchTicket", new { area = "User" })' + '/' + id;
                 }
             })
         }

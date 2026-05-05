@@ -212,37 +212,36 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> SetTariff(int id, string filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
-            var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+            var model = await dbContext.MMSIDispatchTickets
+                .Include(dt => dt.Customer)
+                .Include(dt => dt.TugMaster)
+                .Include(dt => dt.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(dt => dt.Vessel)
+                .Include(dt => dt.Terminal).ThenInclude(t => t!.Port)
+                .FirstOrDefaultAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (model == null)
             {
                 return NotFound();
             }
 
-            var viewModel       = DispatchTicketModelToTariffVm(model);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-            return View(viewModel);
+            ViewBag.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            return View(model);
         }
 
         [HttpPost]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
         public async Task<IActionResult> SetTariff(
-            TariffViewModel vm, string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
+            [Bind("DispatchTicketId,JobOrderId,CustomerId,DispatchRate,DispatchDiscount,DispatchBillingAmount,DispatchNetRevenue,BAFRate,BAFDiscount,BAFBillingAmount,BAFNetRevenue,TotalBilling,TotalNetRevenue,ApOtherTugs")] DispatchTicket model,
+            string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId });
-            }
-
-            if (!await IsTicketJobOrderEditableAsync(vm.DispatchTicketId, cancellationToken))
+            if (!await IsTicketJobOrderEditableAsync(model.DispatchTicketId, cancellationToken))
             {
                 TempData["error"] = "Cannot set tariff — parent Job Order is cancelled or closed.";
-                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId });
+                return RedirectToAction(nameof(SetTariff), new { id = model.DispatchTicketId });
             }
 
-            // FIX: SetTariff and EditTariff shared the same scaffold. Unified via ApplyTariffFields.
             return await SaveTariffAsync(
-                vm, chargeType, chargeType2, filterType,
+                model, chargeType, chargeType2, filterType,
                 isEdit: false,
                 cancellationToken: cancellationToken);
         }
@@ -256,36 +255,36 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> EditTariff(int id, string filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
-            var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+            var model = await dbContext.MMSIDispatchTickets
+                .Include(dt => dt.Customer)
+                .Include(dt => dt.TugMaster)
+                .Include(dt => dt.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(dt => dt.Vessel)
+                .Include(dt => dt.Terminal).ThenInclude(t => t!.Port)
+                .FirstOrDefaultAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (model == null)
             {
                 return NotFound();
             }
 
-            var viewModel       = DispatchTicketModelToTariffVm(model);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-            return View(viewModel);
+            ViewBag.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            return View(model);
         }
 
         [HttpPost]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
         public async Task<IActionResult> EditTariff(
-            TariffViewModel viewModel, string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
+            [Bind("DispatchTicketId,JobOrderId,CustomerId,DispatchRate,DispatchDiscount,DispatchBillingAmount,DispatchNetRevenue,BAFRate,BAFDiscount,BAFBillingAmount,BAFNetRevenue,TotalBilling,TotalNetRevenue,ApOtherTugs")] DispatchTicket model,
+            string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId });
-            }
-
-            if (!await IsTicketJobOrderEditableAsync(viewModel.DispatchTicketId, cancellationToken))
+            if (!await IsTicketJobOrderEditableAsync(model.DispatchTicketId, cancellationToken))
             {
                 TempData["error"] = "Cannot edit tariff — parent Job Order is cancelled or closed.";
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId });
+                return RedirectToAction(nameof(EditTariff), new { id = model.DispatchTicketId });
             }
 
             return await SaveTariffAsync(
-                viewModel, chargeType, chargeType2, filterType,
+                model, chargeType, chargeType2, filterType,
                 isEdit: true,
                 cancellationToken: cancellationToken);
         }
@@ -944,15 +943,14 @@ namespace IBSWeb.Areas.User.Controllers
         /// isEdit=false → sets TariffBy; isEdit=true → sets TariffEditedBy/Date and tracks changes.
         /// </summary>
         private async Task<IActionResult> SaveTariffAsync(
-            TariffViewModel vm,
+            DispatchTicket model,
             string chargeType,
             string chargeType2,
             string filterType,
             bool isEdit,
             CancellationToken cancellationToken)
         {
-            var actionName   = isEdit ? nameof(EditTariff) : nameof(SetTariff);
-            var model        = TariffVmToDispatchTicket(vm);
+            var actionName = isEdit ? nameof(EditTariff) : nameof(SetTariff);
             var currentModel = await unitOfWork.DispatchTicket
                 .GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
@@ -1030,7 +1028,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 logger.LogError(ex, "Failed to {Action} tariff.", isEdit ? "edit" : "set");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(actionName, new { id = vm.DispatchTicketId });
+                return RedirectToAction(actionName, new { id = model.DispatchTicketId });
             }
         }
 
@@ -1182,24 +1180,6 @@ namespace IBSWeb.Areas.User.Controllers
                 JobOrderId         = vm.JobOrderId
             };
 
-        private static DispatchTicket TariffVmToDispatchTicket(TariffViewModel vm) =>
-            new()
-            {
-                DispatchTicketId      = vm.DispatchTicketId,
-                CustomerId            = vm.CustomerId,
-                DispatchRate          = vm.DispatchRate ?? 0,
-                DispatchDiscount      = vm.DispatchDiscount ?? 0,
-                DispatchBillingAmount = vm.DispatchBillingAmount,
-                DispatchNetRevenue    = vm.DispatchNetRevenue,
-                BAFRate               = vm.BAFRate ?? 0,
-                BAFDiscount           = vm.BAFDiscount ?? 0,
-                BAFBillingAmount      = vm.BAFBillingAmount,
-                BAFNetRevenue         = vm.BAFNetRevenue,
-                TotalBilling          = vm.TotalBilling,
-                TotalNetRevenue       = vm.TotalNetRevenue,
-                ApOtherTugs           = vm.ApOtherTugs ?? 0
-            };
-
         private static ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(DispatchTicket model) =>
             new()
             {
@@ -1226,48 +1206,6 @@ namespace IBSWeb.Areas.User.Controllers
                 VideoSignedUrl   = model.VideoSignedUrl,
                 DispatchTicketId = model.DispatchTicketId,
                 JobOrderId       = model.JobOrderId
-            };
-
-        private static TariffViewModel DispatchTicketModelToTariffVm(DispatchTicket model) =>
-            new()
-            {
-                DispatchTicketId      = model.DispatchTicketId,
-                JobOrderId            = model.JobOrderId,
-                DispatchNumber        = model.DispatchNumber,
-                COSNumber             = model.COSNumber,
-                VoyageNumber          = model.VoyageNumber,
-                Date                  = model.Date,
-                TugMasterName         = model.TugMaster?.TugMasterName,
-                DateLeft              = model.DateLeft,
-                TimeLeft              = model.TimeLeft,
-                DateArrived           = model.DateArrived,
-                TimeArrived           = model.TimeArrived,
-                TugboatName           = model.Tugboat?.TugboatName,
-                VesselName            = model.Vessel?.VesselName,
-                VesselType            = model.Vessel?.VesselType,
-                TerminalName          = model.Terminal?.TerminalName,
-                PortName              = model.Terminal?.Port?.PortName,
-                IsTugboatCompanyOwned = model.Tugboat?.IsCompanyOwned,
-                TugboatOwnerName      = model.Tugboat?.TugboatOwner?.TugboatOwnerName,
-                FixedRate             = model.Tugboat?.TugboatOwner?.FixedRate,
-                Remarks               = model.Remarks,
-                CustomerName          = model.Customer?.CustomerName,
-                TotalHours            = model.TotalHours,
-                ImageName             = model.ImageName,
-                DispatchChargeType    = model.DispatchChargeType,
-                BAFChargeType         = model.BAFChargeType,
-                CustomerId            = model.CustomerId,
-                DispatchRate          = model.DispatchRate,
-                DispatchDiscount      = model.DispatchDiscount,
-                DispatchBillingAmount = model.DispatchBillingAmount,
-                DispatchNetRevenue    = model.DispatchNetRevenue,
-                BAFRate               = model.BAFRate,
-                BAFDiscount           = model.BAFDiscount,
-                BAFBillingAmount      = model.BAFBillingAmount,
-                BAFNetRevenue         = model.BAFNetRevenue,
-                TotalBilling          = model.TotalBilling,
-                TotalNetRevenue       = model.TotalNetRevenue,
-                ApOtherTugs           = model.ApOtherTugs
             };
     }
 }

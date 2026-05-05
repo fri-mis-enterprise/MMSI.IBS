@@ -241,7 +241,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `@Url.Action("Approve", "DispatchTicket", new { area = "User" })/${imageId}`;
+                        window.location.href = '@Url.Action("Approve", "DispatchTicket", new { area = "User" })' + '/' + imageId;
                     }
                 });
             });
@@ -257,7 +257,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `@Url.Action("RevokeApproval", "DispatchTicket", new { area = "User" })/${imageId}`;
+                        window.location.href = '@Url.Action("RevokeApproval", "DispatchTicket", new { area = "User" })' + '/' + imageId;
                     }
                 });
             });
@@ -273,7 +273,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `@Url.Action("Disapprove", "DispatchTicket", new { area = "User" })/${imageId}`;
+                        window.location.href = '@Url.Action("Disapprove", "DispatchTicket", new { area = "User" })' + '/' + imageId;
                     }
                 });
             });
@@ -289,7 +289,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `@Url.Action("Delete", "DispatchTicket", new { area = "User" })/${id}`;
+                        window.location.href = '@Url.Action("Delete", "DispatchTicket", new { area = "User" })' + '/' + id;
                     }
                 });
             });
