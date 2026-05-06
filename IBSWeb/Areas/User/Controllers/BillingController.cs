@@ -42,11 +42,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Create(Billing model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return Failure(message: "Can't create entry, please review your input.", data: new { errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-            }
-
             try
             {
                 if (model.CustomerId == null)
@@ -289,13 +284,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [RequireAccess(ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> Edit(Billing model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit([Bind("MMSIBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return Failure(message: "Can't update entry, please review your input.", data: new { errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-            }
-
             try
             {
                 var currentModel = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken)
