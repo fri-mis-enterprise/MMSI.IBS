@@ -136,12 +136,12 @@ namespace IBS.Models.MMSI
 
         public int? JobOrderId { get; set; }
 
-        [NotMapped]
+        [ForeignKey(nameof(JobOrderId))]
         public JobOrder? JobOrder { get; set; }
 
         public int? CollectionId { get; set; }
 
-        [NotMapped]
+        [ForeignKey(nameof(CollectionId))]
         public Collection? Collection { get; set; }
 
         public string? CollectionNumber { get; set; }

@@ -31,7 +31,7 @@
                     <div class="col-3">
                         <h5>Dispatch Ticket</h5>
                     </div>
-                    <div class="col-3">
+                    <div class="col-3">a
                         <h5>Tariff</h5>
                     </div>
                     <div class="col-3">
@@ -111,6 +111,22 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanEditBilling" class="form-check-input m-0 ms-2" type="checkbox" id="canEditBilling">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canEditBilling">
+                                    Edit Billing
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanDeleteBilling" class="form-check-input m-0 ms-2" type="checkbox" id="canDeleteBilling">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canDeleteBilling">
+                                    Delete Billing
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-3 ps-2">
                         <div class="row">
@@ -123,7 +139,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row pt-3">
                     <div class="col-12">
                         <h5>Job Order</h5>

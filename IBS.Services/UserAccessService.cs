@@ -41,6 +41,10 @@ namespace IBS.Services
                     return userAccess.CanApproveTariff;
                 case ProcedureEnum.CreateBilling:
                     return userAccess.CanCreateBilling;
+                case ProcedureEnum.EditBilling:
+                    return userAccess.CanEditBilling;
+                case ProcedureEnum.DeleteBilling:
+                    return userAccess.CanDeleteBilling;
                 case ProcedureEnum.CreateCollection:
                     return userAccess.CanCreateCollection;
                 case ProcedureEnum.CreateJobOrder:

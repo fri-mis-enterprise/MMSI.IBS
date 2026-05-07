@@ -317,6 +317,14 @@
                 if (initialBilledTo === 'PRINCIPAL') $("#billPrincipal").prop("checked", true);
                 else $("#billLocal").prop("checked", true);
 
+                // Initialize Job Order if available
+                const initialJobOrderName = '@(Model.JobOrder?.JobOrderNumber ?? "")';
+                const initialJobOrderId = '@Model.JobOrderId';
+                if (initialJobOrderName) {
+                    $("#JobOrderSearch").val(initialJobOrderName);
+                    $("#JobOrderId").val(initialJobOrderId);
+                }
+
                 // Load already billed tickets into the table
                 if (currentCustomerId && billingId) {
                     try {

@@ -252,6 +252,7 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.VesselId = model.VesselId;
                 currentModel.BilledTo = model.BilledTo;
                 currentModel.IsVatable = model.IsVatable;
+                currentModel.JobOrderId = model.JobOrderId;
 
                 decimal total = 0, dispatch = 0, baf = 0;
                 foreach (var ticketIdStr in model.ToBillDispatchTickets!)

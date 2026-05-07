@@ -141,6 +141,8 @@ namespace IBSWeb.Areas.User.Controllers
                 tempModel.CanSetTariff = model.CanSetTariff;
                 tempModel.CanApproveTariff = model.CanApproveTariff;
                 tempModel.CanCreateBilling = model.CanCreateBilling;
+                tempModel.CanEditBilling = model.CanEditBilling;
+                tempModel.CanDeleteBilling = model.CanDeleteBilling;
                 tempModel.CanCreateCollection = model.CanCreateCollection;
                 tempModel.CanCreateJobOrder = model.CanCreateJobOrder;
                 tempModel.CanEditJobOrder = model.CanEditJobOrder;

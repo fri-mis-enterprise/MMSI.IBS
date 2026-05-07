@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507081816_AddEditAndDeleteBillingPermissions")]
+    partial class AddEditAndDeleteBillingPermissions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2020,9 +2023,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_billings_date");
-
-                    b.HasIndex("JobOrderId")
-                        .HasDatabaseName("ix_billings_job_order_id");
 
                     b.HasIndex("PortId")
                         .HasDatabaseName("ix_billings_port_id");
@@ -4610,11 +4610,6 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("CustomerId")
                         .HasConstraintName("fk_billings_customers_customer_id");
 
-                    b.HasOne("IBS.Models.MMSI.JobOrder", "JobOrder")
-                        .WithMany()
-                        .HasForeignKey("JobOrderId")
-                        .HasConstraintName("fk_billings_mmsi_job_orders_job_order_id");
-
                     b.HasOne("IBS.Models.MMSI.MasterFile.Port", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
@@ -4638,8 +4633,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Collection");
 
                     b.Navigation("Customer");
-
-                    b.Navigation("JobOrder");
 
                     b.Navigation("Port");
 

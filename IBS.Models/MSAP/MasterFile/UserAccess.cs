@@ -32,6 +32,10 @@ namespace IBS.Models.MMSI.MasterFile
 
         public bool CanCreateBilling { get; set; }
 
+        public bool CanEditBilling { get; set; }
+
+        public bool CanDeleteBilling { get; set; }
+
         public bool CanCreateCollection { get; set; }
 
         public bool CanCreateJobOrder { get; set; }

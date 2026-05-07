@@ -81,7 +81,8 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ThenInclude(t => t!.Port)
                 .Include(b => b.Vessel)
                 .Include(b => b.Customer)
-                .Include(b => b.Principal);
+                .Include(b => b.Principal)
+                .Include(b => b.JobOrder);
 
             if (filter != null)
             {
@@ -297,15 +298,31 @@ namespace IBS.DataAccess.Repository.MMSI
                 if (jobOrder != null)
                 {
                     entity.JobOrder = jobOrder;
-                    entity.CustomerId = jobOrder.CustomerId;
-                    entity.Customer = jobOrder.Customer;
-                    entity.VesselId = jobOrder.VesselId;
-                    entity.Vessel = jobOrder.Vessel;
-                    entity.PortId = jobOrder.PortId;
-                    entity.Port = jobOrder.Port;
-                    entity.TerminalId = jobOrder.TerminalId;
-                    entity.Terminal = jobOrder.Terminal;
-                    entity.VoyageNumber = jobOrder.VoyageNumber;
+                    entity.CustomerId ??= jobOrder.CustomerId;
+                    entity.Customer ??= jobOrder.Customer;
+                    
+                    if (!entity.VesselId.HasValue || entity.VesselId == 0)
+                    {
+                        entity.VesselId = jobOrder.VesselId;
+                        entity.Vessel = jobOrder.Vessel;
+                    }
+                    
+                    if (!entity.PortId.HasValue || entity.PortId == 0)
+                    {
+                        entity.PortId = jobOrder.PortId;
+                        entity.Port = jobOrder.Port;
+                    }
+                    
+                    if (!entity.TerminalId.HasValue || entity.TerminalId == 0)
+                    {
+                        entity.TerminalId = jobOrder.TerminalId;
+                        entity.Terminal = jobOrder.Terminal;
+                    }
+                    
+                    if (string.IsNullOrWhiteSpace(entity.VoyageNumber))
+                    {
+                        entity.VoyageNumber = jobOrder.VoyageNumber;
+                    }
                 }
             }
 
