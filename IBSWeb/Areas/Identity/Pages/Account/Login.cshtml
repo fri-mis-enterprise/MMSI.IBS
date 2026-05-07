@@ -3,8 +3,6 @@
 
 @{
     ViewData["Title"] = "Log in";
-    var usersList = Model.Users.Select(u => u.Value).ToList();
-    var accessList = Model.StationAccess.Select(u => u.Value).ToList();
 }
 
 <div class="container py-5">
@@ -28,14 +26,6 @@
                             <span asp-validation-for="Input.Password" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3" id="company-div">
-                            <label asp-for="Input.Company" class="form-label">Select Company</label>
-                            <select asp-for="Input.Company" asp-items="@Model.Companies" class="form-select js-select2" id="company-select" style="width: 100%" required>
-                                <option value="">Select company</option>
-                            </select>
-                            <span asp-validation-for="Input.Company" class="text-danger"></span>
-                        </div>
-
                         <div class="d-grid mt-4">
                             <button id="login-submit" type="submit" class="btn btn-primary btn-lg">Log in</button>
                         </div>
@@ -54,13 +44,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        $(document).ready(function () {
-            $('.js-select2').select2({
-                placeholder: "Select company",
-                allowClear: true,
-                width: '100%'
-            });
-        });
-    </script>
 }

@@ -3,7 +3,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MMSI;
-using IBS.Models.MMSI.MasterFile;
 using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -11,7 +10,6 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.User.Controllers
 {

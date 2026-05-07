@@ -5,7 +5,6 @@ using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI

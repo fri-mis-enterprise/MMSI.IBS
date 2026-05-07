@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using IBS.DataAccess.Repository.IRepository;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +18,6 @@ namespace IBSWeb.Areas.Identity.Pages.Account
     public class LoginModel(
         SignInManager<ApplicationUser> signInManager,
         ILogger<LoginModel> logger,
-        IUnitOfWork unitOfWork,
         UserManager<ApplicationUser> userManager)
         : PageModel
     {
@@ -51,13 +49,6 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         [TempData]
         public string ErrorMessage { get; set; }
 
-        public List<SelectListItem> Stations { get; set; }
-
-        public List<SelectListItem> Companies { get; set; }
-
-        public List<SelectListItem> Users { get; set; }
-        public List<SelectListItem> StationAccess { get; set; }
-
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -86,7 +77,6 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
 
-            [Required]
             [Display(Name = "Company")]
             public string Company { get; set; }
 
@@ -151,7 +141,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     // Add fresh dynamic claims based on user input
                     var newClaims = new List<Claim>
                     {
-                        new Claim("Company", Input.Company)
+                        new Claim("Company", "MMSI")
                     };
 
                     if (!string.IsNullOrEmpty(Input.StationCode))
@@ -213,9 +203,6 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         private async Task LoadPageData(string returnUrl)
         {
             ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-            Companies = await unitOfWork.GetCompanyListAsyncByName();
-            Users = await unitOfWork.GetCashierListAsyncByUsernameAsync();
-            StationAccess = await unitOfWork.GetCashierListAsyncByStationAsync();
             ReturnUrl = returnUrl;
         }
 
