@@ -25,7 +25,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var salesBook = new SalesBook
             {
                 TransactionDate = billing.Date,
-                SerialNo = billing.MMSIBillingNumber!,
+                SerialNo = billing.MMSIBillingNumber,
                 SoldTo = (billing.PrincipalId != null ? billing.Principal?.PrincipalName : billing.Customer?.CustomerName) ?? string.Empty,
                 TinNo = (billing.PrincipalId != null ? billing.Principal?.TIN : billing.Customer?.CustomerTin) ?? string.Empty,
                 Address = (billing.PrincipalId != null ? billing.Principal?.Address : billing.Customer?.CustomerAddress) ?? string.Empty,
@@ -78,7 +78,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             IQueryable<Billing> query = dbSet
                 .Include(b => b.Terminal)
-                .ThenInclude(t => t!.Port)
+                .ThenInclude(t => t.Port)
                 .Include(b => b.Vessel)
                 .Include(b => b.Customer)
                 .Include(b => b.Principal)
@@ -102,7 +102,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             return await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == billingId)
-                .Select(dt => dt.Tugboat!.TugboatName.ToString())
+                .Select(dt => dt.Tugboat.TugboatName.ToString())
                 .Distinct() // Ensures unique values
                 .ToListAsync(cancellationToken);
         }
@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == billingId)
                 .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
@@ -247,7 +247,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
                 return model;
             }
-            foreach (var word in words!)
+            foreach (var word in words)
             {
                 if (currentString.Length + word.Length + (currentString.Length > 0 ? 1 : 0) > 40)
                 {
@@ -299,25 +299,28 @@ namespace IBS.DataAccess.Repository.MMSI
                 if (jobOrder != null)
                 {
                     entity.JobOrder = jobOrder;
-                    entity.CustomerId ??= jobOrder.CustomerId;
-                    entity.Customer ??= jobOrder.Customer;
+                    if (entity.CustomerId == 0)
+                    {
+                        entity.CustomerId = jobOrder.CustomerId;
+                        entity.Customer = jobOrder.Customer!;
+                    }
                     
-                    if (!entity.VesselId.HasValue || entity.VesselId == 0)
+                    if (entity.VesselId == 0)
                     {
                         entity.VesselId = jobOrder.VesselId;
-                        entity.Vessel = jobOrder.Vessel;
+                        entity.Vessel = jobOrder.Vessel!;
                     }
                     
-                    if (!entity.PortId.HasValue || entity.PortId == 0)
+                    if (entity.PortId == 0)
                     {
                         entity.PortId = jobOrder.PortId;
-                        entity.Port = jobOrder.Port;
+                        entity.Port = jobOrder.Port!;
                     }
                     
-                    if (!entity.TerminalId.HasValue || entity.TerminalId == 0)
+                    if (entity.TerminalId == 0)
                     {
                         entity.TerminalId = jobOrder.TerminalId;
-                        entity.Terminal = jobOrder.Terminal;
+                        entity.Terminal = jobOrder.Terminal!;
                     }
                     
                     if (string.IsNullOrWhiteSpace(entity.VoyageNumber))
@@ -327,9 +330,9 @@ namespace IBS.DataAccess.Repository.MMSI
                 }
             }
 
-            if (entity.CustomerId.HasValue && entity.CustomerId != 0)
+            if (entity.CustomerId != 0)
             {
-                entity.Customer ??= await _db.Customers.FindAsync(new object[] { entity.CustomerId.Value }, cancellationToken);
+                entity.Customer ??= (await _db.Customers.FindAsync(new object[] { entity.CustomerId }, cancellationToken))!;
             }
             
             entity.IsVatable = entity.Customer?.VatType == "Vatable";

@@ -178,9 +178,9 @@ namespace IBSWeb.Areas.User.Controllers
             var model = await dbContext.MMSIDispatchTickets
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.TugMaster)
-                .Include(dt => dt.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(dt => dt.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(dt => dt.Vessel)
-                .Include(dt => dt.Terminal).ThenInclude(t => t!.Port)
+                .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (model == null)
             {
@@ -221,9 +221,9 @@ namespace IBSWeb.Areas.User.Controllers
             var model = await dbContext.MMSIDispatchTickets
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.TugMaster)
-                .Include(dt => dt.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(dt => dt.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(dt => dt.Vessel)
-                .Include(dt => dt.Terminal).ThenInclude(t => t!.Port)
+                .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (model == null)
             {

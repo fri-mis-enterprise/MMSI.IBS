@@ -57,13 +57,44 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? tariffFile,
             IFormFile? dispatchTicketFile,
             IFormFile? billingFile,
-            IFormFile? collectionFile)
+            IFormFile? collectionFile,
+            List<IFormFile>? bulkFiles)
         {
             var sb = new StringBuilder();
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try
             {
+                // Helper to resolve files from bulk list if individual parameter is null
+                IFormFile? GetFile(IFormFile? individual, string keyword)
+                {
+                    if (individual != null) return individual;
+                    if (bulkFiles == null || bulkFiles.Count == 0) return null;
+                    
+                    return bulkFiles.FirstOrDefault(f => 
+                        f.FileName.Equals($"{keyword}.csv", StringComparison.OrdinalIgnoreCase) || 
+                        f.FileName.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Resolve all files
+                customerFile = GetFile(customerFile, "customer");
+                portFile = GetFile(portFile, "port");
+                terminalFile = GetFile(terminalFile, "terminal");
+                principalFile = GetFile(principalFile, "principal");
+                serviceFile = GetFile(serviceFile, "service");
+                tugboatOwnerFile = GetFile(tugboatOwnerFile, "tugboatowner");
+                // Special case for tugboat to not match tugboatowner
+                tugboatFile = tugboatFile ?? bulkFiles?.FirstOrDefault(f => 
+                    (f.FileName.Equals("tugboat.csv", StringComparison.OrdinalIgnoreCase) || f.FileName.Contains("tugboat", StringComparison.OrdinalIgnoreCase)) && 
+                    !f.FileName.Contains("owner", StringComparison.OrdinalIgnoreCase));
+                
+                tugMasterFile = GetFile(tugMasterFile, "tugmaster") ?? GetFile(tugMasterFile, "master");
+                vesselFile = GetFile(vesselFile, "vessel");
+                tariffFile = GetFile(tariffFile, "tariff");
+                dispatchTicketFile = GetFile(dispatchTicketFile, "dispatch");
+                billingFile = GetFile(billingFile, "billing");
+                collectionFile = GetFile(collectionFile, "collection");
+
                 // Maps for dependency resolution
                 var customerMap = new Dictionary<string, int>(); // MsapNumber -> IbsCustomerId
                 var portMap = new Dictionary<string, int>();     // MsapNumber -> IbsPortId
@@ -85,7 +116,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     var (res, map) = await ImportMsapCustomers(customerFile, CancellationToken.None);
                     sb.AppendLine(res);
-                    customerMap = map;
+                    foreach(var entry in map) customerMap[entry.Key] = entry.Value;
                 }
 
                 if (portFile != null)
@@ -169,7 +200,7 @@ namespace IBSWeb.Areas.User.Controllers
                 // Level 5: Final
                 if (dispatchTicketFile != null)
                 {
-                    sb.AppendLine(await ImportMsapDispatchTickets(dispatchTicketFile, customerMap, vesselMap, tugboatMap, tugMasterMap, serviceMap, terminalMap, billingMap, CancellationToken.None));
+                    sb.AppendLine(await ProcessDispatchTickets(dispatchTicketFile, customerMap, vesselMap, tugboatMap, tugMasterMap, serviceMap, terminalMap, portMap, billingMap, CancellationToken.None));
                 }
 
                 if (sb.Length == 0)
@@ -300,22 +331,22 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var o in owners) ownerMap[o.TugboatOwnerNumber] = o.TugboatOwnerId;
 
             var masters = await dbContext.MMSITugMasters.AsNoTracking().Where(x => x.TugMasterNumber != null).ToListAsync(cancellationToken);
-            foreach (var m in masters) tugMasterMap[m.TugMasterNumber!] = m.TugMasterId;
+            foreach (var m in masters) tugMasterMap[m.TugMasterNumber] = m.TugMasterId;
 
             var vessels = await dbContext.MMSIVessels.AsNoTracking().Where(x => x.VesselNumber != null).ToListAsync(cancellationToken);
-            foreach (var v in vessels) vesselMap[v.VesselNumber!] = v.VesselId;
+            foreach (var v in vessels) vesselMap[v.VesselNumber] = v.VesselId;
 
             var tugboats = await dbContext.MMSITugboats.AsNoTracking().Where(x => x.TugboatNumber != null).ToListAsync(cancellationToken);
-            foreach (var t in tugboats) tugboatMap[t.TugboatNumber!] = t.TugboatId;
+            foreach (var t in tugboats) tugboatMap[t.TugboatNumber] = t.TugboatId;
 
             var terminals = await dbContext.MMSITerminals.Include(t => t.Port).AsNoTracking().ToListAsync(cancellationToken);
             foreach (var t in terminals) terminalMap[$"{t.Port!.PortNumber}{t.TerminalNumber}"] = t.TerminalId;
 
             var billings = await dbContext.Billings.AsNoTracking().Where(x => x.MMSIBillingNumber != null).ToListAsync(cancellationToken);
-            foreach (var b in billings) billingMap[b.MMSIBillingNumber!] = b.MMSIBillingId;
+            foreach (var b in billings) billingMap[b.MMSIBillingNumber] = b.MMSIBillingId;
 
             var collections = await dbContext.MMSICollections.AsNoTracking().Where(x => x.MMSICollectionNumber != null).ToListAsync(cancellationToken);
-            foreach (var c in collections) collectionMap[c.MMSICollectionNumber!] = c.MMSICollectionId;
+            foreach (var c in collections) collectionMap[c.MMSICollectionNumber] = c.MMSICollectionId;
             
             // Customers are tricky because we don't store MSAP Number in Customer table.
             // But we can match by name if needed, or assume customerMap is only for the current session.
@@ -341,11 +372,16 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var record in records)
             {
                 string customerName = (GetString(record, "name") ?? string.Empty).Trim();
-                string msapNumber = PadNumber(GetString(record, "number"), 4);
+                string? rawNumber = GetString(record, "number");
+                if (string.IsNullOrWhiteSpace(rawNumber))
+                {
+                    throw new Exception("Customer number is missing in CSV.");
+                }
+                string msapNumber = PadNumber(rawNumber, 4);
 
                 if (string.IsNullOrWhiteSpace(customerName))
                 {
-                    continue;
+                    throw new Exception($"Customer name is missing for record #{msapNumber}.");
                 }
 
                 if (existingCustomers.TryGetValue(customerName, out int existingId))
@@ -702,7 +738,7 @@ namespace IBSWeb.Areas.User.Controllers
                 string msapNumber = GetString(record, "number") ?? string.Empty;
                 if (msapNumber.Length < 6)
                 {
-                    continue;
+                    throw new Exception($"Terminal number '{msapNumber}' is invalid. It must be at least 6 characters.");
                 }
 
                 var portPart = msapNumber.Substring(0, 3);
@@ -721,7 +757,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (!portMap.TryGetValue(portPart, out int portId))
                 {
-                    continue;
+                    throw new Exception($"Port '{portPart}' not found for terminal '{msapNumber}'. Please import Ports first.");
                 }
 
                 Terminal newRecord = new Terminal
@@ -834,7 +870,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (!customerMap.TryGetValue(agentNo, out int customerId))
                 {
-                    continue;
+                    throw new Exception($"Agent/Customer '{agentNo}' not found for principal '{msapNumber}'. Please import Customers first.");
                 }
 
                 string principalName = GetString(record, "name") ?? string.Empty;
@@ -914,7 +950,7 @@ namespace IBSWeb.Areas.User.Controllers
                 DateOnly? asOfDateNullable = ParseDateOnly(record, "date");
                 if (asOfDateNullable == null)
                 {
-                    continue;
+                    throw new Exception("As-of Date is missing or invalid in Tariff Rates CSV.");
                 }
 
                 DateOnly asOfDate = asOfDateNullable.Value;
@@ -922,19 +958,19 @@ namespace IBSWeb.Areas.User.Controllers
                 string? custNo = GetString(record, "custno");
                 if (custNo == null || !customerMap.TryGetValue(PadNumber(custNo, 4), out int customerId))
                 {
-                    continue;
+                    throw new Exception($"Customer '{custNo}' not found for tariff rate. Please import Customers first.");
                 }
 
                 string terminalRaw = GetString(record, "terminal") ?? string.Empty;
                 if (!terminalMap.TryGetValue(terminalRaw, out int terminalId))
                 {
-                    continue;
+                    throw new Exception($"Terminal '{terminalRaw}' not found for tariff rate. Please import Terminals first.");
                 }
 
                 string serviceNum = GetString(record, "service") ?? string.Empty;
                 if (!serviceMap.TryGetValue(PadNumber(serviceNum, 3), out int serviceId))
                 {
-                    continue;
+                    throw new Exception($"Service '{serviceNum}' not found for tariff rate. Please import Services first.");
                 }
 
                 var identity = new { CustomerId = customerId, TerminalId = terminalId, ServiceId = serviceId, AsOfDate = asOfDate };
@@ -964,7 +1000,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         #endregion -- Masterfiles --
 
-        public async Task<string> ImportMsapDispatchTickets(
+        private async Task<string> ProcessDispatchTickets(
             IFormFile file,
             Dictionary<string, int> customerMap,
             Dictionary<string, int> vesselMap,
@@ -972,6 +1008,7 @@ namespace IBSWeb.Areas.User.Controllers
             Dictionary<string, int> tugMasterMap,
             Dictionary<string, int> serviceMap,
             Dictionary<string, int> terminalMap,
+            Dictionary<string, int> portMap,
             Dictionary<string, int> billingMap,
             CancellationToken cancellationToken)
         {
@@ -992,7 +1029,7 @@ namespace IBSWeb.Areas.User.Controllers
                 DateTime? entryDateNullable = ParseDateTime(record, "entrydate");
                 if (entryDateNullable == null)
                 {
-                    continue;
+                    throw new Exception("Entry Date is missing or invalid in Dispatch Tickets CSV.");
                 }
 
                 DateTime entryDate = entryDateNullable.Value;
@@ -1005,13 +1042,54 @@ namespace IBSWeb.Areas.User.Controllers
                     continue;
                 }
 
-                DispatchTicket newRecord = new DispatchTicket();
-
                 string? custNo = GetString(record, "custno");
-                if (custNo != null && customerMap.TryGetValue(custNo, out int customerId))
+                if (custNo == null || !customerMap.TryGetValue(PadNumber(custNo, 4), out int customerId))
                 {
-                    newRecord.CustomerId = customerId;
+                    throw new Exception($"Customer '{custNo}' not found for dispatch ticket '{dispatchNumber}'.");
                 }
+
+                string tugboatNum = GetString(record, "tugnum") ?? string.Empty;
+                if (!tugboatMap.TryGetValue(tugboatNum, out int tbId))
+                {
+                    throw new Exception($"Tugboat '{tugboatNum}' not found for dispatch ticket '{dispatchNumber}'.");
+                }
+
+                string vesselNum = GetString(record, "vesselnum") ?? string.Empty;
+                if (!vesselMap.TryGetValue(vesselNum, out int vId))
+                {
+                    throw new Exception($"Vessel '{vesselNum}' not found for dispatch ticket '{dispatchNumber}'.");
+                }
+
+                string serviceNum = GetString(record, "srvctype") ?? string.Empty;
+                if (!serviceMap.TryGetValue(serviceNum, out int sId))
+                {
+                    throw new Exception($"Service '{serviceNum}' not found for dispatch ticket '{dispatchNumber}'.");
+                }
+
+                string terminalRaw = GetString(record, "terminal") ?? string.Empty;
+                if (terminalRaw.Length < 6)
+                {
+                    throw new Exception($"Terminal '{terminalRaw}' is invalid for dispatch ticket '{dispatchNumber}'.");
+                }
+                var portPart = terminalRaw.Substring(0, 3);
+                if (!portMap.TryGetValue(portPart, out int portId))
+                {
+                    throw new Exception($"Port '{portPart}' not found for dispatch ticket '{dispatchNumber}'.");
+                }
+                if (!terminalMap.TryGetValue(terminalRaw, out int termId))
+                {
+                    throw new Exception($"Terminal '{terminalRaw}' not found for dispatch ticket '{dispatchNumber}'.");
+                }
+
+                DispatchTicket newRecord = new DispatchTicket
+                {
+                    CustomerId = customerId,
+                    TugBoatId = tbId,
+                    VesselId = vId,
+                    ServiceId = sId,
+                    PortId = portId,
+                    TerminalId = termId
+                };
 
                 string? billNumberStr = GetString(record, "billnum");
                 if (!string.IsNullOrEmpty(billNumberStr) && billingMap.TryGetValue(billNumberStr, out int billingId))
@@ -1021,63 +1099,6 @@ namespace IBSWeb.Areas.User.Controllers
 
                 newRecord.BillingNumber = string.IsNullOrEmpty(billNumberStr) ? null : billNumberStr;
                 newRecord.DispatchNumber = dispatchNumber;
-                newRecord.Date = ParseDateOnly(record, "date");
-                newRecord.COSNumber = GetString(record, "cosno") == string.Empty ? null : GetString(record, "cosno");
-                newRecord.DateLeft = ParseDateOnly(record, "dateleft");
-                newRecord.DateArrived = ParseDateOnly(record, "datearrive");
-
-                string? timeLeftStr = GetString(record, "timeleft");
-                string? timeArriveStr = GetString(record, "timearrive");
-                if (!string.IsNullOrEmpty(timeLeftStr) && !string.IsNullOrEmpty(timeArriveStr) &&
-                    int.TryParse(timeLeftStr, out int timeLeftInt) && int.TryParse(timeArriveStr, out int timeArriveInt))
-                {
-                    newRecord.TimeLeft = TimeOnly.ParseExact(timeLeftInt.ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
-                    newRecord.TimeArrived = TimeOnly.ParseExact(timeArriveInt.ToString("D4"), "HHmm", CultureInfo.InvariantCulture);
-                }
-
-                newRecord.BaseOrStation = GetString(record, "@base") == string.Empty ? null : GetString(record, "@base");
-                newRecord.VoyageNumber = GetString(record, "voyage") == string.Empty ? null : GetString(record, "voyage");
-                newRecord.DispatchRate = ParseDecimal(record, "dispatchra");
-                newRecord.DispatchBillingAmount = ParseDecimal(record, "dispatchbi");
-                newRecord.DispatchNetRevenue = ParseDecimal(record, "dispatchne");
-                newRecord.BAFRate = ParseDecimal(record, "bafrate");
-                newRecord.BAFBillingAmount = ParseDecimal(record, "bafbillamt");
-                newRecord.BAFNetRevenue = ParseDecimal(record, "bafnetamt");
-                newRecord.TotalBilling = newRecord.DispatchBillingAmount + newRecord.BAFBillingAmount;
-                newRecord.TotalNetRevenue = newRecord.DispatchNetRevenue + newRecord.BAFNetRevenue;
-
-                string tugboatNum = GetString(record, "tugnum") ?? string.Empty;
-                if (tugboatMap.TryGetValue(tugboatNum, out int tbId))
-                {
-                    newRecord.TugBoatId = tbId;
-                }
-
-                string masterNo = GetString(record, "masterno") ?? string.Empty;
-                if (tugMasterMap.TryGetValue(masterNo, out int tmId))
-                {
-                    newRecord.TugMasterId = tmId;
-                }
-
-                string vesselNum = GetString(record, "vesselnum") ?? string.Empty;
-                if (vesselMap.TryGetValue(vesselNum, out int vId))
-                {
-                    newRecord.VesselId = vId;
-                }
-
-                string serviceNum = GetString(record, "srvctype") ?? string.Empty;
-                if (serviceMap.TryGetValue(serviceNum, out int sId))
-                {
-                    newRecord.ServiceId = sId;
-                }
-
-                string terminalRaw = GetString(record, "terminal") ?? string.Empty;
-                if (terminalMap.TryGetValue(terminalRaw, out int termId))
-                {
-                    newRecord.TerminalId = termId;
-                }
-
-                newRecord.CreatedBy = GetString(record, "entryby") ?? "IMPORT";
-                newRecord.CreatedDate = entryDate;
                 newRecord.ApOtherTugs = ParseDecimal(record, "apothertug");
                 newRecord.DispatchChargeType = ParseBool(record, "perhour") ? "Per hour" : "Per move";
                 newRecord.BAFChargeType = "Per move";
@@ -1154,7 +1175,7 @@ namespace IBSWeb.Areas.User.Controllers
                 string? billingNumber = GetString(record, "number");
                 if (string.IsNullOrEmpty(billingNumber))
                 {
-                    continue;
+                    throw new Exception("Billing Number is missing in CSV.");
                 }
 
                 if (existingIdentifier.TryGetValue(billingNumber, out int existingId))
@@ -1166,16 +1187,39 @@ namespace IBSWeb.Areas.User.Controllers
                 string vesselNum = GetString(record, "vesselnum") ?? string.Empty;
                 if (!vesselMap.TryGetValue(vesselNum, out int vesselId))
                 {
-                    continue;
+                    throw new Exception($"Vessel '{vesselNum}' not found for billing '{billingNumber}'.");
                 }
-
-                Billing newRecord = new Billing { VesselId = vesselId };
 
                 string? custNo = GetString(record, "custno");
-                if (custNo != null && customerMap.TryGetValue(custNo, out int customerId))
+                if (custNo == null || !customerMap.TryGetValue(PadNumber(custNo, 4), out int customerId))
                 {
-                    newRecord.CustomerId = customerId;
+                    throw new Exception($"Customer '{custNo}' not found for billing '{billingNumber}'.");
                 }
+
+                string terminalRaw = GetString(record, "terminal") ?? string.Empty;
+                if (terminalRaw.Length < 6)
+                {
+                    throw new Exception($"Terminal '{terminalRaw}' is invalid for billing '{billingNumber}'.");
+                }
+
+                var portPart = terminalRaw.Substring(0, 3);
+                if (!portMap.TryGetValue(portPart, out int portId))
+                {
+                    throw new Exception($"Port '{portPart}' not found for billing '{billingNumber}'.");
+                }
+
+                if (!terminalMap.TryGetValue(terminalRaw, out int terminalId))
+                {
+                    throw new Exception($"Terminal '{terminalRaw}' not found for billing '{billingNumber}'.");
+                }
+
+                Billing newRecord = new Billing
+                {
+                    VesselId = vesselId,
+                    CustomerId = customerId,
+                    PortId = portId,
+                    TerminalId = terminalId
+                };
 
                 newRecord.MMSIBillingNumber = billingNumber;
                 DateOnly? billingDateNullable = ParseDateOnly(record, "date");
@@ -1188,21 +1232,6 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     newRecord.Date = DateOnly.FromDateTime(DateTime.Today);
                     newRecord.DueDate = DateOnly.FromDateTime(DateTime.Today);
-                }
-
-                string terminalRaw = GetString(record, "terminal") ?? string.Empty;
-                if (terminalRaw.Length >= 6)
-                {
-                    var portPart = terminalRaw.Substring(0, 3);
-                    if (portMap.TryGetValue(portPart, out int portId))
-                    {
-                        newRecord.PortId = portId;
-                    }
-
-                    if (terminalMap.TryGetValue(terminalRaw, out int terminalId))
-                    {
-                        newRecord.TerminalId = terminalId;
-                    }
                 }
 
                 newRecord.Amount = ParseDecimal(record, "amount");
@@ -1288,7 +1317,7 @@ namespace IBSWeb.Areas.User.Controllers
                 string? crNum = GetString(record, "crnum");
                 if (string.IsNullOrEmpty(crNum))
                 {
-                    continue;
+                    throw new Exception("CR Number is missing in Collections CSV.");
                 }
 
                 if (existingIdentifier.TryGetValue(crNum, out int existingId))
@@ -1300,7 +1329,7 @@ namespace IBSWeb.Areas.User.Controllers
                 string? custNo = GetString(record, "custno");
                 if (custNo == null || !customerMap.TryGetValue(custNo, out int customerId))
                 {
-                    continue;
+                    throw new Exception($"Customer '{custNo}' not found for collection '{crNum}'.");
                 }
 
                 Collection newRecord = new Collection

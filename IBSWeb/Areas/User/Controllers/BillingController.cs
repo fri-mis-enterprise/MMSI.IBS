@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var queried = dbContext.Billings
                     .Include(b => b.Customer)
                     .Include(b => b.Terminal)
-                    .ThenInclude(b => b!.Port)
+                    .ThenInclude(b => b.Port)
                     .Include(b => b.Vessel)
                     .Where(b => b.Status != "For Posting" && b.Status != "Cancelled");
 
@@ -111,10 +111,10 @@ namespace IBSWeb.Areas.User.Controllers
                             dt.Date.Year.ToString().Contains(searchValue) == true ||
                             dt.MMSIBillingNumber.ToLower().Contains(searchValue) == true ||
                             dt.Amount.ToString().Contains(searchValue) == true ||
-                            dt.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
-                            dt.Terminal!.TerminalName!.ToLower().Contains(searchValue) == true ||
+                            dt.Customer.CustomerName.ToLower().Contains(searchValue) == true ||
+                            dt.Terminal.TerminalName!.ToLower().Contains(searchValue) == true ||
                             dt.Terminal.Port!.PortName!.ToLower().Contains(searchValue) == true ||
-                            dt.Vessel!.VesselName.ToLower().Contains(searchValue) == true ||
+                            dt.Vessel.VesselName.ToLower().Contains(searchValue) == true ||
                             dt.Status.ToLower().Contains(searchValue) == true
                         );
                 }
@@ -185,7 +185,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             model = await GetBillingSelectLists(model, cancellationToken);
             model.UnbilledDispatchTickets = await GetEditTickets(model.CustomerId, model.MMSIBillingId, cancellationToken);
-            if(model.CustomerId != null)
+            if(model.CustomerId != 0)
             {
                 model.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
             }
@@ -403,7 +403,7 @@ namespace IBSWeb.Areas.User.Controllers
                 worksheet.Cells["B4"].Value = $"{billing.Customer?.CustomerTin}";
                 worksheet.Cells["E4"].Value = $"VOYAGE NO. {billing.VoyageNumber}";
                 worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel?.VesselName}";
-                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port!.PortName}";
+                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port.PortName}";
                 var rowStart = 9;
                 var row = rowStart;
 

@@ -124,10 +124,10 @@ namespace IBSWeb.Areas.User.Controllers
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                if (model.CustomerId != null)
+                if (model.CustomerId != 0)
                 {
-                    model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
-                        cancellationToken);
+                    model.Customer = (await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
+                        cancellationToken))!;
                 }
 
                 if (imageFile != null && imageFile.Length > 0)
@@ -195,7 +195,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (model.Date != null &&
                     model.DateLeft != null && model.TimeLeft != null && model.DateArrived != null && model.TimeArrived != null &&
-                    model.TerminalId != null && model.ServiceId != null && model.TugBoatId != null && model.TugMasterId != null && model.VesselId != null)
+                    model.TerminalId != 0 && model.ServiceId != 0 && model.TugBoatId != 0 && model.TugMasterId != null && model.VesselId != 0)
                 {
                     model.Status = "For Posting";
                 }
@@ -307,7 +307,7 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.EditedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                if (model.CustomerId != null)
+                if (model.CustomerId != 0)
                 {
                     model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
                         cancellationToken);
@@ -431,7 +431,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (currentModel.Date != null &&
                     currentModel.DateLeft != null && currentModel.TimeLeft != null && currentModel.DateArrived != null && currentModel.TimeArrived != null &&
-                    currentModel.TerminalId != null && currentModel.ServiceId != null && currentModel.TugBoatId != null && currentModel.TugMasterId != null && currentModel.VesselId != null)
+                    currentModel.TerminalId != 0 && currentModel.ServiceId != 0 && currentModel.TugBoatId != 0 && currentModel.TugMasterId != null && currentModel.VesselId != 0)
                 {
                     currentModel.Status = "For Posting";
                 }
@@ -514,7 +514,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var queried = await dbContext.MMSIDispatchTickets
                     .Include(dt => dt.Service)
                     .Include(dt => dt.Terminal)
-                    .ThenInclude(dt => dt!.Port)
+                    .ThenInclude(dt => dt.Port)
                     .Include(dt => dt.Tugboat)
                     .Include(dt => dt.TugMaster)
                     .Include(dt => dt.Vessel)
@@ -564,12 +564,12 @@ namespace IBSWeb.Areas.User.Controllers
                     .Where(dt =>
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
                         dt.DispatchNumber.ToLower().Contains(searchValue) ||
-                        dt.Service!.ServiceName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal!.TerminalName!.ToString().Contains(searchValue) == true ||
+                        dt.Service.ServiceName.ToString().Contains(searchValue) == true ||
+                        dt.Terminal.TerminalName!.ToString().Contains(searchValue) == true ||
                         dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||
-                        dt.Tugboat!.TugboatName.ToString().Contains(searchValue) == true ||
+                        dt.Tugboat.TugboatName.ToString().Contains(searchValue) == true ||
                         dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) == true ||
-                        dt.Vessel!.VesselName.ToString().Contains(searchValue) == true ||
+                        dt.Vessel.VesselName.ToString().Contains(searchValue) == true ||
                         dt.Status.Contains(searchValue) == true
                         )
                         .ToList();
@@ -925,6 +925,7 @@ namespace IBSWeb.Areas.User.Controllers
                 TugBoatId = vm.TugBoatId,
                 TugMasterId = vm.TugMasterId,
                 VesselId = vm.VesselId,
+                PortId = vm.PortId,
                 Remarks = vm.Remarks,
                 DispatchChargeType = string.Empty,
                 BAFChargeType = string.Empty,

@@ -162,33 +162,33 @@ namespace IBS.Models.MMSI
 
         #region ---Columns with Table relations---
 
-        public int? CustomerId { get; set; }
+        public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public Customer? Customer { get; set; } = null!;
 
-        public int? TugBoatId { get; set; }
+        public int TugBoatId { get; set; }
         [ForeignKey(nameof(TugBoatId))]
-        public Tugboat? Tugboat { get; set; } //carries the columns of one record
+        public Tugboat Tugboat { get; set; } = null!; //carries the columns of one record
 
         public int? TugMasterId { get; set; }
         [ForeignKey(nameof(TugMasterId))]
         public TugMaster? TugMaster { get; set; } //carries the columns of one record
 
-        public int? VesselId { get; set; }
+        public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
-        public Vessel? Vessel { get; set; } //carries the columns of one record
+        public Vessel Vessel { get; set; } = null!; //carries the columns of one record
 
-        public int? PortId { get; set; }
+        public int PortId { get; set; }
         [ForeignKey(nameof(PortId))]
-        public Port? Port { get; set; }
+        public Port Port { get; set; } = null!;
 
-        public int? TerminalId { get; set; }
+        public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
-        public Terminal? Terminal { get; set; } //carries the columns of one record
+        public Terminal Terminal { get; set; } = null!; //carries the columns of one record
 
-        public int? ServiceId { get; set; }
+        public int ServiceId { get; set; }
         [ForeignKey(nameof(ServiceId))]
-        public Service? Service { get; set; } //carries the columns of one record
+        public Service Service { get; set; } = null!; //carries the columns of one record
 
         #endregion ---Columns with Table relations---
 

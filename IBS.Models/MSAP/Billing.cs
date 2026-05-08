@@ -54,25 +54,25 @@ namespace IBS.Models.MMSI
 
         public bool IsPrincipal { get; set; }
 
-        public int? CustomerId { get; set; }
+        public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public Customer Customer { get; set; } = null!;
 
         public int? PrincipalId { get; set; }
         [ForeignKey(nameof(PrincipalId))]
         public Principal? Principal { get; set; }
 
-        public int? VesselId { get; set; }
+        public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
-        public Vessel? Vessel { get; set; }
+        public Vessel Vessel { get; set; } = null!;
 
-        public int? PortId { get; set; }
+        public int PortId { get; set; }
         [ForeignKey(nameof(PortId))]
-        public Port? Port { get; set; }
+        public Port Port { get; set; } = null!;
 
-        public int? TerminalId { get; set; }
+        public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
-        public Terminal? Terminal { get; set; }
+        public Terminal Terminal { get; set; } = null!;
 
         public decimal ApOtherTug { get; set; }
 

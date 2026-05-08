@@ -82,8 +82,36 @@ ViewData["Title"] = "MSAP Import";
                 <strong>Guidance:</strong> This is a one-time import. Upload files according to the steps below to ensure data relationships are maintained.
             </div>
 
+            @* NEW: Smart Folder Section *@
+            <div class="card bg-light border-info mb-4">
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-7">
+                            <h6 class="mb-1 fw-bold"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Smart Folder Selection</h6>
+                            <p class="text-muted small mb-0">Select your MSAP CSV folder and we'll automatically match the files for you.</p>
+                        </div>
+                        <div class="col-12 col-md-5 text-md-end mt-2 mt-md-0">
+                            <label class="btn btn-info btn-sm px-3">
+                                <i class="bi bi-folder2-open me-1"></i> Select MSAP Folder
+                                <input type="file" id="folderPicker" name="bulkFiles" webkitdirectory directory multiple style="display: none;" />
+                            </label>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAllBtn">Clear All</button>
+                        </div>
+                    </div>
+                    <div id="matchSummary" class="mt-2 d-none">
+                        <hr class="my-2" />
+                        <div class="d-flex flex-wrap gap-2" id="matchedBadges">
+                            <!-- JS will populate badges here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <form asp-action="Index" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
+                
+                @* Invisible container for folder files - We'll handle this via JS or the folderPicker if inside form *@
+                <div id="hiddenInputs"></div>
 
                 <div class="row g-4">
 
@@ -208,27 +236,116 @@ ViewData["Title"] = "MSAP Import";
 @section Scripts {
 <script>
     $(document).ready(function () {
+        const filePicker = document.getElementById('folderPicker');
         const allFileInputs = $('input[type="file"]');
+        const $summary = $('#matchSummary');
+        const $badges = $('#matchedBadges');
+        const $form = $('form');
+        const $fileCount = $('#fileCount');
+
+        const keywords = {
+            'customerFile': ['customer'],
+            'portFile': ['port'],
+            'terminalFile': ['terminal'],
+            'principalFile': ['principal'],
+            'serviceFile': ['service'],
+            'tugboatOwnerFile': ['tugboatowner'],
+            'tugboatFile': ['tugboat'],
+            'tugMasterFile': ['tugmaster', 'master'],
+            'vesselFile': ['vessel'],
+            'tariffFile': ['tariff'],
+            'dispatchTicketFile': ['dispatch'],
+            'billingFile': ['billing'],
+            'collectionFile': ['collection']
+        };
 
         function updateFileCount() {
-            const count = allFileInputs.filter(function () { return this.files.length > 0; }).length;
-            $('#fileCount').text(count > 0 ? `${count} file${count > 1 ? 's' : ''} selected` : '');
+            let count = 0;
+            // Count unique files between bulk and individual
+            const seen = new Set();
+            
+            // Check individual inputs
+            $('.import-file-input').each(function() {
+                if (this.files.length > 0) seen.add(this.name);
+            });
+            
+            // Add any recognized files from bulk that aren't manually overridden
+            if (filePicker.files.length > 0) {
+                // This is an estimation for the UI
+                $badges.children().each(function() {
+                    const label = $(this).data('key');
+                    seen.add(label);
+                });
+            }
+
+            $fileCount.text(seen.size > 0 ? `${seen.size} category file(s) ready` : '');
         }
 
-        allFileInputs.on('change', updateFileCount);
+        filePicker.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length === 0) return;
 
-        $('#clearAllBtn').on('click', function () {
-            allFileInputs.val('');
+            $badges.empty();
+            $summary.removeClass('d-none');
+            $('.import-file-input').removeClass('border-success bg-success bg-opacity-10');
+
+            const matchedNames = [];
+
+            for (let file of files) {
+                const name = file.name.toLowerCase();
+                if (!name.endsWith('.csv')) continue;
+
+                let matchedKey = null;
+
+                if (name.includes('tugboatowner')) {
+                    matchedKey = 'tugboatOwnerFile';
+                } else if (name.includes('tugboat')) {
+                    matchedKey = 'tugboatFile';
+                } else {
+                    for (const [key, kwList] of Object.entries(keywords)) {
+                        if (key === 'tugboatFile' || key === 'tugboatOwnerFile') continue;
+                        if (kwList.some(kw => name.includes(kw))) {
+                            matchedKey = key;
+                            break;
+                        }
+                    }
+                }
+
+                if (matchedKey) {
+                    const label = $(`input[name="${matchedKey}"]`).prevAll('.import-file-label').text();
+                    $badges.append(`<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1" data-key="${matchedKey}"><i class="bi bi-check-circle-fill me-1"></i> ${label}: ${file.name}</span>`);
+                    
+                    const $input = $(`input[name="${matchedKey}"]`);
+                    $input.addClass('border-success bg-success bg-opacity-10');
+                    matchedNames.push(label);
+                }
+            }
+
+            if (matchedNames.length > 0) {
+                toastr.success(`Automatically matched ${matchedNames.length} files.`);
+            }
             updateFileCount();
         });
 
-        $('form').on('submit', function () {
-            const anySelected = allFileInputs.filter(function () { return this.files.length > 0; }).length > 0;
-            if (!anySelected) {
-                alert('Please upload at least one CSV file.');
+        allFileInputs.on('change', updateFileCount);
+
+        $('#clearAllBtn').on('click', function() {
+            allFileInputs.val('');
+            $('.import-file-input').removeClass('border-success bg-success bg-opacity-10');
+            $summary.addClass('d-none');
+            $badges.empty();
+            updateFileCount();
+        });
+
+        $form.on('submit', function () {
+            const hasIndividual = $('.import-file-input').filter(function() { return $(this).val(); }).length > 0;
+            const hasFolder = filePicker.files.length > 0;
+
+            if (!hasIndividual && !hasFolder) {
+                alert('Please upload a folder or select individual CSV files.');
                 return false;
             }
-            $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Importing...');
+            $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Importing Data...');
         });
     });
 </script>

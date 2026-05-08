@@ -24,12 +24,14 @@ namespace IBS.Models.MMSI.ViewModels
         public int VesselId { get; set; }
         public string? VesselName { get; set; }
         
+        [Required]
         [Display(Name = "Port")]
-        public int? PortId { get; set; }
+        public int PortId { get; set; }
         public string? PortName { get; set; }
 
+        [Required]
         [Display(Name = "Terminal")]
-        public int? TerminalId { get; set; }
+        public int TerminalId { get; set; }
         public string? TerminalName { get; set; }
         
         [Display(Name = "COS Number")]

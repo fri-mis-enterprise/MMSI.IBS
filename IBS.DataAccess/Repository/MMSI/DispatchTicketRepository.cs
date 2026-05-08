@@ -23,7 +23,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             IQueryable<DispatchTicket> query = dbSet
                 .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel);
@@ -40,13 +40,13 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             var model =  await dbSet.Where(filter)
                 .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (model != null && model.CustomerId != 0 && model.CustomerId != null)
+            if (model != null && model.CustomerId != 0)
             {
                 model.Customer = await _db.Customers
                     .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
@@ -59,13 +59,13 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             var model = await dbSet.Where(dt => dt.DispatchTicketId == id)
                 .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (model != null && model.CustomerId != 0 && model.CustomerId != null)
+            if (model != null && model.CustomerId != 0)
             {
                 model.Customer = await _db.Customers
                     .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
@@ -89,37 +89,37 @@ namespace IBS.DataAccess.Repository.MMSI
                 {
                     entity.JobOrder = jobOrder;
                     entity.CustomerId = jobOrder.CustomerId;
-                    entity.Customer = jobOrder.Customer;
+                    entity.Customer = jobOrder.Customer!;
                     entity.VesselId = jobOrder.VesselId;
-                    entity.Vessel = jobOrder.Vessel;
+                    entity.Vessel = jobOrder.Vessel!;
                     entity.PortId = jobOrder.PortId;
-                    entity.Port = jobOrder.Port;
+                    entity.Port = jobOrder.Port!;
                     entity.TerminalId = jobOrder.TerminalId;
-                    entity.Terminal = jobOrder.Terminal;
+                    entity.Terminal = jobOrder.Terminal!;
                     entity.VoyageNumber = jobOrder.VoyageNumber;
                     entity.COSNumber = jobOrder.COSNumber;
                     entity.Date = jobOrder.Date;
                 }
             }
-            else if (entity.TerminalId.HasValue && entity.Terminal == null)
+            else if (entity.TerminalId != 0 && entity.Terminal == null)
             {
-                entity.Terminal = await _db.MMSITerminals
+                entity.Terminal = (await _db.MMSITerminals
                     .Include(t => t.Port)
-                    .FirstOrDefaultAsync(t => t.TerminalId == entity.TerminalId, cancellationToken);
-                entity.PortId = entity.Terminal?.PortId;
-                entity.Port = entity.Terminal?.Port;
+                    .FirstOrDefaultAsync(t => t.TerminalId == entity.TerminalId, cancellationToken))!;
+                entity.PortId = entity.Terminal.PortId;
+                entity.Port = entity.Terminal.Port!;
             }
 
-            if (entity.CustomerId.HasValue && entity.Customer == null)
+            if (entity.CustomerId != 0 && entity.Customer == null)
             {
-                entity.Customer = await _db.Customers.FindAsync(new object[] { entity.CustomerId.Value }, cancellationToken);
+                entity.Customer = (await _db.Customers.FindAsync(new object[] { entity.CustomerId }, cancellationToken))!;
             }
 
             if (entity is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
             {
                 var start = entity.DateLeft.Value.ToDateTime(entity.TimeLeft.Value);
                 var end = entity.DateArrived.Value.ToDateTime(entity.TimeArrived.Value);
-                
+
                 if (end <= start)
                 {
                     throw new InvalidOperationException("Arrival Date/Time must be strictly after Departure Date/Time.");
@@ -134,7 +134,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 entity.Status = "Pending";
             }
 
-            entity.CreatedBy = entity.CreatedBy ?? "System";
+            entity.CreatedBy = entity.CreatedBy;
             entity.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
             await base.AddAsync(entity, cancellationToken);
@@ -225,7 +225,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
             // Validate dates
             decimal? newTotalHours = null;
-            if (entity.DateLeft != null && entity.DateArrived != null && 
+            if (entity.DateLeft != null && entity.DateArrived != null &&
                 entity.TimeLeft != null && entity.TimeArrived != null)
             {
                 var departure = entity.DateLeft.Value.ToDateTime(entity.TimeLeft.Value);
@@ -234,7 +234,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 {
                     throw new InvalidOperationException("Date/Time Left cannot be later than Date/Time Arrived!");
                 }
-                
+
                 newTotalHours = Math.Max((decimal)(arrival - departure).TotalHours, 0.5m);
                 currentModel.TotalHours = newTotalHours.Value;
             }
@@ -265,9 +265,7 @@ namespace IBS.DataAccess.Repository.MMSI
             AddChange(nameof(entity.Remarks), currentModel.Remarks, entity.Remarks);
 
             // Business rule for company-owned tugs
-            var tugboat = entity.TugBoatId.HasValue 
-                ? await _db.MMSITugboats.FindAsync(new object[] { entity.TugBoatId.Value }, cancellationToken)
-                : null;
+            var tugboat = await _db.MMSITugboats.FindAsync(new object[] { entity.TugBoatId }, cancellationToken);
             if (currentModel.TugBoatId != entity.TugBoatId && tugboat?.IsCompanyOwned == true && currentModel.ApOtherTugs != 0)
             {
                 changes.Add($"ApOtherTugs: '{currentModel.ApOtherTugs}' -> '0'");
@@ -294,7 +292,7 @@ namespace IBS.DataAccess.Repository.MMSI
             currentModel.VesselId       = entity.VesselId;
             currentModel.Remarks        = entity.Remarks;
             currentModel.JobOrderId     = entity.JobOrderId;
-            
+
             if (!string.IsNullOrEmpty(entity.ImageName))
             {
                 AddChange(nameof(entity.ImageName), currentModel.ImageName, entity.ImageName);
@@ -342,7 +340,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             var query = dbSet
                 .Include(dt => dt.Service)
-                .Include(dt => dt.Terminal).ThenInclude(dt => dt!.Port)
+                .Include(dt => dt.Terminal).ThenInclude(dt => dt.Port)
                 .Include(dt => dt.Tugboat)
                 .Include(dt => dt.TugMaster)
                 .Include(dt => dt.Vessel)

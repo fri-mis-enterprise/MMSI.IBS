@@ -450,16 +450,14 @@ namespace IBSWeb.Areas.User.Controllers
                 id             = ticket.DispatchTicketId,
                 dispatchNumber = ticket.DispatchNumber,
                 date           = ticket.Date?.ToString("MMM dd, yyyy") ?? "-",
-                serviceName    = ticket.Service?.ServiceName,
-                tugboatName    = ticket.Tugboat?.TugboatName,
+                serviceName    = ticket.Service.ServiceName,
+                tugboatName    = ticket.Tugboat.TugboatName,
                 tugMasterName  = ticket.TugMaster?.TugMasterName,
-                location       = ticket.Terminal != null
-                    ? $"{ticket.Terminal.Port?.PortName} - {ticket.Terminal.TerminalName}"
-                    : "N/A",
-                timeStart = ticket.DateLeft.HasValue && ticket.TimeLeft.HasValue
+                location       = $"{ticket.Terminal.Port?.PortName} - {ticket.Terminal.TerminalName}",
+                timeStart = ticket is { DateLeft: not null, TimeLeft: not null }
                     ? $"{ticket.DateLeft.Value:MMM dd, yyyy} {ticket.TimeLeft.Value:HH:mm}"
                     : "-",
-                timeEnd = ticket.DateArrived.HasValue && ticket.TimeArrived.HasValue
+                timeEnd = ticket is { DateArrived: not null, TimeArrived: not null }
                     ? $"{ticket.DateArrived.Value:MMM dd, yyyy} {ticket.TimeArrived.Value:HH:mm}"
                     : "-",
                 remarks        = ticket.Remarks ?? "No remarks",
@@ -532,7 +530,7 @@ namespace IBSWeb.Areas.User.Controllers
                 })
                 .ToList();
 
-            viewModel.Terminals = viewModel.PortId.HasValue
+            viewModel.Terminals = viewModel.PortId != 0
                 ? (await unitOfWork.Terminal.GetAllAsync(t => t.PortId == viewModel.PortId,
                     cancellationToken: cancellationToken))
                     .OrderBy(t => t.TerminalName)

@@ -68,7 +68,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
             var listOfCustomerWithCollectibleBillings = billingsToBeCollected
                 .Where(t => t.Customer != null)
-                .Select(t => t.Customer!.CustomerId)
+                .Select(t => t.Customer.CustomerId)
                 .Distinct()
                 .ToList();
 
@@ -90,7 +90,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(s => new SelectListItem
                 {
                     Value = s.MMSIBillingId.ToString(),
-                    Text = $"{s.MMSIBillingNumber} - {s.Customer!.CustomerName}, {s.Date}"
+                    Text = $"{s.MMSIBillingNumber} - {s.Customer.CustomerName}, {s.Date}"
                 }).ToListAsync(cancellationToken);
 
             return billingsList;
@@ -147,7 +147,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = cashInBankTitle.AccountId,
                         AccountNo = cashInBankTitle.AccountNumber,
@@ -173,7 +173,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = cwt.AccountId,
                         AccountNo = cwt.AccountNumber,
@@ -194,7 +194,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = cwv.AccountId,
                         AccountNo = cwv.AccountNumber,
@@ -218,7 +218,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = account.AccountId,
                         AccountNo = account.AccountNumber,
@@ -241,7 +241,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = arTradeTitle.AccountId,
                         AccountNo = arTradeTitle.AccountNumber,
@@ -265,7 +265,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = arTradeCwt.AccountId,
                         AccountNo = arTradeCwt.AccountNumber,
@@ -286,7 +286,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new GeneralLedgerBook
                     {
                         Date = collection.Date,
-                        Reference = collection.MMSICollectionNumber!,
+                        Reference = collection.MMSICollectionNumber,
                         Description = "Collection for Receivable",
                         AccountId = arTradeCwv.AccountId,
                         AccountNo = arTradeCwv.AccountNumber,
@@ -312,7 +312,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 new()
                 {
                     Date = collection.Date,
-                    RefNo = collection.MMSICollectionNumber!,
+                    RefNo = collection.MMSICollectionNumber,
                     CustomerName = customerName,
                     Bank = collection.BankAccount?.Bank ?? "--",
                     CheckNo = collection.CheckNumber ?? "--",
@@ -332,7 +332,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new CashReceiptBook
                     {
                         Date = collection.Date,
-                        RefNo = collection.MMSICollectionNumber!,
+                        RefNo = collection.MMSICollectionNumber,
                         CustomerName = customerName,
                         Bank = collection.BankAccount?.Bank ?? "--",
                         CheckNo = collection.CheckNumber ?? "--",
@@ -353,7 +353,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new CashReceiptBook
                     {
                         Date = collection.Date,
-                        RefNo = collection.MMSICollectionNumber!,
+                        RefNo = collection.MMSICollectionNumber,
                         CustomerName = customerName,
                         Bank = collection.BankAccount?.Bank ?? "--",
                         CheckNo = collection.CheckNumber ?? "--",
@@ -377,7 +377,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new CashReceiptBook
                     {
                         Date = collection.Date,
-                        RefNo = collection.MMSICollectionNumber!,
+                        RefNo = collection.MMSICollectionNumber,
                         CustomerName = customerName,
                         Bank = collection.BankAccount?.Bank ?? "--",
                         CheckNo = collection.CheckNumber ?? "--",
@@ -396,7 +396,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 new CashReceiptBook
                 {
                     Date = collection.Date,
-                    RefNo = collection.MMSICollectionNumber!,
+                    RefNo = collection.MMSICollectionNumber,
                     CustomerName = customerName,
                     Bank = collection.BankAccount?.Bank ?? "--",
                     CheckNo = collection.CheckNumber ?? "--",
@@ -416,7 +416,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new CashReceiptBook
                     {
                         Date = collection.Date,
-                        RefNo = collection.MMSICollectionNumber!,
+                        RefNo = collection.MMSICollectionNumber,
                         CustomerName = customerName,
                         Bank = collection.BankAccount?.Bank ?? "--",
                         CheckNo = collection.CheckNumber ?? "--",
@@ -437,7 +437,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     new CashReceiptBook
                     {
                         Date = collection.Date,
-                        RefNo = collection.MMSICollectionNumber!,
+                        RefNo = collection.MMSICollectionNumber,
                         CustomerName = customerName,
                         Bank = collection.BankAccount?.Bank ?? "--",
                         CheckNo = collection.CheckNumber ?? "--",
@@ -473,7 +473,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 new GeneralLedgerBook
                 {
                     Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber!,
+                    Reference = collection.MMSICollectionNumber,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,
                     AccountNo = cashInBankTitle.AccountNumber,
@@ -496,7 +496,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 new GeneralLedgerBook
                 {
                     Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber!,
+                    Reference = collection.MMSICollectionNumber,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,
                     AccountNo = cashInBankTitle.AccountNumber,
@@ -565,7 +565,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 ledgers.Add(new GeneralLedgerBook
                 {
                     Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber!,
+                    Reference = collection.MMSICollectionNumber,
                     Description = description,
                     AccountId = cashInBankTitle.AccountId,
                     AccountNo = cashInBankTitle.AccountNumber,
@@ -589,7 +589,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 ledgers.Add(new GeneralLedgerBook
                 {
                     Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber!,
+                    Reference = collection.MMSICollectionNumber,
                     Description = description,
                     AccountId = arTradeTitle.AccountId,
                     AccountNo = arTradeTitle.AccountNumber,

@@ -22,7 +22,7 @@ namespace IBS.Models.MMSI.ViewModels
         [StringLength(100)]
         public string? VoyageNumber { get; set; }
 
-        public int? CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
         public DateOnly? DateLeft { get; set; }
 
@@ -32,20 +32,20 @@ namespace IBS.Models.MMSI.ViewModels
 
         public TimeOnly? TimeArrived { get; set; }
 
-        public int? TerminalId { get; set; }
+        public int TerminalId { get; set; }
 
         [ForeignKey(nameof(TerminalId))]
         public Terminal? Terminal { get; set; }
 
-        public int? PortId { get; set; }
+        public int PortId { get; set; }
 
-        public int? ServiceId { get; set; }
+        public int ServiceId { get; set; }
 
-        public int? TugBoatId { get; set; }
+        public int TugBoatId { get; set; }
 
         public int? TugMasterId { get; set; }
 
-        public int? VesselId { get; set; }
+        public int VesselId { get; set; }
 
         public string? ImageName { get; set; }
 
