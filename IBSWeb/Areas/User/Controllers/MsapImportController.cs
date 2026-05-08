@@ -77,6 +77,9 @@ namespace IBSWeb.Areas.User.Controllers
                 var collectionMap = new Dictionary<string, int>();// MsapNumber -> IbsCollectionId
                 var billingMap = new Dictionary<string, int>();  // MsapNumber -> IbsBillingId
 
+                // Pre-load maps from existing database records to support partial uploads
+                await LoadMsapMapsAsync(customerMap, portMap, serviceMap, ownerMap, tugboatMap, tugMasterMap, vesselMap, terminalMap, principalMap, collectionMap, billingMap, CancellationToken.None);
+
                 // Level 1: Independent
                 if (customerFile != null)
                 {
@@ -266,6 +269,56 @@ namespace IBSWeb.Areas.User.Controllers
             return int.TryParse(value, out var n)
                 ? n.ToString($"D{width}")
                 : value.PadLeft(width, '0');
+        }
+
+        private async Task LoadMsapMapsAsync(
+            Dictionary<string, int> customerMap,
+            Dictionary<string, int> portMap,
+            Dictionary<string, int> serviceMap,
+            Dictionary<string, int> ownerMap,
+            Dictionary<string, int> tugboatMap,
+            Dictionary<string, int> tugMasterMap,
+            Dictionary<string, int> vesselMap,
+            Dictionary<string, int> terminalMap,
+            Dictionary<string, int> principalMap,
+            Dictionary<string, int> collectionMap,
+            Dictionary<string, int> billingMap,
+            CancellationToken cancellationToken)
+        {
+            // Note: Since MSAP numbers are not stored in our DB for most entities (we only used them for mapping during import),
+            // this pre-loading is only useful if we are running multiple imports in the same session.
+            // For a "one-time" import, these will likely be empty unless we store the MSAP mapping somewhere.
+            // However, some entities DO have their original numbers (like PortNumber, ServiceNumber, etc.)
+            
+            var ports = await dbContext.MMSIPorts.AsNoTracking().Where(x => x.PortNumber != null).ToListAsync(cancellationToken);
+            foreach (var p in ports) portMap[p.PortNumber!] = p.PortId;
+
+            var services = await dbContext.MMSIServices.AsNoTracking().ToListAsync(cancellationToken);
+            foreach (var s in services) serviceMap[s.ServiceNumber] = s.ServiceId;
+
+            var owners = await dbContext.MMSITugboatOwners.AsNoTracking().ToListAsync(cancellationToken);
+            foreach (var o in owners) ownerMap[o.TugboatOwnerNumber] = o.TugboatOwnerId;
+
+            var masters = await dbContext.MMSITugMasters.AsNoTracking().Where(x => x.TugMasterNumber != null).ToListAsync(cancellationToken);
+            foreach (var m in masters) tugMasterMap[m.TugMasterNumber!] = m.TugMasterId;
+
+            var vessels = await dbContext.MMSIVessels.AsNoTracking().Where(x => x.VesselNumber != null).ToListAsync(cancellationToken);
+            foreach (var v in vessels) vesselMap[v.VesselNumber!] = v.VesselId;
+
+            var tugboats = await dbContext.MMSITugboats.AsNoTracking().Where(x => x.TugboatNumber != null).ToListAsync(cancellationToken);
+            foreach (var t in tugboats) tugboatMap[t.TugboatNumber!] = t.TugboatId;
+
+            var terminals = await dbContext.MMSITerminals.Include(t => t.Port).AsNoTracking().ToListAsync(cancellationToken);
+            foreach (var t in terminals) terminalMap[$"{t.Port!.PortNumber}{t.TerminalNumber}"] = t.TerminalId;
+
+            var billings = await dbContext.Billings.AsNoTracking().Where(x => x.MMSIBillingNumber != null).ToListAsync(cancellationToken);
+            foreach (var b in billings) billingMap[b.MMSIBillingNumber!] = b.MMSIBillingId;
+
+            var collections = await dbContext.MMSICollections.AsNoTracking().Where(x => x.MMSICollectionNumber != null).ToListAsync(cancellationToken);
+            foreach (var c in collections) collectionMap[c.MMSICollectionNumber!] = c.MMSICollectionId;
+            
+            // Customers are tricky because we don't store MSAP Number in Customer table.
+            // But we can match by name if needed, or assume customerMap is only for the current session.
         }
 
         #endregion
@@ -867,7 +920,7 @@ namespace IBSWeb.Areas.User.Controllers
                 DateOnly asOfDate = asOfDateNullable.Value;
 
                 string? custNo = GetString(record, "custno");
-                if (custNo == null || !customerMap.TryGetValue(custNo, out int customerId))
+                if (custNo == null || !customerMap.TryGetValue(PadNumber(custNo, 4), out int customerId))
                 {
                     continue;
                 }
@@ -879,7 +932,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 string serviceNum = GetString(record, "service") ?? string.Empty;
-                if (!serviceMap.TryGetValue(serviceNum, out int serviceId))
+                if (!serviceMap.TryGetValue(PadNumber(serviceNum, 3), out int serviceId))
                 {
                     continue;
                 }
