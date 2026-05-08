@@ -38,138 +38,153 @@ ViewData["Title"] = "MSAP Import";
         flex-shrink: 0;
     }
 
-    .badge-required {
+    .badge-step1 {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+
+    .badge-step2 {
         background: #fef3c7;
         color: #92400e;
         border: 1px solid #fde68a;
     }
 
-    .badge-optional {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
+    .badge-step3 {
+        background: #fdf2f8;
+        color: #9d174d;
+        border: 1px solid #fbcfe8;
     }
 
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
+    .badge-dependency {
+        background: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+        font-style: italic;
+    }
+
+    .section-header small {
+        font-size: 0.75rem;
+        font-weight: normal;
+        color: #6b7280;
     }
 </style>
 
-<div class="container-fluid mt-4" style="max-width: 900px;">
+<div class="container-fluid mt-4" style="max-width: 1000px;">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
     </div>
 
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-4">
-            <p class="text-muted small mb-4">
-                Upload CSV files for the data you want to import. Leave a field empty to skip it.
-                <strong>Customer CSV is required</strong> when importing Principals, Tariffs, Dispatch Tickets, Billings, or Collections.
-            </p>
+            <div class="alert alert-info py-2 px-3 small mb-4">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Guidance:</strong> This is a one-time import. Upload files according to the steps below to ensure data relationships are maintained.
+            </div>
 
             <form asp-action="Index" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
                 <div class="row g-4">
 
-                    @* Master Files *@
-                    <div class="col-12 col-md-6">
+                    @* Step 1: Foundation *@
+                    <div class="col-12">
                         <div class="section-header">
-                            <h5 class="m-0 fw-semibold">Master Files</h5>
+                            <h5 class="m-0 fw-semibold text-primary">Step 1: Foundational Data</h5>
+                            <span class="file-badge badge-step1">Level 1 - Core Masterfiles</span>
                         </div>
                         <div class="border rounded p-3 bg-light bg-opacity-50">
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Customer</span>
-                                <span class="file-badge badge-required">Shared</span>
-                                <input type="file" name="customerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            <div class="row">
+                                <div class="col-12 col-md-6 border-end">
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Customer</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="customerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Port</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="portFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Service</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="serviceFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6 ps-md-4">
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Tugboat Owner</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="tugboatOwnerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Tug Master</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="tugMasterFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Vessel</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="vesselFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                </div>
                             </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Port</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="portFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Terminal</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="terminalFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Principal</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="principalFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Service</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="serviceFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Tugboat Owner</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="tugboatOwnerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Tugboat</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="tugboatFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Tug Master</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="tugMasterFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Vessel</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="vesselFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
                         </div>
                     </div>
 
-                    @* Data Entries *@
+                    @* Step 2: Dependencies *@
                     <div class="col-12 col-md-6">
                         <div class="section-header">
-                            <h5 class="m-0 fw-semibold">Data Entries</h5>
+                            <h5 class="m-0 fw-semibold text-warning">Step 2: Sub-Masters</h5>
+                            <span class="file-badge badge-step2">Level 2 - Requires Step 1</span>
                         </div>
                         <div class="border rounded p-3 bg-light bg-opacity-50">
-
                             <div class="import-file-row">
-                                <span class="import-file-label">Tariff</span>
-                                <span class="file-badge badge-optional">Optional</span>
+                                <span class="import-file-label">Terminal</span>
+                                <span class="file-badge badge-dependency">Needs Port</span>
+                                <input type="file" name="terminalFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Tugboat</span>
+                                <span class="file-badge badge-dependency">Needs Owner</span>
+                                <input type="file" name="tugboatFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Principal</span>
+                                <span class="file-badge badge-dependency">Needs Customer</span>
+                                <input type="file" name="principalFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Step 3: Mixed Dependencies *@
+                    <div class="col-12 col-md-6">
+                        <div class="section-header">
+                            <h5 class="m-0 fw-semibold text-danger">Step 3: Tariffs & Records</h5>
+                            <span class="file-badge badge-step3">Level 3+ - Requires Steps 1-2</span>
+                        </div>
+                        <div class="border rounded p-3 bg-light bg-opacity-50">
+                            <div class="import-file-row">
+                                <span class="import-file-label">Tariff Rate</span>
+                                <span class="file-badge badge-dependency">Needs Customer/Terminal</span>
                                 <input type="file" name="tariffFile" accept=".csv" class="form-control form-control-sm import-file-input" />
                             </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Dispatch Ticket</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="dispatchTicketFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
-                            <div class="import-file-row">
-                                <span class="import-file-label">Billing</span>
-                                <span class="file-badge badge-optional">Optional</span>
-                                <input type="file" name="billingFile" accept=".csv" class="form-control form-control-sm import-file-input" />
-                            </div>
-
                             <div class="import-file-row">
                                 <span class="import-file-label">Collection</span>
-                                <span class="file-badge badge-optional">Optional</span>
+                                <span class="file-badge badge-dependency">Needs Customer</span>
                                 <input type="file" name="collectionFile" accept=".csv" class="form-control form-control-sm import-file-input" />
                             </div>
-
+                            <div class="import-file-row">
+                                <span class="import-file-label">Billing</span>
+                                <span class="file-badge badge-dependency">Needs Everything</span>
+                                <input type="file" name="billingFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
+                                <span class="import-file-label">Dispatch Ticket</span>
+                                <span class="file-badge badge-dependency">Needs Everything</span>
+                                <input type="file" name="dispatchTicketFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
                         </div>
                     </div>
 
