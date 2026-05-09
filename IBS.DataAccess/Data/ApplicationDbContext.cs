@@ -80,6 +80,9 @@ namespace IBS.DataAccess.Data
         public DbSet<DispatchTicket> MMSIDispatchTickets { get; set; }
         public DbSet<JobOrder> MMSIJobOrders { get; set; }
         public DbSet<TariffRate> MMSITariffRates { get; set; }
+        public DbSet<BillDispatch> MMSIBillDispatches { get; set; }
+        public DbSet<BillAdjust> MMSIBillAdjustments { get; set; }
+        public DbSet<CollectionBill> MMSICollectionBills { get; set; }
 
         #endregion
 
@@ -94,6 +97,8 @@ namespace IBS.DataAccess.Data
         public DbSet<TugMaster> MMSITugMasters { get; set; }
         public DbSet<UserAccess> MMSIUserAccesses { get; set; }
         public DbSet<Vessel> MMSIVessels { get; set; }
+        public DbSet<Rate> MMSIRates { get; set; }
+        public DbSet<Module> MMSIModules { get; set; }
 
         #endregion --Master File Entities
 

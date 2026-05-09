@@ -25,6 +25,15 @@ namespace IBS.Models.MasterFile
         [StringLength(200)]
         public string CustomerAddress { get; set; } = null!;
 
+        [StringLength(100)]
+        public string? Address1 { get; set; }
+
+        [StringLength(100)]
+        public string? Address2 { get; set; }
+
+        [StringLength(100)]
+        public string? Address3 { get; set; }
+
         [Required]
         [Display(Name = "TIN No")]
         [RegularExpression(@"\d{3}-\d{3}-\d{3}-\d{5}", ErrorMessage = "Invalid TIN number format.")]

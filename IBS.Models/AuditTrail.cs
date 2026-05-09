@@ -20,5 +20,8 @@ namespace IBS.Models
 
         [Display(Name = "Document Type")]
         public string DocumentType { get; set; } = documentType;
+
+        [Display(Name = "Record Id")]
+        public int? RecordId { get; set; }
     }
 }

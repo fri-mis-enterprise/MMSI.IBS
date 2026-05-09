@@ -15,5 +15,9 @@ namespace IBS.Models.MMSI.MasterFile
         [StringLength(100, ErrorMessage = "Service name cannot exceed 100 characters.")]
         [Column(TypeName = "varchar(100)")]
         public string ServiceName { get; set; } = null!;
+
+        [StringLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        public string? ServiceType { get; set; }
     }
 }

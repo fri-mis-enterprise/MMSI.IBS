@@ -10,6 +10,10 @@ namespace IBS.Models.MasterFile
         public int BankAccountId { get; set; }
 
         [StringLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        public string? BankAccountCode { get; set; }
+
+        [StringLength(10)]
         public string Bank { get; set; } = null!;
 
         [StringLength(200)]

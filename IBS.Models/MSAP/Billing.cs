@@ -9,9 +9,10 @@ namespace IBS.Models.MMSI
     public class Billing : BaseEntity
     {
         [Key]
+        [Column("RECID")]
         public int MMSIBillingId { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column("NUMBER", TypeName = "varchar(10)")]
         public string MMSIBillingNumber
         {
             get => _billingNumber;
@@ -20,13 +21,14 @@ namespace IBS.Models.MMSI
 
         private string _billingNumber = null!;
 
+        [Column("DATE")]
         public DateOnly Date { get; set; }
 
         public string Status { get; set; } = null!;
 
         public bool IsUndocumented { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column("CUSTNO", TypeName = "varchar(10)")]
         public string BilledTo { get; set; } = null!;
 
         public string? VoyageNumber
@@ -37,7 +39,7 @@ namespace IBS.Models.MMSI
 
         private string? _voyageNumber;
 
-        [Column(TypeName = "numeric(18,4)")]
+        [Column("AMOUNT", TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
@@ -54,6 +56,7 @@ namespace IBS.Models.MMSI
 
         public bool IsPrincipal { get; set; }
 
+        [Column("CUSTNO_FK")] // Keeping CustomerId but noting it links to CUSTNO logic
         public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public Customer Customer { get; set; } = null!;
@@ -62,20 +65,24 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(PrincipalId))]
         public Principal? Principal { get; set; }
 
+        [Column("VESSELNUM")]
         public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
         public Vessel Vessel { get; set; } = null!;
 
+        [Column("PORTNUM")]
         public int PortId { get; set; }
         [ForeignKey(nameof(PortId))]
         public Port Port { get; set; } = null!;
 
+        [Column("TERMINAL")]
         public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public Terminal Terminal { get; set; } = null!;
 
         public decimal ApOtherTug { get; set; }
 
+        [Column("VAT")]
         public bool IsVatable { get; set; }
 
         public bool IsPrinted { get; set; }
@@ -139,6 +146,7 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(JobOrderId))]
         public JobOrder? JobOrder { get; set; }
 
+        [Column("CRNUM")]
         public int? CollectionId { get; set; }
 
         [ForeignKey(nameof(CollectionId))]

@@ -18,6 +18,11 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(CustomerId))]
         public Customer? Customer { get; set; }
 
+        public int PortId { get; set; }
+
+        [ForeignKey(nameof(PortId))]
+        public Port? Port { get; set; }
+
         public int TerminalId { get; set; }
 
         [ForeignKey(nameof(TerminalId))]

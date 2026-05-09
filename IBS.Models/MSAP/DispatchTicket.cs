@@ -9,12 +9,14 @@ namespace IBS.Models.MMSI
     public class DispatchTicket
     {
         [Key]
+        [Column("RECID")]
         public int DispatchTicketId { get; set; }
 
+        [Column("DATE")]
         [Display(Name = "Date")]
         public DateOnly? Date { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column("NUMBER", TypeName = "varchar(20)")]
         public string DispatchNumber
         {
             get => _dispatchNumber;
@@ -154,6 +156,7 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(JobOrderId))]
         public JobOrder? JobOrder { get; set; }
 
+        [Column("BILLNUM")]
         public int? BillingId { get; set; }
         [ForeignKey(nameof(BillingId))]
         public Billing? Billing { get; set; }
@@ -162,26 +165,32 @@ namespace IBS.Models.MMSI
 
         #region ---Columns with Table relations---
 
+        [Column("CUSTNO")]
         public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public Customer? Customer { get; set; } = null!;
 
+        [Column("TUGNUM")]
         public int TugBoatId { get; set; }
         [ForeignKey(nameof(TugBoatId))]
         public Tugboat Tugboat { get; set; } = null!; //carries the columns of one record
 
+        [Column("MASTERNO")]
         public int? TugMasterId { get; set; }
         [ForeignKey(nameof(TugMasterId))]
         public TugMaster? TugMaster { get; set; } //carries the columns of one record
 
+        [Column("VESSELNUM")]
         public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
         public Vessel Vessel { get; set; } = null!; //carries the columns of one record
 
+        [Column("PORTNUM")]
         public int PortId { get; set; }
         [ForeignKey(nameof(PortId))]
         public Port Port { get; set; } = null!;
 
+        [Column("TERMINAL")]
         public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public Terminal Terminal { get; set; } = null!; //carries the columns of one record

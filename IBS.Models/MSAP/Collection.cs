@@ -7,8 +7,10 @@ namespace IBS.Models.MMSI
     public class Collection : BaseEntity
     {
         [Key]
+        [Column("RECID")]
         public int MMSICollectionId { get; set; }
 
+        [Column("CRNUM")]
         [Display(Name = "Collection Receipt #")]
         public string MMSICollectionNumber
         {
@@ -25,6 +27,7 @@ namespace IBS.Models.MMSI
         public string? Status { get; set; }
 
         [Required]
+        [Column("CRDATE")]
         [Display(Name = "Transaction Date")]
         public DateOnly Date { get; set; }
 
@@ -36,9 +39,10 @@ namespace IBS.Models.MMSI
         public decimal CashAmount { get; set; }
 
         // Check
-        [Column(TypeName = "date")]
+        [Column("CHECKDATE", TypeName = "date")]
         public DateOnly? CheckDate { get; set; }
 
+        [Column("CHECKNO")]
         [StringLength(50)]
         public string? CheckNumber { get; set; }
 
@@ -51,6 +55,7 @@ namespace IBS.Models.MMSI
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
 
+        [Column("BANKACCTCO")]
         public int? BankId { get; set; }
 
         [ForeignKey(nameof(BankId))]
@@ -62,7 +67,7 @@ namespace IBS.Models.MMSI
         [StringLength(30)]
         public string? BankAccountNumber { get; set; }
 
-        [Column(TypeName = "numeric(18,4)")]
+        [Column("AMOUNT", TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; } // This seems to be Total Amount
 
         [Column(TypeName = "numeric(18,4)")]
@@ -74,6 +79,7 @@ namespace IBS.Models.MMSI
         [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 
+        [Column("CUSTNO")]
         public int CustomerId { get; set; }
 
         public bool IsUndocumented { get; set; }
