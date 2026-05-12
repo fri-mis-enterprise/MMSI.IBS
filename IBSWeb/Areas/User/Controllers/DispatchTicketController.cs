@@ -13,6 +13,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.User.Controllers
 {
+    /// <summary>
+    /// Controller for managing Dispatch Tickets in the MMSI system.
+    /// </summary>
     [Area("User")]
     public class DispatchTicketController(
         ApplicationDbContext dbContext,
@@ -21,12 +24,11 @@ namespace IBSWeb.Areas.User.Controllers
         ILogger<DispatchTicketController> logger)
         : Controller
     {
+        #region Index
 
-
-        // ════════════════════════════════════════════════════════════════════════
-        // INDEX
-        // ════════════════════════════════════════════════════════════════════════
-
+        /// <summary>
+        /// Displays the list of Dispatch Tickets.
+        /// </summary>
         [RequireAnyAccess(
             "Access denied. You don't have permission to access Dispatch Tickets.",
             "DispatchTicket",
@@ -41,10 +43,13 @@ namespace IBSWeb.Areas.User.Controllers
             return Task.FromResult<IActionResult>(View(Enumerable.Empty<DispatchTicket>()));
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // CREATE
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Create
+
+        /// <summary>
+        /// Displays the form to create a new Dispatch Ticket.
+        /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
         public async Task<IActionResult> Create(int? jobOrderId, CancellationToken cancellationToken = default)
@@ -74,6 +79,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Processes the creation of a new Dispatch Ticket, including file uploads.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
         public async Task<IActionResult> Create(
@@ -138,10 +146,13 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // PREVIEW
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Preview
+
+        /// <summary>
+        /// Displays a preview of a specific Dispatch Ticket, including signed URLs for media.
+        /// </summary>
         [RequireAnyAccess(
             "Access denied. You don't have permission to view Dispatch Tickets.",
             "DispatchTicket",
@@ -166,10 +177,13 @@ namespace IBSWeb.Areas.User.Controllers
             return View(model);
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // SET TARIFF
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Set Tariff
+
+        /// <summary>
+        /// Displays the form to set the tariff for a Dispatch Ticket.
+        /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
         public async Task<IActionResult> SetTariff(int id, string filterType, CancellationToken cancellationToken)
@@ -191,6 +205,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(model);
         }
 
+        /// <summary>
+        /// Processes the saving of the tariff for a Dispatch Ticket.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
         public async Task<IActionResult> SetTariff(
@@ -209,10 +226,13 @@ namespace IBSWeb.Areas.User.Controllers
                 cancellationToken: cancellationToken);
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // EDIT TARIFF
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Edit Tariff
+
+        /// <summary>
+        /// Displays the form to edit the tariff for a Dispatch Ticket.
+        /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
         public async Task<IActionResult> EditTariff(int id, string filterType, CancellationToken cancellationToken)
@@ -234,6 +254,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(model);
         }
 
+        /// <summary>
+        /// Processes the update of the tariff for a Dispatch Ticket.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
         public async Task<IActionResult> EditTariff(
@@ -252,10 +275,13 @@ namespace IBSWeb.Areas.User.Controllers
                 cancellationToken: cancellationToken);
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // EDIT TICKET
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Edit Ticket
+
+        /// <summary>
+        /// Displays the form to edit basic information of a Dispatch Ticket.
+        /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.", "DispatchTicket")]
         public async Task<IActionResult> EditTicket(
@@ -263,8 +289,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             ViewBag.FilterType = filterType;
 
-            // FIX: load the ticket once and reuse it for the editability check,
-            // avoiding the extra DB hit that IsTicketJobOrderEditableAsync would cause.
+            // Load the ticket once and reuse it for the editability check to optimize DB hits.
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (model == null)
             {
@@ -320,6 +345,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Processes the update of basic information for a Dispatch Ticket.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.", "DispatchTicket")]
         public async Task<IActionResult> EditTicket(
@@ -384,10 +412,13 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // STATUS-CHANGE ACTIONS  (Approve / RevokeApproval / Disapprove / Cancel)
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
+        #region Status Changes
+
+        /// <summary>
+        /// General endpoint for changing the status of a Dispatch Ticket.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.ApproveTariff)]
         public async Task<IActionResult> ChangeStatus(int id, string status, string activity, string docType, string successMessage, CancellationToken cancellationToken)
@@ -405,27 +436,78 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // CHANGE TERMINAL  (JSON endpoint for cascading dropdown)
-        // ════════════════════════════════════════════════════════════════════════
+        /// <summary>
+        /// Approves the tariff for a Dispatch Ticket, moving it to 'For Billing'.
+        /// </summary>
+        [HttpPost]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
+        public async Task<IActionResult> ApproveTariff(int id, CancellationToken cancellationToken)
+        {
+            if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
+            {
+                return Json(new { success = false, message = "Cannot approve tariff — parent Job Order is cancelled or closed." });
+            }
 
+            return await ChangeTicketStatusJsonAsync(
+                id,
+                newStatus: "For Billing",
+                auditActivity: m => $"Approved tariff for dispatch ticket #{m.DispatchNumber}",
+                cancellationToken: cancellationToken);
+        }
+
+        /// <summary>
+        /// Disapproves the tariff for a Dispatch Ticket, requiring a reason.
+        /// </summary>
+        [HttpPost]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
+        public async Task<IActionResult> DisapproveTariff(int id, string reason, CancellationToken cancellationToken)
+        {
+            if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
+            {
+                return Json(new { success = false, message = "Cannot disapprove tariff — parent Job Order is cancelled or closed." });
+            }
+
+            if (string.IsNullOrWhiteSpace(reason) || reason.Length < 10)
+            {
+                return Json(new { success = false, message = "Please provide a detailed reason (at least 10 characters)" });
+            }
+
+            return await ChangeTicketStatusJsonAsync(
+                id,
+                newStatus: "Disapproved",
+                auditActivity: m => $"Disapproved tariff for dispatch ticket #{m.DispatchNumber}. Reason: {reason}",
+                cancellationToken: cancellationToken,
+                beforeSave: m =>
+                {
+                    m.Remarks = string.IsNullOrEmpty(m.Remarks)
+                        ? $"Disapproved: {reason}"
+                        : $"{m.Remarks} | Disapproved: {reason}";
+                });
+        }
+
+        #endregion
+
+        #region AJAX Endpoints
+
+        /// <summary>
+        /// Retrieves terminals for a specific port for cascading dropdowns.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
             var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
-            var list      = terminals.Select(t => new SelectListItem
+            var list = terminals.Select(t => new SelectListItem
             {
                 Value = t.TerminalId.ToString(),
-                Text  = t.TerminalName
+                Text = t.TerminalName
             }).ToList();
 
             return Json(list);
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // GET DISPATCH TICKET LIST  (simple JSON — not DataTables)
-        // ════════════════════════════════════════════════════════════════════════
-
+        /// <summary>
+        /// Retrieves a list of Dispatch Tickets filtered by status.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken)
         {
@@ -438,10 +520,10 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(items);
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // GET DISPATCH TICKET LISTS  (DataTables POST)
-        // ════════════════════════════════════════════════════════════════════════
-
+        /// <summary>
+        /// Retrieves a paged and filtered list of Dispatch Tickets for DataTables.
+        /// Includes signed URLs for media attachments.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> GetDispatchTicketLists(
             [FromForm] DataTablesParameters parameters,
@@ -478,11 +560,60 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // DELETE IMAGE
-        // ════════════════════════════════════════════════════════════════════════
+        /// <summary>
+        /// Checks if a tariff rate exists for a given customer and Dispatch Ticket criteria.
+        /// </summary>
+        public async Task<IActionResult> CheckForTariffRate(
+            int customerId, int dispatchTicketId, CancellationToken cancellationToken)
+        {
+            var dispatchModel = await unitOfWork.DispatchTicket
+                .GetAsync(dt => dt.DispatchTicketId == dispatchTicketId, cancellationToken);
+            if (dispatchModel == null)
+            {
+                return NotFound();
+            }
 
-        // FIX: accept filterType so the user lands back on the correct filtered view
+            var tariffRate =
+                await unitOfWork.TariffTable.GetAsync(t =>
+                        t.CustomerId == customerId &&
+                        t.TerminalId == dispatchModel.TerminalId &&
+                        t.ServiceId == dispatchModel.ServiceId &&
+                        t.AsOfDate <= dispatchModel.DateLeft,
+                    cancellationToken)
+                ??
+                await unitOfWork.TariffTable.GetAsync(t =>
+                        t.CustomerId == customerId &&
+                        t.TerminalId == dispatchModel.TerminalId &&
+                        t.AsOfDate <= dispatchModel.DateLeft,
+                    cancellationToken)
+                ??
+                await unitOfWork.TariffTable.GetAsync(t =>
+                        t.CustomerId == customerId &&
+                        t.AsOfDate <= dispatchModel.DateLeft,
+                    cancellationToken);
+
+            if (tariffRate != null)
+            {
+                return Json(new
+                {
+                    tariffRate.Dispatch,
+                    tariffRate.BAF,
+                    tariffRate.DispatchDiscount,
+                    tariffRate.BAFDiscount,
+                    Exists = true
+                });
+            }
+
+            return Json(new { Exists = false });
+        }
+
+        #endregion
+
+        #region Media Management
+
+        /// <summary>
+        /// Deletes the associated image from a Dispatch Ticket and cloud storage.
+        /// </summary>
         public async Task<IActionResult> DeleteImage(int id, string filterType, CancellationToken cancellationToken)
         {
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -514,107 +645,13 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        // ════════════════════════════════════════════════════════════════════════
-        // CHECK FOR TARIFF RATE
-        // ════════════════════════════════════════════════════════════════════════
+        #endregion
 
-        public async Task<IActionResult> CheckForTariffRate(
-            int customerId, int dispatchTicketId, CancellationToken cancellationToken)
-        {
-            var dispatchModel = await unitOfWork.DispatchTicket
-                .GetAsync(dt => dt.DispatchTicketId == dispatchTicketId, cancellationToken);
-            if (dispatchModel == null)
-            {
-                return NotFound();
-            }
+        #region Private Helpers
 
-            var tariffRate =
-                await unitOfWork.TariffTable.GetAsync(t =>
-                        t.CustomerId == customerId &&
-                        t.TerminalId == dispatchModel.TerminalId &&
-                        t.ServiceId  == dispatchModel.ServiceId &&
-                        t.AsOfDate   <= dispatchModel.DateLeft,
-                    cancellationToken)
-                ??
-                await unitOfWork.TariffTable.GetAsync(t =>
-                        t.CustomerId == customerId &&
-                        t.TerminalId == dispatchModel.TerminalId &&
-                        t.AsOfDate   <= dispatchModel.DateLeft,
-                    cancellationToken)
-                ??
-                await unitOfWork.TariffTable.GetAsync(t =>
-                        t.CustomerId == customerId &&
-                        t.AsOfDate   <= dispatchModel.DateLeft,
-                    cancellationToken);
-
-            if (tariffRate != null)
-            {
-                return Json(new
-                {
-                    tariffRate.Dispatch,
-                    tariffRate.BAF,
-                    tariffRate.DispatchDiscount,
-                    tariffRate.BAFDiscount,
-                    Exists = true
-                });
-            }
-
-            return Json(new { Exists = false });
-        }
-
-        // ════════════════════════════════════════════════════════════════════════
-        // APPROVE/DISAPPROVE TARIFF (POST actions for modal)
-        // FIX: shared the same transaction/audit scaffold. Unified via
-        //      ChangeTicketStatusJsonAsync.
-        // ════════════════════════════════════════════════════════════════════════
-
-        [HttpPost]
-        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
-        public async Task<IActionResult> ApproveTariff(int id, CancellationToken cancellationToken)
-        {
-            if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
-            {
-                return Json(new { success = false, message = "Cannot approve tariff — parent Job Order is cancelled or closed." });
-            }
-
-            return await ChangeTicketStatusJsonAsync(
-                id,
-                newStatus:     "For Billing",
-                auditActivity: m => $"Approved tariff for dispatch ticket #{m.DispatchNumber}",
-                cancellationToken: cancellationToken);
-        }
-
-        [HttpPost]
-        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
-        public async Task<IActionResult> DisapproveTariff(int id, string reason, CancellationToken cancellationToken)
-        {
-            if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
-            {
-                return Json(new { success = false, message = "Cannot disapprove tariff — parent Job Order is cancelled or closed." });
-            }
-
-            if (string.IsNullOrWhiteSpace(reason) || reason.Length < 10)
-            {
-                return Json(new { success = false, message = "Please provide a detailed reason (at least 10 characters)" });
-            }
-
-            return await ChangeTicketStatusJsonAsync(
-                id,
-                newStatus: "Disapproved",
-                auditActivity: m => $"Disapproved tariff for dispatch ticket #{m.DispatchNumber}. Reason: {reason}",
-                cancellationToken: cancellationToken,
-                beforeSave: m =>
-                {
-                    m.Remarks = string.IsNullOrEmpty(m.Remarks)
-                        ? $"Disapproved: {reason}"
-                        : $"{m.Remarks} | Disapproved: {reason}";
-                });
-        }
-
-        // ════════════════════════════════════════════════════════════════════════
-        // PRIVATE HELPERS (minimal set)
-        // ════════════════════════════════════════════════════════════════════════
-
+        /// <summary>
+        /// Validates that the arrival time is after the departure time.
+        /// </summary>
         private static bool IsArrivalAfterDeparture(DispatchTicket model)
         {
             if (model.DateLeft == null || model.DateArrived == null || model.TimeLeft == null || model.TimeArrived == null)
@@ -625,6 +662,9 @@ namespace IBSWeb.Areas.User.Controllers
             return arrival > departure;
         }
 
+        /// <summary>
+        /// Helper method to save tariff information and handle audit trails.
+        /// </summary>
         private async Task<IActionResult> SaveTariffAsync(
             DispatchTicket model,
             string chargeType,
@@ -647,11 +687,17 @@ namespace IBSWeb.Areas.User.Controllers
             return RedirectToAction(nameof(Index), new { filterType });
         }
 
+        /// <summary>
+        /// Checks if the parent Job Order is in an editable state.
+        /// </summary>
         private async Task<bool> IsJobOrderEditableAsync(int? jobOrderId, CancellationToken cancellationToken)
         {
             return await unitOfWork.DispatchTicket.IsJobOrderEditableAsync(jobOrderId, cancellationToken);
         }
 
+        /// <summary>
+        /// Checks if the Job Order associated with a specific ticket is editable.
+        /// </summary>
         private async Task<bool> IsTicketJobOrderEditableAsync(int dispatchTicketId, CancellationToken cancellationToken)
         {
             var ticket = await unitOfWork.DispatchTicket.GetAsync(
@@ -659,6 +705,9 @@ namespace IBSWeb.Areas.User.Controllers
             return ticket != null && await IsJobOrderEditableAsync(ticket.JobOrderId, cancellationToken);
         }
 
+        /// <summary>
+        /// Helper method to handle status changes with transactions and audit logs, returning JSON.
+        /// </summary>
         private async Task<IActionResult> ChangeTicketStatusJsonAsync(
             int id,
             string newStatus,
@@ -699,5 +748,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        #endregion
     }
 }

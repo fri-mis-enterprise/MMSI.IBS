@@ -15,6 +15,9 @@ using IBS.Services.Attributes;
 
 namespace IBSWeb.Areas.User.Controllers
 {
+    /// <summary>
+    /// Controller for managing Billing in the MMSI system.
+    /// </summary>
     [Area("User")]
     public class BillingController(
         IUnitOfWork unitOfWork,
@@ -23,6 +26,11 @@ namespace IBSWeb.Areas.User.Controllers
         ILogger<BillingController> logger)
         : Controller
     {
+        #region Index
+
+        /// <summary>
+        /// Displays the list of Billings.
+        /// </summary>
         [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
@@ -30,6 +38,13 @@ namespace IBSWeb.Areas.User.Controllers
             return View(Enumerable.Empty<Billing>());
         }
 
+        #endregion
+
+        #region Create
+
+        /// <summary>
+        /// Displays the form to create a new Billing.
+        /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
@@ -38,6 +53,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(model);
         }
 
+        /// <summary>
+        /// Processes the creation of a new Billing and posts it immediately.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> Create(Billing model, CancellationToken cancellationToken)
@@ -59,6 +77,290 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        #endregion
+
+        #region Edit
+
+        /// <summary>
+        /// Displays the form to edit an existing Billing.
+        /// </summary>
+        [HttpGet]
+        [RequireAccess(ProcedureEnum.EditBilling)]
+        public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+        {
+            var model = await unitOfWork.Billing
+                .GetAsync(b => b.MMSIBillingId == id, cancellationToken) ?? throw new NullReferenceException();
+
+            model = await GetBillingSelectLists(model, cancellationToken);
+            model.UnbilledDispatchTickets = await GetEditTickets(model.CustomerId, model.MMSIBillingId, cancellationToken);
+            
+            if (model.CustomerId != 0)
+            {
+                model.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
+            }
+
+            model.Terminals = await unitOfWork.Terminal
+                .GetMMSITerminalsSelectList(model.PortId, cancellationToken);
+
+            model.ToBillDispatchTickets = await unitOfWork.Billing
+                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
+
+            ViewData["HasPrincipal"] = model.CustomerPrincipal != null && model.CustomerPrincipal.Count > 0;
+
+            if (model.Customer != null)
+            {
+                ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
+                ViewData["CustomerTIN"] = model.Customer.CustomerTin;
+                ViewData["CustomerTerms"] = model.Customer.CustomerTerms;
+                ViewData["CustomerBusinessStyle"] = model.Customer.BusinessStyle ?? "-";
+                ViewData["CustomerVatType"] = model.Customer.VatType;
+                ViewData["CustomerType"] = model.Customer.Type;
+            }
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Processes the update of an existing Billing, including ticket reallocation.
+        /// </summary>
+        [HttpPost]
+        [RequireAccess(ProcedureEnum.EditBilling)]
+        public async Task<IActionResult> Edit([Bind("MMSIBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentModel = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken)
+                    ?? throw new InvalidOperationException("Billing not found.");
+
+                model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken)
+                    ?? throw new InvalidOperationException("Customer not found.");
+                model.IsVatable = model.Customer.VatType == "Vatable";
+
+                // Revert old tickets associated with this billing back to 'For Billing' status.
+                var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MMSIBillingId, cancellationToken);
+                foreach (var dt in oldTickets)
+                {
+                    dt.Status = "For Billing";
+                    dt.BillingId = null;
+                    dt.BillingNumber = null;
+                }
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                // Update current model properties.
+                currentModel.CustomerId = model.CustomerId;
+                currentModel.PrincipalId = model.PrincipalId;
+                currentModel.VoyageNumber = model.VoyageNumber;
+                currentModel.Date = model.Date;
+                currentModel.PortId = model.PortId;
+                currentModel.TerminalId = model.TerminalId;
+                currentModel.VesselId = model.VesselId;
+                currentModel.BilledTo = model.BilledTo;
+                currentModel.IsVatable = model.IsVatable;
+                currentModel.JobOrderId = model.JobOrderId;
+
+                decimal total = 0, dispatch = 0, baf = 0;
+                foreach (var ticketIdStr in model.ToBillDispatchTickets!)
+                {
+                    var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken)
+                        ?? throw new InvalidOperationException($"Dispatch ticket #{ticketIdStr} not found.");
+
+                    total += dt.TotalNetRevenue;
+                    dispatch += dt.DispatchNetRevenue;
+                    baf += dt.BAFNetRevenue;
+
+                    dt.Status = "Billed";
+                    dt.BillingId = model.MMSIBillingId;
+                    dt.BillingNumber = currentModel.MMSIBillingNumber;
+                }
+
+                currentModel.Amount = currentModel.Balance = total;
+                currentModel.DispatchAmount = dispatch;
+                currentModel.BAFAmount = baf;
+
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(await GetUserNameAsync() ?? "System", $"Edit billing #{currentModel.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return Success("Entry edited successfully!", new { redirectUrl = Url.Action(nameof(Index)) });
+            }
+            catch (Exception ex)
+            {
+                return Failure(ex, "Failed to edit billing.");
+            }
+        }
+
+        #endregion
+
+        #region Delete
+
+        /// <summary>
+        /// Deletes a specific Billing.
+        /// </summary>
+        [RequireAccess(ProcedureEnum.DeleteBilling)]
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var model = await unitOfWork.Billing
+                    .GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+
+                if (model != null)
+                {
+                    await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
+                    TempData["success"] = "Billing deleted successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["error"] = "Can't find entry.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to delete billing.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        #endregion
+
+        #region Preview & Print
+
+        /// <summary>
+        /// Displays a preview of the Billing, including associated tickets and tugboats.
+        /// </summary>
+        [RequireAccess(ProcedureEnum.CreateBilling)]
+        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
+        {
+            var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            model.ToBillDispatchTickets = await unitOfWork.Billing
+                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
+
+            model.PaidDispatchTickets = await unitOfWork.Billing
+                .GetPaidDispatchTicketsAsync(model.MMSIBillingId, cancellationToken);
+
+            model.UniqueTugboats = await unitOfWork.Billing
+                .GetUniqueTugboatsListAsync(model.MMSIBillingId, cancellationToken) ?? throw new NullReferenceException();
+
+            model = unitOfWork.Billing.ProcessAddress(model, cancellationToken);
+            return View(model);
+        }
+
+        /// <summary>
+        /// Generates an Excel file for dot-matrix printing of the Billing.
+        /// </summary>
+        [RequireAccess(ProcedureEnum.CreateBilling)]
+        public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var billing = await unitOfWork.Billing
+                    .GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+
+                if (billing == null)
+                {
+                    TempData["error"] = "Billing not found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                billing.ToBillDispatchTickets = await unitOfWork.Billing
+                    .GetToBillDispatchTicketListAsync(billing.MMSIBillingId, cancellationToken);
+
+                billing.PaidDispatchTickets = await unitOfWork.Billing
+                    .GetPaidDispatchTicketsAsync(billing.MMSIBillingId, cancellationToken) ?? throw new NullReferenceException();
+
+                billing.UniqueTugboats = await unitOfWork.Billing
+                    .GetUniqueTugboatsListAsync(billing.MMSIBillingId, cancellationToken) ?? throw new NullReferenceException();
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add($"Billing #{billing.MMSIBillingNumber}");
+                worksheet.Cells.Style.Font.Name = "Calibri";
+                worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
+                worksheet.Cells["E2"].Value = $"{billing.Date}";
+                worksheet.Cells["E2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                worksheet.Cells["B3"].Value = $"{billing.Customer?.CustomerAddress}                              TERMS: {billing.Customer?.CustomerTerms}";
+                worksheet.Cells["B4"].Value = $"{billing.Customer?.CustomerTin}";
+                worksheet.Cells["E4"].Value = $"VOYAGE NO. {billing.VoyageNumber}";
+                worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel?.VesselName}";
+                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port.PortName}";
+                
+                var row = 9;
+
+                foreach (var tugboat in billing.UniqueTugboats)
+                {
+                    worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: {tugboat}";
+                    row++;
+
+                    foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.Tugboat?.TugboatName == tugboat))
+                    {
+                        worksheet.Cells[row, 1].Value = "1";
+                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                        worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
+                        worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 5].Value = $"{ticket.DispatchBillingAmount}";
+                        worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        row++;
+                    }
+
+                    row++;
+                }
+
+                if (billing.PaidDispatchTickets != null)
+                {
+                    foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
+                    {
+                        worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: BUNKER ADJUSTMENT FACTOR";
+                        row++;
+
+                        foreach (var record in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
+                        {
+                            worksheet.Cells[row, 1].Value = "1";
+                            worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                            worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
+                            worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
+                            worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            row++;
+                        }
+
+                        row++;
+                    }
+                }
+
+                worksheet.Cells[1, 1, row, 7].Style.Font.Name = "Calibri";
+                worksheet.Column(1).Width = 8;
+                worksheet.Column(2).Width = 53;
+                worksheet.Column(3).Width = 9;
+                worksheet.Column(4).Width = 8.5;
+                worksheet.Column(5).Width = 16;
+                
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"DotMatrix_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to print billing.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        #endregion
+
+        #region AJAX Endpoints
+
+        /// <summary>
+        /// Retrieves detailed information for a list of Dispatch Tickets.
+        /// </summary>
         [HttpPost]
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetDispatchTickets(List<string> dispatchTicketIds)
@@ -69,24 +371,18 @@ namespace IBSWeb.Areas.User.Controllers
                 var dispatchTickets = await unitOfWork.DispatchTicket
                     .GetAllAsync(t => intDispatchTicketIds.Contains(t.DispatchTicketId));
 
-                return Json(new
-                {
-                    success = true,
-                    data = dispatchTickets
-                });
+                return Json(new { success = true, data = dispatchTickets });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get dispatch tickets.");
-
-                return Json(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
+        /// <summary>
+        /// Retrieves a paged and filtered list of Billings for DataTables.
+        /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.CreateBilling)]
         public async Task<IActionResult> GetBillingList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
@@ -176,301 +472,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        [HttpGet]
-        [RequireAccess(ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
-        {
-            var model = await unitOfWork.Billing
-                .GetAsync(b => b.MMSIBillingId == id, cancellationToken) ?? throw new NullReferenceException();
-
-            model = await GetBillingSelectLists(model, cancellationToken);
-            model.UnbilledDispatchTickets = await GetEditTickets(model.CustomerId, model.MMSIBillingId, cancellationToken);
-            if(model.CustomerId != 0)
-            {
-                model.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
-            }
-
-            model.Terminals = await unitOfWork.Terminal
-                .GetMMSITerminalsSelectList(model.PortId, cancellationToken);
-
-            model.ToBillDispatchTickets = await unitOfWork.Billing
-                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
-
-            if (model.CustomerPrincipal?.Count == 0 || model.CustomerPrincipal == null)
-            {
-                ViewData["HasPrincipal"] = false;
-            }
-            else
-            {
-                ViewData["HasPrincipal"] = true;
-            }
-
-            // Customer Details for display
-            if (model.Customer != null)
-            {
-                ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
-                ViewData["CustomerTIN"] = model.Customer.CustomerTin;
-                ViewData["CustomerTerms"] = model.Customer.CustomerTerms;
-                ViewData["CustomerBusinessStyle"] = model.Customer.BusinessStyle ?? "-";
-                ViewData["CustomerVatType"] = model.Customer.VatType;
-                ViewData["CustomerType"] = model.Customer.Type;
-            }
-
-            return View(model);
-        }
-
-        [HttpPost]
-        [RequireAccess(ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> Edit([Bind("MMSIBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var currentModel = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken)
-                    ?? throw new InvalidOperationException("Billing not found.");
-
-                model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken)
-                    ?? throw new InvalidOperationException("Customer not found.");
-                model.IsVatable = model.Customer.VatType == "Vatable";
-
-                // Revert old tickets
-                var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MMSIBillingId, cancellationToken);
-                foreach (var dt in oldTickets)
-                {
-                    dt.Status = "For Billing";
-                    dt.BillingId = null;
-                    dt.BillingNumber = null;
-                }
-                await unitOfWork.SaveAsync(cancellationToken);
-
-                // Update current model
-                currentModel.CustomerId = model.CustomerId;
-                currentModel.PrincipalId = model.PrincipalId;
-                currentModel.VoyageNumber = model.VoyageNumber;
-                currentModel.Date = model.Date;
-                currentModel.PortId = model.PortId;
-                currentModel.TerminalId = model.TerminalId;
-                currentModel.VesselId = model.VesselId;
-                currentModel.BilledTo = model.BilledTo;
-                currentModel.IsVatable = model.IsVatable;
-                currentModel.JobOrderId = model.JobOrderId;
-
-                decimal total = 0, dispatch = 0, baf = 0;
-                foreach (var ticketIdStr in model.ToBillDispatchTickets!)
-                {
-                    var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken)
-                        ?? throw new InvalidOperationException($"Dispatch ticket #{ticketIdStr} not found.");
-
-                    total += dt.TotalNetRevenue;
-                    dispatch += dt.DispatchNetRevenue;
-                    baf += dt.BAFNetRevenue;
-
-                    dt.Status = "Billed";
-                    dt.BillingId = model.MMSIBillingId;
-                    dt.BillingNumber = currentModel.MMSIBillingNumber;
-                }
-
-                currentModel.Amount = currentModel.Balance = total;
-                currentModel.DispatchAmount = dispatch;
-                currentModel.BAFAmount = baf;
-
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(await GetUserNameAsync() ?? "System", $"Edit billing #{currentModel.MMSIBillingNumber}", "Billing"), cancellationToken);
-                await unitOfWork.SaveAsync(cancellationToken);
-
-                return Success("Entry edited successfully!", new { redirectUrl = Url.Action(nameof(Index)) });
-            }
-            catch (Exception ex)
-            {
-                return Failure(ex, "Failed to edit billing.");
-            }
-        }
-
-        private JsonResult Success(string message, object? data = null)
-        {
-            var redirectUrl = data?.GetType().GetProperty("redirectUrl")?.GetValue(data);
-            return Json(new { success = true, message, redirectUrl });
-        }
-
-        private JsonResult Failure(Exception? ex = null, string? message = null, object? data = null)
-        {
-            if (ex != null)
-            {
-                logger.LogError(ex, message ?? "An error occurred.");
-            }
-
-            var finalMessage = message ?? "Operation failed.";
-            if (ex != null)
-            {
-                var errorMsg = ex.InnerException?.Message ?? ex.Message;
-                if (errorMsg.Contains("unique") || errorMsg.Contains("23505"))
-                {
-                    finalMessage = "Billing number already exists.";
-                }
-                else if (errorMsg.Contains("foreign key") || errorMsg.Contains("23503"))
-                {
-                    finalMessage = "Invalid reference selected.";
-                }
-                else
-                {
-                    finalMessage = ex.Message;
-                }
-            }
-
-            var errors = data?.GetType().GetProperty("errors")?.GetValue(data);
-            return Json(new { success = false, message = finalMessage, errors });
-        }
-
-        [RequireAccess(ProcedureEnum.DeleteBilling)]
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await unitOfWork.Billing
-                    .GetAsync(b => b.MMSIBillingId == id, cancellationToken);
-
-                if (model != null)
-                {
-                    await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
-                    TempData["success"] = "Billing deleted successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                else
-                {
-                    TempData["error"] = "Can't find entry.";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to delete billing.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [RequireAccess(ProcedureEnum.CreateBilling)]
-        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
-        {
-            var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
-
-            if (model == null)
-            {
-                return NotFound();
-            }
-
-            model.ToBillDispatchTickets = await unitOfWork.Billing
-                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
-
-            model.PaidDispatchTickets = await unitOfWork.Billing
-                .GetPaidDispatchTicketsAsync(model.MMSIBillingId, cancellationToken);
-
-            model.UniqueTugboats = await unitOfWork.Billing
-                .GetUniqueTugboatsListAsync(model.MMSIBillingId, cancellationToken) ?? throw new NullReferenceException();
-
-            model = unitOfWork.Billing.ProcessAddress(model, cancellationToken);
-            return View(model);
-        }
-
-        [RequireAccess(ProcedureEnum.CreateBilling)]
-        public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var billing = await unitOfWork.Billing
-                    .GetAsync(b => b.MMSIBillingId == id, cancellationToken);
-
-                if (billing == null)
-                {
-                    TempData["error"] = "Billing not found";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                billing.ToBillDispatchTickets = await unitOfWork.Billing
-                    .GetToBillDispatchTicketListAsync(billing.MMSIBillingId, cancellationToken);
-
-                billing.PaidDispatchTickets = await unitOfWork.Billing
-                    .GetPaidDispatchTicketsAsync(billing.MMSIBillingId, cancellationToken) ?? throw new NullReferenceException();
-
-                billing.UniqueTugboats = await unitOfWork.Billing
-                    .GetUniqueTugboatsListAsync(billing.MMSIBillingId, cancellationToken) ?? throw new NullReferenceException();
-
-                using var package = new ExcelPackage();
-                var worksheet = package.Workbook.Worksheets.Add($"Billing #{billing.MMSIBillingNumber}");
-                worksheet.Cells.Style.Font.Name = "Calibri";
-                worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
-                worksheet.Cells["E2"].Value = $"{billing.Date}";
-                worksheet.Cells["E2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                worksheet.Cells["B3"].Value = $"{billing.Customer?.CustomerAddress}                              TERMS: {billing.Customer?.CustomerTerms}";
-                worksheet.Cells["B4"].Value = $"{billing.Customer?.CustomerTin}";
-                worksheet.Cells["E4"].Value = $"VOYAGE NO. {billing.VoyageNumber}";
-                worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel?.VesselName}";
-                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port.PortName}";
-                var rowStart = 9;
-                var row = rowStart;
-
-                foreach (var tugboat in billing.UniqueTugboats)
-                {
-                    worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: {tugboat}";
-                    row++;
-
-                    foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.Tugboat?.TugboatName == tugboat))
-                    {
-                        worksheet.Cells[row, 1].Value = "1";
-                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
-                        worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
-                        worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        worksheet.Cells[row, 5].Value = $"{ticket.DispatchBillingAmount}";
-                        worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        row++;
-                    }
-
-                    row++;
-                }
-
-                var ticketsWithBaf = billing.PaidDispatchTickets;
-
-                if (ticketsWithBaf != null)
-                {
-                    foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
-                    {
-                        worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: BUNKER ADJUSTMENT FACTOR";
-                        row++;
-
-                        foreach (var record in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
-                        {
-                            worksheet.Cells[row, 1].Value = "1";
-                            worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
-                            worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
-                            worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
-                            worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            row++;
-                        }
-
-                        row++;
-                    }
-                }
-
-                worksheet.Cells[1, 1, row, 7].Style.Font.Name = "Calibri";
-                worksheet.Column(1).Width = 8;
-                worksheet.Column(2).Width = 53;
-                worksheet.Column(3).Width = 9;
-                worksheet.Column(4).Width = 8.5;
-                worksheet.Column(5).Width = 16;
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"DotMatrix_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to print billing.");
-                TempData["error"] = ex.Message;
-                logger.LogError(ex, "Error generating sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                ex.Message, ex.StackTrace, userManager.GetUserAsync(User));
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
+        /// <summary>
+        /// Searches for customers matching a search term.
+        /// </summary>
         [HttpGet]
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
@@ -523,6 +527,9 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(result);
         }
 
+        /// <summary>
+        /// Searches for principals associated with a specific customer.
+        /// </summary>
         [HttpGet]
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchPrincipals(string? term, int customerId, CancellationToken cancellationToken)
@@ -543,7 +550,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     value = p.PrincipalId,
                     name = p.PrincipalName,
-                    address = p.Address,
+                    address = p.Address1,
                     tinNo = p.TIN,
                     businessStyle = p.BusinessType,
                     terms = p.Terms
@@ -553,22 +560,16 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(result);
         }
 
+        /// <summary>
+        /// Searches for Job Orders for a customer that have unbilled tickets and are ready for billing.
+        /// </summary>
         [HttpGet]
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchJobOrders(string? term, int customerId, CancellationToken cancellationToken)
         {
-            // Strict Mode: All tickets must be "For Billing"
-            var query = dbContext.MMSIJobOrders.AsNoTracking()
-                .Where(j => j.CustomerId == customerId &&
-                            j.DispatchTickets.Any() &&
-                            j.DispatchTickets.All(dt => dt.Status == "For Billing" || dt.Status == "Billed" || dt.Status == "Cancelled"));
-
-            // Refinement: The user said "if all tickets are for billing".
-            // Cancelled tickets are ignored. Billed tickets are already done.
-            // So we want JOs where there's at least one "For Billing" ticket,
+            // We want JOs where there's at least one "For Billing" ticket,
             // and NO tickets that are "Pending", "For Tariff", or "For Approval".
-
-            query = dbContext.MMSIJobOrders.AsNoTracking()
+            var query = dbContext.MMSIJobOrders.AsNoTracking()
                 .Where(j => j.CustomerId == customerId &&
                             j.DispatchTickets.Any(dt => dt.Status == "For Billing" && dt.BillingId == null) &&
                             !j.DispatchTickets.Any(dt => dt.Status == "Pending" || dt.Status == "For Tariff" || dt.Status == "For Approval"));
@@ -593,6 +594,9 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(result);
         }
 
+        /// <summary>
+        /// Retrieves unbilled 'For Billing' tickets associated with a specific Job Order.
+        /// </summary>
         [HttpGet]
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> GetDispatchTicketsByJobOrder(int jobOrderId, CancellationToken cancellationToken)
@@ -633,6 +637,84 @@ namespace IBSWeb.Areas.User.Controllers
             });
         }
 
+        /// <summary>
+        /// Retrieves principals for a customer as a JSON list.
+        /// </summary>
+        [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
+        public async Task<IActionResult> GetPrincipalsJson(string customerId, CancellationToken cancellationToken)
+        {
+            var principalsList = await GetPrincipals(customerId, cancellationToken);
+            return Json(principalsList);
+        }
+
+        /// <summary>
+        /// Retrieves unbilled tickets for a customer as a JSON list.
+        /// </summary>
+        [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
+        public async Task<IActionResult> GetDispatchTicketsByCustomer(string customerId, CancellationToken cancellationToken)
+        {
+            var dispatchTickets = await unitOfWork.DispatchTicket
+                .GetAllAsync(t => t.CustomerId == int.Parse(customerId) && t.Status == "For Billing", cancellationToken);
+
+            var ticketsList = dispatchTickets.Select(t => new SelectListItem
+            {
+                Value = t.DispatchTicketId.ToString(),
+                Text = t.DispatchNumber
+            }).ToList();
+
+            return Json(ticketsList);
+        }
+
+        #endregion
+
+        #region Private Helpers
+
+        /// <summary>
+        /// Returns a success JSON result with an optional redirect URL.
+        /// </summary>
+        private JsonResult Success(string message, object? data = null)
+        {
+            var redirectUrl = data?.GetType().GetProperty("redirectUrl")?.GetValue(data);
+            return Json(new { success = true, message, redirectUrl });
+        }
+
+        /// <summary>
+        /// Returns a failure JSON result with error message and logging.
+        /// </summary>
+        private JsonResult Failure(Exception? ex = null, string? message = null, object? data = null)
+        {
+            if (ex != null)
+            {
+                logger.LogError(ex, message ?? "An error occurred.");
+            }
+
+            var finalMessage = message ?? "Operation failed.";
+            if (ex != null)
+            {
+                var errorMsg = ex.InnerException?.Message ?? ex.Message;
+                if (errorMsg.Contains("unique") || errorMsg.Contains("23505"))
+                {
+                    finalMessage = "Billing number already exists.";
+                }
+                else if (errorMsg.Contains("foreign key") || errorMsg.Contains("23503"))
+                {
+                    finalMessage = "Invalid reference selected.";
+                }
+                else
+                {
+                    finalMessage = ex.Message;
+                }
+            }
+
+            var errors = data?.GetType().GetProperty("errors")?.GetValue(data);
+            return Json(new { success = false, message = finalMessage, errors });
+        }
+
+        /// <summary>
+        /// Retrieves the company claim value for the current user.
+        /// </summary>
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await userManager.GetUserAsync(User);
@@ -646,20 +728,18 @@ namespace IBSWeb.Areas.User.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
+        /// <summary>
+        /// Retrieves the username of the current user.
+        /// </summary>
         private async Task<string?> GetUserNameAsync()
         {
             var user = await userManager.GetUserAsync(User);
             return user?.UserName;
         }
 
-        [HttpGet]
-        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> GetPrincipalsJson(string customerId, CancellationToken cancellationToken)
-        {
-            var principalsList = await GetPrincipals(customerId, cancellationToken);
-            return Json(principalsList);
-        }
-
+        /// <summary>
+        /// Retrieves principals for a specific customer as SelectListItems.
+        /// </summary>
         [HttpGet]
         public async Task<List<SelectListItem>?> GetPrincipals(string? customerId, CancellationToken cancellationToken)
         {
@@ -671,32 +751,17 @@ namespace IBSWeb.Areas.User.Controllers
             var principals = await unitOfWork.Principal
                 .GetAllAsync(t => t.CustomerId == int.Parse(customerId), cancellationToken);
 
-            var principalsList = principals.Select(t => new SelectListItem
+            return principals.Select(t => new SelectListItem
             {
                 Value = t.PrincipalId.ToString(),
                 Text = t.PrincipalName
             }).ToList();
-
-            return principalsList;
         }
 
-        [HttpGet]
-        [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> GetDispatchTicketsByCustomer(string customerId, CancellationToken cancellationToken)
-        {
-            //order by dispatch number
-            var dispatchTickets = await unitOfWork.DispatchTicket
-                .GetAllAsync(t => t.CustomerId == int.Parse(customerId) && t.Status == "For Billing", cancellationToken);
-
-            var principalsList = dispatchTickets.Select(t => new SelectListItem
-            {
-                Value = t.DispatchTicketId.ToString(),
-                Text = t.DispatchNumber
-            }).ToList();
-
-            return Json(principalsList);
-        }
-
+        /// <summary>
+        /// Retrieves the list of unbilled tickets and tickets already billed to this specific billing.
+        /// Used for population during Edit mode.
+        /// </summary>
         [HttpPost]
         public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
         {
@@ -717,6 +782,9 @@ namespace IBSWeb.Areas.User.Controllers
             return listToReturn;
         }
 
+        /// <summary>
+        /// Populates common SelectLists for Billing ViewModels.
+        /// </summary>
         public async Task<Billing> GetBillingSelectLists(Billing model, CancellationToken cancellationToken = default)
         {
             model.Vessels = await unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
@@ -730,5 +798,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             return model;
         }
+
+        #endregion
     }
 }
