@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -80,7 +80,8 @@ namespace IBS.DataAccess.Migrations
                     date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     machine_name = table.Column<string>(type: "text", nullable: false),
                     activity = table.Column<string>(type: "text", nullable: false),
-                    document_type = table.Column<string>(type: "text", nullable: false)
+                    document_type = table.Column<string>(type: "text", nullable: false),
+                    record_id = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -93,6 +94,7 @@ namespace IBS.DataAccess.Migrations
                 {
                     bank_account_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    bank_account_code = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: true),
                     bank = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     branch = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     account_no = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
@@ -294,6 +296,19 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "mmsi_modules",
+                columns: table => new
+                {
+                    module_number = table.Column<int>(type: "integer", nullable: false),
+                    module_name = table.Column<string>(type: "varchar(50)", nullable: false),
+                    description = table.Column<string>(type: "varchar(100)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mmsi_modules", x => x.module_number);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "mmsi_ports",
                 columns: table => new
                 {
@@ -309,13 +324,29 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "mmsi_rates",
+                columns: table => new
+                {
+                    rate_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    type = table.Column<string>(type: "varchar(50)", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    as_of = table.Column<DateOnly>(type: "date", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mmsi_rates", x => x.rate_id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "mmsi_services",
                 columns: table => new
                 {
                     service_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     service_number = table.Column<string>(type: "varchar(3)", maxLength: 3, nullable: false),
-                    service_name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                    service_name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    service_type = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -368,6 +399,8 @@ namespace IBS.DataAccess.Migrations
                     can_set_tariff = table.Column<bool>(type: "boolean", nullable: false),
                     can_approve_tariff = table.Column<bool>(type: "boolean", nullable: false),
                     can_create_billing = table.Column<bool>(type: "boolean", nullable: false),
+                    can_edit_billing = table.Column<bool>(type: "boolean", nullable: false),
+                    can_delete_billing = table.Column<bool>(type: "boolean", nullable: false),
                     can_create_collection = table.Column<bool>(type: "boolean", nullable: false),
                     can_create_job_order = table.Column<bool>(type: "boolean", nullable: false),
                     can_edit_job_order = table.Column<bool>(type: "boolean", nullable: false),
@@ -634,9 +667,9 @@ namespace IBS.DataAccess.Migrations
                     number_of_days = table.Column<int>(type: "integer", nullable: false),
                     number_of_months = table.Column<int>(type: "integer", nullable: false),
                     created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     edited_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    edited_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -959,6 +992,9 @@ namespace IBS.DataAccess.Migrations
                     customer_code = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: true),
                     customer_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     customer_address = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    address1 = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    address2 = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    address3 = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     customer_tin = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     business_style = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     customer_terms = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
@@ -1044,27 +1080,27 @@ namespace IBS.DataAccess.Migrations
                 name: "mmsi_collections",
                 columns: table => new
                 {
-                    mmsi_collection_id = table.Column<int>(type: "integer", nullable: false)
+                    RECID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    mmsi_collection_number = table.Column<string>(type: "text", nullable: false),
+                    CRNUM = table.Column<string>(type: "text", nullable: false),
                     reference_no = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     status = table.Column<string>(type: "text", nullable: true),
-                    date = table.Column<DateOnly>(type: "date", nullable: false),
+                    CRDATE = table.Column<DateOnly>(type: "date", nullable: false),
                     remarks = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     cash_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    check_date = table.Column<DateOnly>(type: "date", nullable: true),
-                    check_number = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    CHECKDATE = table.Column<DateOnly>(type: "date", nullable: true),
+                    CHECKNO = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     check_bank = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     check_branch = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     check_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    bank_id = table.Column<int>(type: "integer", nullable: true),
+                    BANKACCTCO = table.Column<int>(type: "integer", nullable: true),
                     bank_account_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     bank_account_number = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
-                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    AMOUNT = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     ewt = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     wvat = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     total = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    customer_id = table.Column<int>(type: "integer", nullable: false),
+                    CUSTNO = table.Column<int>(type: "integer", nullable: false),
                     is_undocumented = table.Column<bool>(type: "boolean", nullable: false),
                     company = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     deposit_date = table.Column<DateOnly>(type: "date", nullable: true),
@@ -1084,15 +1120,15 @@ namespace IBS.DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_mmsi_collections", x => x.mmsi_collection_id);
+                    table.PrimaryKey("pk_mmsi_collections", x => x.RECID);
                     table.ForeignKey(
-                        name: "fk_mmsi_collections_bank_accounts_bank_id",
-                        column: x => x.bank_id,
+                        name: "fk_mmsi_collections_bank_accounts_bankacctco",
+                        column: x => x.BANKACCTCO,
                         principalTable: "bank_accounts",
                         principalColumn: "bank_account_id");
                     table.ForeignKey(
-                        name: "fk_mmsi_collections_customers_customer_id",
-                        column: x => x.customer_id,
+                        name: "fk_mmsi_collections_customers_custno",
+                        column: x => x.CUSTNO,
                         principalTable: "customers",
                         principalColumn: "customer_id",
                         onDelete: ReferentialAction.Cascade);
@@ -1112,8 +1148,8 @@ namespace IBS.DataAccess.Migrations
                     remarks = table.Column<string>(type: "text", nullable: true),
                     customer_id = table.Column<int>(type: "integer", nullable: false),
                     vessel_id = table.Column<int>(type: "integer", nullable: false),
-                    port_id = table.Column<int>(type: "integer", nullable: true),
-                    terminal_id = table.Column<int>(type: "integer", nullable: true),
+                    port_id = table.Column<int>(type: "integer", nullable: false),
+                    terminal_id = table.Column<int>(type: "integer", nullable: false),
                     created_by = table.Column<string>(type: "varchar(100)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1139,12 +1175,14 @@ namespace IBS.DataAccess.Migrations
                         name: "fk_mmsi_job_orders_mmsi_ports_port_id",
                         column: x => x.port_id,
                         principalTable: "mmsi_ports",
-                        principalColumn: "port_id");
+                        principalColumn: "port_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_mmsi_job_orders_mmsi_terminals_terminal_id",
                         column: x => x.terminal_id,
                         principalTable: "mmsi_terminals",
-                        principalColumn: "terminal_id");
+                        principalColumn: "terminal_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_mmsi_job_orders_mmsi_vessels_vessel_id",
                         column: x => x.vessel_id,
@@ -1161,7 +1199,10 @@ namespace IBS.DataAccess.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     principal_number = table.Column<string>(type: "varchar(4)", maxLength: 4, nullable: false),
                     principal_name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
-                    address = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    agent = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true),
+                    address1 = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    address2 = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true),
+                    address3 = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true),
                     business_type = table.Column<string>(type: "text", nullable: true),
                     terms = table.Column<string>(type: "text", nullable: true),
                     tin = table.Column<string>(type: "text", nullable: true),
@@ -1192,6 +1233,7 @@ namespace IBS.DataAccess.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     as_of_date = table.Column<DateOnly>(type: "date", nullable: false),
                     customer_id = table.Column<int>(type: "integer", nullable: false),
+                    port_id = table.Column<int>(type: "integer", nullable: false),
                     terminal_id = table.Column<int>(type: "integer", nullable: false),
                     service_id = table.Column<int>(type: "integer", nullable: false),
                     dispatch = table.Column<decimal>(type: "numeric", nullable: false),
@@ -1211,6 +1253,12 @@ namespace IBS.DataAccess.Migrations
                         column: x => x.customer_id,
                         principalTable: "customers",
                         principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mmsi_tariff_rates_mmsi_ports_port_id",
+                        column: x => x.port_id,
+                        principalTable: "mmsi_ports",
+                        principalColumn: "port_id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_mmsi_tariff_rates_mmsi_services_service_id",
@@ -1362,34 +1410,35 @@ namespace IBS.DataAccess.Migrations
                 name: "billings",
                 columns: table => new
                 {
-                    mmsi_billing_id = table.Column<int>(type: "integer", nullable: false)
+                    RECID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    mmsi_billing_number = table.Column<string>(type: "varchar(10)", nullable: false),
-                    date = table.Column<DateOnly>(type: "date", nullable: false),
+                    NUMBER = table.Column<string>(type: "varchar(10)", nullable: false),
+                    DATE = table.Column<DateOnly>(type: "date", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
                     is_undocumented = table.Column<bool>(type: "boolean", nullable: false),
-                    billed_to = table.Column<string>(type: "varchar(10)", nullable: false),
+                    CUSTNO = table.Column<string>(type: "varchar(10)", nullable: false),
                     voyage_number = table.Column<string>(type: "text", nullable: true),
-                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    AMOUNT = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     balance = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     is_paid = table.Column<bool>(type: "boolean", nullable: false),
                     dispatch_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     baf_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     is_principal = table.Column<bool>(type: "boolean", nullable: false),
-                    customer_id = table.Column<int>(type: "integer", nullable: true),
+                    CUSTNO_FK = table.Column<int>(type: "integer", nullable: false),
                     principal_id = table.Column<int>(type: "integer", nullable: true),
-                    vessel_id = table.Column<int>(type: "integer", nullable: true),
-                    port_id = table.Column<int>(type: "integer", nullable: true),
-                    terminal_id = table.Column<int>(type: "integer", nullable: true),
+                    VESSELNUM = table.Column<int>(type: "integer", nullable: false),
+                    PORTNUM = table.Column<int>(type: "integer", nullable: false),
+                    TERMINAL = table.Column<int>(type: "integer", nullable: false),
                     ap_other_tug = table.Column<decimal>(type: "numeric", nullable: false),
-                    is_vatable = table.Column<bool>(type: "boolean", nullable: false),
+                    VAT = table.Column<bool>(type: "boolean", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
                     discount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     due_date = table.Column<DateOnly>(type: "date", nullable: false),
                     terms = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: true),
                     company = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    collection_id = table.Column<int>(type: "integer", nullable: true),
+                    job_order_id = table.Column<int>(type: "integer", nullable: true),
+                    CRNUM = table.Column<int>(type: "integer", nullable: true),
                     collection_number = table.Column<string>(type: "text", nullable: true),
                     created_by = table.Column<string>(type: "varchar(100)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
@@ -1405,38 +1454,47 @@ namespace IBS.DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_billings", x => x.mmsi_billing_id);
+                    table.PrimaryKey("pk_billings", x => x.RECID);
                     table.ForeignKey(
-                        name: "fk_billings_customers_customer_id",
-                        column: x => x.customer_id,
+                        name: "fk_billings_customers_custno_fk",
+                        column: x => x.CUSTNO_FK,
                         principalTable: "customers",
-                        principalColumn: "customer_id");
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_billings_mmsi_collections_collection_id",
-                        column: x => x.collection_id,
+                        name: "fk_billings_mmsi_collections_crnum",
+                        column: x => x.CRNUM,
                         principalTable: "mmsi_collections",
-                        principalColumn: "mmsi_collection_id",
+                        principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_billings_mmsi_ports_port_id",
-                        column: x => x.port_id,
+                        name: "fk_billings_mmsi_job_orders_job_order_id",
+                        column: x => x.job_order_id,
+                        principalTable: "mmsi_job_orders",
+                        principalColumn: "job_order_id");
+                    table.ForeignKey(
+                        name: "fk_billings_mmsi_ports_portnum",
+                        column: x => x.PORTNUM,
                         principalTable: "mmsi_ports",
-                        principalColumn: "port_id");
+                        principalColumn: "port_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_billings_mmsi_principals_principal_id",
                         column: x => x.principal_id,
                         principalTable: "mmsi_principals",
                         principalColumn: "principal_id");
                     table.ForeignKey(
-                        name: "fk_billings_mmsi_terminals_terminal_id",
-                        column: x => x.terminal_id,
+                        name: "fk_billings_mmsi_terminals_terminal",
+                        column: x => x.TERMINAL,
                         principalTable: "mmsi_terminals",
-                        principalColumn: "terminal_id");
+                        principalColumn: "terminal_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_billings_mmsi_vessels_vessel_id",
-                        column: x => x.vessel_id,
+                        name: "fk_billings_mmsi_vessels_vesselnum",
+                        column: x => x.VESSELNUM,
                         principalTable: "mmsi_vessels",
-                        principalColumn: "vessel_id");
+                        principalColumn: "vessel_id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1512,13 +1570,49 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "mmsi_collection_bills",
+                columns: table => new
+                {
+                    collection_bill_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    collection_number = table.Column<string>(type: "varchar(10)", nullable: false),
+                    billing_number = table.Column<string>(type: "varchar(10)", nullable: false),
+                    customer_number = table.Column<string>(type: "varchar(10)", nullable: false),
+                    collection_id = table.Column<int>(type: "integer", nullable: false),
+                    billing_id = table.Column<int>(type: "integer", nullable: false),
+                    customer_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mmsi_collection_bills", x => x.collection_bill_id);
+                    table.ForeignKey(
+                        name: "fk_mmsi_collection_bills_billings_billing_id",
+                        column: x => x.billing_id,
+                        principalTable: "billings",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mmsi_collection_bills_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mmsi_collection_bills_mmsi_collections_collection_id",
+                        column: x => x.collection_id,
+                        principalTable: "mmsi_collections",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "mmsi_dispatch_tickets",
                 columns: table => new
                 {
-                    dispatch_ticket_id = table.Column<int>(type: "integer", nullable: false)
+                    RECID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    date = table.Column<DateOnly>(type: "date", nullable: true),
-                    dispatch_number = table.Column<string>(type: "varchar(20)", nullable: false),
+                    DATE = table.Column<DateOnly>(type: "date", nullable: true),
+                    NUMBER = table.Column<string>(type: "varchar(20)", nullable: false),
                     cos_number = table.Column<string>(type: "varchar(10)", nullable: true),
                     date_left = table.Column<DateOnly>(type: "date", nullable: true),
                     date_arrived = table.Column<DateOnly>(type: "date", nullable: true),
@@ -1557,58 +1651,70 @@ namespace IBS.DataAccess.Migrations
                     video_saved_url = table.Column<string>(type: "text", nullable: true),
                     video_signed_url = table.Column<string>(type: "text", nullable: true),
                     job_order_id = table.Column<int>(type: "integer", nullable: true),
-                    billing_id = table.Column<int>(type: "integer", nullable: true),
+                    BILLNUM = table.Column<int>(type: "integer", nullable: true),
                     billing_number = table.Column<string>(type: "text", nullable: true),
-                    customer_id = table.Column<int>(type: "integer", nullable: true),
-                    tug_boat_id = table.Column<int>(type: "integer", nullable: true),
-                    tug_master_id = table.Column<int>(type: "integer", nullable: true),
-                    vessel_id = table.Column<int>(type: "integer", nullable: true),
-                    terminal_id = table.Column<int>(type: "integer", nullable: true),
-                    service_id = table.Column<int>(type: "integer", nullable: true)
+                    CUSTNO = table.Column<int>(type: "integer", nullable: false),
+                    TUGNUM = table.Column<int>(type: "integer", nullable: false),
+                    MASTERNO = table.Column<int>(type: "integer", nullable: true),
+                    VESSELNUM = table.Column<int>(type: "integer", nullable: false),
+                    PORTNUM = table.Column<int>(type: "integer", nullable: false),
+                    TERMINAL = table.Column<int>(type: "integer", nullable: false),
+                    service_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_mmsi_dispatch_tickets", x => x.dispatch_ticket_id);
+                    table.PrimaryKey("pk_mmsi_dispatch_tickets", x => x.RECID);
                     table.ForeignKey(
-                        name: "fk_mmsi_dispatch_tickets_billings_billing_id",
-                        column: x => x.billing_id,
+                        name: "fk_mmsi_dispatch_tickets_billings_billnum",
+                        column: x => x.BILLNUM,
                         principalTable: "billings",
-                        principalColumn: "mmsi_billing_id");
+                        principalColumn: "RECID");
                     table.ForeignKey(
-                        name: "fk_mmsi_dispatch_tickets_customers_customer_id",
-                        column: x => x.customer_id,
+                        name: "fk_mmsi_dispatch_tickets_customers_custno",
+                        column: x => x.CUSTNO,
                         principalTable: "customers",
-                        principalColumn: "customer_id");
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_mmsi_dispatch_tickets_mmsi_job_orders_job_order_id",
                         column: x => x.job_order_id,
                         principalTable: "mmsi_job_orders",
                         principalColumn: "job_order_id");
                     table.ForeignKey(
+                        name: "fk_mmsi_dispatch_tickets_mmsi_ports_portnum",
+                        column: x => x.PORTNUM,
+                        principalTable: "mmsi_ports",
+                        principalColumn: "port_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "fk_mmsi_dispatch_tickets_mmsi_services_service_id",
                         column: x => x.service_id,
                         principalTable: "mmsi_services",
-                        principalColumn: "service_id");
+                        principalColumn: "service_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_mmsi_dispatch_tickets_mmsi_terminals_terminal_id",
-                        column: x => x.terminal_id,
+                        name: "fk_mmsi_dispatch_tickets_mmsi_terminals_terminal",
+                        column: x => x.TERMINAL,
                         principalTable: "mmsi_terminals",
-                        principalColumn: "terminal_id");
+                        principalColumn: "terminal_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_mmsi_dispatch_tickets_mmsi_tug_masters_tug_master_id",
-                        column: x => x.tug_master_id,
+                        name: "fk_mmsi_dispatch_tickets_mmsi_tug_masters_masterno",
+                        column: x => x.MASTERNO,
                         principalTable: "mmsi_tug_masters",
                         principalColumn: "tug_master_id");
                     table.ForeignKey(
-                        name: "fk_mmsi_dispatch_tickets_mmsi_tugboats_tug_boat_id",
-                        column: x => x.tug_boat_id,
+                        name: "fk_mmsi_dispatch_tickets_mmsi_tugboats_tugnum",
+                        column: x => x.TUGNUM,
                         principalTable: "mmsi_tugboats",
-                        principalColumn: "tugboat_id");
+                        principalColumn: "tugboat_id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_mmsi_dispatch_tickets_mmsi_vessels_vessel_id",
-                        column: x => x.vessel_id,
+                        name: "fk_mmsi_dispatch_tickets_mmsi_vessels_vesselnum",
+                        column: x => x.VESSELNUM,
                         principalTable: "mmsi_vessels",
-                        principalColumn: "vessel_id");
+                        principalColumn: "vessel_id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1735,6 +1841,67 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "mmsi_bill_adjustments",
+                columns: table => new
+                {
+                    bill_adjust_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    billing_number = table.Column<string>(type: "varchar(10)", nullable: false),
+                    dispatch_number = table.Column<string>(type: "varchar(20)", nullable: false),
+                    rate = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    billing_id = table.Column<int>(type: "integer", nullable: false),
+                    dispatch_ticket_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mmsi_bill_adjustments", x => x.bill_adjust_id);
+                    table.ForeignKey(
+                        name: "fk_mmsi_bill_adjustments_billings_billing_id",
+                        column: x => x.billing_id,
+                        principalTable: "billings",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mmsi_bill_adjustments_mmsi_dispatch_tickets_dispatch_ticket",
+                        column: x => x.dispatch_ticket_id,
+                        principalTable: "mmsi_dispatch_tickets",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "mmsi_bill_dispatches",
+                columns: table => new
+                {
+                    bill_dispatch_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    billing_number = table.Column<string>(type: "varchar(10)", nullable: false),
+                    dispatch_number = table.Column<string>(type: "varchar(20)", nullable: false),
+                    rate = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    ap_other_tug = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    billing_id = table.Column<int>(type: "integer", nullable: false),
+                    dispatch_ticket_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mmsi_bill_dispatches", x => x.bill_dispatch_id);
+                    table.ForeignKey(
+                        name: "fk_mmsi_bill_dispatches_billings_billing_id",
+                        column: x => x.billing_id,
+                        principalTable: "billings",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mmsi_bill_dispatches_mmsi_dispatch_tickets_dispatch_ticket_",
+                        column: x => x.dispatch_ticket_id,
+                        principalTable: "mmsi_dispatch_tickets",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "sales_locked_records_queues",
                 columns: table => new
                 {
@@ -1816,30 +1983,35 @@ namespace IBS.DataAccess.Migrations
                 column: "supplier_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_billings_collection_id",
+                name: "ix_billings_crnum",
                 table: "billings",
-                column: "collection_id");
+                column: "CRNUM");
 
             migrationBuilder.CreateIndex(
-                name: "ix_billings_customer_id",
+                name: "ix_billings_custno_fk",
                 table: "billings",
-                column: "customer_id");
+                column: "CUSTNO_FK");
 
             migrationBuilder.CreateIndex(
                 name: "ix_billings_date",
                 table: "billings",
-                column: "date");
+                column: "DATE");
 
             migrationBuilder.CreateIndex(
-                name: "ix_billings_mmsi_billing_number_company",
+                name: "ix_billings_job_order_id",
                 table: "billings",
-                columns: new[] { "mmsi_billing_number", "company" },
+                column: "job_order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_billings_number_company",
+                table: "billings",
+                columns: new[] { "NUMBER", "company" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_billings_port_id",
+                name: "ix_billings_portnum",
                 table: "billings",
-                column: "port_id");
+                column: "PORTNUM");
 
             migrationBuilder.CreateIndex(
                 name: "ix_billings_principal_id",
@@ -1847,14 +2019,14 @@ namespace IBS.DataAccess.Migrations
                 column: "principal_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_billings_terminal_id",
+                name: "ix_billings_terminal",
                 table: "billings",
-                column: "terminal_id");
+                column: "TERMINAL");
 
             migrationBuilder.CreateIndex(
-                name: "ix_billings_vessel_id",
+                name: "ix_billings_vesselnum",
                 table: "billings",
-                column: "vessel_id");
+                column: "VESSELNUM");
 
             migrationBuilder.CreateIndex(
                 name: "ix_book_atl_details_appointed_id",
@@ -2037,35 +2209,70 @@ namespace IBS.DataAccess.Migrations
                 column: "product_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_mmsi_collections_bank_id",
-                table: "mmsi_collections",
-                column: "bank_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_mmsi_collections_customer_id",
-                table: "mmsi_collections",
-                column: "customer_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_mmsi_collections_date",
-                table: "mmsi_collections",
-                column: "date");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_mmsi_collections_mmsi_collection_number_company",
-                table: "mmsi_collections",
-                columns: new[] { "mmsi_collection_number", "company" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_mmsi_dispatch_tickets_billing_id",
-                table: "mmsi_dispatch_tickets",
+                name: "ix_mmsi_bill_adjustments_billing_id",
+                table: "mmsi_bill_adjustments",
                 column: "billing_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_mmsi_dispatch_tickets_customer_id",
-                table: "mmsi_dispatch_tickets",
+                name: "ix_mmsi_bill_adjustments_dispatch_ticket_id",
+                table: "mmsi_bill_adjustments",
+                column: "dispatch_ticket_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_bill_dispatches_billing_id",
+                table: "mmsi_bill_dispatches",
+                column: "billing_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_bill_dispatches_dispatch_ticket_id",
+                table: "mmsi_bill_dispatches",
+                column: "dispatch_ticket_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collection_bills_billing_id",
+                table: "mmsi_collection_bills",
+                column: "billing_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collection_bills_collection_id",
+                table: "mmsi_collection_bills",
+                column: "collection_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collection_bills_customer_id",
+                table: "mmsi_collection_bills",
                 column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collections_bankacctco",
+                table: "mmsi_collections",
+                column: "BANKACCTCO");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collections_crdate",
+                table: "mmsi_collections",
+                column: "CRDATE");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collections_crnum_company",
+                table: "mmsi_collections",
+                columns: new[] { "CRNUM", "company" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_collections_custno",
+                table: "mmsi_collections",
+                column: "CUSTNO");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_dispatch_tickets_billnum",
+                table: "mmsi_dispatch_tickets",
+                column: "BILLNUM");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_dispatch_tickets_custno",
+                table: "mmsi_dispatch_tickets",
+                column: "CUSTNO");
 
             migrationBuilder.CreateIndex(
                 name: "ix_mmsi_dispatch_tickets_job_order_id",
@@ -2073,29 +2280,34 @@ namespace IBS.DataAccess.Migrations
                 column: "job_order_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_mmsi_dispatch_tickets_masterno",
+                table: "mmsi_dispatch_tickets",
+                column: "MASTERNO");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_dispatch_tickets_portnum",
+                table: "mmsi_dispatch_tickets",
+                column: "PORTNUM");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_mmsi_dispatch_tickets_service_id",
                 table: "mmsi_dispatch_tickets",
                 column: "service_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_mmsi_dispatch_tickets_terminal_id",
+                name: "ix_mmsi_dispatch_tickets_terminal",
                 table: "mmsi_dispatch_tickets",
-                column: "terminal_id");
+                column: "TERMINAL");
 
             migrationBuilder.CreateIndex(
-                name: "ix_mmsi_dispatch_tickets_tug_boat_id",
+                name: "ix_mmsi_dispatch_tickets_tugnum",
                 table: "mmsi_dispatch_tickets",
-                column: "tug_boat_id");
+                column: "TUGNUM");
 
             migrationBuilder.CreateIndex(
-                name: "ix_mmsi_dispatch_tickets_tug_master_id",
+                name: "ix_mmsi_dispatch_tickets_vesselnum",
                 table: "mmsi_dispatch_tickets",
-                column: "tug_master_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_mmsi_dispatch_tickets_vessel_id",
-                table: "mmsi_dispatch_tickets",
-                column: "vessel_id");
+                column: "VESSELNUM");
 
             migrationBuilder.CreateIndex(
                 name: "ix_mmsi_job_orders_customer_id",
@@ -2126,6 +2338,11 @@ namespace IBS.DataAccess.Migrations
                 name: "ix_mmsi_tariff_rates_customer_id",
                 table: "mmsi_tariff_rates",
                 column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mmsi_tariff_rates_port_id",
+                table: "mmsi_tariff_rates",
+                column: "port_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_mmsi_tariff_rates_service_id",
@@ -2292,7 +2509,19 @@ namespace IBS.DataAccess.Migrations
                 name: "log_messages");
 
             migrationBuilder.DropTable(
-                name: "mmsi_dispatch_tickets");
+                name: "mmsi_bill_adjustments");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_bill_dispatches");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_collection_bills");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_modules");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_rates");
 
             migrationBuilder.DropTable(
                 name: "mmsi_tariff_rates");
@@ -2340,19 +2569,7 @@ namespace IBS.DataAccess.Migrations
                 name: "chart_of_accounts");
 
             migrationBuilder.DropTable(
-                name: "billings");
-
-            migrationBuilder.DropTable(
-                name: "mmsi_job_orders");
-
-            migrationBuilder.DropTable(
-                name: "mmsi_tug_masters");
-
-            migrationBuilder.DropTable(
-                name: "mmsi_tugboats");
-
-            migrationBuilder.DropTable(
-                name: "mmsi_services");
+                name: "mmsi_dispatch_tickets");
 
             migrationBuilder.DropTable(
                 name: "delivery_receipts");
@@ -2364,31 +2581,43 @@ namespace IBS.DataAccess.Migrations
                 name: "notifications");
 
             migrationBuilder.DropTable(
+                name: "billings");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_services");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_tug_masters");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_tugboats");
+
+            migrationBuilder.DropTable(
+                name: "authority_to_loads");
+
+            migrationBuilder.DropTable(
                 name: "mmsi_collections");
 
             migrationBuilder.DropTable(
+                name: "mmsi_job_orders");
+
+            migrationBuilder.DropTable(
                 name: "mmsi_principals");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_tugboat_owners");
+
+            migrationBuilder.DropTable(
+                name: "customer_order_slips");
+
+            migrationBuilder.DropTable(
+                name: "bank_accounts");
 
             migrationBuilder.DropTable(
                 name: "mmsi_terminals");
 
             migrationBuilder.DropTable(
                 name: "mmsi_vessels");
-
-            migrationBuilder.DropTable(
-                name: "mmsi_tugboat_owners");
-
-            migrationBuilder.DropTable(
-                name: "authority_to_loads");
-
-            migrationBuilder.DropTable(
-                name: "bank_accounts");
-
-            migrationBuilder.DropTable(
-                name: "mmsi_ports");
-
-            migrationBuilder.DropTable(
-                name: "customer_order_slips");
 
             migrationBuilder.DropTable(
                 name: "customers");
@@ -2398,6 +2627,9 @@ namespace IBS.DataAccess.Migrations
 
             migrationBuilder.DropTable(
                 name: "products");
+
+            migrationBuilder.DropTable(
+                name: "mmsi_ports");
 
             migrationBuilder.DropTable(
                 name: "suppliers");

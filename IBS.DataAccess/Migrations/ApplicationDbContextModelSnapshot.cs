@@ -184,6 +184,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("machine_name");
 
+                    b.Property<int?>("RecordId")
+                        .HasColumnType("integer")
+                        .HasColumnName("record_id");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1838,18 +1842,116 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("log_messages", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.BillAdjust", b =>
+                {
+                    b.Property<int>("BillAdjustId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("bill_adjust_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BillAdjustId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<int>("BillingId")
+                        .HasColumnType("integer")
+                        .HasColumnName("billing_id");
+
+                    b.Property<string>("BillingNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("billing_number");
+
+                    b.Property<string>("DispatchNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("dispatch_number");
+
+                    b.Property<int>("DispatchTicketId")
+                        .HasColumnType("integer")
+                        .HasColumnName("dispatch_ticket_id");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("rate");
+
+                    b.HasKey("BillAdjustId")
+                        .HasName("pk_mmsi_bill_adjustments");
+
+                    b.HasIndex("BillingId")
+                        .HasDatabaseName("ix_mmsi_bill_adjustments_billing_id");
+
+                    b.HasIndex("DispatchTicketId")
+                        .HasDatabaseName("ix_mmsi_bill_adjustments_dispatch_ticket_id");
+
+                    b.ToTable("mmsi_bill_adjustments", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.BillDispatch", b =>
+                {
+                    b.Property<int>("BillDispatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("bill_dispatch_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BillDispatchId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("ApOtherTug")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("ap_other_tug");
+
+                    b.Property<int>("BillingId")
+                        .HasColumnType("integer")
+                        .HasColumnName("billing_id");
+
+                    b.Property<string>("BillingNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("billing_number");
+
+                    b.Property<string>("DispatchNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("dispatch_number");
+
+                    b.Property<int>("DispatchTicketId")
+                        .HasColumnType("integer")
+                        .HasColumnName("dispatch_ticket_id");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("rate");
+
+                    b.HasKey("BillDispatchId")
+                        .HasName("pk_mmsi_bill_dispatches");
+
+                    b.HasIndex("BillingId")
+                        .HasDatabaseName("ix_mmsi_bill_dispatches_billing_id");
+
+                    b.HasIndex("DispatchTicketId")
+                        .HasDatabaseName("ix_mmsi_bill_dispatches_dispatch_ticket_id");
+
+                    b.ToTable("mmsi_bill_dispatches", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.Billing", b =>
                 {
                     b.Property<int>("MMSIBillingId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("mmsi_billing_id");
+                        .HasColumnName("RECID");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSIBillingId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
+                        .HasColumnName("AMOUNT");
 
                     b.Property<decimal>("AmountPaid")
                         .HasColumnType("numeric(18,4)")
@@ -1870,7 +1972,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("BilledTo")
                         .IsRequired()
                         .HasColumnType("varchar(10)")
-                        .HasColumnName("billed_to");
+                        .HasColumnName("CUSTNO");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)")
@@ -1886,7 +1988,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int?>("CollectionId")
                         .HasColumnType("integer")
-                        .HasColumnName("collection_id");
+                        .HasColumnName("CRNUM");
 
                     b.Property<string>("CollectionNumber")
                         .HasColumnType("text")
@@ -1908,11 +2010,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
-                        .HasColumnName("customer_id");
+                        .HasColumnName("CUSTNO_FK");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
-                        .HasColumnName("date");
+                        .HasColumnName("DATE");
 
                     b.Property<decimal>("Discount")
                         .HasColumnType("numeric(18,4)")
@@ -1952,7 +2054,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<bool>("IsVatable")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_vatable");
+                        .HasColumnName("VAT");
 
                     b.Property<int?>("JobOrderId")
                         .HasColumnType("integer")
@@ -1961,11 +2063,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("MMSIBillingNumber")
                         .IsRequired()
                         .HasColumnType("varchar(10)")
-                        .HasColumnName("mmsi_billing_number");
+                        .HasColumnName("NUMBER");
 
                     b.Property<int>("PortId")
                         .HasColumnType("integer")
-                        .HasColumnName("port_id");
+                        .HasColumnName("PORTNUM");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
@@ -1986,7 +2088,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("TerminalId")
                         .HasColumnType("integer")
-                        .HasColumnName("terminal_id");
+                        .HasColumnName("TERMINAL");
 
                     b.Property<string>("Terms")
                         .HasMaxLength(15)
@@ -1995,7 +2097,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("VesselId")
                         .HasColumnType("integer")
-                        .HasColumnName("vessel_id");
+                        .HasColumnName("VESSELNUM");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
@@ -2013,10 +2115,10 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_billings");
 
                     b.HasIndex("CollectionId")
-                        .HasDatabaseName("ix_billings_collection_id");
+                        .HasDatabaseName("ix_billings_crnum");
 
                     b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_billings_customer_id");
+                        .HasDatabaseName("ix_billings_custno_fk");
 
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_billings_date");
@@ -2025,20 +2127,20 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_billings_job_order_id");
 
                     b.HasIndex("PortId")
-                        .HasDatabaseName("ix_billings_port_id");
+                        .HasDatabaseName("ix_billings_portnum");
 
                     b.HasIndex("PrincipalId")
                         .HasDatabaseName("ix_billings_principal_id");
 
                     b.HasIndex("TerminalId")
-                        .HasDatabaseName("ix_billings_terminal_id");
+                        .HasDatabaseName("ix_billings_terminal");
 
                     b.HasIndex("VesselId")
-                        .HasDatabaseName("ix_billings_vessel_id");
+                        .HasDatabaseName("ix_billings_vesselnum");
 
                     b.HasIndex("MMSIBillingNumber", "Company")
                         .IsUnique()
-                        .HasDatabaseName("ix_billings_mmsi_billing_number_company");
+                        .HasDatabaseName("ix_billings_number_company");
 
                     b.ToTable("billings", (string)null);
                 });
@@ -2048,13 +2150,13 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("MMSICollectionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("mmsi_collection_id");
+                        .HasColumnName("RECID");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSICollectionId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
+                        .HasColumnName("AMOUNT");
 
                     b.Property<string>("BankAccountName")
                         .HasMaxLength(50)
@@ -2068,7 +2170,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int?>("BankId")
                         .HasColumnType("integer")
-                        .HasColumnName("bank_id");
+                        .HasColumnName("BANKACCTCO");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)")
@@ -2102,12 +2204,12 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<DateOnly?>("CheckDate")
                         .HasColumnType("date")
-                        .HasColumnName("check_date");
+                        .HasColumnName("CHECKDATE");
 
                     b.Property<string>("CheckNumber")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasColumnName("check_number");
+                        .HasColumnName("CHECKNO");
 
                     b.Property<DateOnly?>("ClearedDate")
                         .HasColumnType("date")
@@ -2129,11 +2231,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
-                        .HasColumnName("customer_id");
+                        .HasColumnName("CUSTNO");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
-                        .HasColumnName("date");
+                        .HasColumnName("CRDATE");
 
                     b.Property<DateOnly?>("DepositDate")
                         .HasColumnType("date")
@@ -2162,7 +2264,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("MMSICollectionNumber")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("mmsi_collection_number");
+                        .HasColumnName("CRNUM");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
@@ -2206,19 +2308,70 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mmsi_collections");
 
                     b.HasIndex("BankId")
-                        .HasDatabaseName("ix_mmsi_collections_bank_id");
+                        .HasDatabaseName("ix_mmsi_collections_bankacctco");
 
                     b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_mmsi_collections_customer_id");
+                        .HasDatabaseName("ix_mmsi_collections_custno");
 
                     b.HasIndex("Date")
-                        .HasDatabaseName("ix_mmsi_collections_date");
+                        .HasDatabaseName("ix_mmsi_collections_crdate");
 
                     b.HasIndex("MMSICollectionNumber", "Company")
                         .IsUnique()
-                        .HasDatabaseName("ix_mmsi_collections_mmsi_collection_number_company");
+                        .HasDatabaseName("ix_mmsi_collections_crnum_company");
 
                     b.ToTable("mmsi_collections", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.CollectionBill", b =>
+                {
+                    b.Property<int>("CollectionBillId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("collection_bill_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CollectionBillId"));
+
+                    b.Property<int>("BillingId")
+                        .HasColumnType("integer")
+                        .HasColumnName("billing_id");
+
+                    b.Property<string>("BillingNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("billing_number");
+
+                    b.Property<int>("CollectionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("collection_id");
+
+                    b.Property<string>("CollectionNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("collection_number");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("customer_number");
+
+                    b.HasKey("CollectionBillId")
+                        .HasName("pk_mmsi_collection_bills");
+
+                    b.HasIndex("BillingId")
+                        .HasDatabaseName("ix_mmsi_collection_bills_billing_id");
+
+                    b.HasIndex("CollectionId")
+                        .HasDatabaseName("ix_mmsi_collection_bills_collection_id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_collection_bills_customer_id");
+
+                    b.ToTable("mmsi_collection_bills", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.DispatchTicket", b =>
@@ -2226,7 +2379,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("DispatchTicketId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("dispatch_ticket_id");
+                        .HasColumnName("RECID");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DispatchTicketId"));
 
@@ -2260,7 +2413,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int?>("BillingId")
                         .HasColumnType("integer")
-                        .HasColumnName("billing_id");
+                        .HasColumnName("BILLNUM");
 
                     b.Property<string>("BillingNumber")
                         .HasColumnType("text")
@@ -2281,11 +2434,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
-                        .HasColumnName("customer_id");
+                        .HasColumnName("CUSTNO");
 
                     b.Property<DateOnly?>("Date")
                         .HasColumnType("date")
-                        .HasColumnName("date");
+                        .HasColumnName("DATE");
 
                     b.Property<DateOnly?>("DateArrived")
                         .HasColumnType("date")
@@ -2314,7 +2467,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("DispatchNumber")
                         .IsRequired()
                         .HasColumnType("varchar(20)")
-                        .HasColumnName("dispatch_number");
+                        .HasColumnName("NUMBER");
 
                     b.Property<decimal>("DispatchRate")
                         .HasColumnType("numeric(18,2)")
@@ -2346,7 +2499,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("PortId")
                         .HasColumnType("integer")
-                        .HasColumnName("port_id");
+                        .HasColumnName("PORTNUM");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("varchar(100)")
@@ -2379,7 +2532,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("TerminalId")
                         .HasColumnType("integer")
-                        .HasColumnName("terminal_id");
+                        .HasColumnName("TERMINAL");
 
                     b.Property<TimeOnly?>("TimeArrived")
                         .HasColumnType("time without time zone")
@@ -2403,15 +2556,15 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("TugBoatId")
                         .HasColumnType("integer")
-                        .HasColumnName("tug_boat_id");
+                        .HasColumnName("TUGNUM");
 
                     b.Property<int?>("TugMasterId")
                         .HasColumnType("integer")
-                        .HasColumnName("tug_master_id");
+                        .HasColumnName("MASTERNO");
 
                     b.Property<int>("VesselId")
                         .HasColumnType("integer")
-                        .HasColumnName("vessel_id");
+                        .HasColumnName("VESSELNUM");
 
                     b.Property<string>("VideoName")
                         .HasColumnType("text")
@@ -2433,31 +2586,31 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mmsi_dispatch_tickets");
 
                     b.HasIndex("BillingId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_billing_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_billnum");
 
                     b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_customer_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_custno");
 
                     b.HasIndex("JobOrderId")
                         .HasDatabaseName("ix_mmsi_dispatch_tickets_job_order_id");
 
                     b.HasIndex("PortId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_port_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_portnum");
 
                     b.HasIndex("ServiceId")
                         .HasDatabaseName("ix_mmsi_dispatch_tickets_service_id");
 
                     b.HasIndex("TerminalId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_terminal_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_terminal");
 
                     b.HasIndex("TugBoatId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_tug_boat_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_tugnum");
 
                     b.HasIndex("TugMasterId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_tug_master_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_masterno");
 
                     b.HasIndex("VesselId")
-                        .HasDatabaseName("ix_mmsi_dispatch_tickets_vessel_id");
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_vesselnum");
 
                     b.ToTable("mmsi_dispatch_tickets", (string)null);
                 });
@@ -2575,6 +2728,28 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_job_orders", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Module", b =>
+                {
+                    b.Property<int>("ModuleNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("module_number");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("ModuleName")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("module_name");
+
+                    b.HasKey("ModuleNumber")
+                        .HasName("pk_mmsi_modules");
+
+                    b.ToTable("mmsi_modules", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Port", b =>
                 {
                     b.Property<int>("PortId")
@@ -2613,11 +2788,26 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PrincipalId"));
 
-                    b.Property<string>("Address")
+                    b.Property<string>("Address1")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)")
-                        .HasColumnName("address");
+                        .HasColumnName("address1");
+
+                    b.Property<string>("Address2")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("address2");
+
+                    b.Property<string>("Address3")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("address3");
+
+                    b.Property<string>("Agent")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("agent");
 
                     b.Property<string>("BusinessType")
                         .HasColumnType("text")
@@ -2680,6 +2870,34 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_principals", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Rate", b =>
+                {
+                    b.Property<int>("RateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("rate_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RateId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateOnly>("AsOf")
+                        .HasColumnType("date")
+                        .HasColumnName("as_of");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("type");
+
+                    b.HasKey("RateId")
+                        .HasName("pk_mmsi_rates");
+
+                    b.ToTable("mmsi_rates", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Service", b =>
                 {
                     b.Property<int>("ServiceId")
@@ -2700,6 +2918,11 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("varchar(3)")
                         .HasColumnName("service_number");
+
+                    b.Property<string>("ServiceType")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("service_type");
 
                     b.HasKey("ServiceId")
                         .HasName("pk_mmsi_services");
@@ -3020,6 +3243,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("dispatch_discount");
 
+                    b.Property<int>("PortId")
+                        .HasColumnType("integer")
+                        .HasColumnName("port_id");
+
                     b.Property<int>("ServiceId")
                         .HasColumnType("integer")
                         .HasColumnName("service_id");
@@ -3041,6 +3268,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_mmsi_tariff_rates_customer_id");
+
+                    b.HasIndex("PortId")
+                        .HasDatabaseName("ix_mmsi_tariff_rates_port_id");
 
                     b.HasIndex("ServiceId")
                         .HasDatabaseName("ix_mmsi_tariff_rates_service_id");
@@ -3077,6 +3307,11 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("bank");
+
+                    b.Property<string>("BankAccountCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("bank_account_code");
 
                     b.Property<string>("Branch")
                         .IsRequired()
@@ -3266,6 +3501,21 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("customer_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
+
+                    b.Property<string>("Address1")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("address1");
+
+                    b.Property<string>("Address2")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("address2");
+
+                    b.Property<string>("Address3")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("address3");
 
                     b.Property<string>("BusinessStyle")
                         .HasMaxLength(100)
@@ -4597,20 +4847,62 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Hauler");
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.BillAdjust", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.Billing", "Billing")
+                        .WithMany()
+                        .HasForeignKey("BillingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_bill_adjustments_billings_billing_id");
+
+                    b.HasOne("IBS.Models.MMSI.DispatchTicket", "DispatchTicket")
+                        .WithMany()
+                        .HasForeignKey("DispatchTicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_bill_adjustments_mmsi_dispatch_tickets_dispatch_ticket");
+
+                    b.Navigation("Billing");
+
+                    b.Navigation("DispatchTicket");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.BillDispatch", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.Billing", "Billing")
+                        .WithMany()
+                        .HasForeignKey("BillingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_bill_dispatches_billings_billing_id");
+
+                    b.HasOne("IBS.Models.MMSI.DispatchTicket", "DispatchTicket")
+                        .WithMany()
+                        .HasForeignKey("DispatchTicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_bill_dispatches_mmsi_dispatch_tickets_dispatch_ticket_");
+
+                    b.Navigation("Billing");
+
+                    b.Navigation("DispatchTicket");
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.Billing", b =>
                 {
                     b.HasOne("IBS.Models.MMSI.Collection", "Collection")
                         .WithMany("PaidBills")
                         .HasForeignKey("CollectionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_billings_mmsi_collections_collection_id");
+                        .HasConstraintName("fk_billings_mmsi_collections_crnum");
 
                     b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_billings_customers_customer_id");
+                        .HasConstraintName("fk_billings_customers_custno_fk");
 
                     b.HasOne("IBS.Models.MMSI.JobOrder", "JobOrder")
                         .WithMany()
@@ -4622,7 +4914,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("PortId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_billings_mmsi_ports_port_id");
+                        .HasConstraintName("fk_billings_mmsi_ports_portnum");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.Principal", "Principal")
                         .WithMany()
@@ -4634,14 +4926,14 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("TerminalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_billings_mmsi_terminals_terminal_id");
+                        .HasConstraintName("fk_billings_mmsi_terminals_terminal");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.Vessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_billings_mmsi_vessels_vessel_id");
+                        .HasConstraintName("fk_billings_mmsi_vessels_vesselnum");
 
                     b.Navigation("Collection");
 
@@ -4663,16 +4955,46 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.MasterFile.BankAccount", "BankAccount")
                         .WithMany()
                         .HasForeignKey("BankId")
-                        .HasConstraintName("fk_mmsi_collections_bank_accounts_bank_id");
+                        .HasConstraintName("fk_mmsi_collections_bank_accounts_bankacctco");
 
                     b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_collections_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_collections_customers_custno");
 
                     b.Navigation("BankAccount");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.CollectionBill", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.Billing", "Billing")
+                        .WithMany()
+                        .HasForeignKey("BillingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_collection_bills_billings_billing_id");
+
+                    b.HasOne("IBS.Models.MMSI.Collection", "Collection")
+                        .WithMany()
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_collection_bills_mmsi_collections_collection_id");
+
+                    b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_collection_bills_customers_customer_id");
+
+                    b.Navigation("Billing");
+
+                    b.Navigation("Collection");
 
                     b.Navigation("Customer");
                 });
@@ -4682,14 +5004,14 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.MMSI.Billing", "Billing")
                         .WithMany()
                         .HasForeignKey("BillingId")
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_billings_billing_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_billings_billnum");
 
                     b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_customers_custno");
 
                     b.HasOne("IBS.Models.MMSI.JobOrder", "JobOrder")
                         .WithMany("DispatchTickets")
@@ -4701,7 +5023,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("PortId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_ports_port_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_ports_portnum");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.Service", "Service")
                         .WithMany()
@@ -4715,26 +5037,26 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("TerminalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_terminals_terminal_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_terminals_terminal");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.Tugboat", "Tugboat")
                         .WithMany()
                         .HasForeignKey("TugBoatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tugboats_tug_boat_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tugboats_tugnum");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.TugMaster", "TugMaster")
                         .WithMany()
                         .HasForeignKey("TugMasterId")
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tug_masters_tug_master_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tug_masters_masterno");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.Vessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_vessels_vessel_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_vessels_vesselnum");
 
                     b.Navigation("Billing");
 
@@ -4837,6 +5159,13 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_tariff_rates_customers_customer_id");
 
+                    b.HasOne("IBS.Models.MMSI.MasterFile.Port", "Port")
+                        .WithMany()
+                        .HasForeignKey("PortId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_ports_port_id");
+
                     b.HasOne("IBS.Models.MMSI.MasterFile.Service", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
@@ -4852,6 +5181,8 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_mmsi_tariff_rates_mmsi_terminals_terminal_id");
 
                     b.Navigation("Customer");
+
+                    b.Navigation("Port");
 
                     b.Navigation("Service");
 
