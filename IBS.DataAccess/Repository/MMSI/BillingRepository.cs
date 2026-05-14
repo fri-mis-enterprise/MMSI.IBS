@@ -28,7 +28,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 SerialNo = billing.MMSIBillingNumber,
                 SoldTo = (billing.PrincipalId != null ? billing.Principal?.PrincipalName : billing.Customer?.CustomerName) ?? string.Empty,
                 TinNo = (billing.PrincipalId != null ? billing.Principal?.TIN : billing.Customer?.CustomerTin) ?? string.Empty,
-                Address = (billing.PrincipalId != null ? billing.Principal?.Address : billing.Customer?.CustomerAddress) ?? string.Empty,
+                Address = (billing.PrincipalId != null ? billing.Principal?.Address1 : billing.Customer?.CustomerAddress) ?? string.Empty,
                 Description = billing.Vessel?.VesselName ?? "Maritime Services",
                 Amount = billing.Amount - billing.Discount
             };
@@ -233,7 +233,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             // Splitting the address for the view
             var words = model.PrincipalId != null
-                ? model.Principal?.Address.Split(' ')
+                ? model.Principal?.Address1.Split(' ')
                 : model.Customer?.CustomerAddress.Split(' ');
             var resultStrings = new List<string>();
             var currentString = "";
@@ -304,25 +304,25 @@ namespace IBS.DataAccess.Repository.MMSI
                         entity.CustomerId = jobOrder.CustomerId;
                         entity.Customer = jobOrder.Customer!;
                     }
-                    
+
                     if (entity.VesselId == 0)
                     {
                         entity.VesselId = jobOrder.VesselId;
                         entity.Vessel = jobOrder.Vessel!;
                     }
-                    
+
                     if (entity.PortId == 0)
                     {
                         entity.PortId = jobOrder.PortId;
                         entity.Port = jobOrder.Port!;
                     }
-                    
+
                     if (entity.TerminalId == 0)
                     {
                         entity.TerminalId = jobOrder.TerminalId;
                         entity.Terminal = jobOrder.Terminal!;
                     }
-                    
+
                     if (string.IsNullOrWhiteSpace(entity.VoyageNumber))
                     {
                         entity.VoyageNumber = jobOrder.VoyageNumber;
@@ -334,7 +334,7 @@ namespace IBS.DataAccess.Repository.MMSI
             {
                 entity.Customer ??= (await _db.Customers.FindAsync(new object[] { entity.CustomerId }, cancellationToken))!;
             }
-            
+
             entity.IsVatable = entity.Customer?.VatType == "Vatable";
             entity.Status = "For Collection";
             entity.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();

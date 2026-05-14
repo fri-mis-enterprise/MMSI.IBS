@@ -164,7 +164,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion -- Audit Trail Recording --
 
-                currentModel.Address = model.Address;
+                currentModel.Address1 = model.Address1;
                 currentModel.PrincipalName = model.PrincipalName;
                 currentModel.PrincipalNumber = model.PrincipalNumber;
                 currentModel.TIN = model.TIN;
