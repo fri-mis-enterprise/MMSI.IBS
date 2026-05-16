@@ -40,6 +40,42 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult Index() => View();
 
+        [RequireAnyAccess("You do not have permission to reset Msap data.", ProcedureEnum.ManageMsapImport)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reset()
+        {
+            try
+            {
+                await dbContext.Database.ExecuteSqlRawAsync(@"
+                    TRUNCATE TABLE mmsi_bill_dispatches RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_bill_adjustments RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_collection_bills RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_dispatch_tickets RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE billings RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_job_orders RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_collections RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_tariff_rates RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_principals RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_tugboats RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_terminals RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_vessels RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_tug_masters RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_tugboat_owners RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_services RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE mmsi_ports RESTART IDENTITY CASCADE;
+                    DELETE FROM customers WHERE company = 'MMSI';
+                ");
+                TempData["success"] = "All MSAP tables have been reset successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = $"Error resetting tables: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         [RequireAnyAccess("You do not have permission to import Msap data.", ProcedureEnum.ManageMsapImport)]
         [HttpPost]
         [ValidateAntiForgeryToken]

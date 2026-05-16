@@ -222,7 +222,10 @@ ViewData["Title"] = "MSAP Import";
                     <button type="button" class="btn btn-outline-secondary" id="clearAllBtn">
                         Clear All
                     </button>
-                    <span class="text-muted small ms-auto" id="fileCount"></span>
+                    <span class="text-muted small" id="fileCount"></span>
+                    <button type="button" class="btn btn-danger ms-auto" id="resetBtn">
+                        <i class="bi bi-trash-fill me-1"></i> Reset All Tables
+                    </button>
                 </div>
 
             </form>
@@ -356,6 +359,24 @@ ViewData["Title"] = "MSAP Import";
             $summary.addClass('d-none');
             $badges.empty();
             updateFileCount();
+        });
+
+        $('#resetBtn').on('click', function() {
+            if (confirm('Are you sure you want to reset ALL MSAP tables? This action cannot be undone.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Reset")';
+                
+                const antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = antiForgeryToken;
+                
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
         });
 
         $form.on('submit', function () {
