@@ -22,8 +22,11 @@ namespace IBS.Models.MMSI.MasterFile
         [ForeignKey(nameof(PortId))]
         public Port? Port { get; set; }
 
+        [StringLength(10)]
+        [Column("msap_recid", TypeName = "varchar(10)")]
+        public string? MsapRecId { get; set; }
+
         [NotMapped]
         public List<SelectListItem>? Ports { get; set; }
-
     }
 }

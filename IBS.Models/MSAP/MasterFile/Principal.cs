@@ -63,5 +63,9 @@ namespace IBS.Models.MMSI.MasterFile
         public List<SelectListItem>? CustomerSelectList { get; set; }
 
         #endregion
+
+        [StringLength(10)]
+        [Column("msap_recid", TypeName = "varchar(10)")]
+        public string? MsapRecId { get; set; }
     }
 }

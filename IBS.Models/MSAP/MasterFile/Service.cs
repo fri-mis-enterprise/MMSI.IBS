@@ -19,5 +19,9 @@ namespace IBS.Models.MMSI.MasterFile
         [StringLength(10)]
         [Column(TypeName = "varchar(10)")]
         public string? ServiceType { get; set; }
+
+        [StringLength(10)]
+        [Column("msap_recid", TypeName = "varchar(10)")]
+        public string? MsapRecId { get; set; }
     }
 }

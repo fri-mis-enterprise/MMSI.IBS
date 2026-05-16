@@ -17,5 +17,9 @@ namespace IBS.Models.MMSI.MasterFile
         public string TugboatOwnerName { get; set; } = null!;
 
         public decimal FixedRate { get; set; }
+
+        [StringLength(10)]
+        [Column("msap_recid", TypeName = "varchar(10)")]
+        public string? MsapRecId { get; set; }
     }
 }

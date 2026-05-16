@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514062929_AddRecIdOnModels")]
+    partial class AddRecIdOnModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2846,11 +2849,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("mobile2");
 
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
-
                     b.Property<string>("PrincipalName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2916,11 +2914,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("service_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceId"));
-
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
@@ -2995,15 +2988,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
-
                     b.Property<string>("TugMasterName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("tug_master_name");
 
                     b.Property<string>("TugMasterNumber")
@@ -3030,11 +3018,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsCompanyOwned")
                         .HasColumnType("boolean")
                         .HasColumnName("is_company_owned");
-
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
 
                     b.Property<string>("TugboatName")
                         .IsRequired()
@@ -3073,11 +3056,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("FixedRate")
                         .HasColumnType("numeric")
                         .HasColumnName("fixed_rate");
-
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
 
                     b.Property<string>("TugboatOwnerName")
                         .IsRequired()
@@ -3213,11 +3191,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("vessel_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("VesselId"));
-
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
 
                     b.Property<string>("VesselName")
                         .IsRequired()
@@ -3652,11 +3625,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<string>("MsapRecId")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("msap_recid");
 
                     b.Property<bool>("RequiresPriceAdjustment")
                         .HasColumnType("boolean")

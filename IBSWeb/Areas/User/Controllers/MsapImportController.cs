@@ -88,27 +88,74 @@ namespace IBSWeb.Areas.User.Controllers
                 await LoadExistingMapsAsync(maps, CancellationToken.None);
 
                 // Level 1 — Independent master files
-                if (customerFile != null) sb.AppendLine(await ImportCustomersAsync(customerFile, maps));
-                if (portFile != null) sb.AppendLine(await ImportPortsAsync(portFile, maps));
-                if (serviceFile != null) sb.AppendLine(await ImportServicesAsync(serviceFile, maps));
-                if (tugboatOwnerFile != null) sb.AppendLine(await ImportTugboatOwnersAsync(tugboatOwnerFile, maps));
-                if (tugMasterFile != null) sb.AppendLine(await ImportTugMastersAsync(tugMasterFile, maps));
-                if (vesselFile != null) sb.AppendLine(await ImportVesselsAsync(vesselFile, maps));
+                if (customerFile != null)
+                {
+                    sb.AppendLine(await ImportCustomersAsync(customerFile, maps));
+                }
+
+                if (portFile != null)
+                {
+                    sb.AppendLine(await ImportPortsAsync(portFile, maps));
+                }
+
+                if (serviceFile != null)
+                {
+                    sb.AppendLine(await ImportServicesAsync(serviceFile, maps));
+                }
+
+                if (tugboatOwnerFile != null)
+                {
+                    sb.AppendLine(await ImportTugboatOwnersAsync(tugboatOwnerFile, maps));
+                }
+
+                if (tugMasterFile != null)
+                {
+                    sb.AppendLine(await ImportTugMastersAsync(tugMasterFile, maps));
+                }
+
+                if (vesselFile != null)
+                {
+                    sb.AppendLine(await ImportVesselsAsync(vesselFile, maps));
+                }
 
                 // Level 2 — Single dependency
-                if (terminalFile != null) sb.AppendLine(await ImportTerminalsAsync(terminalFile, maps));
-                if (tugboatFile != null) sb.AppendLine(await ImportTugboatsAsync(tugboatFile, maps));
-                if (principalFile != null) sb.AppendLine(await ImportPrincipalsAsync(principalFile, maps));
+                if (terminalFile != null)
+                {
+                    sb.AppendLine(await ImportTerminalsAsync(terminalFile, maps));
+                }
+
+                if (tugboatFile != null)
+                {
+                    sb.AppendLine(await ImportTugboatsAsync(tugboatFile, maps));
+                }
+
+                if (principalFile != null)
+                {
+                    sb.AppendLine(await ImportPrincipalsAsync(principalFile, maps));
+                }
 
                 // Level 3 — Mixed dependencies
-                if (tariffFile != null) sb.AppendLine(await ImportTariffRatesAsync(tariffFile, maps));
-                if (collectionFile != null) sb.AppendLine(await ImportCollectionsAsync(collectionFile, maps));
+                if (tariffFile != null)
+                {
+                    sb.AppendLine(await ImportTariffRatesAsync(tariffFile, maps));
+                }
+
+                if (collectionFile != null)
+                {
+                    sb.AppendLine(await ImportCollectionsAsync(collectionFile, maps));
+                }
 
                 // Level 4 — Transactional
-                if (billingFile != null) sb.AppendLine(await ImportBillingsAsync(billingFile, maps));
+                if (billingFile != null)
+                {
+                    sb.AppendLine(await ImportBillingsAsync(billingFile, maps));
+                }
 
                 // Level 5 — Final
-                if (dispatchTicketFile != null) sb.AppendLine(await ImportDispatchTicketsAsync(dispatchTicketFile, maps));
+                if (dispatchTicketFile != null)
+                {
+                    sb.AppendLine(await ImportDispatchTicketsAsync(dispatchTicketFile, maps));
+                }
 
                 if (sb.Length == 0 && _importErrors.Count == 0)
                 {
@@ -122,8 +169,15 @@ namespace IBSWeb.Areas.User.Controllers
                 if (_importErrors.Count > 0)
                 {
                     sb.AppendLine("\nERRORS/SKIPPED RECORDS:");
-                    foreach (var error in _importErrors.Take(100)) sb.AppendLine(error);
-                    if (_importErrors.Count > 100) sb.AppendLine("... (more errors truncated)");
+                    foreach (var error in _importErrors.Take(100))
+                    {
+                        sb.AppendLine(error);
+                    }
+
+                    if (_importErrors.Count > 100)
+                    {
+                        sb.AppendLine("... (more errors truncated)");
+                    }
                 }
 
                 TempData["success"] = sb.ToString().Replace(Environment.NewLine, "\\n");
@@ -141,82 +195,184 @@ namespace IBSWeb.Areas.User.Controllers
         // Import Maps
         // -------------------------------------------------------------------------
 
+        private sealed class BillingMapInfo
+        {
+            public int Id { get; set; }
+            public int PortId { get; set; }
+            public int TerminalId { get; set; }
+        }
+
         private sealed class ImportMaps
         {
             public Dictionary<string, int> Customer { get; } = new();
+            public Dictionary<string, int> CustomerLegacyMap { get; } = new();
             public Dictionary<string, int> Port { get; } = new();
+            public Dictionary<string, int> PortLegacyMap { get; } = new();
             public Dictionary<string, int> Service { get; } = new();
+            public Dictionary<string, int> ServiceLegacyMap { get; } = new();
             public Dictionary<string, int> Owner { get; } = new();
+            public Dictionary<string, int> OwnerLegacyMap { get; } = new();
             public Dictionary<string, int> Tugboat { get; } = new();
+            public Dictionary<string, int> TugboatLegacyMap { get; } = new();
             public Dictionary<string, int> TugMaster { get; } = new();
+            public Dictionary<string, int> TugMasterLegacyMap { get; } = new();
             public Dictionary<string, int> Vessel { get; } = new();
+            public Dictionary<string, int> VesselLegacyMap { get; } = new();
             public Dictionary<string, int> Terminal { get; } = new();
+            public Dictionary<string, (int PortId, int TerminalId)> TerminalLegacyMap { get; } = new();
             public Dictionary<string, int> Principal { get; } = new();
+            public Dictionary<string, int> PrincipalLegacyMap { get; } = new();
             public Dictionary<string, int> Collection { get; } = new();
-            public Dictionary<string, int> Billing { get; } = new();
+            public Dictionary<string, BillingMapInfo> Billing { get; } = new();
+            public Dictionary<string, BillingMapInfo> BillingByRecId { get; } = new();
             public HashSet<string> TariffRate { get; } = new();
             public HashSet<string> DispatchTicket { get; } = new();
+            public Dictionary<int, int> PortToFirstTerminal { get; } = new();
         }
 
         private async Task LoadExistingMapsAsync(ImportMaps maps, CancellationToken ct)
         {
             maps.Port.Clear();
+            maps.PortLegacyMap.Clear();
             foreach (var p in await dbContext.MMSIPorts.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Port[p.PortNumber!] = p.PortId;
+                if (!string.IsNullOrEmpty(p.MsapRecId))
+                {
+                    maps.PortLegacyMap[p.MsapRecId] = p.PortId;
+                }
+            }
 
             maps.Service.Clear();
+            maps.ServiceLegacyMap.Clear();
             foreach (var s in await dbContext.MMSIServices.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Service[s.ServiceNumber] = s.ServiceId;
+                if (!string.IsNullOrEmpty(s.MsapRecId))
+                {
+                    maps.ServiceLegacyMap[s.MsapRecId] = s.ServiceId;
+                }
+            }
 
             maps.Owner.Clear();
+            maps.OwnerLegacyMap.Clear();
             foreach (var o in await dbContext.MMSITugboatOwners.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Owner[o.TugboatOwnerNumber] = o.TugboatOwnerId;
+                if (!string.IsNullOrEmpty(o.MsapRecId))
+                {
+                    maps.OwnerLegacyMap[o.MsapRecId] = o.TugboatOwnerId;
+                }
+            }
 
             maps.TugMaster.Clear();
+            maps.TugMasterLegacyMap.Clear();
             foreach (var m in await dbContext.MMSITugMasters.AsNoTracking().ToListAsync(ct))
+            {
                 maps.TugMaster[m.TugMasterNumber] = m.TugMasterId;
+                if (!string.IsNullOrEmpty(m.MsapRecId))
+                {
+                    maps.TugMasterLegacyMap[m.MsapRecId] = m.TugMasterId;
+                }
+            }
 
             maps.Vessel.Clear();
+            maps.VesselLegacyMap.Clear();
             foreach (var v in await dbContext.MMSIVessels.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Vessel[v.VesselNumber] = v.VesselId;
+                if (!string.IsNullOrEmpty(v.MsapRecId))
+                {
+                    maps.VesselLegacyMap[v.MsapRecId] = v.VesselId;
+                }
+            }
 
             maps.Tugboat.Clear();
+            maps.TugboatLegacyMap.Clear();
             foreach (var t in await dbContext.MMSITugboats.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Tugboat[t.TugboatNumber] = t.TugboatId;
+                if (!string.IsNullOrEmpty(t.MsapRecId))
+                {
+                    maps.TugboatLegacyMap[t.MsapRecId] = t.TugboatId;
+                }
+            }
 
             maps.Terminal.Clear();
+            maps.TerminalLegacyMap.Clear();
             foreach (var t in await dbContext.MMSITerminals.Include(x => x.Port).AsNoTracking().ToListAsync(ct))
             {
                 if (t.Port != null && t.Port.PortNumber != null)
                 {
                     maps.Terminal[$"{t.Port.PortNumber}{t.TerminalNumber}"] = t.TerminalId;
                 }
+                if (!string.IsNullOrEmpty(t.MsapRecId))
+                {
+                    maps.TerminalLegacyMap[t.MsapRecId] = (t.PortId, t.TerminalId);
+                }
             }
 
             maps.Billing.Clear();
+            maps.BillingByRecId.Clear();
             foreach (var b in await dbContext.Billings.AsNoTracking().ToListAsync(ct))
-                maps.Billing[b.MMSIBillingNumber] = b.MMSIBillingId;
+            {
+                var info = new BillingMapInfo { Id = b.MMSIBillingId, PortId = b.PortId, TerminalId = b.TerminalId };
+                maps.Billing[b.MMSIBillingNumber] = info;
+                maps.BillingByRecId[b.MMSIBillingId.ToString()] = info;
+            }
 
             maps.Collection.Clear();
             foreach (var c in await dbContext.MMSICollections.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Collection[c.MMSICollectionNumber] = c.MMSICollectionId;
+            }
 
             maps.Customer.Clear();
+            maps.CustomerLegacyMap.Clear();
             foreach (var c in await dbContext.Customers.AsNoTracking().Where(x => x.Company == "MMSI").ToListAsync(ct))
+            {
                 if (c.CustomerCode != null)
+                {
                     maps.Customer[c.CustomerCode] = c.CustomerId;
+                }
+                if (!string.IsNullOrEmpty(c.MsapRecId))
+                {
+                    maps.CustomerLegacyMap[c.MsapRecId] = c.CustomerId;
+                }
+            }
 
             maps.Principal.Clear();
+            maps.PrincipalLegacyMap.Clear();
             foreach (var p in await dbContext.MMSIPrincipals.AsNoTracking().ToListAsync(ct))
+            {
                 maps.Principal[p.PrincipalNumber] = p.PrincipalId;
+                if (!string.IsNullOrEmpty(p.MsapRecId))
+                {
+                    maps.PrincipalLegacyMap[p.MsapRecId] = p.PrincipalId;
+                }
+            }
 
             maps.TariffRate.Clear();
             foreach (var tr in await dbContext.MMSITariffRates.AsNoTracking().ToListAsync(ct))
+            {
                 maps.TariffRate.Add($"{tr.AsOfDate:yyyy-MM-dd}|{tr.CustomerId}|{tr.TerminalId}|{tr.ServiceId}");
+            }
 
             maps.DispatchTicket.Clear();
             foreach (var dt in await dbContext.MMSIDispatchTickets.AsNoTracking().ToListAsync(ct))
+            {
                 maps.DispatchTicket.Add(dt.DispatchNumber);
+            }
+
+            maps.PortToFirstTerminal.Clear();
+            var allTerminals = await dbContext.MMSITerminals.AsNoTracking().OrderBy(t => t.TerminalNumber).ToListAsync(ct);
+            foreach (var t in allTerminals)
+            {
+                if (!maps.PortToFirstTerminal.ContainsKey(t.PortId))
+                {
+                    maps.PortToFirstTerminal[t.PortId] = t.TerminalId;
+                }
+            }
         }
 
         // -------------------------------------------------------------------------
@@ -227,14 +383,29 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Customer>();
+            var newRecords = new List<(Customer Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 4);
-                if (maps.Customer.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.Customer.TryGetValue(msapNumber, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.CustomerLegacyMap[recid] = existingId;
+                        var existing = await dbContext.Customers.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 string name = GetString(record, "name");
                 if (name == "-") { _importErrors.Add($"Customer {msapNumber}: Name is missing. Skipping."); continue; }
@@ -259,25 +430,41 @@ namespace IBSWeb.Areas.User.Controllers
                     Company = "MMSI",
                     CreatedBy = $"Import: {GetUserFullName()}",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
 
                 if (newRecords.Count >= 500)
                 {
-                    await dbContext.Customers.AddRangeAsync(newRecords);
+                    await dbContext.Customers.AddRangeAsync(newRecords.Select(x => x.Entity));
                     await dbContext.SaveChangesAsync();
-                    foreach (var r in newRecords) maps.Customer[r.CustomerCode!] = r.CustomerId;
+                    foreach (var item in newRecords)
+                    {
+                        maps.Customer[item.Entity.CustomerCode!] = item.Entity.CustomerId;
+                        if (item.LegacyId != "-")
+                        {
+                            maps.CustomerLegacyMap[item.LegacyId] = item.Entity.CustomerId;
+                        }
+                    }
+
                     newRecords.Clear();
                 }
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.Customers.AddRangeAsync(newRecords);
+                await dbContext.Customers.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Customer[r.CustomerCode!] = r.CustomerId;
+                foreach (var item in newRecords)
+                {
+                    maps.Customer[item.Entity.CustomerCode!] = item.Entity.CustomerId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.CustomerLegacyMap[item.LegacyId] = item.Entity.CustomerId;
+                    }
+                }
             }
 
             return $"Customers: {count} imported, {skipped} already existed.";
@@ -287,30 +474,53 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Port>();
+            var newRecords = new List<(Port Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 3);
-                if (maps.Port.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.Port.TryGetValue(msapNumber, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.PortLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSIPorts.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 var entity = new Port
                 {
                     PortNumber = msapNumber,
-                    PortName = GetString(record, "name")
+                    PortName = GetString(record, "name"),
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIPorts.AddRangeAsync(newRecords);
+                await dbContext.MMSIPorts.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Port[r.PortNumber!] = r.PortId;
+                foreach (var item in newRecords)
+                {
+                    maps.Port[item.Entity.PortNumber!] = item.Entity.PortId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.PortLegacyMap[item.LegacyId] = item.Entity.PortId;
+                    }
+                }
             }
 
             return $"Ports: {count} imported, {skipped} already existed.";
@@ -320,31 +530,54 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Service>();
+            var newRecords = new List<(Service Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 3);
-                if (maps.Service.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.Service.TryGetValue(msapNumber, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.ServiceLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSIServices.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 var entity = new Service
                 {
                     ServiceNumber = msapNumber,
                     ServiceName = GetString(record, "desc"),
-                    ServiceType = GetString(record, "type")
+                    ServiceType = GetString(record, "type"),
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIServices.AddRangeAsync(newRecords);
+                await dbContext.MMSIServices.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Service[r.ServiceNumber] = r.ServiceId;
+                foreach (var item in newRecords)
+                {
+                    maps.Service[item.Entity.ServiceNumber] = item.Entity.ServiceId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.ServiceLegacyMap[item.LegacyId] = item.Entity.ServiceId;
+                    }
+                }
             }
 
             return $"Services: {count} imported, {skipped} already existed.";
@@ -354,30 +587,53 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<TugboatOwner>();
+            var newRecords = new List<(TugboatOwner Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 3);
-                if (maps.Owner.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.Owner.TryGetValue(msapNumber, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.OwnerLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSITugboatOwners.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 var entity = new TugboatOwner
                 {
                     TugboatOwnerNumber = msapNumber,
-                    TugboatOwnerName = GetString(record, "name")
+                    TugboatOwnerName = GetString(record, "name"),
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITugboatOwners.AddRangeAsync(newRecords);
+                await dbContext.MMSITugboatOwners.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Owner[r.TugboatOwnerNumber] = r.TugboatOwnerId;
+                foreach (var item in newRecords)
+                {
+                    maps.Owner[item.Entity.TugboatOwnerNumber] = item.Entity.TugboatOwnerId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.OwnerLegacyMap[item.LegacyId] = item.Entity.TugboatOwnerId;
+                    }
+                }
             }
 
             return $"Tugboat Owners: {count} imported, {skipped} already existed.";
@@ -387,31 +643,54 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<TugMaster>();
+            var newRecords = new List<(TugMaster Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string empNo = GetString(record, "empno");
-                if (maps.TugMaster.ContainsKey(empNo)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.TugMaster.TryGetValue(empNo, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.TugMasterLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSITugMasters.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 var entity = new TugMaster
                 {
                     TugMasterNumber = empNo,
                     TugMasterName = GetString(record, "name"),
-                    IsActive = ParseBool(record, "active")
+                    IsActive = ParseBool(record, "active"),
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITugMasters.AddRangeAsync(newRecords);
+                await dbContext.MMSITugMasters.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.TugMaster[r.TugMasterNumber] = r.TugMasterId;
+                foreach (var item in newRecords)
+                {
+                    maps.TugMaster[item.Entity.TugMasterNumber] = item.Entity.TugMasterId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.TugMasterLegacyMap[item.LegacyId] = item.Entity.TugMasterId;
+                    }
+                }
             }
 
             return $"Tug Masters: {count} imported, {skipped} already existed.";
@@ -421,31 +700,54 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Vessel>();
+            var newRecords = new List<(Vessel Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 4);
-                if (maps.Vessel.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.Vessel.TryGetValue(msapNumber, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.VesselLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSIVessels.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 var entity = new Vessel
                 {
                     VesselNumber = msapNumber,
                     VesselName = GetString(record, "name"),
-                    VesselType = GetString(record, "type") == "L" ? "LOCAL" : "FOREIGN"
+                    VesselType = GetString(record, "type") == "L" ? "LOCAL" : "FOREIGN",
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIVessels.AddRangeAsync(newRecords);
+                await dbContext.MMSIVessels.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Vessel[r.VesselNumber] = r.VesselId;
+                foreach (var item in newRecords)
+                {
+                    maps.Vessel[item.Entity.VesselNumber] = item.Entity.VesselId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.VesselLegacyMap[item.LegacyId] = item.Entity.VesselId;
+                    }
+                }
             }
 
             return $"Vessels: {count} imported, {skipped} already existed.";
@@ -455,43 +757,65 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Terminal>();
+            var newRecords = new List<(Terminal Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = GetString(record, "number");
+                string recid = GetString(record, "recid");
                 string? mapKey = NormalizeTerminalCode(msapNumber);
                 if (mapKey == null) { _importErrors.Add($"Terminal {msapNumber}: Invalid code format. Skipping."); continue; }
 
-                if (maps.Terminal.ContainsKey(mapKey)) { skipped++; continue; }
-
-                string portPart = mapKey.Substring(0, 3);
-                string terminalPart = mapKey.Substring(3, 3);
-
-                if (!maps.Port.TryGetValue(portPart, out int portId))
+                if (!maps.Port.TryGetValue(mapKey.Substring(0, 3), out int portId))
                 {
-                    _importErrors.Add($"Terminal {msapNumber}: Port {portPart} not found. Skipping.");
+                    _importErrors.Add($"Terminal {msapNumber}: Port {mapKey.Substring(0, 3)} not found. Skipping.");
+                    continue;
+                }
+
+                if (maps.Terminal.TryGetValue(mapKey, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.TerminalLegacyMap[recid] = (portId, existingId);
+                        var existing = await dbContext.MMSITerminals.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
                     continue;
                 }
 
                 var entity = new Terminal
                 {
                     PortId = portId,
-                    TerminalNumber = terminalPart,
-                    TerminalName = GetString(record, "name")
+                    TerminalNumber = mapKey.Substring(3, 3),
+                    TerminalName = GetString(record, "name"),
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITerminals.AddRangeAsync(newRecords);
+                await dbContext.MMSITerminals.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Terminal[$"{maps.Port.First(x => x.Value == r.PortId).Key}{r.TerminalNumber}"] = r.TerminalId;
+                foreach (var item in newRecords)
+                {
+                    var r = item.Entity;
+                    string pNum = maps.Port.First(x => x.Value == r.PortId).Key;
+                    string mapKey = $"{pNum}{r.TerminalNumber}";
+                    maps.Terminal[mapKey] = r.TerminalId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.TerminalLegacyMap[item.LegacyId] = (r.PortId, r.TerminalId);
+                    }
+                }
             }
 
             return $"Terminals: {count} imported, {skipped} already existed.";
@@ -501,24 +825,43 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Tugboat>();
+            var newRecords = new List<(Tugboat Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 3);
-                if (maps.Tugboat.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
 
-                string ownerNo = PadNumber(GetString(record, "owner"), 3);
-                int? ownerId = null;
-                if (ownerNo != "-" && maps.Owner.TryGetValue(ownerNo, out int id))
+                if (maps.Tugboat.TryGetValue(msapNumber, out int existingId))
                 {
-                    ownerId = id;
+                    if (recid != "-")
+                    {
+                        maps.TugboatLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSITugboats.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
                 }
-                else if (ownerNo != "-")
+
+                string ownerNoRaw = GetString(record, "owner");
+                string ownerNo = PadNumber(ownerNoRaw, 3);
+                int? ownerId = null;
+                if (ownerNo != "-" && ownerNo != "000")
                 {
-                    _importErrors.Add($"Tugboat {msapNumber}: Owner {ownerNo} not found. Setting as null.");
+                    if (maps.Owner.TryGetValue(ownerNo, out int id) || maps.OwnerLegacyMap.TryGetValue(ownerNoRaw, out id))
+                    {
+                        ownerId = id;
+                    }
+                    else
+                    {
+                        _importErrors.Add($"Tugboat {msapNumber}: Owner {ownerNo} not found. Setting as null.");
+                    }
                 }
 
                 var entity = new Tugboat
@@ -526,18 +869,26 @@ namespace IBSWeb.Areas.User.Controllers
                     TugboatNumber = msapNumber,
                     TugboatName = GetString(record, "name"),
                     IsCompanyOwned = ParseBool(record, "companyown"),
-                    TugboatOwnerId = ownerId
+                    TugboatOwnerId = ownerId,
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITugboats.AddRangeAsync(newRecords);
+                await dbContext.MMSITugboats.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Tugboat[r.TugboatNumber] = r.TugboatId;
+                foreach (var item in newRecords)
+                {
+                    maps.Tugboat[item.Entity.TugboatNumber] = item.Entity.TugboatId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.TugboatLegacyMap[item.LegacyId] = item.Entity.TugboatId;
+                    }
+                }
             }
 
             return $"Tugboats: {count} imported, {skipped} already existed.";
@@ -547,17 +898,32 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
-            var newRecords = new List<Principal>();
+            var newRecords = new List<(Principal Entity, string LegacyId)>();
 
             foreach (var record in records)
             {
                 string msapNumber = PadNumber(GetString(record, "number"), 4);
-                if (maps.Principal.ContainsKey(msapNumber)) { skipped++; continue; }
+                string recid = GetString(record, "recid");
+
+                if (maps.Principal.TryGetValue(msapNumber, out int existingId))
+                {
+                    if (recid != "-")
+                    {
+                        maps.PrincipalLegacyMap[recid] = existingId;
+                        var existing = await dbContext.MMSIPrincipals.FindAsync(existingId);
+                        if (existing != null && existing.MsapRecId != recid)
+                        {
+                            existing.MsapRecId = recid;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
 
                 string agentNo = PadNumber(GetString(record, "agent"), 4);
-                if (!maps.Customer.TryGetValue(agentNo, out int customerId))
+                if (!maps.Customer.TryGetValue(agentNo, out int customerId) && !maps.CustomerLegacyMap.TryGetValue(GetString(record, "agent"), out customerId))
                 {
                     _importErrors.Add($"Principal {msapNumber}: Agent/Customer {agentNo} not found. Skipping.");
                     continue;
@@ -580,18 +946,26 @@ namespace IBSWeb.Areas.User.Controllers
                     Mobile2 = GetString(record, "mobile2"),
                     IsVatable = ParseBool(record, "vatable"),
                     IsActive = ParseBool(record, "active"),
-                    CustomerId = customerId
+                    CustomerId = customerId,
+                    MsapRecId = recid != "-" ? recid : null
                 };
 
-                newRecords.Add(entity);
+                newRecords.Add((entity, recid));
                 count++;
             }
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIPrincipals.AddRangeAsync(newRecords);
+                await dbContext.MMSIPrincipals.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Principal[r.PrincipalNumber] = r.PrincipalId;
+                foreach (var item in newRecords)
+                {
+                    maps.Principal[item.Entity.PrincipalNumber] = item.Entity.PrincipalId;
+                    if (item.LegacyId != "-")
+                    {
+                        maps.PrincipalLegacyMap[item.LegacyId] = item.Entity.PrincipalId;
+                    }
+                }
             }
 
             return $"Principals: {count} imported, {skipped} already existed.";
@@ -601,7 +975,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<TariffRate>();
 
@@ -613,16 +987,32 @@ namespace IBSWeb.Areas.User.Controllers
                 string terminalRaw = GetString(record, "terminal");
                 string serviceNum = PadNumber(GetString(record, "service"), 3);
 
-                if (!maps.Customer.TryGetValue(custNo, out int customerId)) { _importErrors.Add($"Tariff: Customer {custNo} not found. Skipping."); continue; }
+                if (!maps.Customer.TryGetValue(custNo, out int customerId) && !maps.CustomerLegacyMap.TryGetValue(GetString(record, "custno"), out customerId))
+                {
+                    _importErrors.Add($"Tariff: Customer {custNo} not found. Skipping."); continue;
+                }
 
                 string? terminalKey = NormalizeTerminalCode(terminalRaw);
-                if (terminalKey == null || !maps.Terminal.TryGetValue(terminalKey, out int terminalId))
+                int? terminalId = null;
+                if (terminalKey != null && maps.Terminal.TryGetValue(terminalKey, out int tid))
+                {
+                    terminalId = tid;
+                }
+                else if (maps.TerminalLegacyMap.TryGetValue(terminalRaw, out var termInfo))
+                {
+                    terminalId = termInfo.TerminalId;
+                }
+
+                if (terminalId == null)
                 {
                     _importErrors.Add($"Tariff: Terminal {terminalRaw} not found. Skipping.");
                     continue;
                 }
 
-                if (!maps.Service.TryGetValue(serviceNum, out int serviceId)) { _importErrors.Add($"Tariff: Service {serviceNum} not found. Skipping."); continue; }
+                if (!maps.Service.TryGetValue(serviceNum, out int serviceId) && !maps.ServiceLegacyMap.TryGetValue(GetString(record, "service"), out serviceId))
+                {
+                    _importErrors.Add($"Tariff: Service {serviceNum} not found. Skipping."); continue;
+                }
 
                 var asOfDate = ParseDateOnly(record, "date") ?? DateOnly.FromDateTime(DateTime.Today);
                 string key = $"{asOfDate:yyyy-MM-dd}|{customerId}|{terminalId}|{serviceId}";
@@ -632,9 +1022,9 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     AsOfDate = asOfDate,
                     CustomerId = customerId,
-                    TerminalId = terminalId,
+                    TerminalId = terminalId.Value,
                     ServiceId = serviceId,
-                    PortId = terminalToPortMap.GetValueOrDefault(terminalId),
+                    PortId = terminalToPortMap.GetValueOrDefault(terminalId.Value),
                     Dispatch = ParseDecimal(record, "dispatch"),
                     BAF = ParseDecimal(record, "baf"),
                     CreatedBy = GetString(record, "createdby"),
@@ -660,7 +1050,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<Collection>();
 
@@ -670,7 +1060,7 @@ namespace IBSWeb.Areas.User.Controllers
                 if (maps.Collection.ContainsKey(crNum)) { skipped++; continue; }
 
                 string custNo = PadNumber(GetString(record, "custno"), 4);
-                if (!maps.Customer.TryGetValue(custNo, out int customerId))
+                if (!maps.Customer.TryGetValue(custNo, out int customerId) && !maps.CustomerLegacyMap.TryGetValue(GetString(record, "custno"), out customerId))
                 {
                     _importErrors.Add($"Collection {crNum}: Customer {custNo} not found. Skipping.");
                     continue;
@@ -708,7 +1098,11 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     await dbContext.MMSICollections.AddRangeAsync(newRecords);
                     await dbContext.SaveChangesAsync();
-                    foreach (var r in newRecords) maps.Collection[r.MMSICollectionNumber] = r.MMSICollectionId;
+                    foreach (var r in newRecords)
+                    {
+                        maps.Collection[r.MMSICollectionNumber] = r.MMSICollectionId;
+                    }
+
                     newRecords.Clear();
                 }
             }
@@ -717,7 +1111,10 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 await dbContext.MMSICollections.AddRangeAsync(newRecords);
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Collection[r.MMSICollectionNumber] = r.MMSICollectionId;
+                foreach (var r in newRecords)
+                {
+                    maps.Collection[r.MMSICollectionNumber] = r.MMSICollectionId;
+                }
             }
 
             return $"Collections: {count} imported, {skipped} already existed.";
@@ -725,6 +1122,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         private async Task<string> ImportBillingsAsync(IFormFile file, ImportMaps maps)
         {
+            // Clear existing data to fix scrambled IDs as requested by user
+            await dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE mmsi_dispatch_tickets RESTART IDENTITY CASCADE");
+            await dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE billings RESTART IDENTITY CASCADE");
+            // Clear maps to reflect empty tables
+            maps.Billing.Clear();
+            maps.BillingByRecId.Clear();
+            maps.DispatchTicket.Clear();
+
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>();
@@ -734,6 +1139,7 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var record in records)
             {
                 string billingNumber = GetString(record, "number");
+                int legacyRecId = (int)ParseDecimal(record, "recid");
                 if (maps.Billing.ContainsKey(billingNumber)) { skipped++; continue; }
 
                 string custNo = PadNumber(GetString(record, "custno"), 4);
@@ -743,12 +1149,18 @@ namespace IBSWeb.Areas.User.Controllers
                 string principalNum = PadNumber(GetString(record, "billto"), 4);
                 string crNum = GetString(record, "crnum");
 
-                if (!maps.Customer.TryGetValue(custNo, out int customerId)) { _importErrors.Add($"Billing {billingNumber}: Customer {custNo} not found. Skipping."); continue; }
-                if (!maps.Vessel.TryGetValue(vesselNum, out int vesselId)) { _importErrors.Add($"Billing {billingNumber}: Vessel {vesselNum} not found. Skipping."); continue; }
+                if (!maps.Customer.TryGetValue(custNo, out int customerId) && !maps.CustomerLegacyMap.TryGetValue(GetString(record, "custno"), out customerId))
+                {
+                    _importErrors.Add($"Billing {billingNumber}: Customer {custNo} not found. Skipping."); continue;
+                }
 
-                var (pId, tId) = ResolvePortTerminal(terminalRaw, portNumRaw, maps);
-                if (pId == null) { _importErrors.Add($"Billing {billingNumber}: Port reference not found. Skipping."); continue; }
-                if (tId == null) { _importErrors.Add($"Billing {billingNumber}: Terminal reference not found. Skipping."); continue; }
+                if (!maps.Vessel.TryGetValue(vesselNum, out int vesselId) && !maps.VesselLegacyMap.TryGetValue(GetString(record, "vesselnum"), out vesselId))
+                {
+                    _importErrors.Add($"Billing {billingNumber}: Vessel {vesselNum} not found. Skipping."); continue;
+                }
+
+                var (pId, tId) = ResolvePortTerminal(terminalRaw, portNumRaw, maps, useFallback: true);
+                if (pId == null || tId == null) { _importErrors.Add($"Billing {billingNumber}: Port/Terminal resolution failed (TerminalRaw='{terminalRaw}', PortNumRaw='{portNumRaw}'). Skipping."); continue; }
 
                 int? principalId = maps.Principal.TryGetValue(principalNum, out int pid) ? pid : null;
                 int? collectionId = maps.Collection.TryGetValue(crNum, out int cid) ? cid : null;
@@ -757,6 +1169,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var entity = new Billing
                 {
+                    MMSIBillingId = legacyRecId, // Force Legacy ID
                     MMSIBillingNumber = billingNumber,
                     CustomerId = customerId,
                     VesselId = vesselId,
@@ -789,13 +1202,14 @@ namespace IBSWeb.Areas.User.Controllers
 
                 newRecords.Add(entity);
                 count++;
-                maps.Billing[billingNumber] = -1;
+                var tempInfo = new BillingMapInfo { Id = legacyRecId, PortId = pId.Value, TerminalId = tId.Value };
+                maps.Billing[billingNumber] = tempInfo;
+                maps.BillingByRecId[legacyRecId.ToString()] = tempInfo;
 
                 if (newRecords.Count >= 500)
                 {
                     await dbContext.Billings.AddRangeAsync(newRecords);
                     await dbContext.SaveChangesAsync();
-                    foreach (var r in newRecords) maps.Billing[r.MMSIBillingNumber] = r.MMSIBillingId;
                     newRecords.Clear();
                 }
             }
@@ -804,23 +1218,26 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 await dbContext.Billings.AddRangeAsync(newRecords);
                 await dbContext.SaveChangesAsync();
-                foreach (var r in newRecords) maps.Billing[r.MMSIBillingNumber] = r.MMSIBillingId;
             }
 
-            return $"Billings: {count} imported, {skipped} already existed.";
+            // Sync sequence after manual ID insertion
+            await dbContext.Database.ExecuteSqlRawAsync("SELECT setval(pg_get_serial_sequence('billings', 'RECID'), COALESCE(MAX(\"RECID\"), 1)) FROM billings");
+
+            return $"Billings: {count} imported (Tables cleared first).";
         }
 
         private async Task<string> ImportDispatchTicketsAsync(IFormFile file, ImportMaps maps)
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<dynamic>();
+            var records = csv.GetRecords<dynamic>().ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<DispatchTicket>();
 
             foreach (var record in records)
             {
                 string dispatchNo = GetString(record, "number");
+                int legacyRecId = (int)ParseDecimal(record, "recid");
                 if (maps.DispatchTicket.Contains(dispatchNo)) { skipped++; continue; }
 
                 string custNoRaw = GetString(record, "custno");
@@ -828,10 +1245,11 @@ namespace IBSWeb.Areas.User.Controllers
                 string tugboatNum = PadNumber(GetString(record, "tugnum"), 3);
                 string vesselNum = PadNumber(GetString(record, "vesselnum"), 4);
                 string serviceNum = PadNumber(GetString(record, "srvctype"), 3);
+                string portNumRaw = PadNumber(GetString(record, "portnum"), 3);
                 string terminalRaw = GetString(record, "terminal");
                 string billNumStr = GetString(record, "billnum");
 
-                if (!maps.Customer.TryGetValue(custNo, out int customerId))
+                if (!maps.Customer.TryGetValue(custNo, out int customerId) && !maps.CustomerLegacyMap.TryGetValue(GetString(record, "custno"), out customerId))
                 {
                     if (custNo == "0000")
                     {
@@ -865,17 +1283,45 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                if (!maps.Tugboat.TryGetValue(tugboatNum, out int tugboatId)) { _importErrors.Add($"Dispatch {dispatchNo}: Tugboat {tugboatNum} not found. Skipping."); continue; }
-                if (!maps.Vessel.TryGetValue(vesselNum, out int vesselId)) { _importErrors.Add($"Dispatch {dispatchNo}: Vessel {vesselNum} not found. Skipping."); continue; }
-                if (!maps.Service.TryGetValue(serviceNum, out int serviceId)) { _importErrors.Add($"Dispatch {dispatchNo}: Service {serviceNum} not found. Skipping."); continue; }
+                if (!maps.Tugboat.TryGetValue(tugboatNum, out int tugboatId) && !maps.TugboatLegacyMap.TryGetValue(GetString(record, "tugnum"), out tugboatId))
+                {
+                    _importErrors.Add($"Dispatch {dispatchNo}: Tugboat {tugboatNum} not found. Skipping."); continue;
+                }
 
-                var (pId, tId) = ResolvePortTerminal(terminalRaw, "-", maps);
-                if (pId == null || tId == null) { _importErrors.Add($"Dispatch {dispatchNo}: Port/Terminal not found. Skipping."); continue; }
+                if (!maps.Vessel.TryGetValue(vesselNum, out int vesselId) && !maps.VesselLegacyMap.TryGetValue(GetString(record, "vesselnum"), out vesselId))
+                {
+                    _importErrors.Add($"Dispatch {dispatchNo}: Vessel {vesselNum} not found. Skipping."); continue;
+                }
 
-                int? billingId = maps.Billing.TryGetValue(billNumStr, out int bid) ? bid : null;
+                if (!maps.Service.TryGetValue(serviceNum, out int serviceId) && !maps.ServiceLegacyMap.TryGetValue(GetString(record, "srvctype"), out serviceId))
+                {
+                    _importErrors.Add($"Dispatch {dispatchNo}: Service {serviceNum} not found. Skipping."); continue;
+                }
+
+                var (pId, tId) = ResolvePortTerminal(terminalRaw, portNumRaw, maps, useFallback: true);
+
+                if ((pId == null || tId == null) && billNumStr != "-")
+                {
+                    if (maps.Billing.TryGetValue(billNumStr, out var bInfo) || maps.BillingByRecId.TryGetValue(billNumStr, out bInfo))
+                    {
+                        pId ??= bInfo.PortId;
+                        tId ??= bInfo.TerminalId;
+                    }
+                }
+
+                if (pId == null || tId == null) { _importErrors.Add($"Dispatch {dispatchNo}: Port/Terminal not found (TerminalRaw='{terminalRaw}', PortNumRaw='{portNumRaw}', BillNum='{billNumStr}'). Skipping."); continue; }
+
+                BillingMapInfo? info = null;
+                if (billNumStr != "-")
+                {
+                    maps.Billing.TryGetValue(billNumStr, out info);
+                    info ??= maps.BillingByRecId.GetValueOrDefault(billNumStr);
+                }
+                int? billingId = info?.Id == -1 ? null : info?.Id;
 
                 var entity = new DispatchTicket
                 {
+                    DispatchTicketId = legacyRecId, // Force Legacy ID
                     DispatchNumber = dispatchNo,
                     CustomerId = customerId,
                     TugBoatId = tugboatId,
@@ -923,6 +1369,9 @@ namespace IBSWeb.Areas.User.Controllers
                 await dbContext.SaveChangesAsync();
             }
 
+            // Sync sequence after manual ID insertion
+            await dbContext.Database.ExecuteSqlRawAsync("SELECT setval(pg_get_serial_sequence('mmsi_dispatch_tickets', 'RECID'), COALESCE(MAX(\"RECID\"), 1)) FROM mmsi_dispatch_tickets");
+
             return $"Dispatch Tickets: {count} imported, {skipped} already existed.";
         }
 
@@ -931,20 +1380,82 @@ namespace IBSWeb.Areas.User.Controllers
         // -------------------------------------------------------------------------
 
         private static (int? PortId, int? TerminalId) ResolvePortTerminal(
-            string terminalRaw, string portNumRaw, ImportMaps maps)
+            string terminalRaw, string portNumRaw, ImportMaps maps, bool useFallback = false)
         {
+            // 1. Try by Terminal Code (PPP-TTT or PPPTTT)
             string? terminalKey = NormalizeTerminalCode(terminalRaw);
             if (terminalKey != null)
             {
                 string portPart = terminalKey.Substring(0, 3);
                 int? portId = maps.Port.TryGetValue(portPart, out int pid) ? pid : null;
                 int? terminalId = maps.Terminal.TryGetValue(terminalKey, out int tid) ? tid : null;
-                return (portId, terminalId);
+                if (portId != null && terminalId != null)
+                {
+                    return (portId, terminalId);
+                }
             }
 
-            if (portNumRaw != "-" && maps.Port.TryGetValue(portNumRaw, out int pId))
+            if (portNumRaw != "-")
             {
-                return (pId, null);
+                // 2. Try as Port Number (padded e.g. "005")
+                if (maps.Port.TryGetValue(portNumRaw, out int pId))
+                {
+                    int? tId = null;
+                    if (useFallback)
+                    {
+                        maps.PortToFirstTerminal.TryGetValue(pId, out int firstTid);
+                        if (firstTid != 0)
+                        {
+                            tId = firstTid;
+                        }
+                    }
+                    return (pId, tId);
+                }
+
+                // 3. Try as Port Legacy ID (from port.csv RECID)
+                if (maps.PortLegacyMap.TryGetValue(portNumRaw.TrimStart('0'), out int plId))
+                {
+                    int? tId = null;
+                    if (useFallback)
+                    {
+                        maps.PortToFirstTerminal.TryGetValue(plId, out int firstTid);
+                        if (firstTid != 0)
+                        {
+                            tId = firstTid;
+                        }
+                    }
+                    return (plId, tId);
+                }
+
+                // 4. Try as Terminal Legacy ID (from terminal.csv RECID)
+                string unpadded = portNumRaw.TrimStart('0');
+                if (string.IsNullOrEmpty(unpadded))
+                {
+                    unpadded = "0";
+                }
+
+                if (maps.TerminalLegacyMap.TryGetValue(unpadded, out var termInfo))
+                {
+                    return (termInfo.PortId, termInfo.TerminalId);
+                }
+            }
+
+            if (useFallback)
+            {
+                // Try Davao (005) as a preferred default
+                if (maps.Port.TryGetValue("005", out int davaoId))
+                {
+                    maps.PortToFirstTerminal.TryGetValue(davaoId, out int firstTid);
+                    return (davaoId, firstTid != 0 ? firstTid : (int?)null);
+                }
+
+                // Ultimate fallback: first available port and its first terminal
+                var firstPortId = maps.Port.Values.FirstOrDefault(id => id != 0);
+                if (firstPortId != 0)
+                {
+                    maps.PortToFirstTerminal.TryGetValue(firstPortId, out int firstTid);
+                    return (firstPortId, firstTid != 0 ? firstTid : (int?)null);
+                }
             }
 
             return (null, null);
@@ -954,7 +1465,9 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (dt.DateLeft == null || dt.DateArrived == null
                 || dt.TimeLeft == null || dt.TimeArrived == null)
+            {
                 return 0;
+            }
 
             var dtl       = dt.DateLeft.Value.ToDateTime(dt.TimeLeft.Value);
             var dta       = dt.DateArrived.Value.ToDateTime(dt.TimeArrived.Value);
@@ -976,19 +1489,32 @@ namespace IBSWeb.Areas.User.Controllers
         private static IFormFile? ResolveFile(
             IFormFile? individual, List<IFormFile>? bulk, string keyword, string? exactName = null)
         {
-            if (individual != null) return individual;
-            if (bulk == null || bulk.Count == 0) return null;
+            if (individual != null)
+            {
+                return individual;
+            }
+
+            if (bulk == null || bulk.Count == 0)
+            {
+                return null;
+            }
 
             if (exactName != null)
             {
                 var exact = bulk.FirstOrDefault(f =>
                     f.FileName.Equals(exactName, StringComparison.OrdinalIgnoreCase));
-                if (exact != null) return exact;
+                if (exact != null)
+                {
+                    return exact;
+                }
             }
 
             var byCsv = bulk.FirstOrDefault(f =>
                 f.FileName.Equals($"{keyword}.csv", StringComparison.OrdinalIgnoreCase));
-            if (byCsv != null) return byCsv;
+            if (byCsv != null)
+            {
+                return byCsv;
+            }
 
             return bulk.FirstOrDefault(f =>
                 f.FileName.Contains(keyword, StringComparison.OrdinalIgnoreCase));
@@ -1046,7 +1572,9 @@ namespace IBSWeb.Areas.User.Controllers
                 else                      { minutes = int.Parse(val); }
 
                 if (hours is >= 0 and < 24 && minutes is >= 0 and < 60)
+                {
                     return new TimeOnly(hours, minutes);
+                }
             }
 
             return TimeOnly.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly result)
@@ -1055,7 +1583,11 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string PadNumber(string? value, int width)
         {
-            if (string.IsNullOrEmpty(value) || value == "-") return value ?? string.Empty;
+            if (string.IsNullOrEmpty(value) || value == "-")
+            {
+                return value ?? string.Empty;
+            }
+
             return int.TryParse(value, out var n)
                 ? n.ToString($"D{width}")
                 : value.PadLeft(width, '0');
@@ -1063,8 +1595,15 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string? NormalizeTerminalCode(string? value)
         {
-            if (string.IsNullOrWhiteSpace(value) || value == "-") return null;
-            if (value.Length < 6) return null;
+            if (string.IsNullOrWhiteSpace(value) || value == "-")
+            {
+                return null;
+            }
+
+            if (value.Length < 6)
+            {
+                return null;
+            }
 
             string portPart = PadNumber(value.Substring(0, 3), 3);
             string terminalPart = PadNumber(value.Substring(value.Length - 3, 3), 3);

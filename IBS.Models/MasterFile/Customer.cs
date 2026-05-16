@@ -137,5 +137,9 @@ namespace IBS.Models.MasterFile
         public List<SelectListItem>? Commissionees { get; set; }
 
         public Supplier? Commissionee { get; set; }
+
+        [StringLength(10)]
+        [Column("msap_recid", TypeName = "varchar(10)")]
+        public string? MsapRecId { get; set; }
     }
 }

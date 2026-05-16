@@ -12,10 +12,14 @@ namespace IBS.Models.MMSI.MasterFile
         [Column(TypeName = "varchar(5)")]
         public string TugMasterNumber { get; set; } = null!;
 
-        [StringLength(100, ErrorMessage = "Tug Master name cannot exceed 100 characters.")]
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(50, ErrorMessage = "Tug master name cannot exceed 50 characters.")]
+        [Column(TypeName = "varchar(50)")]
         public string TugMasterName { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
+
+        [StringLength(10)]
+        [Column("msap_recid", TypeName = "varchar(10)")]
+        public string? MsapRecId { get; set; }
     }
 }
