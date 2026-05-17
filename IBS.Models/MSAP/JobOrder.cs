@@ -50,6 +50,18 @@ namespace IBS.Models.MMSI
 
         #endregion
 
+        [Display(Name = "Planned Start Time")]
+        public DateTime? PlannedStartTime { get; set; }
+
+        [Display(Name = "Planned End Time")]
+        public DateTime? PlannedEndTime { get; set; }
+
+        [Display(Name = "Preferred Tugboat")]
+        public int? PreferredTugboatId { get; set; }
+
+        [ForeignKey(nameof(PreferredTugboatId))]
+        public Tugboat? PreferredTugboat { get; set; }
+
         public virtual ICollection<DispatchTicket> DispatchTickets { get; set; } = new List<DispatchTicket>();
 
         #region ---Select Lists (Not Mapped)---

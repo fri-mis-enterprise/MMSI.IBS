@@ -74,6 +74,48 @@ namespace IBS.DataAccess.Repository.MMSI
             return model;
         }
 
+        public async Task<IEnumerable<DispatchTicket>> GetDispatchTicketsWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default)
+        {
+            var startDate = DateOnly.FromDateTime(start);
+            var endDate = DateOnly.FromDateTime(end);
+
+            var tickets = await dbSet
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .Where(dt => dt.DateLeft <= endDate && dt.DateArrived >= startDate)
+                .ToListAsync(cancellationToken);
+
+            foreach (var ticket in tickets.Where(t => t.CustomerId != 0))
+            {
+                ticket.Customer = await _db.Customers
+                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken);
+            }
+
+            return tickets;
+        }
+
+        public async Task<IEnumerable<DispatchTicket>> GetAllDispatchTicketsWithDetailsAsync(CancellationToken cancellationToken = default)
+        {
+            var tickets = await dbSet
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .ToListAsync(cancellationToken);
+
+            foreach (var ticket in tickets.Where(t => t.CustomerId != 0))
+            {
+                ticket.Customer = await _db.Customers
+                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken);
+            }
+
+            return tickets;
+        }
+
         public override async Task AddAsync(DispatchTicket entity, CancellationToken cancellationToken = default)
         {
             if (entity.JobOrderId.HasValue)

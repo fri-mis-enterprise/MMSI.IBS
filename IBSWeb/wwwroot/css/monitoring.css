@@ -1,0 +1,213 @@
+:root {
+    --header-width: 180px;
+    --hour-width: 40px;
+    --row-height: 40px;
+}
+
+.timeline-container {
+    display: grid;
+    grid-template-columns: var(--header-width) 1fr;
+    overflow: auto;
+    position: relative;
+    height: calc(100vh - 45px);
+    cursor: grab;
+    user-select: none;
+    background-color: white;
+}
+
+.timeline-header-row, #tugboat-rows-container {
+    display: contents;
+}
+
+.timeline-container.dragging {
+    cursor: grabbing;
+}
+
+/* Header corner */
+.tugboat-header-col {
+    width: var(--header-width);
+    height: 60px;
+    line-height: 60px;
+    padding-left: 15px;
+    font-weight: bold;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    background-color: #f8f9fa;
+}
+
+/* Top bar (Days + Hours) */
+.hours-container {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 80;
+    height: 60px;
+}
+
+.day-slot {
+    border-right: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    min-width: calc(var(--hour-width) * 24);
+    display: flex;
+    flex-direction: column;
+}
+
+.day-label {
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 2px 0;
+    background-color: #e9ecef;
+    height: 30px;
+    line-height: 26px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.hours-sub-header {
+    height: 30px;
+    display: flex;
+    flex-wrap: nowrap; /* Prevent wrapping */
+}
+
+.hour-tick {
+    width: var(--hour-width);
+    text-align: center;
+    font-size: 0.6rem;
+    line-height: 30px;
+    border-right: 1px solid rgba(0,0,0,0.05);
+    color: #6c757d;
+    flex-shrink: 0; /* Important: never shrink/wrap */
+    overflow: hidden;
+}
+
+.tugboat-row {
+    display: contents;
+}
+
+/* Left bar (Tugboat Names) */
+.tugboat-name {
+    width: var(--header-width);
+    height: var(--row-height);
+    line-height: var(--row-height);
+    padding-left: 15px;
+    border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 90;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.blocks-container {
+    height: var(--row-height);
+    border-bottom: 1px solid #dee2e6;
+    position: relative;
+    background-image: linear-gradient(to right, #f1f3f5 1px, transparent 1px);
+    background-size: var(--hour-width) 100%;
+    width: calc(var(--days-in-month) * 24 * var(--hour-width));
+}
+
+.timeline-block {
+    position: absolute;
+    height: 28px;
+    top: 6px;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    color: white;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: transform 0.1s, box-shadow 0.1s;
+    z-index: 10;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    
+    left: calc(var(--block-start) * var(--hour-width));
+    width: calc(var(--block-duration) * var(--hour-width));
+    min-width: 15px;
+}
+
+.timeline-block:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 150;
+}
+
+.timeline-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+
+.block-planned {
+    background-color: #ffc107;
+    color: #212529;
+    border: 1px solid #e0a800;
+}
+
+.block-in-progress {
+    background-color: #28a745;
+    border: 1px solid #1e7e34;
+}
+
+.block-completed {
+    background-color: #007bff;
+    border: 1px solid #0062cc;
+}
+
+.block-conflict {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(220, 53, 69, 0.2),
+        rgba(220, 53, 69, 0.2) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    border: 2px solid #dc3545 !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-xs {
+    padding: 1px 5px;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.now-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dc3545;
+    z-index: 30;
+    pointer-events: none;
+}
+
+.now-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #dc3545;
+}

@@ -5,9 +5,11 @@ using IBS.Models.MMSI.ViewModels;
 using IBS.Models;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -17,6 +19,7 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class JobOrderController(
         IUnitOfWork unitOfWork,
+        IHubContext<TugboatHub> hubContext,
         ILogger<JobOrderController> logger) : Controller
     {
         private const string _closeConfirmKey = "JobOrder_PendingCloseId";
@@ -87,6 +90,9 @@ namespace IBSWeb.Areas.User.Controllers
                     TerminalId = viewModel.TerminalId,
                     COSNumber = viewModel.COSNumber,
                     VoyageNumber = viewModel.VoyageNumber,
+                    PlannedStartTime = viewModel.PlannedStartTime,
+                    PlannedEndTime = viewModel.PlannedEndTime,
+                    PreferredTugboatId = viewModel.PreferredTugboatId,
                     Remarks = viewModel.Remarks,
                     Status = JobOrderStatus.Open,
                     JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken),
@@ -102,6 +108,8 @@ namespace IBSWeb.Areas.User.Controllers
                     cancellationToken: cancellationToken);
 
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
 
                 TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} created successfully.";
                 return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
@@ -216,6 +224,9 @@ namespace IBSWeb.Areas.User.Controllers
                 jobOrder.TerminalId = viewModel.TerminalId;
                 jobOrder.COSNumber = viewModel.COSNumber;
                 jobOrder.VoyageNumber = viewModel.VoyageNumber;
+                jobOrder.PlannedStartTime = viewModel.PlannedStartTime;
+                jobOrder.PlannedEndTime = viewModel.PlannedEndTime;
+                jobOrder.PreferredTugboatId = viewModel.PreferredTugboatId;
                 jobOrder.Remarks = viewModel.Remarks;
                 jobOrder.EditedBy = User.Identity?.Name ?? "Unknown";
                 jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -226,6 +237,8 @@ namespace IBSWeb.Areas.User.Controllers
                     cancellationToken: cancellationToken);
 
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
 
                 TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} updated successfully.";
                 return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
@@ -286,6 +299,8 @@ namespace IBSWeb.Areas.User.Controllers
                 cancellationToken);
 
             await unitOfWork.SaveAsync(cancellationToken);
+
+            await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
 
             TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} has been cancelled.";
             return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
@@ -367,6 +382,8 @@ namespace IBSWeb.Areas.User.Controllers
                 cancellationToken: cancellationToken);
 
             await unitOfWork.SaveAsync(cancellationToken);
+
+            await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
 
             TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} has been closed.";
             return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
@@ -470,6 +487,9 @@ namespace IBSWeb.Areas.User.Controllers
             TerminalId = jobOrder.TerminalId,
             COSNumber = jobOrder.COSNumber,
             VoyageNumber = jobOrder.VoyageNumber,
+            PlannedStartTime = jobOrder.PlannedStartTime,
+            PlannedEndTime = jobOrder.PlannedEndTime,
+            PreferredTugboatId = jobOrder.PreferredTugboatId,
             Remarks = jobOrder.Remarks
         };
 
@@ -510,6 +530,16 @@ namespace IBSWeb.Areas.User.Controllers
                     })
                     .ToList()
                 : new List<SelectListItem>();
+
+            var tugboats = await unitOfWork.Tugboat.GetAllAsync(cancellationToken: cancellationToken);
+            viewModel.Tugboats = tugboats
+                .OrderBy(t => t.TugboatName)
+                .Select(t => new SelectListItem
+                {
+                    Value = t.TugboatId.ToString(),
+                    Text = t.TugboatName
+                })
+                .ToList();
         }
 
         #endregion

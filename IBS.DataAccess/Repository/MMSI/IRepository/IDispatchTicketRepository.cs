@@ -10,6 +10,10 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<DispatchTicket?> GetDispatchTicketWithDetailsAsync(int id, CancellationToken cancellationToken = default);
 
+        Task<IEnumerable<DispatchTicket>> GetAllDispatchTicketsWithDetailsAsync(CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<DispatchTicket>> GetDispatchTicketsWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default);
+
         Task<bool> IsJobOrderEditableAsync(int? jobOrderId, CancellationToken cancellationToken = default);
 
         Task UpdateStatusAsync(int id, string status, string updatedBy, string activity, string docType, CancellationToken cancellationToken = default);

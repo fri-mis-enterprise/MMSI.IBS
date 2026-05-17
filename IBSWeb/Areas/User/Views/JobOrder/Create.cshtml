@@ -74,6 +74,27 @@
                         <span asp-validation-for="VoyageNumber" class="text-danger"></span>
                     </div>
 
+                    <!-- Planning -->
+                    <div class="col-12 col-md-4">
+                        <label asp-for="PlannedStartTime" class="form-label fw-bold"></label>
+                        <input asp-for="PlannedStartTime" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="PlannedStartTime" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label asp-for="PlannedEndTime" class="form-label fw-bold"></label>
+                        <input asp-for="PlannedEndTime" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="PlannedEndTime" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label asp-for="PreferredTugboatId" class="form-label fw-bold"></label>
+                        <select asp-for="PreferredTugboatId" asp-items="@Model.Tugboats" class="form-select js-select2">
+                            <option value="">-- No Preferred Tugboat --</option>
+                        </select>
+                        <span asp-validation-for="PreferredTugboatId" class="text-danger"></span>
+                    </div>
+
                     <!-- Remarks -->
                     <div class="col-12">
                         <label asp-for="Remarks" class="form-label fw-bold"></label>

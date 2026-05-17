@@ -1,77 +1,38 @@
-# MMSI-IBS Gemini CLI Guide
+# MMSI-IBS Gemini Workspace
 
-This workspace is equipped with specialized Model Context Protocol (MCP) servers to enhance your development workflow.
+This workspace is powered by a custom MCP server designed to handle the complexity of the MMSI-IBS N-Tier architecture.
 
-## Available MCP Servers
+## 🛠️ Specialized Tools
 
-### 1. Database Peeker (`mcp-database-peeker`)
-Used for inspecting the PostgreSQL database directly. It automatically detects connection strings from `IBSWeb/appsettings.Development.json`.
+### 1. Code Oracle (`search_code_context`)
+Deep-dives into C# methods. It doesn't just show the code; it fetches the definitions of every DTO, Model, and Enum referenced in that method.
+- **Use for**: Understanding how a specific operation works without jumping between files.
+- **Example**: `search_code_context(methodName: "Create")`
 
-- **Tools**: `list_tables`, `describe_table`, `get_table_sample`, `execute_query`.
-- **Database Switching**: Use the optional `database` parameter to switch between databases.
-  - **MMSI IBS**: `database: "mmsi_ibs_dev"` (Default)
-  - **IBS (Main)**: `database: "ibs_dev"`
-- **Example**: `list_tables(database: "ibs_dev")`
+### 2. Logic Mapper (`trace_workflow`)
+Maps the execution path across layers. It follows the chain from Controller -> Service -> Repository.
+- **Use for**: Tracing complex business logic that spans multiple projects and files.
+- **Example**: `trace_workflow(methodName: "PostCheckVoucher", filePath: "IBSWeb/Areas/User/Controllers/CheckVoucherController.cs")`
 
-### 2. .NET Analyzer (`mcp-dotnet-analyzer`)
-Provides project-wide diagnostics and build errors.
+### 3. Data Guardian (`execute_sql`)
+Direct access to the PostgreSQL database (`mmsi_ibs_dev`). 
+- **Safety**: Automatically detects connection strings. **Prompt on Write** is enforced for any data modification.
+- **Use for**: Verifying data state, checking constraints, or performing safe data fixes.
+- **Example**: `execute_sql(sql: "SELECT * FROM public.customer LIMIT 10")`
 
-- **Tools**: `analyze_file`, `analyze_project`.
-- **Usage**: Run `analyze_project` to see all current compilation errors and warnings in the solution.
+### 4. Build Guard (`check_build_status`)
+Integrates the .NET build system.
+- **Use for**: Checking for compilation errors and warnings after making changes.
+- **Example**: `check_build_status()`
 
-### 3. Function Reader (`mcp-function-reader`)
-Reads specific C# functions/methods with their dependencies, avoiding the need to read entire large files.
+## 📂 Project Structure
+- **Web UI**: `IBSWeb/`
+- **Services**: `IBS.Services/`
+- **Data Access**: `IBS.DataAccess/`
+- **Models/DTOs**: `IBS.Models/` & `IBS.DTOs/`
+- **MCP Server**: `mcp-server/`
 
-- **Tools**: `read_function`, `find_type`, `list_project_files`.
-- **Configuration**: Ensure `PROJECT_ROOT` in your `.qwen/settings.json` points to `C:\Users\MIS2\Desktop\MMSI-IBS`.
-- **Example**: `read_function(functionName: "Create", filePath: "IBSWeb/Areas/User/Controllers/JobOrderController.cs")`
-
-### 4. CSV Reader (`mcp-csv-reader`)
-Efficiently reads and analyzes legacy CSV data in the `Imports` directory.
-
-- **Tools**: `list_csv_files`, `get_csv_headers`, `read_csv_rows`, `search_csv`, `analyze_csv_integrity`.
-- **Strictness**: Automatically handles empty fields as `null` when `strict: true`.
-- **Search**: Use `search_csv` to find specific records (supports regex).
-- **FK Analysis**: Use `analyze_csv_integrity` to verify relationships between CSVs (e.g., check if all `CUSTNO` in `billing.csv` exist in `customer.csv`).
-- **Example**: `search_csv(fileName: "customer.csv", searchTerm: "INC")`
-
-## Configuration Guide
-
-To ensure all tools work correctly in this workspace, verify your `.gemini/settings.json` (or global equivalent) includes these servers:
-
-```json
-{
-  "mcpServers": {
-    "database-peeker": {
-      "command": "node",
-      "args": ["C:\\MCP\\mcp-database-peeker\\index.js"],
-      "cwd": "C:\\Users\\MIS2\\Desktop\\MMSI-IBS"
-    },
-    "dotnet-analyzer": {
-      "command": "node",
-      "args": ["C:\\MCP\\mcp-dotnet-analyzer\\index.js"],
-      "cwd": "C:\\Users\\MIS2\\Desktop\\MMSI-IBS"
-    },
-    "function-reader": {
-      "command": "node",
-      "args": ["C:\\MCP\\mcp-function-reader\\index.js"],
-      "cwd": "C:\\MCP\\mcp-function-reader",
-      "env": {
-        "PROJECT_ROOT": "C:\\Users\\MIS2\\Desktop\\MMSI-IBS"
-      }
-    },
-    "csv-reader": {
-      "command": "node",
-      "args": ["C:\\MCP\\mcp-csv-reader\\index.js"],
-      "cwd": "C:\\Users\\MIS2\\Desktop\\MMSI-IBS",
-      "env": {
-        "IMPORTS_DIR": "C:\\Users\\MIS2\\Desktop\\MMSI-IBS\\Imports"
-      }
-    }
-  }
-}
-```
-
-## Conventions
-- **Database**: Always specify the `database` name when working on main IBS modules vs MMSI-specific modules.
-- **Diagnostics**: Run `analyze_file` after modifying complex controllers to ensure no regressions.
+## 📜 Development Guidelines
+- Always verify your changes with `check_build_status`.
+- Use `trace_workflow` before refactoring core services to understand the impact on other layers.
+- Database connection settings are managed in `IBSWeb/appsettings.Development.json`.

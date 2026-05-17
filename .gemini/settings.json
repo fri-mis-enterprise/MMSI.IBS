@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mmsi-ibs": {
+      "command": "node",
+      "args": ["/home/roi/RiderProjects/MMSI.IBS/mcp-server/build/index.js"],
+      "cwd": "/home/roi/RiderProjects/MMSI.IBS/mcp-server"
+    }
+  }
+}

@@ -20,6 +20,18 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<JobOrder>> GetJobOrdersWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken)
+        {
+            return await _db.MMSIJobOrders
+                .Include(j => j.Customer)
+                .Include(j => j.Vessel)
+                .Include(j => j.Port)
+                .Include(j => j.Terminal)
+                .Include(j => j.DispatchTickets)
+                .Where(j => j.PlannedStartTime <= end && j.PlannedEndTime >= start)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken)
         {
             return await _db.MMSIJobOrders

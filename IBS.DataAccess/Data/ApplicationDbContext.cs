@@ -385,6 +385,17 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<JobOrder>(jo =>
+            {
+                jo.HasOne(j => j.PreferredTugboat)
+                    .WithMany()
+                    .HasForeignKey(j => j.PreferredTugboatId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                jo.Property(j => j.PlannedStartTime).HasColumnType("timestamp without time zone");
+                jo.Property(j => j.PlannedEndTime).HasColumnType("timestamp without time zone");
+            });
+
             #endregion
 
             #endregion --MMSI

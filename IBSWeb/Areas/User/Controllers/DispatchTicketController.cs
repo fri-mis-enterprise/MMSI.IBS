@@ -7,8 +7,10 @@ using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -20,6 +22,7 @@ namespace IBSWeb.Areas.User.Controllers
     public class DispatchTicketController(
         ApplicationDbContext dbContext,
         IUnitOfWork unitOfWork,
+        IHubContext<TugboatHub> hubContext,
         ICloudStorageService cloudStorageService,
         ILogger<DispatchTicketController> logger)
         : Controller
@@ -132,6 +135,8 @@ namespace IBSWeb.Areas.User.Controllers
                     cancellationToken);
 
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
 
                 TempData["success"] = $"Dispatch Ticket #{model.DispatchNumber} was successfully created.";
                 return RedirectToAction("Details", "JobOrder", new { id = viewModel.JobOrderId });
@@ -397,6 +402,8 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var updatedBy = User.Identity?.Name ?? "System";
                 await unitOfWork.DispatchTicket.UpdateAsync(model, updatedBy, cancellationToken);
+
+                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
 
                 TempData["success"] = "Entry edited successfully!";
 

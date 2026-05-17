@@ -128,6 +128,10 @@
                                                     @if (await HasJobOrderAccess())
                                                     {
                                                         <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="User" title="Tugboat Monitoring & Scheduling" asp-controller="TugboatMonitoring" asp-action="Index">Tugboat Monitoring</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
                                                             <a class="dropdown-item text-dark" asp-area="User" title="Manage Job Orders" asp-controller="JobOrder" asp-action="Index">Job Orders</a>
                                                         </li>
                                                         <li><hr class="dropdown-divider"></li>

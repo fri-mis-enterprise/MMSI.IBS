@@ -40,12 +40,22 @@ namespace IBS.Models.MMSI.ViewModels
         [Display(Name = "Voyage Number")]
         public string? VoyageNumber { get; set; }
         
+        [Display(Name = "Planned Start Time")]
+        public DateTime? PlannedStartTime { get; set; }
+
+        [Display(Name = "Planned End Time")]
+        public DateTime? PlannedEndTime { get; set; }
+
+        [Display(Name = "Preferred Tugboat")]
+        public int? PreferredTugboatId { get; set; }
+
         public string? Remarks { get; set; }
 
         public List<SelectListItem>? Customers { get; set; }
         public List<SelectListItem>? Vessels { get; set; }
         public List<SelectListItem>? Ports { get; set; }
         public List<SelectListItem>? Terminals { get; set; }
+        public List<SelectListItem>? Tugboats { get; set; }
         
         public List<DispatchTicket> DispatchTickets { get; set; } = new();
     }
