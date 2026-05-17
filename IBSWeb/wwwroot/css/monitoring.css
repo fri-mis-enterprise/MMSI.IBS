@@ -3,6 +3,9 @@
     --hour-width: 40px;
     --row-height: 48px;
     --day-header-height: 60px;
+    --days-in-month: 31;
+    --block-start: 0;
+    --block-duration: 0;
 }
 
 .timeline-container {
