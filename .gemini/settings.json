@@ -2,8 +2,11 @@
   "mcpServers": {
     "mmsi-ibs": {
       "command": "node",
-      "args": ["/home/roi/RiderProjects/MMSI.IBS/mcp-server/build/index.js"],
-      "cwd": "/home/roi/RiderProjects/MMSI.IBS/mcp-server"
+      "args": ["C:/Users/MIS2/Desktop/MMSI-IBS/mcp-server/build/index.js"],
+      "cwd": "C:/Users/MIS2/Desktop/MMSI-IBS/mcp-server",
+      "env": {
+        "PROJECT_ROOT": "C:/Users/MIS2/Desktop/MMSI-IBS"
+      }
     }
   }
 }

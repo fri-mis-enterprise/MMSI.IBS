@@ -5,7 +5,13 @@ import { getDbPool } from "./utils/db-client.js";
 import { runBuild, parseBuildErrors } from "./tools/build-guard.js";
 import { findMethodInFile, extractReferencedTypes, findTypeDefinition, traceMethodCalls } from "./utils/dotnet-parser.js";
 import path from "path";
-const PROJECT_ROOT = "/home/roi/RiderProjects/MMSI.IBS";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// If running from build/index.js, root is two levels up. 
+// If running from src/index.ts (via ts-node), root is also two levels up.
+const PROJECT_ROOT = process.env.PROJECT_ROOT || path.resolve(__dirname, "..", "..");
+console.error(`Starting MCP server with PROJECT_ROOT: ${PROJECT_ROOT}`);
 const server = new Server({
     name: "mmsi-ibs-assistant",
     version: "1.0.0",

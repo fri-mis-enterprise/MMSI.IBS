@@ -233,9 +233,9 @@ namespace IBSWeb.Areas.User.Controllers
 
         private sealed class BillingMapInfo
         {
-            public int Id { get; set; }
-            public int PortId { get; set; }
-            public int TerminalId { get; set; }
+            public int Id { get; init; }
+            public int PortId { get; init; }
+            public int TerminalId { get; init; }
         }
 
         private sealed class ImportMaps
@@ -338,7 +338,7 @@ namespace IBSWeb.Areas.User.Controllers
             maps.TerminalLegacyMap.Clear();
             foreach (var t in await dbContext.MMSITerminals.Include(x => x.Port).AsNoTracking().ToListAsync(ct))
             {
-                if (t.Port != null && t.Port.PortNumber != null)
+                if (t.Port is { PortNumber: not null })
                 {
                     maps.Terminal[$"{t.Port.PortNumber}{t.TerminalNumber}"] = t.TerminalId;
                 }
@@ -1161,7 +1161,7 @@ namespace IBSWeb.Areas.User.Controllers
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
             var records = csv.GetRecords<dynamic>();
-            int count = 0, skipped = 0;
+            int count = 0;
             var newRecords = new List<Billing>();
 
             foreach (var record in records)
@@ -1170,13 +1170,13 @@ namespace IBSWeb.Areas.User.Controllers
                 int legacyRecId = (int)ParseDecimal(record, "recid");
 
                 // 1. Skip if RECID already exists (redundant but safe)
-                if (maps.BillingByRecId.ContainsKey(legacyRecId.ToString())) { skipped++; continue; }
+                if (maps.BillingByRecId.ContainsKey(legacyRecId.ToString())) {
+                    continue; }
 
                 // 2. Skip if Number already exists to avoid unique constraint violation in DB
                 if (maps.Billing.ContainsKey(billingNumber))
                 {
                     _importErrors.Add($"Billing {billingNumber} (RECID {legacyRecId}): Duplicate number found. Skipping to avoid DB constraint violation.");
-                    skipped++;
                     continue;
                 }
 
@@ -1199,7 +1199,11 @@ namespace IBSWeb.Areas.User.Controllers
                     if (!maps.VesselLegacyMap.TryGetValue(vesselNumRaw, out vesselId))
                     {
                         string unpadded = vesselNumRaw.TrimStart('0');
-                        if (string.IsNullOrEmpty(unpadded)) unpadded = "0";
+                        if (string.IsNullOrEmpty(unpadded))
+                        {
+                            unpadded = "0";
+                        }
+
                         if (!maps.VesselLegacyMap.TryGetValue(unpadded, out vesselId))
                         {
                             _importErrors.Add($"Billing {billingNumber}: Vessel {vesselNumRaw} not found. Skipping.");
@@ -1305,7 +1309,11 @@ namespace IBSWeb.Areas.User.Controllers
                     if (!maps.CustomerLegacyMap.TryGetValue(custNoRaw, out customerId))
                     {
                         string unpadded = custNoRaw.TrimStart('0');
-                        if (string.IsNullOrEmpty(unpadded)) unpadded = "0";
+                        if (string.IsNullOrEmpty(unpadded))
+                        {
+                            unpadded = "0";
+                        }
+
                         if (!maps.CustomerLegacyMap.TryGetValue(unpadded, out customerId))
                         {
                             if (custNo == "0000")
@@ -1353,7 +1361,11 @@ namespace IBSWeb.Areas.User.Controllers
                     if (!maps.VesselLegacyMap.TryGetValue(vesselNumRaw, out vesselId))
                     {
                         string unpadded = vesselNumRaw.TrimStart('0');
-                        if (string.IsNullOrEmpty(unpadded)) unpadded = "0";
+                        if (string.IsNullOrEmpty(unpadded))
+                        {
+                            unpadded = "0";
+                        }
+
                         if (!maps.VesselLegacyMap.TryGetValue(unpadded, out vesselId))
                         {
                             _importErrors.Add($"Dispatch {dispatchNo}: Vessel {vesselNumRaw} not found. Skipping.");
@@ -1523,7 +1535,7 @@ namespace IBSWeb.Areas.User.Controllers
                 if (maps.Port.TryGetValue("005", out int davaoId))
                 {
                     maps.PortToFirstTerminal.TryGetValue(davaoId, out int firstTid);
-                    return (davaoId, firstTid != 0 ? firstTid : (int?)null);
+                    return (davaoId, firstTid != 0 ? firstTid : null);
                 }
 
                 // Ultimate fallback: first available port and its first terminal
@@ -1531,7 +1543,7 @@ namespace IBSWeb.Areas.User.Controllers
                 if (firstPortId != 0)
                 {
                     maps.PortToFirstTerminal.TryGetValue(firstPortId, out int firstTid);
-                    return (firstPortId, firstTid != 0 ? firstTid : (int?)null);
+                    return (firstPortId, firstTid != 0 ? firstTid : null);
                 }
             }
 
