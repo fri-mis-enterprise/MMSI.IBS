@@ -4,6 +4,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextpro
 import { getDbPool } from "./utils/db-client.js";
 import { runBuild, parseBuildErrors } from "./tools/build-guard.js";
 import { findMethodInFile, extractReferencedTypes, findTypeDefinition, traceMethodCalls } from "./utils/dotnet-parser.js";
+import { listCsvFiles, queryCsv } from "./tools/csv-handler.js";
 import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -64,6 +65,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                         filePath: { type: "string" },
                     },
                     required: ["methodName", "filePath"],
+                },
+            },
+            {
+                name: "list_csv_files",
+                description: "List all CSV files in Exported and Imports directories.",
+                inputSchema: {
+                    type: "object",
+                    properties: {},
+                },
+            },
+            {
+                name: "query_csv",
+                description: "Query and filter data from a CSV file.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        filePath: { type: "string", description: "Relative path to the CSV file." },
+                        filter: { type: "object", description: "Optional key-value pairs to filter rows." },
+                        limit: { type: "integer", description: "Max rows to return (default 100)." },
+                    },
+                    required: ["filePath"],
                 },
             },
         ],
@@ -135,6 +157,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const trace = await traceMethodCalls(PROJECT_ROOT, methodBody);
             return {
                 content: [{ type: "text", text: JSON.stringify(trace, null, 2) }],
+            };
+        }
+        if (name === "list_csv_files") {
+            const files = await listCsvFiles(PROJECT_ROOT);
+            return {
+                content: [{ type: "text", text: JSON.stringify(files, null, 2) }],
+            };
+        }
+        if (name === "query_csv") {
+            const filePath = args?.filePath;
+            const filter = args?.filter;
+            const limit = args?.limit || 100;
+            const data = await queryCsv(PROJECT_ROOT, filePath, filter, limit);
+            return {
+                content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
             };
         }
         throw new Error(`Tool not found: ${name}`);
