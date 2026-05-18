@@ -27,7 +27,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var tugboat = new Tugboat
             {
-                CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken)
+                CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken),
+                PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
 
             return View(tugboat);
@@ -38,6 +39,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
+                model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
+                model.PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
                 TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
@@ -115,15 +118,17 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            model.PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(Tugboat model, CancellationToken cancellationToken)
         {
-            model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
             if (!ModelState.IsValid)
             {
+                model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
+                model.PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
                 TempData["error"] = "Invalid entry, please try again.";
                 return View(model);
             }
@@ -155,6 +160,7 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.IsCompanyOwned = model.IsCompanyOwned;
                 currentModel.TugboatNumber = model.TugboatNumber;
                 currentModel.TugboatName = model.TugboatName;
+                currentModel.PortId = model.PortId;
                 await unitOfWork.Tugboat.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";

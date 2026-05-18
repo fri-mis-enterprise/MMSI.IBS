@@ -1,0 +1,171 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Vessel Planning & Resource Scheduling";
+    ViewData["IsFullWidth"] = true;
+}
+
+<link rel="stylesheet" href="~/css/vessel-planning.css">
+
+<div class="container-fluid p-0 m-0 overflow-hidden">
+    <div class="card shadow-none border-0 rounded-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center p-2 rounded-0">
+            <div class="d-flex align-items-center gap-3">
+                <h6 class="m-0"><i class="bi bi-calendar-event me-1"></i> Vessel Planning</h6>
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="vesselSearch" class="form-control bg-dark border-secondary text-white" placeholder="Search vessel or customer..." />
+                </div>
+                <div class="form-check form-switch mb-0 small">
+                    <input class="form-check-input" type="checkbox" id="onlyWithSchedules" checked>
+                    <label class="form-check-label text-light" for="onlyWithSchedules">Only with schedules</label>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <select id="portSelector" class="form-select form-select-sm" style="width: 200px;" asp-items="ViewBag.Ports">
+                    <option value="">-- Select Port --</option>
+                </select>
+                <input type="month" id="targetDate" class="form-control form-control-sm" style="width: 150px;" value="@DateTime.Now.ToString("yyyy-MM")" />
+                <button id="refreshBtn" class="btn btn-sm btn-outline-light" title="Reload Data">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Capacity Heatmap (Sticky below header) -->
+        <div class="heatmap-container-wrapper sticky-top bg-light shadow-sm" style="z-index: 101; top: 0;">
+            <div class="heatmap-label border-bottom">
+                Fleet Pressure Heatmap
+                <span class="ms-2" data-bs-toggle="tooltip" title="Green: <80%, Yellow: 80-100%, Red: >100% capacity">
+                    <i class="bi bi-info-circle small"></i>
+                </span>
+            </div>
+            <div class="overflow-hidden">
+                <div id="heatmapContainer" class="heatmap-slots">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0 position-relative">
+            <!-- Timeline Section -->
+            <div id="timeline-section" class="position-relative bg-white">
+                <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-calendar-range me-1"></i> Interactive Timeline</h6>
+                    <button class="btn btn-xs btn-outline-secondary" onclick="vesselPlanning.toggleFullScreen('timeline-section')" title="Toggle Full Screen">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                </div>
+                <div id="timeline-container" class="timeline-container">
+                    <div class="timeline-header-row">
+                        <div class="terminal-header-col sticky-left bg-light border-bottom">Terminal</div>
+                        <div class="hours-container" id="hours-header">
+                            <!-- Hours will be generated here -->
+                        </div>
+                    </div>
+                    <div id="terminal-rows-container">
+                        <!-- Terminal rows will be generated here -->
+                    </div>
+                    <div id="now-line" class="now-line"></div>
+                </div>
+            </div>
+
+            <!-- List View Section -->
+            <div id="list-section" class="planning-list-section border-top bg-white">
+                <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-list-ul me-1"></i> Planning List</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-info text-dark" id="listCount">0 items</span>
+                        <button class="btn btn-xs btn-outline-secondary" onclick="vesselPlanning.toggleFullScreen('list-section')" title="Toggle Full Screen">
+                            <i class="bi bi-arrows-fullscreen"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive planning-list-wrapper" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover table-bordered mb-0" id="planningList">
+                        <thead class="bg-light sticky-top" style="top: -1px;">
+                            <tr>
+                                <th>Status</th>
+                                <th>Vessel Name</th>
+                                <th>Customer</th>
+                                <th>Service Type</th>
+                                <th>Terminal</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Tugs</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="planningListBody">
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-3">Select a port to view planning list.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Planning Sidebar (Offcanvas) -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="planningSidebar" aria-labelledby="planningSidebarLabel" style="width: 400px;">
+    <div class="offcanvas-header bg-dark text-white py-2">
+        <h5 class="offcanvas-title" id="planningSidebarLabel"><i class="bi bi-pencil-square me-1"></i> Edit Schedule</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="sidebarConflict" class="alert alert-danger py-2 mb-3 d-none">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Capacity Conflict!</strong> This operation exceeds local fleet size.
+        </div>
+
+        <form id="editPlanningForm">
+            <input type="hidden" id="editId" name="id" />
+            <input type="hidden" id="editType" name="type" />
+
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Vessel Name</label>
+                <input type="text" id="editVesselName" class="form-control form-control-sm" readonly />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Customer</label>
+                <input type="text" id="editCustomerName" class="form-control form-control-sm" readonly />
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold small">Planned Start</label>
+                    <input type="datetime-local" id="editStart" name="start" class="form-control form-control-sm" required />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold small">Planned End</label>
+                    <input type="datetime-local" id="editEnd" name="end" class="form-control form-control-sm" required />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold small">Required Tugs</label>
+                <input type="number" id="editTugs" name="requiredTugs" class="form-control form-control-sm" min="1" required />
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold small">Remarks</label>
+                <textarea id="editRemarks" class="form-control form-control-sm" rows="3" readonly></textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" id="btnSavePlanning">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+                <a id="editLink" href="#" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> View Full Record
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/VesselPlanningManager.js"></script>
+}

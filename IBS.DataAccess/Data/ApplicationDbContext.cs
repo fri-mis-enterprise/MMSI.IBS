@@ -396,6 +396,14 @@ namespace IBS.DataAccess.Data
                 jo.Property(j => j.PlannedEndTime).HasColumnType("timestamp without time zone");
             });
 
+            builder.Entity<Tugboat>(t =>
+            {
+                t.HasOne(x => x.Port)
+                    .WithMany()
+                    .HasForeignKey(x => x.PortId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             #endregion
 
             #endregion --MMSI

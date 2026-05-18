@@ -907,6 +907,7 @@ namespace IBSWeb.Areas.User.Controllers
                     TugboatName = GetString(record, "name"),
                     IsCompanyOwned = ParseBool(record, "companyown"),
                     TugboatOwnerId = ownerId,
+                    PortId = 1, // Defaulting to first port for now; can be updated manually
                     MsapRecId = recid != "-" ? recid : null
                 };
 

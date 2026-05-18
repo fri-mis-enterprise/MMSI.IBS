@@ -75,6 +75,7 @@ builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
 builder.Services.AddScoped<ITugboatMonitoringService, TugboatMonitoringService>();
+builder.Services.AddScoped<IVesselPlanningService, VesselPlanningService>();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -152,6 +153,7 @@ app.MapControllerRoute(
 // SignalR
 app.MapHub<NotificationHub>("/notificationHub");
 app.MapHub<TugboatHub>("/tugboatHub");
+app.MapHub<PlanningHub>("/planningHub");
 
 using (var scope = app.Services.CreateScope())
 {

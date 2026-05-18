@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518030729_AddVesselPlanningFields")]
+    partial class AddVesselPlanningFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3063,10 +3066,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(10)")
                         .HasColumnName("msap_recid");
 
-                    b.Property<int>("PortId")
-                        .HasColumnType("integer")
-                        .HasColumnName("port_id");
-
                     b.Property<string>("TugboatName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -3085,9 +3084,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("TugboatId")
                         .HasName("pk_mmsi_tugboats");
-
-                    b.HasIndex("PortId")
-                        .HasDatabaseName("ix_mmsi_tugboats_port_id");
 
                     b.HasIndex("TugboatOwnerId")
                         .HasDatabaseName("ix_mmsi_tugboats_tugboat_owner_id");
@@ -5229,19 +5225,10 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.Tugboat", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.Port", "Port")
-                        .WithMany()
-                        .HasForeignKey("PortId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_mmsi_tugboats_mmsi_ports_port_id");
-
                     b.HasOne("IBS.Models.MMSI.MasterFile.TugboatOwner", "TugboatOwner")
                         .WithMany()
                         .HasForeignKey("TugboatOwnerId")
                         .HasConstraintName("fk_mmsi_tugboats_mmsi_tugboat_owners_tugboat_owner_id");
-
-                    b.Navigation("Port");
 
                     b.Navigation("TugboatOwner");
                 });

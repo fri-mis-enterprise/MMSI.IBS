@@ -56,6 +56,16 @@ namespace IBS.Models.MMSI
         [Display(Name = "Planned End Time")]
         public DateTime? PlannedEndTime { get; set; }
 
+        [Display(Name = "Required Tug Count")]
+        public int RequiredTugCount { get; set; } = 1;
+
+        [Column(TypeName = "varchar(50)")]
+        [Display(Name = "Service Type")]
+        public string? ServiceType { get; set; }
+
+        [Display(Name = "Is Confirmed")]
+        public bool IsConfirmed { get; set; }
+
         [Display(Name = "Preferred Tugboat")]
         public int? PreferredTugboatId { get; set; }
 

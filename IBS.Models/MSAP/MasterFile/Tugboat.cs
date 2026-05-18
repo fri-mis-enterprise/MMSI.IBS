@@ -24,11 +24,19 @@ namespace IBS.Models.MMSI.MasterFile
         [ForeignKey(nameof(TugboatOwnerId))]
         public TugboatOwner? TugboatOwner { get; set; }
 
+        public int PortId { get; set; }
+
+        [ForeignKey(nameof(PortId))]
+        public Port? Port { get; set; }
+
         [StringLength(10)]
         [Column("msap_recid", TypeName = "varchar(10)")]
         public string? MsapRecId { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CompanyList { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? PortList { get; set; }
     }
 }

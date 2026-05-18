@@ -1,0 +1,340 @@
+:root {
+    --header-width: 200px;
+    --hour-width: 80px;
+    --row-height: 50px;
+    --day-header-height: 60px;
+    --days-in-month: 31;
+}
+
+/* Full Screen Mode */
+.fullscreen-section {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white;
+    overflow: hidden;
+}
+
+.fullscreen-section .timeline-container {
+    height: calc(100vh - 45px) !important;
+}
+
+.fullscreen-section .planning-list-wrapper {
+    max-height: calc(100vh - 45px) !important;
+}
+
+.timeline-container {
+    display: grid;
+    grid-template-columns: var(--header-width) 1fr;
+    overflow: auto;
+    position: relative;
+    height: 400px; /* Fixed height for timeline when list is present */
+    background-color: #fcfcfc;
+    border-bottom: 1px solid #dee2e6;
+    cursor: grab;
+    user-select: none;
+    
+    /* Persistent grid lines */
+    background-image: 
+        linear-gradient(to right, #dee2e6 1px, transparent 1px),
+        linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 
+        calc(var(--hour-width) * 24) 100%, 
+        var(--hour-width) 100%;
+    background-position: var(--header-width) 0;
+    background-attachment: local;
+}
+
+.timeline-container.dragging {
+    cursor: grabbing;
+}
+
+.timeline-header-row, #terminal-rows-container {
+    display: contents;
+}
+
+/* Explicit Column Placement to prevent layout drift */
+.terminal-header-col, .terminal-name-col {
+    grid-column: 1;
+}
+
+.hours-container, .blocks-container {
+    grid-column: 2;
+}
+
+/* Header corner */
+.terminal-header-col {
+    width: var(--header-width);
+    height: var(--day-header-height);
+    line-height: var(--day-header-height);
+    padding-left: 15px;
+    font-weight: bold;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    background-color: #f8f9fa;
+}
+
+/* Top bar (Days + Hours) */
+.hours-container {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 80;
+    height: var(--day-header-height);
+    width: fit-content;
+}
+
+.day-slot {
+    border-right: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    min-width: calc(var(--hour-width) * 24);
+    display: flex;
+    flex-direction: column;
+}
+
+.day-label {
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 2px 0;
+    background-color: #e9ecef;
+    height: 30px;
+    line-height: 26px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.hours-sub-header {
+    height: 30px;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.hour-tick {
+    width: var(--hour-width);
+    text-align: center;
+    font-size: 0.7rem;
+    line-height: 30px;
+    border-right: 1px solid rgba(0,0,0,0.05);
+    color: #6c757d;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+/* Left bar (Terminal Names) */
+.terminal-name-col {
+    width: var(--header-width);
+    height: var(--row-height);
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 90;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.blocks-container {
+    height: var(--row-height);
+    border-bottom: 1px solid #dee2e6;
+    position: relative;
+    width: calc(var(--days-in-month) * 24 * var(--hour-width));
+}
+
+.timeline-block {
+    position: absolute;
+    height: calc(var(--row-height) - 12px);
+    top: 6px;
+    border-radius: 4px;
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: transform 0.1s, box-shadow 0.1s, height 0.1s;
+    z-index: 10;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.block-main-content {
+    width: 100%;
+    overflow: hidden;
+}
+
+.block-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block-details {
+    display: none;
+    font-size: 0.7rem;
+    margin-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 4px;
+    font-weight: 400;
+}
+
+.detail-item {
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.timeline-block:hover {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    z-index: 200;
+    white-space: normal;
+    height: auto !important;
+    min-width: 250px !important;
+    min-height: calc(var(--row-height) - 12px);
+    padding: 8px 10px;
+    justify-content: flex-start;
+}
+
+.timeline-block:hover .block-details {
+    display: block;
+}
+
+.timeline-block:hover .block-title {
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.timeline-block span {
+    pointer-events: none;
+    user-select: none;
+}
+
+.now-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dc3545;
+    z-index: 30;
+    pointer-events: none;
+}
+
+/* Status Colors */
+.block-planned {
+    background-color: #4e73df;
+    border: 1px solid #2e59d9;
+}
+
+.block-in-progress {
+    background-color: #f6c23e;
+    color: #212529;
+    border: 1px solid #dda20a;
+}
+
+.block-completed {
+    background-color: #1cc88a;
+    border: 1px solid #169b6b;
+}
+
+.block-conflict {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(231, 74, 59, 0.2),
+        rgba(231, 74, 59, 0.2) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    border: 2px solid #e74a3b !important;
+}
+
+.timeline-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 200;
+}
+
+/* Heatmap styles */
+.heatmap-container-wrapper {
+    display: grid;
+    grid-template-columns: var(--header-width) 1fr;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.heatmap-label {
+    width: var(--header-width);
+    padding: 5px 15px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #dee2e6;
+}
+
+.heatmap-slots {
+    display: flex;
+    height: 30px;
+    width: fit-content;
+}
+
+.heatmap-slot {
+    width: calc(var(--hour-width) / 2); /* Heatmap is every 30 mins */
+    height: 100%;
+    border-right: 1px solid rgba(0,0,0,0.05);
+    transition: background-color 0.3s;
+}
+
+/* Planning List Section */
+.planning-list-section {
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+}
+
+.planning-list-section .table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 10px;
+}
+
+.planning-list-section .table td {
+    font-size: 0.85rem;
+    vertical-align: middle;
+    padding: 8px 10px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.row-conflict {
+    background-color: rgba(231, 74, 59, 0.05);
+}
+
+.row-conflict td {
+    border-left: 3px solid #e74a3b;
+}
