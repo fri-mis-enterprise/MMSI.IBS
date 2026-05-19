@@ -55,7 +55,7 @@ namespace IBS.Models.MMSI.MasterFile
         public int CustomerId { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public Customer Customer { get; set; } = null!;
 
         #region -- Select List
 

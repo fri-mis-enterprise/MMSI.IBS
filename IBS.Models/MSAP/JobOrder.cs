@@ -34,19 +34,19 @@ namespace IBS.Models.MMSI
 
         public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public Customer Customer { get; set; } = null!;
 
         public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
-        public Vessel? Vessel { get; set; }
+        public Vessel Vessel { get; set; } = null!;
 
         public int PortId { get; set; }
         [ForeignKey(nameof(PortId))]
-        public Port? Port { get; set; }
+        public Port Port { get; set; } = null!;
 
         public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
-        public Terminal? Terminal { get; set; }
+        public Terminal Terminal { get; set; } = null!;
 
         #endregion
 

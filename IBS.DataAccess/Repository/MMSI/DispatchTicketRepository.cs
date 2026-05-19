@@ -48,8 +48,8 @@ namespace IBS.DataAccess.Repository.MMSI
 
             if (model != null && model.CustomerId != 0)
             {
-                model.Customer = await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
+                model.Customer = (await _db.Customers
+                    .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken))!;
             }
 
             return model;
@@ -67,8 +67,8 @@ namespace IBS.DataAccess.Repository.MMSI
 
             if (model != null && model.CustomerId != 0)
             {
-                model.Customer = await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken);
+                model.Customer = (await _db.Customers
+                    .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken))!;
             }
 
             return model;
@@ -90,8 +90,8 @@ namespace IBS.DataAccess.Repository.MMSI
 
             foreach (var ticket in tickets.Where(t => t.CustomerId != 0))
             {
-                ticket.Customer = await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken);
+                ticket.Customer = (await _db.Customers
+                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken))!;
             }
 
             return tickets;
@@ -109,8 +109,8 @@ namespace IBS.DataAccess.Repository.MMSI
 
             foreach (var ticket in tickets.Where(t => t.CustomerId != 0))
             {
-                ticket.Customer = await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken);
+                ticket.Customer = (await _db.Customers
+                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken))!;
             }
 
             return tickets;

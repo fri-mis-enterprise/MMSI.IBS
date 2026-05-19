@@ -159,6 +159,17 @@
                                         <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow-sm bg-light" readonly>
                                     </div>
                                     <div class="col-12 col-md-6">
+                                        <label asp-for="IsVatable" class="form-label fw-bold small">Tax Status</label>
+                                        <div class="input-group">
+                                            <div class="form-control border-0 shadow-sm bg-white d-flex align-items-center">
+                                                <div class="form-check form-switch mb-0">
+                                                    <input asp-for="IsVatable" class="form-check-input" type="checkbox" id="isVatableToggle">
+                                                    <label class="form-check-label small fw-bold" for="isVatableToggle">Is Vatable?</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
                                         <label asp-for="VoyageNumber" class="form-label fw-bold small">Voyage Number <span class="text-danger">*</span></label>
                                         <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow-sm" id="VoyageNumber" required>
                                     </div>
@@ -340,7 +351,9 @@
                             tugboat: t.tugboat?.tugboatName || 'N/A',
                             service: t.service?.serviceName || 'N/A',
                             duration: t.totalHours,
-                            totalAmount: t.totalNetRevenue
+                            dispatchAmount: t.dispatchNetRevenue,
+                            bafAmount: t.bafNetRevenue,
+                            totalAmount: t.totalBilling
                         })));
                     } catch (e) { console.error('Error loading initial tickets', e); }
                 }
@@ -469,32 +482,34 @@
                 $jobOrderResults.empty().addClass('d-none');
                 try {
                     const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrder.value)}`);
-                    const tickets = await res.json();
+                    const response = await res.json();
 
-                    // Merge with existing tickets in the table
-                    let existingIds = [];
-                    $ticketsTableBody.find('tr[data-ticket-id]').each(function() {
-                        existingIds.push($(this).data('ticket-id').toString());
-                    });
+                    if (response.success) {
+                         // Merge with existing tickets in the table
+                        let existingIds = [];
+                        $ticketsTableBody.find('tr[data-ticket-id]').each(function() {
+                            existingIds.push($(this).data('ticket-id').toString());
+                        });
 
-                    tickets.forEach(ticket => {
-                        if (!existingIds.includes(ticket.dispatchTicketId.toString())) {
-                            $ticketsTableBody.append(`
-                                <tr data-ticket-id="${ticket.dispatchTicketId}">
-                                    <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked></td>
-                                    <td class="text-center fw-bold">${ticket.dispatchNo}</td>
-                                    <td class="text-center">${ticket.tugboat}</td>
-                                    <td class="text-center">${ticket.service}</td>
-                                    <td class="text-center">${ticket.duration.toFixed(2)}</td>
-                                    <td class="text-end pe-3">₱${formatNumber(ticket.totalAmount)}</td>
-                                </tr>
-                            `);
-                            if (!$dispatchSelect.find(`option[value="${ticket.dispatchTicketId}"]`).length) {
-                                $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
+                        response.tickets.forEach(ticket => {
+                            if (!existingIds.includes(ticket.dispatchTicketId.toString())) {
+                                $ticketsTableBody.append(`
+                                    <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
+                                        <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked></td>
+                                        <td class="text-center fw-bold">${ticket.dispatchNo}</td>
+                                        <td class="text-center">${ticket.tugboat}</td>
+                                        <td class="text-center">${ticket.service}</td>
+                                        <td class="text-center">${ticket.duration.toFixed(2)}</td>
+                                        <td class="text-end pe-3">₱${formatNumber(ticket.totalAmount)}</td>
+                                    </tr>
+                                `);
+                                if (!$dispatchSelect.find(`option[value="${ticket.dispatchTicketId}"]`).length) {
+                                    $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
+                                }
                             }
-                        }
-                    });
-                    updateTotals();
+                        });
+                        updateTotals();
+                    }
                 } catch {
                     Swal.fire('Error', 'Failed to load tickets', 'error');
                 }
@@ -509,7 +524,7 @@
                 }
                 tickets.forEach(ticket => {
                     $ticketsTableBody.append(`
-                        <tr data-ticket-id="${ticket.dispatchTicketId}">
+                        <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
                             <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked></td>
                             <td class="text-center fw-bold">${ticket.dispatchNo}</td>
                             <td class="text-center">${ticket.tugboat}</td>
@@ -541,9 +556,9 @@
             function updateTotals() {
                 let dispatch = 0, baf = 0;
                 $ticketsTableBody.find('.ticket-checkbox:checked').each(function () {
-                    const total = parseFloat($(this).closest('tr').find('td:eq(5)').text().replace(/[^0-9.-]+/g, '')) || 0;
-                    dispatch += total * 0.8;
-                    baf += total * 0.2;
+                    const $row = $(this).closest('tr');
+                    dispatch += parseFloat($row.data('dispatch-amount')) || 0;
+                    baf += parseFloat($row.data('baf-amount')) || 0;
                 });
                 const count = $ticketsTableBody.find('.ticket-checkbox:checked').length;
                 $('#DispatchAmountTotal').text(formatNumber(dispatch));

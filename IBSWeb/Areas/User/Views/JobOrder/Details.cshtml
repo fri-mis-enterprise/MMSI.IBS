@@ -192,7 +192,7 @@
                                         <span class="text-muted">-</span>
                                     }
                                 </td>
-                                <td class="text-start">@(ticket.Date?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                <td class="text-start">@ticket.Date.ToString("MMM dd, yyyy")</td>
                                 <td class="text-start">@ticket.Service?.ServiceName</td>
                                 <td class="text-start">@ticket.Tugboat?.TugboatName</td>
                                 <td class="text-center">@ticket.TotalHours.ToString("N2")</td>

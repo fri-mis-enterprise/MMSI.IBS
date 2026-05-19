@@ -193,8 +193,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 model.Status = "Incomplete";
 
-                if (model.Date != null &&
-                    model.DateLeft != null && model.TimeLeft != null && model.DateArrived != null && model.TimeArrived != null &&
+                if (model.DateLeft != null && model.TimeLeft != null && model.DateArrived != null && model.TimeArrived != null &&
                     model.TerminalId != 0 && model.ServiceId != 0 && model.TugBoatId != 0 && model.TugMasterId != null && model.VesselId != 0)
                 {
                     model.Status = "For Posting";
@@ -309,8 +308,8 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (model.CustomerId != 0)
                 {
-                    model.Customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
-                        cancellationToken);
+                    model.Customer = (await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
+                        cancellationToken))!;
                 }
 
                 if (imageFile != null)
@@ -429,8 +428,7 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.VesselId = model.VesselId;
                 currentModel.Remarks = model.Remarks;
 
-                if (currentModel.Date != null &&
-                    currentModel.DateLeft != null && currentModel.TimeLeft != null && currentModel.DateArrived != null && currentModel.TimeArrived != null &&
+                if (currentModel.DateLeft != null && currentModel.TimeLeft != null && currentModel.DateArrived != null && currentModel.TimeArrived != null &&
                     currentModel.TerminalId != 0 && currentModel.ServiceId != 0 && currentModel.TugBoatId != 0 && currentModel.TugMasterId != null && currentModel.VesselId != 0)
                 {
                     currentModel.Status = "For Posting";

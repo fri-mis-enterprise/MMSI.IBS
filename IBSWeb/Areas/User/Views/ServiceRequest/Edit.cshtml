@@ -102,7 +102,7 @@
                 <h5 class="section-header text-secondary border-bottom"><i class="bi bi-info-circle me-2"></i>I. Reference Information</h5>
                 <div class="row">
                     <div class="form-floating col-md-3 col-6 my-2">
-                        <input asp-for="Date" type="date" value="@(Model.Date?.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="Date" placeholder=" ">
+                        <input asp-for="Date" type="date" value="@(Model.Date.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="Date" placeholder=" ">
                         <label asp-for="Date" for="Date" class="ms-2">Date Today<span class="required text-danger">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>

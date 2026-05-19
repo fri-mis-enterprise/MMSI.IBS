@@ -16,22 +16,22 @@ namespace IBS.Models.MMSI
         public int CustomerId { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public Customer Customer { get; set; } = null!;
 
         public int PortId { get; set; }
 
         [ForeignKey(nameof(PortId))]
-        public Port? Port { get; set; }
+        public Port Port { get; set; } = null!;
 
         public int TerminalId { get; set; }
 
         [ForeignKey(nameof(TerminalId))]
-        public Terminal? Terminal { get; set; }
+        public Terminal Terminal { get; set; } = null!;
 
         public int ServiceId { get; set; }
 
         [ForeignKey(nameof(ServiceId))]
-        public Service? Service { get; set; }
+        public Service Service { get; set; } = null!;
 
         public decimal Dispatch { get; set; }
 

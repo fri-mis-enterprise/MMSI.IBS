@@ -27,7 +27,7 @@ namespace IBS.Models.MMSI.MasterFile
         public int PortId { get; set; }
 
         [ForeignKey(nameof(PortId))]
-        public Port? Port { get; set; }
+        public Port Port { get; set; } = null!;
 
         [StringLength(10)]
         [Column("msap_recid", TypeName = "varchar(10)")]

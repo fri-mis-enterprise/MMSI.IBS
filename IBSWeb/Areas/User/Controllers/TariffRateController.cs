@@ -107,8 +107,8 @@ namespace IBSWeb.Areas.User.Controllers
                 TempData["error"] = ex.Message;
                 model = await GetSelectLists(model,
                     cancellationToken);
-                model.Terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
-                    cancellationToken);
+                model.Terminal = (await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
+                    cancellationToken))!;
                 return View(model);
             }
         }
@@ -197,8 +197,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return model;
             }
 
-            model.Terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
-                cancellationToken);
+            model.Terminal = (await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
+                cancellationToken))!;
             model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal!.PortId,
                 cancellationToken);
             return model;

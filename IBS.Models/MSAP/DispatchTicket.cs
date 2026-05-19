@@ -14,7 +14,7 @@ namespace IBS.Models.MMSI
 
         [Column("DATE")]
         [Display(Name = "Date")]
-        public DateOnly? Date { get; set; }
+        public DateOnly Date { get; set; }
 
         [Column("NUMBER", TypeName = "varchar(20)")]
         public string DispatchNumber
@@ -168,7 +168,7 @@ namespace IBS.Models.MMSI
         [Column("CUSTNO")]
         public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; } = null!;
+        public Customer Customer { get; set; } = null!;
 
         [Column("TUGNUM")]
         public int TugBoatId { get; set; }

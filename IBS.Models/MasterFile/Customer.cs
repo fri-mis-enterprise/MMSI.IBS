@@ -11,9 +11,10 @@ namespace IBS.Models.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerId { get; set; }
 
+        [Required]
         [Display(Name = "Customer Code")]
         [StringLength(7)]
-        public string? CustomerCode { get; set; }
+        public string CustomerCode { get; set; } = null!;
 
         [Required]
         [Display(Name = "Customer Name")]
@@ -113,7 +114,7 @@ namespace IBS.Models.MasterFile
         [Required]
         [Display(Name = "Zip Code")]
         [StringLength(10)]
-        public string? ZipCode { get; set; }
+        public string ZipCode { get; set; } = null!;
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal? RetentionRate { get; set; }

@@ -112,7 +112,7 @@
                     </div>
                     <div class="card-body pt-0">
                         <div class="row g-3">
-                            <div class="col-12">
+                            <div class="col-12 col-md-6">
                                 <label asp-for="MMSIBillingNumber" class="form-label fw-bold">Billing Number <span class="text-danger" id="billingNumberRequired">*</span></label>
                                 <div class="input-group">
                                     <input asp-for="MMSIBillingNumber" type="text" class="form-control" id="billingNumber" placeholder="B000000">
@@ -123,6 +123,17 @@
                                     </div>
                                 </div>
                                 <span asp-validation-for="MMSIBillingNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="IsVatable" class="form-label fw-bold small">Tax Status</label>
+                                <div class="input-group">
+                                    <div class="form-control d-flex align-items-center">
+                                        <div class="form-check form-switch mb-0">
+                                            <input asp-for="IsVatable" class="form-check-input" type="checkbox" id="isVatableToggle">
+                                            <label class="form-check-label small fw-bold" for="isVatableToggle">Is Vatable?</label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label asp-for="VoyageNumber" class="form-label fw-bold">Voyage Number <span class="text-danger">*</span></label>
@@ -403,7 +414,9 @@
             $("#PrincipalCheckboxContainer").toggleClass("d-none", !customer.hasPrincipal);
             if (!customer.hasPrincipal) $("#PrincipalSection").addClass("d-none");
 
-            $(customer.vatType === "Vatable" ? "#billLocal" : "#billPrincipal").prop("checked", true);
+            const isVatable = customer.vatType === "Vatable";
+            $(isVatable ? "#billLocal" : "#billPrincipal").prop("checked", true);
+            $("#isVatableToggle").prop("checked", isVatable);
             $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
             handleCheckboxChange();
 
@@ -477,12 +490,12 @@
             }
             tickets.forEach(ticket => {
                 $ticketsTableBody.append(`
-                <tr data-ticket-id="${ticket.dispatchTicketId}">
+                <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
                     <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked></td>
                     <td class="text-center">${ticket.dispatchNo}</td>
                     <td class="text-center">${ticket.tugboat}</td>
                     <td class="text-center">${ticket.service}</td>
-                    <td class="text-center">${ticket.duration}</td>
+                    <td class="text-center">${ticket.duration.toFixed(2)}</td>
                     <td class="text-end">${formatNumber(ticket.totalAmount)}</td>
                 </tr>
             `);
@@ -510,9 +523,9 @@
         function updateTotals() {
             let dispatch = 0, baf = 0;
             $ticketsTableBody.find('.ticket-checkbox:checked').each(function () {
-                const total = parseFloat($(this).closest('tr').find('td:eq(5)').text().replace(/[^0-9.-]+/g, '')) || 0;
-                dispatch += total * 0.8;
-                baf += total * 0.2;
+                const $row = $(this).closest('tr');
+                dispatch += parseFloat($row.data('dispatch-amount')) || 0;
+                baf += parseFloat($row.data('baf-amount')) || 0;
             });
             const count = $ticketsTableBody.find('.ticket-checkbox:checked').length;
             $('#DispatchAmountTotal').text(formatNumber(dispatch));

@@ -16,9 +16,10 @@ namespace IBS.Models.MMSI.MasterFile
         [Column(TypeName = "varchar(50)")]
         public string VesselName { get; set; } = null!;
 
+        [Required]
         [StringLength(20, ErrorMessage = "Vessel name cannot exceed 20 characters.")]
         [Column(TypeName = "varchar(20)")]
-        public string? VesselType { get; set; }
+        public string VesselType { get; set; } = null!;
 
         [StringLength(10)]
         [Column("msap_recid", TypeName = "varchar(10)")]

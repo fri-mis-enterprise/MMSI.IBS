@@ -430,7 +430,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 id = ticket.DispatchTicketId,
                 dispatchNumber = ticket.DispatchNumber,
-                date = ticket.Date?.ToString("MMM dd, yyyy") ?? "-",
+                date = ticket.Date.ToString("MMM dd, yyyy"),
                 serviceName = ticket.Service.ServiceName,
                 tugboatName = ticket.Tugboat.TugboatName,
                 tugMasterName = ticket.TugMaster?.TugMasterName,

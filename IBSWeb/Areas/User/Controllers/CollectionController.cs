@@ -509,9 +509,9 @@ namespace IBSWeb.Areas.User.Controllers
                 ReferenceNo = viewModel.ReferenceNo,
                 Remarks = viewModel.Remarks,
                 DepositDate = viewModel.DepositDate,
-                Customer = await _unitOfWork.Customer
+                Customer = (await _unitOfWork.Customer
                     .GetAsync(c => c.CustomerId == viewModel.CustomerId,
-                        cancellationToken)
+                        cancellationToken))!
             };
 
             if (viewModel.MMSICollectionId != null)

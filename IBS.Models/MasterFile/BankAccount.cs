@@ -9,9 +9,10 @@ namespace IBS.Models.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BankAccountId { get; set; }
 
+        [Required]
         [StringLength(10)]
         [Column(TypeName = "varchar(10)")]
-        public string? BankAccountCode { get; set; }
+        public string BankAccountCode { get; set; } = null!;
 
         [StringLength(10)]
         public string Bank { get; set; } = null!;

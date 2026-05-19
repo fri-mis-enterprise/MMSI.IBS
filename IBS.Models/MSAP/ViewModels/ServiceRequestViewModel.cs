@@ -11,7 +11,7 @@ namespace IBS.Models.MMSI.ViewModels
 
         public int? DispatchTicketId { get; set; }
 
-        public DateOnly? Date { get; set; }
+        public DateOnly Date { get; set; }
 
         [StringLength(10, ErrorMessage = "Dispatch Number can only contain 10 characters")]
         public string? COSNumber { get; set; }

@@ -5,13 +5,40 @@
 }
 <style>
     @@media print {
-        .print-bottom {
-            position: absolute;
-            bottom: 3%;
+        .buttons {
+            display: none !important;
         }
-        .print-bottom2 {
-            position: absolute;
-            bottom: 15%;
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: white !important;
+        }
+
+        .container {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+        }
+        
+        .page-break-before {
+            page-break-before: always;
+        }
+
+        /* Ensure the main table expands but doesn't overlap */
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        /* Use flex or standard block for sections instead of absolute positioning */
+        .footer-section {
+            margin-top: 2rem;
+            page-break-inside: avoid;
         }
     }
 </style>
@@ -178,7 +205,7 @@
                 @foreach (var dt in Model.PaidDispatchTickets!.Where(dt => dt.Tugboat.TugboatName == tugboat))
                 {
                     <tr class="pb-2">
-                        <td class="text-center p-0">@dt.Date!.Value.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.Service.ServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
@@ -196,7 +223,7 @@
                 @foreach (var dt in Model.PaidDispatchTickets!.Where(dt => dt.BAFNetRevenue > 0))
                 {
                     <tr class="pb-2">
-                        <td class="text-center p-0">@dt.Date!.Value.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.Service.ServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
@@ -217,7 +244,7 @@
         </table>
     </div>
     
-    <div class="p-1 border-top border-bottom border-dark print-bottom2">
+    <div class="footer-section p-1 border-top border-bottom border-dark no-break">
         <div class="row">
             <div class="col-12 px-3 pb-3 d-flex justify-content-end" style="font-size: 12px;">
                 <b>@Model.Amount.ToString(SD.Two_Decimal_Format)</b>
@@ -244,162 +271,111 @@
                     </tr>
                 </table>
             </div>
-            @if (Model.BilledTo == "LOCAL")
-            {
-                <div class="col-5">
-                    <table class="table-borderless col-12">
+            
+            <div class="col-5">
+                <table class="table-borderless col-12">
+                    @if (Model.IsVatable)
+                    {
                         <tr class="row">
-                            <td class="col-6">
-                                VATABLE SALES:
-                            </td>
+                            <td class="col-6">VATABLE SALES:</td>
                             <td class="col-6 text-end border-bottom border-dark">
                                 @{ var vatableSales = Model.Amount / 1.12m; }
                                 <b>@vatableSales.ToString(SD.Two_Decimal_Format) </b>
                             </td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                VAT - EXEMPT SALES
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">VAT - EXEMPT SALES</td>
+                            <td class="col-6 text-end border-bottom border-dark">0.00</td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                ZERO RATED SALES
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">ZERO RATED SALES</td>
+                            <td class="col-6 text-end border-bottom border-dark">0.00</td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                TOTAL SALES
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">TOTAL SALES</td>
+                            <td class="col-6 text-end border-bottom border-dark"><b>@vatableSales.ToString(SD.Two_Decimal_Format)</b></td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                12% VAT
-                            </td>
+                            <td class="col-6">12% VAT</td>
                             <td class="col-6 text-end border-bottom border-dark">
                                 @{ var taxAmount = (Model.Amount - (Model.Amount / 1.12m)); }
                                 <b>@taxAmount.ToString(SD.Two_Decimal_Format) </b>
                             </td>
                         </tr>
-                        <tr class="row mt-1 mb-2">
-                            <td class="col-6">
-                                <b>TOTAL AMOUNT DUE:</b>
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-                                <div class="row border-bottom border-dark">
-                                    <div class="col-12">
-                                        <b> @Model.Amount.ToString(SD.Two_Decimal_Format)</b>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <div class="col-5">
-                    <table class="table-borderless col-12">
+                    }
+                    else
+                    {
                         <tr class="row">
-                            <td class="col-6">
-                                VATABLE SALES:
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-                                
-                            </td>
+                            <td class="col-6">VATABLE SALES:</td>
+                            <td class="col-6 text-end border-bottom border-dark">0.00</td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                VAT - EXEMPT SALES
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">VAT - EXEMPT SALES</td>
+                            <td class="col-6 text-end border-bottom border-dark">0.00</td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                ZERO RATED SALES
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">ZERO RATED SALES</td>
+                            <td class="col-6 text-end border-bottom border-dark"><b>@Model.Amount.ToString(SD.Two_Decimal_Format)</b></td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                TOTAL SALES
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">TOTAL SALES</td>
+                            <td class="col-6 text-end border-bottom border-dark"><b>@Model.Amount.ToString(SD.Two_Decimal_Format)</b></td>
                         </tr>
                         <tr class="row mt-1">
-                            <td class="col-6">
-                                12% VAT
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-
-                            </td>
+                            <td class="col-6">12% VAT</td>
+                            <td class="col-6 text-end border-bottom border-dark">0.00</td>
                         </tr>
-                        <tr class="row mt-1 mb-2">
-                            <td class="col-6">
-                                <b>TOTAL AMOUNT DUE:</b>
-                            </td>
-                            <td class="col-6 text-end border-bottom border-dark">
-                                <div class="row border-bottom border-dark">
-                                    <div class="col-12">
-                                        <b> @Model.Amount.ToString(SD.Two_Decimal_Format)</b>
-                                    </div>
+                    }
+                    <tr class="row mt-1 mb-2">
+                        <td class="col-6"><b>TOTAL AMOUNT DUE:</b></td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            <div class="row border-bottom border-dark">
+                                <div class="col-12">
+                                    <b> @Model.Amount.ToString(SD.Two_Decimal_Format)</b>
                                 </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            }
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
         </div>
     </div>
     
-    <div class="row pt-3 print-bottom">
-        <div class="col-8">
-            <table>
-                <tr>
-                    <td>
-                        We hereby certify that this Billing Statement is correct and Just 
-                        and the payment thereof has not been received.
-                    </td>
-                </tr>
-                <tr>
-                    <th class="pt-3">MALAYAN MARITIME SERVICES INC.</th>
-                </tr>
-                <tr>
-                    <td class="pt-3">
-                        BY:___________________________________
-                    </td>
-                </tr>
-            </table>
+    <div class="footer-section pt-3 no-break">
+        <div class="row">
+            <div class="col-8">
+                <table>
+                    <tr>
+                        <td>
+                            We hereby certify that this Billing Statement is correct and Just 
+                            and the payment thereof has not been received.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="pt-3">MALAYAN MARITIME SERVICES INC.</th>
+                    </tr>
+                    <tr>
+                        <td class="pt-3">
+                            BY:___________________________________
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="row pt-3 justify-content-end d-flex">
+    <div class="row pt-3 justify-content-end d-flex buttons">
         <div class="col-6 col-md-3">
-            <a onclick="window.print()" class="btn btn-primary form-control buttons"><i class="bi bi-printer"></i> Print</a>
+            <a onclick="window.print()" class="btn btn-primary form-control"><i class="bi bi-printer"></i> Print</a>
         </div>
 
         <div class="col-6 col-md-3">
-            <a asp-area="User" asp-controller="Billing" asp-action="Print" asp-route-id="@Model.MMSIBillingId" class="btn btn-primary border form-control buttons"><i class="bi bi-printer"></i> Dot Matrix Print</a>
+            <a asp-area="User" asp-controller="Billing" asp-action="Print" asp-route-id="@Model.MMSIBillingId" class="btn btn-primary border form-control"><i class="bi bi-printer"></i> Dot Matrix Print</a>
         </div>
 
         <div class="col-6 col-md-3">
-            <a asp-area="User" asp-controller="Billing" asp-action="Index" class="btn btn-outline-primary border form-control buttons"><i class="bi bi-arrow-90deg-left"></i> Back to List</a>
+            <a asp-area="User" asp-controller="Billing" asp-action="Index" class="btn btn-outline-primary border form-control"><i class="bi bi-arrow-90deg-left"></i> Back to List</a>
         </div>
     </div>
 </div>

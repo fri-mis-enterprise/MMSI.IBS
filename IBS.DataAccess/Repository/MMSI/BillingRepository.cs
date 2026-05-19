@@ -335,7 +335,6 @@ namespace IBS.DataAccess.Repository.MMSI
                 entity.Customer ??= (await _db.Customers.FindAsync(new object[] { entity.CustomerId }, cancellationToken))!;
             }
 
-            entity.IsVatable = entity.Customer?.VatType == "Vatable";
             entity.Status = "For Collection";
             entity.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 

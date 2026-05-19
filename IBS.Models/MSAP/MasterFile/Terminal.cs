@@ -9,18 +9,20 @@ namespace IBS.Models.MMSI.MasterFile
         [Key]
         public int TerminalId { get; set; }
 
+        [Required]
         [StringLength(3, MinimumLength = 3, ErrorMessage = "Terminal number must be 3 characters long.")]
         [Column(TypeName = "varchar(3)")]
-        public string? TerminalNumber { get; set; }
+        public string TerminalNumber { get; set; } = null!;
 
+        [Required]
         [StringLength(50, ErrorMessage = "Terminal name cannot exceed 50 characters.")]
         [Column(TypeName = "varchar(50)")]
-        public string? TerminalName { get; set; }
+        public string TerminalName { get; set; } = null!;
 
         public int PortId { get; set; }
 
         [ForeignKey(nameof(PortId))]
-        public Port? Port { get; set; }
+        public Port Port { get; set; } = null!;
 
         [StringLength(10)]
         [Column("msap_recid", TypeName = "varchar(10)")]

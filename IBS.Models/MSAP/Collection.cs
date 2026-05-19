@@ -98,7 +98,7 @@ namespace IBS.Models.MMSI
         #region --Objects--
 
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public Customer Customer { get; set; } = null!;
 
         public List<Billing>? PaidBills { get; set; }
 
