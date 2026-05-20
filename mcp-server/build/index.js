@@ -3,8 +3,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
 import { getDbPool } from "./utils/db-client.js";
 import { runBuild, parseBuildErrors } from "./tools/build-guard.js";
-import { findMethodInFile, extractReferencedTypes, findTypeDefinition, traceMethodCalls } from "./utils/dotnet-parser.js";
+import { findMethodInFile, extractReferencedTypes, findTypeDefinition, traceMethodCalls, extractModelInfo, analyzeActionRelations } from "./utils/dotnet-parser.js";
 import { listCsvFiles, queryCsv } from "./tools/csv-handler.js";
+import * as Formatter from "./utils/formatter.js";
 import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +57,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 },
             },
             {
+                name: "read_model",
+                description: "Get a concise summary of a Model or DTO's properties.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        modelName: { type: "string" },
+                    },
+                    required: ["modelName"],
+                },
+            },
+            {
+                name: "analyze_action",
+                description: "Deep-dive into a controller action and show all its relations.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        filePath: { type: "string" },
+                        methodName: { type: "string" },
+                    },
+                    required: ["filePath", "methodName"],
+                },
+            },
+            {
                 name: "trace_workflow",
                 description: "Recursively trace service and repository calls for a given code block or method.",
                 inputSchema: {
@@ -99,14 +123,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const pool = await getDbPool(PROJECT_ROOT);
             const result = await pool.query(sql);
             return {
-                content: [{ type: "text", text: JSON.stringify(result.rows, null, 2) }],
+                content: [{ type: "text", text: Formatter.formatSqlResult(result.rows) }],
             };
         }
         if (name === "check_build_status") {
             const buildResult = await runBuild(PROJECT_ROOT);
-            const parsed = parseBuildErrors(buildResult.output);
+            const parsed = parseBuildErrors(buildResult.output, PROJECT_ROOT);
             return {
-                content: [{ type: "text", text: JSON.stringify({ success: buildResult.success, ...parsed }, null, 2) }],
+                content: [{ type: "text", text: Formatter.formatBuildStatus(buildResult.success, parsed.errors, parsed.warnings) }],
             };
         }
         if (name === "search_code_context") {
@@ -140,11 +164,38 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const definitions = {};
             for (const type of types) {
                 const def = await findTypeDefinition(PROJECT_ROOT, type);
-                if (def)
-                    definitions[type] = def;
+                if (def) {
+                    const props = extractModelInfo(def);
+                    if (props.length > 0) {
+                        definitions[type] = `| Property | Type | Attributes |\n| --- | --- | --- |\n` +
+                            props.map(p => `| ${p.name} | ${p.type} | ${p.attributes.join(", ")} |`).join("\n");
+                    }
+                    else {
+                        // If it's an enum or small class that extractModelInfo missed, show first 20 lines
+                        definitions[type] = def.split('\n').slice(0, 20).join('\n') + (def.split('\n').length > 20 ? '\n...' : '');
+                    }
+                }
             }
             return {
-                content: [{ type: "text", text: JSON.stringify({ path: foundPath, method: methodBody, types: definitions }, null, 2) }],
+                content: [{ type: "text", text: Formatter.formatCodeContext({ path: foundPath, method: methodBody, types: definitions }) }],
+            };
+        }
+        if (name === "read_model") {
+            const modelName = args?.modelName;
+            const def = await findTypeDefinition(PROJECT_ROOT, modelName);
+            if (!def)
+                return { content: [{ type: "text", text: `Model ${modelName} not found.` }] };
+            const props = extractModelInfo(def);
+            return {
+                content: [{ type: "text", text: Formatter.formatModel(modelName, props) }],
+            };
+        }
+        if (name === "analyze_action") {
+            const filePath = args?.filePath;
+            const methodName = args?.methodName;
+            const analysis = await analyzeActionRelations(PROJECT_ROOT, filePath, methodName);
+            return {
+                content: [{ type: "text", text: Formatter.formatActionAnalysis(analysis) }],
             };
         }
         if (name === "trace_workflow") {
@@ -156,13 +207,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return { content: [{ type: "text", text: "Method not found." }] };
             const trace = await traceMethodCalls(PROJECT_ROOT, methodBody);
             return {
-                content: [{ type: "text", text: JSON.stringify(trace, null, 2) }],
+                content: [{ type: "text", text: Formatter.formatWorkflowTrace(trace) }],
             };
         }
         if (name === "list_csv_files") {
             const files = await listCsvFiles(PROJECT_ROOT);
             return {
-                content: [{ type: "text", text: JSON.stringify(files, null, 2) }],
+                content: [{ type: "text", text: Formatter.formatCsvList(files) }],
             };
         }
         if (name === "query_csv") {
@@ -171,7 +222,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const limit = args?.limit || 100;
             const data = await queryCsv(PROJECT_ROOT, filePath, filter, limit);
             return {
-                content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+                content: [{ type: "text", text: Formatter.formatCsvQuery(data) }],
             };
         }
         throw new Error(`Tool not found: ${name}`);
