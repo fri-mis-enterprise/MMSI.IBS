@@ -39,9 +39,9 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
 
-            var createViewModel = new JobOrderViewModel();
-            await PopulateSelectListsAsync(createViewModel, cancellationToken);
-            ViewBag.CreateViewModel = createViewModel;
+            var createModel = new JobOrder { Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()) };
+            await PopulateSelectListsAsync(createModel, cancellationToken);
+            ViewBag.CreateViewModel = createModel;
 
             return View(jobOrders
                 .OrderByDescending(j => j.JobOrderNumber)
@@ -59,10 +59,10 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateJobOrder, "Access denied. You don't have permission to create Job Orders.")]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new JobOrderViewModel();
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
+            var jobOrder = new JobOrder { Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()) };
+            await PopulateSelectListsAsync(jobOrder, cancellationToken);
 
-            return View(viewModel);
+            return View(jobOrder);
         }
 
         /// <summary>
@@ -71,34 +71,20 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateJobOrder, "Access denied. You don't have permission to create Job Orders.")]
-        public async Task<IActionResult> Create(JobOrderViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(JobOrder jobOrder, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                await PopulateSelectListsAsync(viewModel, cancellationToken);
-                return View(viewModel);
+                await PopulateSelectListsAsync(jobOrder, cancellationToken);
+                return View(jobOrder);
             }
 
             try
             {
-                var jobOrder = new JobOrder
-                {
-                    Date = viewModel.Date,
-                    CustomerId = viewModel.CustomerId,
-                    VesselId = viewModel.VesselId,
-                    PortId = viewModel.PortId,
-                    TerminalId = viewModel.TerminalId,
-                    COSNumber = viewModel.COSNumber,
-                    VoyageNumber = viewModel.VoyageNumber,
-                    PlannedStartTime = viewModel.PlannedStartTime,
-                    PlannedEndTime = viewModel.PlannedEndTime,
-                    PreferredTugboatId = viewModel.PreferredTugboatId,
-                    Remarks = viewModel.Remarks,
-                    Status = JobOrderStatus.Open,
-                    JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken),
-                    CreatedBy = User.Identity?.Name ?? "Unknown",
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                };
+                jobOrder.Status = JobOrderStatus.Open;
+                jobOrder.JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken);
+                jobOrder.CreatedBy = User.Identity?.Name ?? "Unknown";
+                jobOrder.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 await unitOfWork.JobOrder.AddAsync(jobOrder, cancellationToken);
 
@@ -120,8 +106,8 @@ namespace IBSWeb.Areas.User.Controllers
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the Job Order.");
             }
 
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
-            return View(viewModel);
+            await PopulateSelectListsAsync(jobOrder, cancellationToken);
+            return View(jobOrder);
         }
 
         #endregion
@@ -187,12 +173,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            var viewModel = MapToViewModel(jobOrder);
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
+            await PopulateSelectListsAsync(jobOrder, cancellationToken);
 
             ViewData["HasTickets"] = jobOrder.DispatchTickets.Any();
 
-            return View(viewModel);
+            return View(jobOrder);
         }
 
         /// <summary>
@@ -201,33 +186,33 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.EditJobOrder, "Access denied. You don't have permission to edit Job Orders.")]
-        public async Task<IActionResult> Edit(JobOrderViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(JobOrder model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                await PopulateSelectListsAsync(viewModel, cancellationToken);
-                return View(viewModel);
+                await PopulateSelectListsAsync(model, cancellationToken);
+                return View(model);
             }
 
             try
             {
-                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == viewModel.JobOrderId, cancellationToken);
+                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == model.JobOrderId, cancellationToken);
                 if (jobOrder == null)
                 {
                     return NotFound();
                 }
 
-                jobOrder.Date = viewModel.Date;
-                jobOrder.CustomerId = viewModel.CustomerId;
-                jobOrder.VesselId = viewModel.VesselId;
-                jobOrder.PortId = viewModel.PortId;
-                jobOrder.TerminalId = viewModel.TerminalId;
-                jobOrder.COSNumber = viewModel.COSNumber;
-                jobOrder.VoyageNumber = viewModel.VoyageNumber;
-                jobOrder.PlannedStartTime = viewModel.PlannedStartTime;
-                jobOrder.PlannedEndTime = viewModel.PlannedEndTime;
-                jobOrder.PreferredTugboatId = viewModel.PreferredTugboatId;
-                jobOrder.Remarks = viewModel.Remarks;
+                jobOrder.Date = model.Date;
+                jobOrder.CustomerId = model.CustomerId;
+                jobOrder.VesselId = model.VesselId;
+                jobOrder.PortId = model.PortId;
+                jobOrder.TerminalId = model.TerminalId;
+                jobOrder.COSNumber = model.COSNumber;
+                jobOrder.VoyageNumber = model.VoyageNumber;
+                jobOrder.PlannedStartTime = model.PlannedStartTime;
+                jobOrder.PlannedEndTime = model.PlannedEndTime;
+                jobOrder.PreferredTugboatId = model.PreferredTugboatId;
+                jobOrder.Remarks = model.Remarks;
                 jobOrder.EditedBy = User.Identity?.Name ?? "Unknown";
                 jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -245,12 +230,12 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error updating Job Order {JobOrderId}", viewModel.JobOrderId);
+                logger.LogError(ex, "Error updating Job Order {JobOrderId}", model.JobOrderId);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred while updating the Job Order.");
             }
 
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
-            return View(viewModel);
+            await PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
         }
 
         #endregion
@@ -473,35 +458,14 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
-        /// Maps a JobOrder entity to a JobOrderViewModel.
+        /// Populates the dropdown lists in the JobOrder.
         /// </summary>
-        private static JobOrderViewModel MapToViewModel(JobOrder jobOrder) => new()
+        private async Task PopulateSelectListsAsync(JobOrder jobOrder, CancellationToken cancellationToken)
         {
-            JobOrderId = jobOrder.JobOrderId,
-            JobOrderNumber = jobOrder.JobOrderNumber,
-            Date = jobOrder.Date,
-            Status = jobOrder.Status,
-            CustomerId = jobOrder.CustomerId,
-            VesselId = jobOrder.VesselId,
-            PortId = jobOrder.PortId,
-            TerminalId = jobOrder.TerminalId,
-            COSNumber = jobOrder.COSNumber,
-            VoyageNumber = jobOrder.VoyageNumber,
-            PlannedStartTime = jobOrder.PlannedStartTime,
-            PlannedEndTime = jobOrder.PlannedEndTime,
-            PreferredTugboatId = jobOrder.PreferredTugboatId,
-            Remarks = jobOrder.Remarks
-        };
-
-        /// <summary>
-        /// Populates the dropdown lists in the JobOrderViewModel.
-        /// </summary>
-        private async Task PopulateSelectListsAsync(JobOrderViewModel viewModel, CancellationToken cancellationToken)
-        {
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            jobOrder.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
 
             var vessels = await unitOfWork.Vessel.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Vessels = vessels
+            jobOrder.Vessels = vessels
                 .OrderBy(v => v.VesselName)
                 .Select(v => new SelectListItem
                 {
@@ -511,7 +475,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .ToList();
 
             var ports = await unitOfWork.Port.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Ports = ports
+            jobOrder.Ports = ports
                 .OrderBy(p => p.PortName)
                 .Select(p => new SelectListItem
                 {
@@ -520,8 +484,8 @@ namespace IBSWeb.Areas.User.Controllers
                 })
                 .ToList();
 
-            viewModel.Terminals = viewModel.PortId != 0
-                ? (await unitOfWork.Terminal.GetAllAsync(t => t.PortId == viewModel.PortId, cancellationToken: cancellationToken))
+            jobOrder.Terminals = jobOrder.PortId != 0
+                ? (await unitOfWork.Terminal.GetAllAsync(t => t.PortId == jobOrder.PortId, cancellationToken: cancellationToken))
                     .OrderBy(t => t.TerminalName)
                     .Select(t => new SelectListItem
                     {
@@ -532,7 +496,7 @@ namespace IBSWeb.Areas.User.Controllers
                 : new List<SelectListItem>();
 
             var tugboats = await unitOfWork.Tugboat.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Tugboats = tugboats
+            jobOrder.Tugboats = tugboats
                 .OrderBy(t => t.TugboatName)
                 .Select(t => new SelectListItem
                 {

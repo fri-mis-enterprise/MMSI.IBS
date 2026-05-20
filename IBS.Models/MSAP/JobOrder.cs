@@ -16,6 +16,7 @@ namespace IBS.Models.MMSI
         public string JobOrderNumber { get; set; } = null!;
 
         [Required]
+        [Display(Name = "Job Order Date")]
         public DateOnly Date { get; set; }
 
         [Required]
@@ -23,27 +24,33 @@ namespace IBS.Models.MMSI
         public string Status { get; set; } = null!;
 
         [Column(TypeName = "varchar(20)")]
+        [Display(Name = "COS Number")]
         public string? COSNumber { get; set; }
 
         [Column(TypeName = "varchar(100)")]
+        [Display(Name = "Voyage Number")]
         public string? VoyageNumber { get; set; }
 
         public string? Remarks { get; set; }
 
         #region ---Foreign Keys---
 
+        [Display(Name = "Customer")]
         public int CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public Customer Customer { get; set; } = null!;
 
+        [Display(Name = "Vessel")]
         public int VesselId { get; set; }
         [ForeignKey(nameof(VesselId))]
         public Vessel Vessel { get; set; } = null!;
 
+        [Display(Name = "Port")]
         public int PortId { get; set; }
         [ForeignKey(nameof(PortId))]
         public Port Port { get; set; } = null!;
 
+        [Display(Name = "Terminal")]
         public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public Terminal Terminal { get; set; } = null!;
@@ -87,6 +94,9 @@ namespace IBS.Models.MMSI
 
         [NotMapped]
         public List<SelectListItem>? Terminals { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Tugboats { get; set; }
 
         #endregion
     }
