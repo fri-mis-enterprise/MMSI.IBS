@@ -61,16 +61,16 @@
                 &nbsp; @Model.CheckNumber?.ToUpper() &nbsp;<br />
 
                 <span><b>Check Date:</b></span>
-                &nbsp; @Model.CheckDate.ToString() &nbsp;<br />
+                &nbsp; @(Model.CheckDate.HasValue ? Model.CheckDate.Value.ToString(SD.Date_Format) : "--") &nbsp;<br />
             </td>
 
             <td class="w-25 text-nowrap">
 
-                <b>Date :</b> @Model.CreatedDate.ToString(SD.Date_Format)&nbsp;<br />
-                <b>Bank :</b> MBTC &nbsp;<br />
-                <b>Account No :</b> 167-7-16753668-5 &nbsp;<br />
-                <b>Account Name :</b> MALAYAN MARITIME SERVICES INC. &nbsp;<br />
-                <b>Deposit Date :</b> @Model.DepositDate.ToString() &nbsp;<br /><br />
+                <b>Date :</b> @Model.Date.ToString(SD.Date_Format)&nbsp;<br />
+                <b>Bank :</b> @Model.BankAccount?.Bank &nbsp;<br />
+                <b>Account No :</b> @Model.BankAccount?.AccountNo &nbsp;<br />
+                <b>Account Name :</b> @Model.BankAccount?.AccountName &nbsp;<br />
+                <b>Deposit Date :</b> @(Model.DepositDate.HasValue ? Model.DepositDate.Value.ToString(SD.Date_Format) : "--") &nbsp;<br /><br />
                 &nbsp;
             </td>
         </tr>

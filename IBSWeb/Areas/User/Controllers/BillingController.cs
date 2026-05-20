@@ -408,8 +408,8 @@ namespace IBSWeb.Areas.User.Controllers
                             dt.MMSIBillingNumber.ToLower().Contains(searchValue) == true ||
                             dt.Amount.ToString().Contains(searchValue) == true ||
                             dt.Customer.CustomerName.ToLower().Contains(searchValue) == true ||
-                            dt.Terminal.TerminalName!.ToLower().Contains(searchValue) == true ||
-                            dt.Terminal.Port!.PortName!.ToLower().Contains(searchValue) == true ||
+                            dt.Terminal.TerminalName.ToLower().Contains(searchValue) == true ||
+                            dt.Terminal.Port.PortName.ToLower().Contains(searchValue) == true ||
                             dt.Vessel.VesselName.ToLower().Contains(searchValue) == true ||
                             dt.Status.ToLower().Contains(searchValue) == true
                         );
@@ -485,7 +485,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var lowerTerm = term.ToLower();
                 query = query.Where(c => c.CustomerName.ToLower().Contains(lowerTerm) ||
-                                         c.CustomerCode!.ToLower().Contains(lowerTerm));
+                                         c.CustomerCode.ToLower().Contains(lowerTerm));
             }
 
             var customers = await query

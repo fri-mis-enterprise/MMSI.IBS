@@ -175,9 +175,14 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             if (!string.IsNullOrEmpty(model.ImageName))
+            {
                 model.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(model.ImageName);
+            }
+
             if (!string.IsNullOrEmpty(model.VideoName))
+            {
                 model.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(model.VideoName);
+            }
 
             return View(model);
         }
@@ -662,7 +667,9 @@ namespace IBSWeb.Areas.User.Controllers
         private static bool IsArrivalAfterDeparture(DispatchTicket model)
         {
             if (model.DateLeft == null || model.DateArrived == null || model.TimeLeft == null || model.TimeArrived == null)
+            {
                 return true;
+            }
 
             var departure = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
             var arrival = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);

@@ -272,7 +272,7 @@ namespace IBSWeb.Areas.User.Controllers
             maps.PortLegacyMap.Clear();
             foreach (var p in await dbContext.MMSIPorts.AsNoTracking().ToListAsync(ct))
             {
-                maps.Port[p.PortNumber!] = p.PortId;
+                maps.Port[p.PortNumber] = p.PortId;
                 if (!string.IsNullOrEmpty(p.MsapRecId))
                 {
                     maps.PortLegacyMap[p.MsapRecId] = p.PortId;
@@ -479,7 +479,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await dbContext.SaveChangesAsync();
                     foreach (var item in newRecords)
                     {
-                        maps.Customer[item.Entity.CustomerCode!] = item.Entity.CustomerId;
+                        maps.Customer[item.Entity.CustomerCode] = item.Entity.CustomerId;
                         if (item.LegacyId != "-")
                         {
                             maps.CustomerLegacyMap[item.LegacyId] = item.Entity.CustomerId;
@@ -496,7 +496,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
-                    maps.Customer[item.Entity.CustomerCode!] = item.Entity.CustomerId;
+                    maps.Customer[item.Entity.CustomerCode] = item.Entity.CustomerId;
                     if (item.LegacyId != "-")
                     {
                         maps.CustomerLegacyMap[item.LegacyId] = item.Entity.CustomerId;
@@ -552,7 +552,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
-                    maps.Port[item.Entity.PortNumber!] = item.Entity.PortId;
+                    maps.Port[item.Entity.PortNumber] = item.Entity.PortId;
                     if (item.LegacyId != "-")
                     {
                         maps.PortLegacyMap[item.LegacyId] = item.Entity.PortId;

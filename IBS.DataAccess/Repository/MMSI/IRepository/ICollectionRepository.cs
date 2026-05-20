@@ -19,6 +19,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<List<SelectListItem>?> GetMMSIUncollectedBillingsByCustomer(int? customerId, CancellationToken cancellationToken);
 
+        Task<List<Billing>> GetMMSIUncollectedBillingsByCustomerList(int? customerId, CancellationToken cancellationToken);
+
         Task<string> GenerateCollectionNumber(CancellationToken cancellationToken = default);
 
         // Accounting Methods

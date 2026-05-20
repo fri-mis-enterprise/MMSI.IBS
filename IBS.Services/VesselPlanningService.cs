@@ -101,14 +101,20 @@ namespace IBS.Services
         private DateTime? GetTicketStart(DispatchTicket ticket)
         {
             if (ticket.DateLeft.HasValue && ticket.TimeLeft.HasValue)
+            {
                 return ticket.DateLeft.Value.ToDateTime(ticket.TimeLeft.Value);
+            }
+
             return null;
         }
 
         private DateTime? GetTicketEnd(DispatchTicket ticket)
         {
             if (ticket.DateArrived.HasValue && ticket.TimeArrived.HasValue)
+            {
                 return ticket.DateArrived.Value.ToDateTime(ticket.TimeArrived.Value);
+            }
+
             return null;
         }
 

@@ -1,0 +1,78 @@
+@model BankAccount
+
+@{
+    ViewData["Title"] = "Create Bank Account";
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-secondary py-3">
+            <h2 class="text-white m-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="row">
+                    <div class="form-floating col-md-6 my-2">
+                        <input asp-for="BankAccountCode" class="form-control border-0 shadow" placeholder="Code" />
+                        <label asp-for="BankAccountCode" class="ms-2"></label>
+                        <span asp-validation-for="BankAccountCode" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-md-6 my-2">
+                        <input asp-for="Bank" class="form-control border-0 shadow" placeholder="Bank" />
+                        <label asp-for="Bank" class="ms-2"></label>
+                        <span asp-validation-for="Bank" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-floating col-md-6 my-2">
+                        <input asp-for="Branch" class="form-control border-0 shadow" placeholder="Branch" />
+                        <label asp-for="Branch" class="ms-2"></label>
+                        <span asp-validation-for="Branch" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-md-6 my-2">
+                        <input asp-for="AccountNo" class="form-control border-0 shadow" placeholder="Account No" />
+                        <label asp-for="AccountNo" class="ms-2"></label>
+                        <span asp-validation-for="AccountNo" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-floating col-md-6 my-2">
+                        <input asp-for="AccountName" class="form-control border-0 shadow" placeholder="Account Name" />
+                        <label asp-for="AccountName" class="ms-2"></label>
+                        <span asp-validation-for="AccountName" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-md-6 my-2">
+                        <select asp-for="Company" class="form-select border-0 shadow">
+                            <option value="">--Select Company--</option>
+                            <option value="Filpride">Filpride</option>
+                            <option value="MMSI">MMSI</option>
+                        </select>
+                        <label asp-for="Company" class="ms-2"></label>
+                        <span asp-validation-for="Company" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row pt-4 justify-content-end">
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100 shadow">
+                            <i class="bi bi-check-circle"></i> Create
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100 shadow">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

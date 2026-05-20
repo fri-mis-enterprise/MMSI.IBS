@@ -131,13 +131,13 @@ namespace IBS.DataAccess.Repository.MMSI
                 {
                     entity.JobOrder = jobOrder;
                     entity.CustomerId = jobOrder.CustomerId;
-                    entity.Customer = jobOrder.Customer!;
+                    entity.Customer = jobOrder.Customer;
                     entity.VesselId = jobOrder.VesselId;
-                    entity.Vessel = jobOrder.Vessel!;
+                    entity.Vessel = jobOrder.Vessel;
                     entity.PortId = jobOrder.PortId;
-                    entity.Port = jobOrder.Port!;
+                    entity.Port = jobOrder.Port;
                     entity.TerminalId = jobOrder.TerminalId;
-                    entity.Terminal = jobOrder.Terminal!;
+                    entity.Terminal = jobOrder.Terminal;
                     entity.VoyageNumber = jobOrder.VoyageNumber;
                     entity.COSNumber = jobOrder.COSNumber;
                     entity.Date = jobOrder.Date;
@@ -149,7 +149,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     .Include(t => t.Port)
                     .FirstOrDefaultAsync(t => t.TerminalId == entity.TerminalId, cancellationToken))!;
                 entity.PortId = entity.Terminal.PortId;
-                entity.Port = entity.Terminal.Port!;
+                entity.Port = entity.Terminal.Port;
             }
 
             if (entity.CustomerId != 0 && entity.Customer == null)
@@ -184,7 +184,11 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<bool> IsJobOrderEditableAsync(int? jobOrderId, CancellationToken cancellationToken = default)
         {
-            if (jobOrderId == null) return true;
+            if (jobOrderId == null)
+            {
+                return true;
+            }
+
             var jobOrder = await _db.MMSIJobOrders.FindAsync(new object[] { jobOrderId.Value }, cancellationToken);
             return jobOrder?.Status == "Open";
         }
@@ -211,21 +215,80 @@ namespace IBS.DataAccess.Repository.MMSI
             if (isEdit)
             {
                 var changes = new List<string>();
-                if (currentModel.CustomerId != model.CustomerId) changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}");
-                if (currentModel.DispatchChargeType != chargeType) changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {chargeType}");
-                if (currentModel.BAFChargeType != bafChargeType) changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {bafChargeType}");
-                if (currentModel.DispatchRate != model.DispatchRate) changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}");
-                if (currentModel.BAFRate != model.BAFRate) changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}");
-                if (currentModel.DispatchDiscount != model.DispatchDiscount) changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}");
-                if (currentModel.BAFDiscount != model.BAFDiscount) changes.Add($"BAFDiscount: {currentModel.BAFDiscount} -> {model.BAFDiscount}");
-                if (currentModel.DispatchBillingAmount != model.DispatchBillingAmount) changes.Add($"DispatchBillingAmount: {currentModel.DispatchBillingAmount} -> {model.DispatchBillingAmount}");
-                if (currentModel.BAFBillingAmount != model.BAFBillingAmount) changes.Add($"BAFBillingAmount: {currentModel.BAFBillingAmount} -> {model.BAFBillingAmount}");
-                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}");
-                if (currentModel.BAFNetRevenue != model.BAFNetRevenue) changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}");
-                if (currentModel.ApOtherTugs != model.ApOtherTugs) changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}");
-                if (currentModel.TotalBilling != model.TotalBilling) changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}");
-                if (currentModel.TotalNetRevenue != model.TotalNetRevenue) changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}");
-                if (currentModel.ServiceId != model.ServiceId) changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}");
+                if (currentModel.CustomerId != model.CustomerId)
+                {
+                    changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}");
+                }
+
+                if (currentModel.DispatchChargeType != chargeType)
+                {
+                    changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {chargeType}");
+                }
+
+                if (currentModel.BAFChargeType != bafChargeType)
+                {
+                    changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {bafChargeType}");
+                }
+
+                if (currentModel.DispatchRate != model.DispatchRate)
+                {
+                    changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}");
+                }
+
+                if (currentModel.BAFRate != model.BAFRate)
+                {
+                    changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}");
+                }
+
+                if (currentModel.DispatchDiscount != model.DispatchDiscount)
+                {
+                    changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}");
+                }
+
+                if (currentModel.BAFDiscount != model.BAFDiscount)
+                {
+                    changes.Add($"BAFDiscount: {currentModel.BAFDiscount} -> {model.BAFDiscount}");
+                }
+
+                if (currentModel.DispatchBillingAmount != model.DispatchBillingAmount)
+                {
+                    changes.Add($"DispatchBillingAmount: {currentModel.DispatchBillingAmount} -> {model.DispatchBillingAmount}");
+                }
+
+                if (currentModel.BAFBillingAmount != model.BAFBillingAmount)
+                {
+                    changes.Add($"BAFBillingAmount: {currentModel.BAFBillingAmount} -> {model.BAFBillingAmount}");
+                }
+
+                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue)
+                {
+                    changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}");
+                }
+
+                if (currentModel.BAFNetRevenue != model.BAFNetRevenue)
+                {
+                    changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}");
+                }
+
+                if (currentModel.ApOtherTugs != model.ApOtherTugs)
+                {
+                    changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}");
+                }
+
+                if (currentModel.TotalBilling != model.TotalBilling)
+                {
+                    changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}");
+                }
+
+                if (currentModel.TotalNetRevenue != model.TotalNetRevenue)
+                {
+                    changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}");
+                }
+
+                if (currentModel.ServiceId != model.ServiceId)
+                {
+                    changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}");
+                }
 
                 currentModel.TariffEditedBy = updatedBy;
                 currentModel.TariffEditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -285,7 +348,10 @@ namespace IBS.DataAccess.Repository.MMSI
             var changes = new List<string>();
             void AddChange(string name, object? oldVal, object? newVal)
             {
-                if (!Equals(oldVal, newVal)) changes.Add($"{name}: '{oldVal}' -> '{newVal}'");
+                if (!Equals(oldVal, newVal))
+                {
+                    changes.Add($"{name}: '{oldVal}' -> '{newVal}'");
+                }
             }
 
             AddChange(nameof(entity.Date), currentModel.Date, entity.Date);

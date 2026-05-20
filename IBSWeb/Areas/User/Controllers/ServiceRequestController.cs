@@ -563,8 +563,8 @@ namespace IBSWeb.Areas.User.Controllers
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
                         dt.DispatchNumber.ToLower().Contains(searchValue) ||
                         dt.Service.ServiceName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal.TerminalName!.ToString().Contains(searchValue) == true ||
-                        dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||
+                        dt.Terminal.TerminalName.ToString().Contains(searchValue) == true ||
+                        dt.Terminal.Port.PortName.ToString().Contains(searchValue) == true ||
                         dt.Tugboat.TugboatName.ToString().Contains(searchValue) == true ||
                         dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) == true ||
                         dt.Vessel.VesselName.ToString().Contains(searchValue) == true ||

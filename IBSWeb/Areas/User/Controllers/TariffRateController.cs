@@ -199,7 +199,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             model.Terminal = (await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
                 cancellationToken))!;
-            model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal!.PortId,
+            model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal.PortId,
                 cancellationToken);
             return model;
         }

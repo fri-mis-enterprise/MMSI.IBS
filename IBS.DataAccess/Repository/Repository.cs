@@ -173,7 +173,7 @@ namespace IBS.DataAccess.Repository
                 .Select(c => new CustomerDto
                 {
                     CustomerId = c.CustomerId,
-                    CustomerCode = c.CustomerCode!,
+                    CustomerCode = c.CustomerCode,
                     CustomerName = c.CustomerName,
                     CustomerAddress = c.CustomerAddress,
                     CustomerTin = c.CustomerTin,

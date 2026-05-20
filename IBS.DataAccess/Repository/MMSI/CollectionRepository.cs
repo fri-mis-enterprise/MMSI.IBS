@@ -11,14 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
-    public class CollectionRepository : Repository<Collection>, ICollectionRepository
+    public class CollectionRepository(ApplicationDbContext db): Repository<Collection>(db), ICollectionRepository
     {
-        private readonly ApplicationDbContext _db;
-
-        public CollectionRepository(ApplicationDbContext db) : base(db)
-        {
-            _db = db;
-        }
+        private readonly ApplicationDbContext _db = db;
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {
@@ -125,6 +120,15 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToList();
 
             return billingsList;
+        }
+
+        public async Task<List<Billing>> GetMMSIUncollectedBillingsByCustomerList(int? customerId, CancellationToken cancellationToken)
+        {
+            return await _db
+                .Billings
+                .Where(b => b.CustomerId == customerId && b.Status == "For Collection")
+                .OrderBy(b => b.MMSIBillingNumber)
+                .ToListAsync(cancellationToken);
         }
 
         public async Task PostAsync(Collection collection, List<Offsettings> offsettings, CancellationToken cancellationToken = default)

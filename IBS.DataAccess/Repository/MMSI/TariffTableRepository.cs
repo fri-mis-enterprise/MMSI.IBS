@@ -13,7 +13,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public override async Task<TariffRate?> GetAsync(Expression<Func<TariffRate, bool>> filter, CancellationToken cancellationToken = default)
         {
             var model =  await dbSet
-                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
+                .Include(t => t.Terminal).ThenInclude(t => t.Port)
                 .Where(filter)
                 .OrderByDescending(t => t.AsOfDate)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -25,7 +25,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             IQueryable<TariffRate> query = dbSet
                 .Include(t => t.Customer)
-                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
+                .Include(t => t.Terminal).ThenInclude(t => t.Port)
                 .Include(t => t.Service);
 
             if (filter != null)

@@ -31,7 +31,7 @@ namespace IBS.DataAccess.Repository.MasterFile
                 };
             }
 
-            var lastCode = lastCustomer.CustomerCode!;
+            var lastCode = lastCustomer.CustomerCode;
             var numericPart = lastCode.Substring(3);
 
             // Parse the numeric part and increment it by one

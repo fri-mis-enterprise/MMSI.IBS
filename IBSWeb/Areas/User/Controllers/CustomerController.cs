@@ -207,7 +207,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     query = query
                     .Where(c =>
-                        c.CustomerCode!.ToLower().Contains(searchValue) ||
+                        c.CustomerCode.ToLower().Contains(searchValue) ||
                         c.CustomerName.ToLower().Contains(searchValue) ||
                         c.CustomerTerms.ToLower().Contains(searchValue) ||
                         c.VatType.ToLower().Contains(searchValue)

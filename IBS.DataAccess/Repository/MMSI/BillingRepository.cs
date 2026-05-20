@@ -146,7 +146,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
             var listOfCustomerWithBillableTickets = dispatchToBeBilled
                 .Where(t => t.Customer != null)
-                .Select(t => t.Customer!.CustomerId)
+                .Select(t => t.Customer.CustomerId)
                 .Distinct()
                 .ToList();
 
@@ -302,25 +302,25 @@ namespace IBS.DataAccess.Repository.MMSI
                     if (entity.CustomerId == 0)
                     {
                         entity.CustomerId = jobOrder.CustomerId;
-                        entity.Customer = jobOrder.Customer!;
+                        entity.Customer = jobOrder.Customer;
                     }
 
                     if (entity.VesselId == 0)
                     {
                         entity.VesselId = jobOrder.VesselId;
-                        entity.Vessel = jobOrder.Vessel!;
+                        entity.Vessel = jobOrder.Vessel;
                     }
 
                     if (entity.PortId == 0)
                     {
                         entity.PortId = jobOrder.PortId;
-                        entity.Port = jobOrder.Port!;
+                        entity.Port = jobOrder.Port;
                     }
 
                     if (entity.TerminalId == 0)
                     {
                         entity.TerminalId = jobOrder.TerminalId;
-                        entity.Terminal = jobOrder.Terminal!;
+                        entity.Terminal = jobOrder.Terminal;
                     }
 
                     if (string.IsNullOrWhiteSpace(entity.VoyageNumber))
