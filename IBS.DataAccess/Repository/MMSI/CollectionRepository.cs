@@ -8,6 +8,7 @@ using IBS.Models.MMSI;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using IBS.DTOs;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
@@ -159,7 +160,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = collection.CashAmount + collection.CheckAmount,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.BankAccount,
                         SubAccountId = collection.BankId,
@@ -185,7 +186,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = collection.EWT,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
@@ -206,7 +207,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = collection.WVAT,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
@@ -230,7 +231,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = item.Amount,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
@@ -253,7 +254,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = 0,
                         Credit = collection.CashAmount + collection.CheckAmount + offsetAmount,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         SubAccountType = SubAccountType.Customer,
                         SubAccountId = collection.CustomerId,
@@ -277,7 +278,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = 0,
                         Credit = collection.EWT,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
@@ -298,7 +299,7 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = 0,
                         Credit = collection.WVAT,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy!,
+                        CreatedBy = collection.CreatedBy!,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         ModuleType = nameof(ModuleType.Collection)
                     }
@@ -325,8 +326,8 @@ namespace IBS.DataAccess.Repository.MMSI
                     Debit = collection.CashAmount + collection.CheckAmount,
                     Credit = 0,
                     Company = collection.Company,
-                    CreatedBy = collection.PostedBy,
-                    CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = collection.CreatedBy,
+                    CreatedDate = collection.CreatedDate,
                 }
             };
 
@@ -345,8 +346,8 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = collection.EWT,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy,
-                        CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collection.CreatedBy,
+                        CreatedDate = collection.CreatedDate,
                     }
                 );
             }
@@ -366,8 +367,8 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = collection.WVAT,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy,
-                        CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collection.CreatedBy,
+                        CreatedDate = collection.CreatedDate,
                     }
                 );
             }
@@ -390,8 +391,8 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = item.Amount,
                         Credit = 0,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy,
-                        CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collection.CreatedBy,
+                        CreatedDate = collection.CreatedDate,
                     }
                 );
             }
@@ -409,8 +410,8 @@ namespace IBS.DataAccess.Repository.MMSI
                     Debit = 0,
                     Credit = collection.CashAmount + collection.CheckAmount + offsetAmount,
                     Company = collection.Company,
-                    CreatedBy = collection.PostedBy,
-                    CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    CreatedBy = collection.CreatedBy,
+                    CreatedDate = collection.CreatedDate,
                 }
             );
 
@@ -429,8 +430,8 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = 0,
                         Credit = collection.EWT,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy,
-                        CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collection.CreatedBy,
+                        CreatedDate = collection.CreatedDate,
                     }
                 );
             }
@@ -450,168 +451,16 @@ namespace IBS.DataAccess.Repository.MMSI
                         Debit = 0,
                         Credit = collection.WVAT,
                         Company = collection.Company,
-                        CreatedBy = collection.PostedBy,
-                        CreatedDate = collection.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CreatedBy = collection.CreatedBy,
+                        CreatedDate = collection.CreatedDate,
                     }
                 );
             }
 
-            await _db.AddRangeAsync(crb, cancellationToken);
+            await _db.CashReceiptBooks.AddRangeAsync(crb, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
             #endregion Cash Receipt Book Recording
-        }
-
-        public async Task DepositAsync(Collection collection, CancellationToken cancellationToken = default)
-        {
-            var ledgers = new List<GeneralLedgerBook>();
-            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100")
-                                  ?? throw new ArgumentException("Account title '101010100' not found.");
-
-            var customerName = collection.Customer?.CustomerName ?? "Unknown Customer";
-            var billingsStr = string.Join(", ", collection.PaidBills?.Select(b => b.MMSIBillingNumber) ?? new List<string>());
-            var description = $"CR Ref collected from {customerName} for {billingsStr} Check No. {collection.CheckNumber} issued by {collection.BankAccountNumber} {collection.BankAccountName}";
-
-            ledgers.Add(
-                new GeneralLedgerBook
-                {
-                    Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber,
-                    Description = description,
-                    AccountId = cashInBankTitle.AccountId,
-                    AccountNo = cashInBankTitle.AccountNumber,
-                    AccountTitle = cashInBankTitle.AccountName,
-                    Debit = collection.CashAmount + collection.CheckAmount,
-                    Credit = 0,
-                    Company = collection.Company,
-                    CreatedBy = collection.PostedBy!,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SubAccountType = SubAccountType.BankAccount,
-                    SubAccountId = collection.BankId,
-                    SubAccountName = collection.BankId.HasValue
-                        ? $"{collection.BankAccountNumber} {collection.BankAccountName}"
-                        : null,
-                    ModuleType = nameof(ModuleType.Collection)
-                }
-            );
-
-            ledgers.Add(
-                new GeneralLedgerBook
-                {
-                    Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber,
-                    Description = description,
-                    AccountId = cashInBankTitle.AccountId,
-                    AccountNo = cashInBankTitle.AccountNumber,
-                    AccountTitle = cashInBankTitle.AccountName,
-                    Debit = 0,
-                    Credit = collection.CashAmount + collection.CheckAmount,
-                    Company = collection.Company,
-                    CreatedBy = collection.PostedBy!,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    ModuleType = nameof(ModuleType.Collection)
-                }
-            );
-
-            await _db.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task ReturnedCheck(string collectionNo, string company, string userName, CancellationToken cancellationToken = default)
-        {
-            var originalEntries = await _db.GeneralLedgerBooks
-                .Where(x => x.Reference == collectionNo && x.Company == company)
-                .ToListAsync(cancellationToken);
-
-            var reversalEntries = originalEntries.Select(originalEntry => new GeneralLedgerBook
-            {
-                Reference = originalEntry.Reference,
-                AccountNo = originalEntry.AccountNo,
-                AccountTitle = originalEntry.AccountTitle,
-                Description = "Reversal of entries due to returned checks.",
-                Debit = originalEntry.Credit,
-                Credit = originalEntry.Debit,
-                CreatedBy = userName,
-                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                IsPosted = true,
-                Company = originalEntry.Company,
-                AccountId = originalEntry.AccountId,
-                SubAccountType = originalEntry.SubAccountType,
-                SubAccountId = originalEntry.SubAccountId,
-                SubAccountName = originalEntry.SubAccountName,
-                ModuleType = originalEntry.ModuleType,
-            }).ToList();
-
-            await _db.GeneralLedgerBooks.AddRangeAsync(reversalEntries, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task RedepositAsync(Collection collection, CancellationToken cancellationToken = default)
-        {
-            // Similar logic to PostAsync but focused on redepositing a previously returned check
-
-            var ledgers = new List<GeneralLedgerBook>();
-            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
-            var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
-            var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
-            var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
-            var cwt = accountTitlesDto.Find(c => c.AccountNumber == "101060400") ?? throw new ArgumentException("Account title '101060400' not found.");
-            var cwv = accountTitlesDto.Find(c => c.AccountNumber == "101060600") ?? throw new ArgumentException("Account title '101060600' not found.");
-
-            var customerName = collection.Customer?.CustomerName ?? "Unknown Customer";
-            var billingsStr = string.Join(", ", collection.PaidBills?.Select(b => b.MMSIBillingNumber) ?? new List<string>());
-            var description = $"Redeposit: CR Ref collected from {customerName} for {billingsStr} Check No. {collection.CheckNumber} issued by {collection.BankAccountNumber} {collection.BankAccountName}";
-
-            if (collection.CashAmount > 0 || collection.CheckAmount > 0)
-            {
-                ledgers.Add(new GeneralLedgerBook
-                {
-                    Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber,
-                    Description = description,
-                    AccountId = cashInBankTitle.AccountId,
-                    AccountNo = cashInBankTitle.AccountNumber,
-                    AccountTitle = cashInBankTitle.AccountName,
-                    Debit = collection.CashAmount + collection.CheckAmount,
-                    Credit = 0,
-                    Company = collection.Company,
-                    CreatedBy = collection.PostedBy!,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SubAccountType = SubAccountType.BankAccount,
-                    SubAccountId = collection.BankId,
-                    SubAccountName = collection.BankId.HasValue ? $"{collection.BankAccountNumber} {collection.BankAccountName}" : null,
-                    ModuleType = nameof(ModuleType.Collection)
-                });
-            }
-            // ... Add EWT and WVAT if needed (mirrors PostAsync)
-            // For brevity, assuming common case.
-
-            if (collection.CashAmount > 0 || collection.CheckAmount > 0)
-            {
-                ledgers.Add(new GeneralLedgerBook
-                {
-                    Date = collection.Date,
-                    Reference = collection.MMSICollectionNumber,
-                    Description = description,
-                    AccountId = arTradeTitle.AccountId,
-                    AccountNo = arTradeTitle.AccountNumber,
-                    AccountTitle = arTradeTitle.AccountName,
-                    Debit = 0,
-                    Credit = collection.CashAmount + collection.CheckAmount,
-                    Company = collection.Company,
-                    CreatedBy = collection.PostedBy!,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SubAccountType = SubAccountType.Customer,
-                    SubAccountId = collection.CustomerId,
-                    SubAccountName = customerName,
-                    ModuleType = nameof(ModuleType.Collection)
-                });
-            }
-
-            await _db.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateBillingPayment(int billingId, decimal paidAmount, CancellationToken cancellationToken = default)
@@ -625,7 +474,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 if (billing.Balance <= 0)
                 {
                     billing.IsPaid = true;
-                    billing.Status = "Paid";
+                    billing.Status = IBS.Utility.Constants.SD.BillingStatus.Paid;
                 }
                 await _db.SaveChangesAsync(cancellationToken);
             }
@@ -640,7 +489,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 billing.AmountPaid -= total;
                 billing.Balance += total;
                 billing.IsPaid = false;
-                billing.Status = "For Collection";
+                billing.Status = IBS.Utility.Constants.SD.BillingStatus.ForCollection;
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }
@@ -648,7 +497,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<string> GenerateCollectionNumber(CancellationToken cancellationToken = default)
         {
             var lastRecord = await _db.MMSICollections
-                .Where(b => b.IsUndocumented && string.IsNullOrEmpty(b.MMSICollectionNumber))
+                .Where(b => b.IsUndocumented && !string.IsNullOrEmpty(b.MMSICollectionNumber))
                 .OrderByDescending(b => b.MMSICollectionNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -657,9 +506,13 @@ namespace IBS.DataAccess.Repository.MMSI
                 return "CL00000001";
             }
 
-            var lastSeries = lastRecord.MMSICollectionNumber.Substring(3);
-            var parsed = int.Parse(lastSeries) + 1;
-            return "CL" + (parsed.ToString("D8"));
+            var lastSeries = lastRecord.MMSICollectionNumber.Substring(2); // "CL" is 2 chars
+            if (int.TryParse(lastSeries, out int lastNumber))
+            {
+                return "CL" + ((lastNumber + 1).ToString("D8"));
+            }
+
+            return "CL" + (DateTime.Now.Ticks % 100000000).ToString("D8");
         }
     }
 }

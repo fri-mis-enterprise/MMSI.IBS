@@ -26,12 +26,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
         // Accounting Methods
         Task PostAsync(Collection collection, List<Offsettings> offsettings, CancellationToken cancellationToken = default);
 
-        Task DepositAsync(Collection collection, CancellationToken cancellationToken = default);
-
-        Task ReturnedCheck(string collectionNo, string company, string userName, CancellationToken cancellationToken = default);
-
-        Task RedepositAsync(Collection collection, CancellationToken cancellationToken = default);
-
         Task UpdateBillingPayment(int billingId, decimal paidAmount, CancellationToken cancellationToken = default);
 
         Task RemoveBillingPayment(int billingId, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);

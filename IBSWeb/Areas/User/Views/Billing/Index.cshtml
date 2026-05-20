@@ -156,10 +156,10 @@
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
                             let statusColor = ``;
-                            if (row.status === "For Collection"){
+                            if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.ForCollection"){
                                 statusColor = `bg-info`
                             }
-                            if (row.status === "Collected"){
+                            if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.Collected"){
                                 statusColor = `bg-success`
                             }
 
@@ -174,7 +174,7 @@
                         "render": function(data, type, row) {
                             let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
 
-                            if (row.status !== "For Collection")
+                            if (row.status !== "@IBS.Utility.Constants.SD.BillingStatus.ForCollection")
                             {
                                 actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.mmsiBillingId}"><i class="bi bi-eye"></i> View</a>`
                             }
@@ -201,12 +201,12 @@
 
             $('#filterForCollection').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                table.columns(6).search('For Collection', true, true).draw();
+                table.columns(6).search('@IBS.Utility.Constants.SD.BillingStatus.ForCollection', true, true).draw();
             });
 
             $('#filterCollected').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                table.columns(6).search('Collected', true, true).draw();
+                table.columns(6).search('@IBS.Utility.Constants.SD.BillingStatus.Collected', true, true).draw();
             });
 
             $('.btn-group button').on('click', function() {

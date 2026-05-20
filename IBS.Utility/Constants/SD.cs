@@ -98,5 +98,38 @@ namespace IBS.Utility.Constants
             public const string Closed = "Closed";
             public const string Cancelled = "Cancelled";
         }
+
+        public static class DispatchTicketStatus
+        {
+            public const string Pending = "Pending";
+            public const string ForTariff = "For Tariff";
+            public const string ForApproval = "For Approval";
+            public const string Disapproved = "Disapproved";
+            public const string ForBilling = "For Billing";
+            public const string Billed = "Billed";
+            public const string Cancelled = "Cancelled";
+            public const string ForPosting = "For Posting";
+            public const string Incomplete = "Incomplete";
+        }
+
+        public static class BillingStatus
+        {
+            public const string ForPosting = "For Posting";
+            public const string ForCollection = "For Collection";
+            public const string Collected = "Collected";
+            public const string Paid = "Paid";
+            public const string Cancelled = "Cancelled";
+        }
+
+        public const string BilledTo_Local = "LOCAL";
+        public const string BilledTo_Foreign = "FOREIGN";
+
+        public static class CollectionStatus
+        {
+            public const string Create = "Create";
+            public const string Pending = "Pending";
+            public const string Posted = "Posted";
+            public const string Cancelled = "Cancelled";
+        }
     }
 }

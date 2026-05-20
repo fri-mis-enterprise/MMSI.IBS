@@ -18,46 +18,6 @@ namespace IBS.DataAccess.Repository.MMSI
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task PostAsync(Billing billing, CancellationToken cancellationToken = default)
-        {
-            #region --Sales Book Recording
-
-            var salesBook = new SalesBook
-            {
-                TransactionDate = billing.Date,
-                SerialNo = billing.MMSIBillingNumber,
-                SoldTo = (billing.PrincipalId != null ? billing.Principal?.PrincipalName : billing.Customer?.CustomerName) ?? string.Empty,
-                TinNo = (billing.PrincipalId != null ? billing.Principal?.TIN : billing.Customer?.CustomerTin) ?? string.Empty,
-                Address = (billing.PrincipalId != null ? billing.Principal?.Address1 : billing.Customer?.CustomerAddress) ?? string.Empty,
-                Description = billing.Vessel?.VesselName ?? "Maritime Services",
-                Amount = billing.Amount - billing.Discount
-            };
-
-            if (billing.IsVatable)
-            {
-                salesBook.VatableSales = ComputeNetOfVat(salesBook.Amount);
-                salesBook.VatAmount = ComputeVatAmount(salesBook.VatableSales);
-                salesBook.NetSales = salesBook.VatableSales - salesBook.Discount;
-            }
-            else
-            {
-                salesBook.ZeroRated = salesBook.Amount;
-                salesBook.NetSales = salesBook.ZeroRated - salesBook.Discount;
-            }
-
-            salesBook.Discount = billing.Discount;
-            salesBook.CreatedBy = billing.CreatedBy;
-            salesBook.CreatedDate = billing.CreatedDate;
-            salesBook.DueDate = billing.DueDate;
-            salesBook.DocumentId = billing.MMSIBillingId;
-            salesBook.Company = billing.Company;
-
-            await _db.SalesBooks.AddAsync(salesBook, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-
-            #endregion --Sales Book Recording
-        }
-
         public override async Task<IEnumerable<Billing>> GetAllAsync(Expression<Func<Billing, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<Billing> query = dbSet
@@ -140,7 +100,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>?> GetMMSICustomersWithBillablesSelectList(int? currentCustomerId, string type, CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _db.MMSIDispatchTickets
-                .Where(t => t.Status == "For Billing" || (currentCustomerId.GetValueOrDefault() != 0 && t.CustomerId == currentCustomerId))
+                .Where(t => t.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling || (currentCustomerId.GetValueOrDefault() != 0 && t.CustomerId == currentCustomerId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -164,7 +124,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(string type, CancellationToken cancellationToken = default)
         {
             var dispatchTicketList = await _db.MMSIDispatchTickets
-                .Where(dt => dt.Status == "For Billing")
+                .Where(dt => dt.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling)
                 .OrderBy(dt => dt.DispatchNumber)
                 .Select(s => new SelectListItem
                 {
@@ -179,7 +139,7 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             var tickets = await _db
                 .MMSIDispatchTickets
-                .Where(b => b.CustomerId == customerId && b.Status == "For Billing")
+                .Where(b => b.CustomerId == customerId && b.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling)
                 .Include(b => b.Customer)
                 .OrderBy(b => b.DispatchNumber)
                 .ToListAsync(cancellationToken);
@@ -278,122 +238,6 @@ namespace IBS.DataAccess.Repository.MMSI
             model.AddressLine4 = fourthString;
 
             return model;
-        }
-
-        public override async Task AddAsync(Billing entity, CancellationToken cancellationToken = default)
-        {
-            if (entity.JobOrderId.HasValue && entity.JobOrderId == 0)
-            {
-                entity.JobOrderId = null;
-            }
-
-            if (entity.JobOrderId.HasValue)
-            {
-                var jobOrder = await _db.MMSIJobOrders
-                    .Include(j => j.Customer)
-                    .Include(j => j.Vessel)
-                    .Include(j => j.Port)
-                    .Include(j => j.Terminal)
-                    .FirstOrDefaultAsync(j => j.JobOrderId == entity.JobOrderId.Value, cancellationToken);
-
-                if (jobOrder != null)
-                {
-                    entity.JobOrder = jobOrder;
-                    if (entity.CustomerId == 0)
-                    {
-                        entity.CustomerId = jobOrder.CustomerId;
-                        entity.Customer = jobOrder.Customer;
-                    }
-
-                    if (entity.VesselId == 0)
-                    {
-                        entity.VesselId = jobOrder.VesselId;
-                        entity.Vessel = jobOrder.Vessel;
-                    }
-
-                    if (entity.PortId == 0)
-                    {
-                        entity.PortId = jobOrder.PortId;
-                        entity.Port = jobOrder.Port;
-                    }
-
-                    if (entity.TerminalId == 0)
-                    {
-                        entity.TerminalId = jobOrder.TerminalId;
-                        entity.Terminal = jobOrder.Terminal;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(entity.VoyageNumber))
-                    {
-                        entity.VoyageNumber = jobOrder.VoyageNumber;
-                    }
-                }
-            }
-
-            if (entity.CustomerId != 0)
-            {
-                entity.Customer ??= (await _db.Customers.FindAsync(new object[] { entity.CustomerId }, cancellationToken))!;
-            }
-
-            entity.Status = "For Collection";
-            entity.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-            if (entity.PrincipalId.HasValue && entity.Principal == null && entity.PrincipalId != 0)
-            {
-                entity.Principal = await _db.MMSIPrincipals.FindAsync(new object[] { entity.PrincipalId.Value }, cancellationToken);
-            }
-
-            entity.Terms = entity.PrincipalId != null && entity.PrincipalId != 0
-                ? entity.Principal?.Terms
-                : entity.Customer?.CustomerTerms;
-
-            if (string.IsNullOrEmpty(entity.Terms))
-            {
-                entity.Terms = "COD";
-            }
-
-            entity.DueDate = await ComputeDueDateAsync(entity.Terms, entity.Date, cancellationToken);
-
-            if (entity.IsUndocumented)
-            {
-                entity.MMSIBillingNumber = await GenerateBillingNumber(cancellationToken);
-            }
-            else if (string.IsNullOrWhiteSpace(entity.MMSIBillingNumber))
-            {
-                throw new InvalidOperationException("Billing Number is required.");
-            }
-
-            if (entity.ToBillDispatchTickets == null || !entity.ToBillDispatchTickets.Any())
-            {
-                throw new InvalidOperationException("At least one dispatch ticket must be selected.");
-            }
-
-            decimal total = 0, dispatch = 0, baf = 0;
-            foreach (var ticketIdStr in entity.ToBillDispatchTickets!)
-            {
-                var dt = await _db.MMSIDispatchTickets.FindAsync(new object[] { int.Parse(ticketIdStr) }, cancellationToken)
-                    ?? throw new InvalidOperationException($"Dispatch ticket #{ticketIdStr} not found.");
-
-                if (entity.JobOrderId.HasValue && dt.JobOrderId != entity.JobOrderId)
-                {
-                    throw new InvalidOperationException($"Ticket #{dt.DispatchNumber} does not belong to the selected Job Order.");
-                }
-
-                total += dt.TotalNetRevenue;
-                dispatch += dt.DispatchNetRevenue;
-                baf += dt.BAFNetRevenue;
-
-                dt.Status = "Billed";
-                dt.Billing = entity;
-                dt.BillingNumber = entity.MMSIBillingNumber;
-            }
-
-            entity.Amount = entity.Balance = total;
-            entity.DispatchAmount = dispatch;
-            entity.BAFAmount = baf;
-            entity.IsPaid = false;
-
-            await base.AddAsync(entity, cancellationToken);
         }
     }
 }

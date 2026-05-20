@@ -77,6 +77,9 @@ builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
 builder.Services.AddScoped<ITugboatMonitoringService, TugboatMonitoringService>();
 builder.Services.AddScoped<IVesselPlanningService, VesselPlanningService>();
 builder.Services.AddScoped<IJobOrderService, JobOrderService>();
+builder.Services.AddScoped<IDispatchTicketService, DispatchTicketService>();
+builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddScoped<ICollectionService, CollectionService>();
 
 // SignalR
 builder.Services.AddSignalR();

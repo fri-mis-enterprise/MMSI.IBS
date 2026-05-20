@@ -1,0 +1,560 @@
+using System.Linq.Dynamic.Core;
+using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Books;
+using IBS.Models.MMSI;
+using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using IBS.DataAccess.Data;
+
+namespace IBS.Services
+{
+    public class BillingService(
+        IUnitOfWork unitOfWork,
+        ApplicationDbContext dbContext,
+        ILogger<BillingService> logger) : IBillingService
+    {
+        public async Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            return await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+        }
+
+        public async Task<ServiceResult<int>> CreateBillingAsync(Billing model, string username, string company, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (model.JobOrderId.HasValue && model.JobOrderId == 0)
+                {
+                    model.JobOrderId = null;
+                }
+
+                if (model.JobOrderId.HasValue)
+                {
+                    var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(model.JobOrderId.Value, cancellationToken);
+                    if (jobOrder != null)
+                    {
+                        if (model.CustomerId == 0) model.CustomerId = jobOrder.CustomerId;
+                        if (model.VesselId == 0) model.VesselId = jobOrder.VesselId;
+                        if (model.PortId == 0) model.PortId = jobOrder.PortId;
+                        if (model.TerminalId == 0) model.TerminalId = jobOrder.TerminalId;
+                        if (string.IsNullOrWhiteSpace(model.VoyageNumber)) model.VoyageNumber = jobOrder.VoyageNumber;
+                    }
+                }
+
+                var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                if (customer == null) return ServiceResult<int>.Failure("Customer not found.");
+
+                model.Customer = customer;
+                model.IsVatable = customer.VatType == SD.VatType_Vatable;
+                model.Status = SD.BillingStatus.ForCollection;
+                model.CreatedBy = username;
+                model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Company = company;
+
+                if (model.PrincipalId.HasValue && model.PrincipalId != 0)
+                {
+                    var principal = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId.Value, cancellationToken);
+                    if (principal != null) model.Principal = principal;
+                }
+
+                model.Terms = model.PrincipalId != null && model.PrincipalId != 0
+                    ? model.Principal?.Terms
+                    : model.Customer?.CustomerTerms;
+
+                if (string.IsNullOrEmpty(model.Terms))
+                {
+                    model.Terms = "COD";
+                }
+
+                model.DueDate = await unitOfWork.Billing.ComputeDueDateAsync(model.Terms, model.Date, cancellationToken);
+
+                if (model.IsUndocumented)
+                {
+                    model.MMSIBillingNumber = await unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
+                }
+                else if (string.IsNullOrWhiteSpace(model.MMSIBillingNumber))
+                {
+                    return ServiceResult<int>.Failure("Billing Number is required.");
+                }
+
+                if (model.ToBillDispatchTickets == null || !model.ToBillDispatchTickets.Any())
+                {
+                    return ServiceResult<int>.Failure("At least one dispatch ticket must be selected.");
+                }
+
+                decimal total = 0, dispatch = 0, baf = 0;
+                foreach (var ticketIdStr in model.ToBillDispatchTickets)
+                {
+                    var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken);
+                    if (dt == null) return ServiceResult<int>.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+
+                    if (model.JobOrderId.HasValue && dt.JobOrderId != model.JobOrderId)
+                    {
+                        return ServiceResult<int>.Failure($"Ticket #{dt.DispatchNumber} does not belong to the selected Job Order.");
+                    }
+
+                    total += dt.TotalNetRevenue;
+                    dispatch += dt.DispatchNetRevenue;
+                    baf += dt.BAFNetRevenue;
+
+                    dt.Status = SD.DispatchTicketStatus.Billed;
+                    dt.BillingId = model.MMSIBillingId;
+                    dt.BillingNumber = model.MMSIBillingNumber;
+                }
+
+                model.Amount = model.Balance = total;
+                model.DispatchAmount = dispatch;
+                model.BAFAmount = baf;
+                model.IsPaid = false;
+
+                await unitOfWork.Billing.AddAsync(model, cancellationToken);
+                
+                var salesBook = new SalesBook
+                {
+                    TransactionDate = model.Date,
+                    SerialNo = model.MMSIBillingNumber,
+                    SoldTo = (model.PrincipalId != null ? model.Principal?.PrincipalName : model.Customer?.CustomerName) ?? string.Empty,
+                    TinNo = (model.PrincipalId != null ? model.Principal?.TIN : model.Customer?.CustomerTin) ?? string.Empty,
+                    Address = (model.PrincipalId != null ? model.Principal?.Address1 : model.Customer?.CustomerAddress) ?? string.Empty,
+                    Description = model.Vessel?.VesselName ?? "Maritime Services",
+                    Amount = model.Amount - model.Discount
+                };
+
+                if (model.IsVatable)
+                {
+                    salesBook.VatableSales = unitOfWork.Billing.ComputeNetOfVat(salesBook.Amount);
+                    salesBook.VatAmount = unitOfWork.Billing.ComputeVatAmount(salesBook.VatableSales);
+                    salesBook.NetSales = salesBook.VatableSales - salesBook.Discount;
+                }
+                else
+                {
+                    salesBook.ZeroRated = salesBook.Amount;
+                    salesBook.NetSales = salesBook.ZeroRated - salesBook.Discount;
+                }
+
+                salesBook.Discount = model.Discount;
+                salesBook.CreatedBy = model.CreatedBy;
+                salesBook.CreatedDate = model.CreatedDate;
+                salesBook.DueDate = model.DueDate;
+                salesBook.DocumentId = model.MMSIBillingId;
+                salesBook.Company = model.Company;
+
+                await dbContext.SalesBooks.AddAsync(salesBook, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+                
+                return ServiceResult<int>.Success(model.MMSIBillingId, "Billing created successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create billing.");
+                return ServiceResult<int>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult> UpdateBillingAsync(Billing model, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentModel = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken);
+                if (currentModel == null)
+                {
+                    return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
+                }
+
+                var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                if (customer == null) return ServiceResult.Failure("Customer not found.");
+
+                currentModel.IsVatable = customer.VatType == SD.VatType_Vatable;
+
+                // Revert old tickets
+                var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MMSIBillingId, cancellationToken);
+                foreach (var dt in oldTickets)
+                {
+                    dt.Status = SD.DispatchTicketStatus.ForBilling;
+                    dt.BillingId = null;
+                    dt.BillingNumber = null;
+                }
+
+                // Update properties
+                currentModel.CustomerId = model.CustomerId;
+                currentModel.PrincipalId = model.PrincipalId;
+                currentModel.VoyageNumber = model.VoyageNumber;
+                currentModel.Date = model.Date;
+                currentModel.PortId = model.PortId;
+                currentModel.TerminalId = model.TerminalId;
+                currentModel.VesselId = model.VesselId;
+                currentModel.BilledTo = model.BilledTo;
+                currentModel.JobOrderId = model.JobOrderId;
+
+                decimal total = 0, dispatch = 0, baf = 0;
+                if (model.ToBillDispatchTickets != null)
+                {
+                    foreach (var ticketIdStr in model.ToBillDispatchTickets)
+                    {
+                        var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken);
+                        if (dt == null) return ServiceResult.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+
+                        total += dt.TotalNetRevenue;
+                        dispatch += dt.DispatchNetRevenue;
+                        baf += dt.BAFNetRevenue;
+
+                        dt.Status = SD.DispatchTicketStatus.Billed;
+                        dt.BillingId = model.MMSIBillingId;
+                        dt.BillingNumber = currentModel.MMSIBillingNumber;
+                    }
+                }
+
+                currentModel.Amount = currentModel.Balance = total;
+                currentModel.DispatchAmount = dispatch;
+                currentModel.BAFAmount = baf;
+
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success("Entry edited successfully!");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to edit billing.");
+                return ServiceResult.Failure(ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult> DeleteBillingAsync(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+                if (model == null)
+                {
+                    return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
+                }
+
+                await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success("Billing deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to delete billing.");
+                return ServiceResult.Failure(ex.Message);
+            }
+        }
+
+        public async Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            var query = dbContext.Billings
+                .Include(b => b.Customer)
+                .Include(b => b.Terminal).ThenInclude(b => b.Port)
+                .Include(b => b.Vessel)
+                .Where(b => b.Status != SD.BillingStatus.ForPosting && b.Status != SD.BillingStatus.Cancelled);
+
+            if (!string.IsNullOrEmpty(parameters.Search.Value))
+            {
+                var s = parameters.Search.Value.ToLower();
+                query = query.Where(dt =>
+                    dt.Date.Day.ToString().Contains(s) ||
+                    dt.Date.Month.ToString().Contains(s) ||
+                    dt.Date.Year.ToString().Contains(s) ||
+                    dt.MMSIBillingNumber.ToLower().Contains(s) ||
+                    dt.Amount.ToString().Contains(s) ||
+                    dt.Customer.CustomerName.ToLower().Contains(s) ||
+                    dt.Terminal.TerminalName.ToLower().Contains(s) ||
+                    dt.Terminal.Port.PortName.ToLower().Contains(s) ||
+                    dt.Vessel.VesselName.ToLower().Contains(s) ||
+                    dt.Status.ToLower().Contains(s)
+                );
+            }
+
+            foreach (var column in parameters.Columns)
+            {
+                if (!string.IsNullOrEmpty(column.Search.Value))
+                {
+                    var s = column.Search.Value.ToLower();
+                    if (column.Data == "status")
+                    {
+                        if (s == "for collection") query = query.Where(x => x.Status == SD.BillingStatus.ForCollection);
+                        if (s == "collected") query = query.Where(x => x.Status == SD.BillingStatus.Collected);
+                    }
+                }
+            }
+
+            var totalRecords = await query.CountAsync(cancellationToken);
+
+            if (parameters.Order?.Count > 0)
+            {
+                var col = parameters.Columns[parameters.Order[0].Column].Data;
+                var dir = parameters.Order[0].Dir.ToLower() == "asc" ? "ascending" : "descending";
+                query = query.OrderBy($"{col} {dir}");
+            }
+
+            var data = await query
+                .Skip(parameters.Start)
+                .Take(parameters.Length)
+                .ToListAsync(cancellationToken);
+
+            return (data, totalRecords, totalRecords);
+        }
+
+        public async Task<byte[]> GenerateExcelForPrintingAsync(int id, CancellationToken cancellationToken)
+        {
+            var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+            if (billing == null) throw new InvalidOperationException("Billing not found");
+
+            billing.PaidDispatchTickets = await unitOfWork.Billing.GetPaidDispatchTicketsAsync(billing.MMSIBillingId, cancellationToken);
+            billing.UniqueTugboats = await unitOfWork.Billing.GetUniqueTugboatsListAsync(billing.MMSIBillingId, cancellationToken);
+
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add($"Billing #{billing.MMSIBillingNumber}");
+            worksheet.Cells.Style.Font.Name = "Calibri";
+            worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
+            worksheet.Cells["E2"].Value = $"{billing.Date}";
+            worksheet.Cells["E2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells["B3"].Value = $"{billing.Customer?.CustomerAddress}                              TERMS: {billing.Customer?.CustomerTerms}";
+            worksheet.Cells["B4"].Value = $"{billing.Customer?.CustomerTin}";
+            worksheet.Cells["E4"].Value = $"VOYAGE NO. {billing.VoyageNumber}";
+            worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel?.VesselName}";
+            worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port?.PortName}";
+
+            var row = 9;
+            if (billing.UniqueTugboats != null)
+            {
+                foreach (var tugboat in billing.UniqueTugboats)
+                {
+                    worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: {tugboat}";
+                    row++;
+
+                    foreach (var ticket in billing.PaidDispatchTickets!.Where(t => t.Tugboat?.TugboatName == tugboat))
+                    {
+                        worksheet.Cells[row, 1].Value = "1";
+                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                        worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
+                        worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 5].Value = $"{ticket.DispatchBillingAmount}";
+                        worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        row++;
+                    }
+                    row++;
+                }
+            }
+
+            if (billing.PaidDispatchTickets != null)
+            {
+                foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
+                {
+                    worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: BUNKER ADJUSTMENT FACTOR";
+                    row++;
+                    worksheet.Cells[row, 1].Value = "1";
+                    worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                    worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
+                    worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
+                    worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    row++;
+                    row++;
+                }
+            }
+
+            worksheet.Cells[1, 1, row, 7].Style.Font.Name = "Calibri";
+            worksheet.Column(1).Width = 8;
+            worksheet.Column(2).Width = 53;
+            worksheet.Column(3).Width = 9;
+            worksheet.Column(4).Width = 8.5;
+            worksheet.Column(5).Width = 16;
+
+            return await package.GetAsByteArrayAsync(cancellationToken);
+        }
+
+        public async Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken)
+        {
+            var query = dbContext.Customers.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var s = term.ToLower();
+                query = query.Where(c => c.CustomerName.ToLower().Contains(s) || c.CustomerCode.ToLower().Contains(s));
+            }
+
+            var customers = await query
+                .OrderBy(c => c.CustomerName)
+                .Take(10)
+                .Select(c => new
+                {
+                    value = c.CustomerId,
+                    name = c.CustomerName,
+                    vatType = c.VatType,
+                    isUndoc = c.Type,
+                    address = c.CustomerAddress,
+                    tinNo = c.CustomerTin,
+                    terms = c.CustomerTerms,
+                    businessStyle = c.BusinessStyle ?? "-"
+                })
+                .ToListAsync(cancellationToken);
+
+            var ids = customers.Select(c => c.value).ToList();
+            var principalsExist = await dbContext.MMSIPrincipals
+                .Where(p => ids.Contains(p.CustomerId))
+                .Select(p => p.CustomerId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return customers.Select(c => (object)new
+            {
+                c.value,
+                c.name,
+                hasPrincipal = principalsExist.Contains(c.value),
+                c.vatType,
+                c.isUndoc,
+                c.address,
+                c.tinNo,
+                c.terms,
+                c.businessStyle
+            }).ToList();
+        }
+
+        public async Task<List<object>> SearchPrincipalsAsync(string? term, int customerId, CancellationToken cancellationToken)
+        {
+            var query = dbContext.MMSIPrincipals.AsNoTracking().Where(p => p.CustomerId == customerId);
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var s = term.ToLower();
+                query = query.Where(p => p.PrincipalName.ToLower().Contains(s) || p.PrincipalNumber.ToLower().Contains(s));
+            }
+
+            var result = await query
+                .OrderBy(p => p.PrincipalName)
+                .Take(10)
+                .Select(p => new
+                {
+                    value = p.PrincipalId,
+                    name = p.PrincipalName,
+                    address = p.Address1,
+                    tinNo = p.TIN,
+                    businessStyle = p.BusinessType,
+                    terms = p.Terms
+                })
+                .ToListAsync(cancellationToken);
+
+            return result.Select(r => (object)r).ToList();
+        }
+
+        public async Task<List<object>> SearchJobOrdersAsync(string? term, int customerId, CancellationToken cancellationToken)
+        {
+            var query = dbContext.MMSIJobOrders.AsNoTracking()
+                .Where(j => j.CustomerId == customerId &&
+                            j.DispatchTickets.Any(dt => dt.Status == SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) &&
+                            !j.DispatchTickets.Any(dt => dt.Status == SD.DispatchTicketStatus.Pending || dt.Status == SD.DispatchTicketStatus.ForTariff || dt.Status == SD.DispatchTicketStatus.ForApproval));
+
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var s = term.ToLower();
+                query = query.Where(j => j.JobOrderNumber.ToLower().Contains(s));
+            }
+
+            var result = await query
+                .OrderByDescending(j => j.Date)
+                .Take(10)
+                .Select(j => new
+                {
+                    value = j.JobOrderId,
+                    name = j.JobOrderNumber,
+                    description = j.Remarks ?? ""
+                })
+                .ToListAsync(cancellationToken);
+
+            return result.Select(r => (object)r).ToList();
+        }
+
+        public async Task<ServiceResult<object>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken)
+        {
+            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(jobOrderId, cancellationToken);
+            if (jobOrder == null) return ServiceResult<object>.Failure("Job Order not found");
+
+            var tickets = jobOrder.DispatchTickets
+                .Where(t => t.Status == SD.DispatchTicketStatus.ForBilling && t.BillingId == null)
+                .Select(t => new
+                {
+                    dispatchTicketId = t.DispatchTicketId,
+                    dispatchNo = t.DispatchNumber,
+                    tugboat = t.Tugboat?.TugboatName ?? "N/A",
+                    service = t.Service?.ServiceName ?? "N/A",
+                    duration = t.TotalHours,
+                    dispatchAmount = t.DispatchBillingAmount,
+                    bafAmount = t.BAFBillingAmount,
+                    totalAmount = t.TotalBilling
+                }).ToList();
+
+            return ServiceResult<object>.Success(new
+            {
+                header = new
+                {
+                    vesselId = jobOrder.VesselId,
+                    portId = jobOrder.PortId,
+                    terminalId = jobOrder.TerminalId,
+                    voyageNumber = jobOrder.VoyageNumber,
+                    cosNumber = jobOrder.COSNumber
+                },
+                tickets
+            });
+        }
+
+        public async Task<List<SelectListItem>?> GetPrincipalsSelectListAsync(int customerId, CancellationToken cancellationToken)
+        {
+            var principals = await unitOfWork.Principal.GetAllAsync(t => t.CustomerId == customerId, cancellationToken);
+            return principals.Select(t => new SelectListItem
+            {
+                Value = t.PrincipalId.ToString(),
+                Text = t.PrincipalName
+            }).ToList();
+        }
+
+        public async Task<List<SelectListItem>?> GetEditTicketsSelectListAsync(int? customerId, int billingId, CancellationToken cancellationToken)
+        {
+            var list = await unitOfWork.Billing.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
+            if (billingId != 0)
+            {
+                var billedTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == billingId, cancellationToken);
+                if (billedTickets.Any() && billedTickets.First().CustomerId == customerId)
+                {
+                    list?.AddRange(await unitOfWork.Billing.GetMMSIBilledTicketsById(billingId, cancellationToken));
+                }
+            }
+            return list;
+        }
+
+        public async Task<Billing> PopulateBillingSelectListsAsync(Billing model, CancellationToken cancellationToken)
+        {
+            model.Vessels = await unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
+            model.Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            model.Customers = await unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(model.CustomerId, "", cancellationToken);
+
+            if (model.PortId != 0)
+            {
+                model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.PortId, cancellationToken);
+            }
+
+            return model;
+        }
+
+        public async Task<ServiceResult<object>> GetCustomerDetailsAsync(int customerId, CancellationToken cancellationToken)
+        {
+            var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == customerId, cancellationToken);
+            if (customer == null) return ServiceResult<object>.Failure("Customer not found.", ServiceResultStatus.NotFound);
+
+            return ServiceResult<object>.Success(new
+            {
+                address = customer.CustomerAddress,
+                tin = customer.CustomerTin,
+                isUndoc = customer.Type
+            });
+        }
+    }
+}
