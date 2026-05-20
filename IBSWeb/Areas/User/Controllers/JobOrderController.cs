@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
+using IBS.Services;
+using IBS.Utility.Constants;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -19,8 +21,8 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class JobOrderController(
         IUnitOfWork unitOfWork,
-        IHubContext<TugboatHub> hubContext,
-        ILogger<JobOrderController> logger) : Controller
+        IJobOrderService jobOrderService,
+        IHubContext<TugboatHub> hubContext) : Controller
     {
         private const string _closeConfirmKey = "JobOrder_PendingCloseId";
 
@@ -37,15 +39,13 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.CloseJobOrder)]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
+            var jobOrders = await jobOrderService.GetAllJobOrdersAsync(cancellationToken);
 
             var createModel = new JobOrder { Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()) };
             await PopulateSelectListsAsync(createModel, cancellationToken);
             ViewBag.CreateViewModel = createModel;
 
-            return View(jobOrders
-                .OrderByDescending(j => j.JobOrderNumber)
-                .ToList());
+            return View(jobOrders.ToList());
         }
 
         #endregion
@@ -79,33 +79,16 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(jobOrder);
             }
 
-            try
+            var result = await jobOrderService.CreateJobOrderAsync(jobOrder, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
             {
-                jobOrder.Status = JobOrderStatus.Open;
-                jobOrder.JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken);
-                jobOrder.CreatedBy = User.Identity?.Name ?? "Unknown";
-                jobOrder.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                await unitOfWork.JobOrder.AddAsync(jobOrder, cancellationToken);
-
-                await RecordAuditAsync(
-                    activity: $"Created Job Order #{jobOrder.JobOrderNumber}",
-                    username: User.Identity?.Name ?? "Unknown",
-                    cancellationToken: cancellationToken);
-
-                await unitOfWork.SaveAsync(cancellationToken);
-
                 await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-
-                TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} created successfully.";
-                return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error creating Job Order");
-                ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the Job Order.");
+                TempData["success"] = result.Message;
+                return RedirectToAction(nameof(Details), new { id = result.Data });
             }
 
+            ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
             await PopulateSelectListsAsync(jobOrder, cancellationToken);
             return View(jobOrder);
         }
@@ -125,7 +108,7 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.CloseJobOrder)]
         public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
         {
-            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await jobOrderService.GetJobOrderByIdAsync(id, cancellationToken);
             if (jobOrder == null)
             {
                 return NotFound();
@@ -160,21 +143,20 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.EditJobOrder, "Access denied. You don't have permission to edit Job Orders.")]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+            var jobOrder = await jobOrderService.GetJobOrderByIdAsync(id, cancellationToken);
             if (jobOrder == null)
             {
                 return NotFound();
             }
 
             // Prevent editing if the Job Order is already Closed or Cancelled.
-            if (jobOrder.Status == JobOrderStatus.Closed || jobOrder.Status == JobOrderStatus.Cancelled)
+            if (jobOrder.Status == SD.JobOrderStatus.Closed || jobOrder.Status == SD.JobOrderStatus.Cancelled)
             {
                 TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is {jobOrder.Status.ToLower()} and cannot be edited.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
             await PopulateSelectListsAsync(jobOrder, cancellationToken);
-
             ViewData["HasTickets"] = jobOrder.DispatchTickets.Any();
 
             return View(jobOrder);
@@ -194,46 +176,21 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            try
+            var result = await jobOrderService.UpdateJobOrderAsync(model, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
             {
-                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == model.JobOrderId, cancellationToken);
-                if (jobOrder == null)
-                {
-                    return NotFound();
-                }
-
-                jobOrder.Date = model.Date;
-                jobOrder.CustomerId = model.CustomerId;
-                jobOrder.VesselId = model.VesselId;
-                jobOrder.PortId = model.PortId;
-                jobOrder.TerminalId = model.TerminalId;
-                jobOrder.COSNumber = model.COSNumber;
-                jobOrder.VoyageNumber = model.VoyageNumber;
-                jobOrder.PlannedStartTime = model.PlannedStartTime;
-                jobOrder.PlannedEndTime = model.PlannedEndTime;
-                jobOrder.PreferredTugboatId = model.PreferredTugboatId;
-                jobOrder.Remarks = model.Remarks;
-                jobOrder.EditedBy = User.Identity?.Name ?? "Unknown";
-                jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                await RecordAuditAsync(
-                    activity: $"Edited Job Order #{jobOrder.JobOrderNumber}",
-                    username: User.Identity?.Name ?? "Unknown",
-                    cancellationToken: cancellationToken);
-
-                await unitOfWork.SaveAsync(cancellationToken);
-
                 await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-
-                TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} updated successfully.";
-                return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
+                TempData["success"] = result.Message;
+                return RedirectToAction(nameof(Details), new { id = model.JobOrderId });
             }
-            catch (Exception ex)
+
+            if (result.Status == ServiceResultStatus.NotFound)
             {
-                logger.LogError(ex, "Error updating Job Order {JobOrderId}", model.JobOrderId);
-                ModelState.AddModelError(string.Empty, "An unexpected error occurred while updating the Job Order.");
+                return NotFound();
             }
 
+            ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
             await PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
@@ -251,44 +208,22 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.DeleteJobOrder, "You don't have permission to cancel Job Orders.")]
         public async Task<IActionResult> CancelConfirmed(int id, CancellationToken cancellationToken = default)
         {
-            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
-            if (jobOrder == null)
+            var result = await jobOrderService.CancelJobOrderAsync(id, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
+                TempData["success"] = result.Message;
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (result.Status == ServiceResultStatus.NotFound)
             {
                 return NotFound();
             }
 
-            switch (jobOrder.Status)
-            {
-                case JobOrderStatus.Cancelled:
-                    TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is already cancelled.";
-                    return RedirectToAction(nameof(Details), new { id });
-                case JobOrderStatus.Closed:
-                    TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is closed and cannot be cancelled.";
-                    return RedirectToAction(nameof(Details), new { id });
-            }
-
-            // Check if any associated tickets are already Billed or For Billing.
-            var ticketsForBillingOrBilled = jobOrder.DispatchTickets
-                .Count(dt => dt.Status == "For Billing" || dt.Status == "Billed");
-
-            if (ticketsForBillingOrBilled > 0)
-            {
-                TempData["error"] = $"Cannot cancel Job Order. {ticketsForBillingOrBilled} ticket(s) are already in the billing process.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            jobOrder.Status = JobOrderStatus.Cancelled;
-
-            await RecordAuditAsync($"Cancelled Job Order #{jobOrder.JobOrderNumber}",
-                User.Identity?.Name ?? "Unknown",
-                cancellationToken);
-
-            await unitOfWork.SaveAsync(cancellationToken);
-
-            await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-
-            TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} has been cancelled.";
-            return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
+            TempData["error"] = result.Message;
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         #endregion
@@ -304,74 +239,38 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CloseJobOrder, "Access denied. You don't have permission to close Job Orders.")]
         public async Task<IActionResult> Close(int id, CancellationToken cancellationToken = default)
         {
-            var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
-            if (jobOrder == null)
+            bool forceClose = false;
+            var pendingId = TempData[_closeConfirmKey] as int?;
+
+            if (pendingId == id)
+            {
+                forceClose = true;
+                TempData.Remove(_closeConfirmKey);
+            }
+
+            var result = await jobOrderService.CloseJobOrderAsync(id, User.Identity?.Name ?? "Unknown", forceClose, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                if (result.Status == ServiceResultStatus.ConfirmationRequired)
+                {
+                    TempData[_closeConfirmKey] = id;
+                    TempData["warning"] = result.Message;
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
+                TempData["success"] = result.Message;
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (result.Status == ServiceResultStatus.NotFound)
             {
                 return NotFound();
             }
 
-            if (jobOrder.Status == JobOrderStatus.Closed)
-            {
-                TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is already closed.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (jobOrder.DispatchTickets.Any())
-            {
-                // Ensure all tickets have tariff rates set and are not disapproved.
-                var ticketsWithoutTariff = jobOrder.DispatchTickets
-                    .Count(dt => dt.Status == "Pending" || dt.Status == "For Tariff");
-
-                var ticketsForApproval = jobOrder.DispatchTickets
-                    .Count(dt => dt.Status == "For Approval");
-
-                var ticketsDisapproved = jobOrder.DispatchTickets
-                    .Count(dt => dt.Status == "Disapproved");
-
-                if (ticketsWithoutTariff > 0)
-                {
-                    TempData["error"] = $"Cannot close Job Order. {ticketsWithoutTariff} dispatch ticket(s) have no tariff set. Please set tariff rates for all tickets before closing.";
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-
-                if (ticketsDisapproved > 0)
-                {
-                    TempData["error"] = $"Cannot close Job Order. {ticketsDisapproved} dispatch ticket(s) are disapproved. Please edit and re-approve all disapproved tickets before closing.";
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-
-                // Server-side confirmation gate for tickets pending approval.
-                // We use TempData to track the first attempt and show a warning.
-                if (ticketsForApproval > 0)
-                {
-                    var pendingId = TempData[_closeConfirmKey] as int?;
-
-                    if (pendingId != id)
-                    {
-                        // First visit — store intent and redirect back to Details with warning.
-                        TempData[_closeConfirmKey] = id;
-                        TempData["warning"] = $"Warning: {ticketsForApproval} dispatch ticket(s) are pending approval. These tickets will not be included in billing until approved. Please confirm below to proceed.";
-                        return RedirectToAction(nameof(Details), new { id });
-                    }
-
-                    // Second visit — confirmed by the user clicking the button again.
-                    TempData.Remove(_closeConfirmKey);
-                }
-            }
-
-            jobOrder.Status = JobOrderStatus.Closed;
-
-            await RecordAuditAsync(
-                activity: $"Closed Job Order #{jobOrder.JobOrderNumber}",
-                username: User.Identity?.Name ?? "Unknown",
-                cancellationToken: cancellationToken);
-
-            await unitOfWork.SaveAsync(cancellationToken);
-
-            await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-
-            TempData["success"] = $"Job Order #{jobOrder.JobOrderNumber} has been closed.";
-            return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
+            TempData["error"] = result.Message;
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         #endregion
@@ -445,19 +344,6 @@ namespace IBSWeb.Areas.User.Controllers
         #region Private Helpers
 
         /// <summary>
-        /// Records an activity in the audit trail.
-        /// </summary>
-        private async Task RecordAuditAsync(
-            string activity,
-            string username,
-            CancellationToken cancellationToken)
-        {
-            var audit = new AuditTrail(username, activity, "Job Order");
-
-            await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
-        }
-
-        /// <summary>
         /// Populates the dropdown lists in the JobOrder.
         /// </summary>
         private async Task PopulateSelectListsAsync(JobOrder jobOrder, CancellationToken cancellationToken)
@@ -507,15 +393,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Constants for Job Order statuses.
-    /// </summary>
-    public static class JobOrderStatus
-    {
-        public const string Open = "Open";
-        public const string Closed = "Closed";
-        public const string Cancelled = "Cancelled";
     }
 }

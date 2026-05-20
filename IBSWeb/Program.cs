@@ -76,6 +76,7 @@ builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
 builder.Services.AddScoped<ITugboatMonitoringService, TugboatMonitoringService>();
 builder.Services.AddScoped<IVesselPlanningService, VesselPlanningService>();
+builder.Services.AddScoped<IJobOrderService, JobOrderService>();
 
 // SignalR
 builder.Services.AddSignalR();

@@ -91,5 +91,12 @@ namespace IBS.Utility.Constants
         public const string Date_Format = "MMM dd, yyyy";
 
         #endregion Format string
+
+        public static class JobOrderStatus
+        {
+            public const string Open = "Open";
+            public const string Closed = "Closed";
+            public const string Cancelled = "Cancelled";
+        }
     }
 }

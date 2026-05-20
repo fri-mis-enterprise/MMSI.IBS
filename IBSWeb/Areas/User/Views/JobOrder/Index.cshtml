@@ -40,7 +40,7 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            var isCancelled = item.Status == "Cancelled";
+                            var isCancelled = item.Status == IBS.Utility.Constants.SD.JobOrderStatus.Cancelled;
                             <tr>
                                 <td class="text-start">
                                     <a asp-action="Details" asp-route-id="@item.JobOrderId" class="text-decoration-none text-primary fw-bold">
@@ -71,7 +71,7 @@
                                     }
                                     else
                                     {
-                                        <span class="badge rounded-pill @(item.Status == "Open" ? "bg-success" : "bg-secondary")">
+                                        <span class="badge rounded-pill @(item.Status == IBS.Utility.Constants.SD.JobOrderStatus.Open ? "bg-success" : "bg-secondary")">
                                             @item.Status
                                         </span>
                                     }

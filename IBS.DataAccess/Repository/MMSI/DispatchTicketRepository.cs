@@ -190,7 +190,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }
 
             var jobOrder = await _db.MMSIJobOrders.FindAsync(new object[] { jobOrderId.Value }, cancellationToken);
-            return jobOrder?.Status == "Open";
+            return jobOrder?.Status == IBS.Utility.Constants.SD.JobOrderStatus.Open;
         }
 
         public async Task UpdateStatusAsync(int id, string status, string updatedBy, string activity, string docType, CancellationToken cancellationToken = default)
