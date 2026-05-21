@@ -13,7 +13,7 @@ namespace IBS.Models.MMSI.ViewModels
 
         public DateOnly Date { get; set; }
 
-        [StringLength(10, ErrorMessage = "Dispatch Number can only contain 10 characters")]
+        [StringLength(20, ErrorMessage = "COS Number should not exceed 20 characters")]
         public string? COSNumber { get; set; }
 
         [StringLength(20, ErrorMessage = "Dispatch Number should not exceed 20 characters")]
@@ -60,25 +60,18 @@ namespace IBS.Models.MMSI.ViewModels
 
         #region ---Select Lists---
 
-        [NotMapped]
         public List<SelectListItem>? Tugboats { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? TugMasters { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? Ports { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? Terminals { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? Vessels { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? Services { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? Customers { get; set; }
 
         #endregion ---Select Lists---

@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.JobOrder
+@model IBS.Models.MSAP.ViewModels.JobOrderViewModel
 
 @{
     ViewData["Title"] = "Create Job Order";
@@ -64,35 +64,58 @@
                     <!-- References -->
                     <div class="col-12 col-md-6">
                         <label asp-for="COSNumber" class="form-label fw-bold"></label>
-                        <input asp-for="COSNumber" class="form-control" placeholder="Optional" />
+                        <input asp-for="COSNumber" class="form-control" placeholder="Optional" maxlength="20" />
                         <span asp-validation-for="COSNumber" class="text-danger"></span>
                     </div>
 
                     <div class="col-12 col-md-6">
                         <label asp-for="VoyageNumber" class="form-label fw-bold"></label>
-                        <input asp-for="VoyageNumber" class="form-control" placeholder="Optional" />
+                        <input asp-for="VoyageNumber" class="form-control" placeholder="Optional" maxlength="100" />
                         <span asp-validation-for="VoyageNumber" class="text-danger"></span>
                     </div>
 
                     <!-- Planning -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label asp-for="PlannedStartTime" class="form-label fw-bold"></label>
                         <input asp-for="PlannedStartTime" type="datetime-local" class="form-control" />
                         <span asp-validation-for="PlannedStartTime" class="text-danger"></span>
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label asp-for="PlannedEndTime" class="form-label fw-bold"></label>
                         <input asp-for="PlannedEndTime" type="datetime-local" class="form-control" />
                         <span asp-validation-for="PlannedEndTime" class="text-danger"></span>
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
+                        <label asp-for="ServiceType" class="form-label fw-bold"></label>
+                        <select asp-for="ServiceType" asp-items="@Model.Services" class="form-select js-select2">
+                            <option value="">-- Select Service Type --</option>
+                        </select>
+                        <span asp-validation-for="ServiceType" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label asp-for="RequiredTugCount" class="form-label fw-bold"></label>
+                        <input asp-for="RequiredTugCount" type="number" class="form-control" min="1" max="10" />
+                        <span asp-validation-for="RequiredTugCount" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
                         <label asp-for="PreferredTugboatId" class="form-label fw-bold"></label>
                         <select asp-for="PreferredTugboatId" asp-items="@Model.Tugboats" class="form-select js-select2">
                             <option value="">-- No Preferred Tugboat --</option>
                         </select>
                         <span asp-validation-for="PreferredTugboatId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input asp-for="IsConfirmed" class="form-check-input" type="checkbox">
+                            <label asp-for="IsConfirmed" class="form-check-label fw-bold">
+                                Is Confirmed
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Remarks -->

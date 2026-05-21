@@ -106,6 +106,25 @@
                             <label class="text-muted small mb-1">Voyage #</label>
                             <div>@(Model.VoyageNumber ?? "-")</div>
                         </div>
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Service Type</label>
+                            <div>
+                                <span class="badge bg-info text-dark">@(Model.ServiceType ?? "-")</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Confirmation</label>
+                            <div>
+                                @if (Model.IsConfirmed)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Tentative</span>
+                                }
+                            </div>
+                        </div>
                     </div>
 
                     <hr class="my-2">
@@ -127,9 +146,15 @@
                                 <div class="text-muted small">No planned schedule set</div>
                             }
                         </div>
-                        <div class="col-12">
+                        <div class="col-6">
                             <label class="text-muted small mb-1"><i class="bi bi-water me-1"></i>Preferred Tugboat</label>
                             <div class="fw-bold">@(Model.PreferredTugboat?.TugboatName ?? "-")</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Required Tugs</label>
+                            <div>
+                                <span class="badge bg-secondary">@Model.RequiredTugCount</span>
+                            </div>
                         </div>
                     </div>
 

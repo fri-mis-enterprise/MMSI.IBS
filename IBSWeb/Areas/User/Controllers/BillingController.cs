@@ -124,7 +124,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> Edit([Bind("MMSIBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit([Bind("MMSIBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
         {
             try
             {
@@ -312,7 +312,18 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<JsonResult> GetDispatchTicketsByJobOrder(int jobOrderId, CancellationToken cancellationToken)
         {
             var result = await billingService.GetDispatchTicketsByJobOrderAsync(jobOrderId, cancellationToken);
-            return Json(result.Data ?? new { success = false, message = result.Message });
+
+            if (result.IsSuccess && result.Data != null)
+            {
+                return Json(new
+                {
+                    success = true,
+                    header = result.Data.Header,
+                    tickets = result.Data.Tickets
+                });
+            }
+
+            return Json(new { success = false, message = result.Message });
         }
 
         /// <summary>

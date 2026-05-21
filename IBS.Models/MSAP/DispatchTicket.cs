@@ -25,7 +25,7 @@ namespace IBS.Models.MMSI
 
         private string _dispatchNumber = null!;
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(20)")]
         public string? COSNumber
         {
             get => _cosNumber;
@@ -200,30 +200,5 @@ namespace IBS.Models.MMSI
         public Service Service { get; set; } = null!; //carries the columns of one record
 
         #endregion ---Columns with Table relations---
-
-        #region ---Select Lists---
-
-        [NotMapped]
-        public List<SelectListItem>? Tugboats { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? TugMasters { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Ports { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Terminals { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Vessels { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Services { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Customers { get; set; }
-
-        #endregion ---Select Lists---
     }
 }

@@ -91,12 +91,11 @@ namespace IBS.Models.MMSI.ViewModels
         public DateTime? TariffEditedDate { get; set; }
 
         #endregion
+#region --Select List
 
-        #region --Select List
+public List<SelectListItem>? Customers { get; set; }
 
-        public List<SelectListItem>? Customers { get; set; }
-
-        #endregion
+#endregion
 
     }
 }

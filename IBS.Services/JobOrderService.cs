@@ -67,6 +67,9 @@ namespace IBS.Services
                 jobOrder.PlannedStartTime = model.PlannedStartTime;
                 jobOrder.PlannedEndTime = model.PlannedEndTime;
                 jobOrder.PreferredTugboatId = model.PreferredTugboatId;
+                jobOrder.RequiredTugCount = model.RequiredTugCount;
+                jobOrder.ServiceType = model.ServiceType;
+                jobOrder.IsConfirmed = model.IsConfirmed;
                 jobOrder.Remarks = model.Remarks;
                 jobOrder.EditedBy = username;
                 jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();

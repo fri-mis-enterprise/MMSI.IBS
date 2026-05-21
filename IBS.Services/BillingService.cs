@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using IBS.DataAccess.Data;
+using IBS.DTOs;
 
 namespace IBS.Services
 {
@@ -43,6 +44,7 @@ namespace IBS.Services
                         if (model.PortId == 0) model.PortId = jobOrder.PortId;
                         if (model.TerminalId == 0) model.TerminalId = jobOrder.TerminalId;
                         if (string.IsNullOrWhiteSpace(model.VoyageNumber)) model.VoyageNumber = jobOrder.VoyageNumber;
+                        if (string.IsNullOrWhiteSpace(model.COSNumber)) model.COSNumber = jobOrder.COSNumber;
                     }
                 }
 
@@ -103,7 +105,7 @@ namespace IBS.Services
                     baf += dt.BAFNetRevenue;
 
                     dt.Status = SD.DispatchTicketStatus.Billed;
-                    dt.BillingId = model.MMSIBillingId;
+                    dt.Billing = model;
                     dt.BillingNumber = model.MMSIBillingNumber;
                 }
 
@@ -185,6 +187,7 @@ namespace IBS.Services
                 currentModel.CustomerId = model.CustomerId;
                 currentModel.PrincipalId = model.PrincipalId;
                 currentModel.VoyageNumber = model.VoyageNumber;
+                currentModel.COSNumber = model.COSNumber;
                 currentModel.Date = model.Date;
                 currentModel.PortId = model.PortId;
                 currentModel.TerminalId = model.TerminalId;
@@ -205,7 +208,7 @@ namespace IBS.Services
                         baf += dt.BAFNetRevenue;
 
                         dt.Status = SD.DispatchTicketStatus.Billed;
-                        dt.BillingId = model.MMSIBillingId;
+                        dt.Billing = currentModel;
                         dt.BillingNumber = currentModel.MMSIBillingNumber;
                     }
                 }
@@ -473,36 +476,36 @@ namespace IBS.Services
             return result.Select(r => (object)r).ToList();
         }
 
-        public async Task<ServiceResult<object>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken)
+        public async Task<ServiceResult<JobOrderBillingDto>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken)
         {
             var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(jobOrderId, cancellationToken);
-            if (jobOrder == null) return ServiceResult<object>.Failure("Job Order not found");
+            if (jobOrder == null) return ServiceResult<JobOrderBillingDto>.Failure("Job Order not found");
 
             var tickets = jobOrder.DispatchTickets
                 .Where(t => t.Status == SD.DispatchTicketStatus.ForBilling && t.BillingId == null)
-                .Select(t => new
+                .Select(t => new JobOrderTicketDto
                 {
-                    dispatchTicketId = t.DispatchTicketId,
-                    dispatchNo = t.DispatchNumber,
-                    tugboat = t.Tugboat?.TugboatName ?? "N/A",
-                    service = t.Service?.ServiceName ?? "N/A",
-                    duration = t.TotalHours,
-                    dispatchAmount = t.DispatchBillingAmount,
-                    bafAmount = t.BAFBillingAmount,
-                    totalAmount = t.TotalBilling
+                    DispatchTicketId = t.DispatchTicketId,
+                    DispatchNo = t.DispatchNumber,
+                    Tugboat = t.Tugboat?.TugboatName ?? "N/A",
+                    Service = t.Service?.ServiceName ?? "N/A",
+                    Duration = t.TotalHours,
+                    DispatchAmount = t.DispatchBillingAmount,
+                    BAFAmount = t.BAFBillingAmount,
+                    TotalAmount = t.TotalBilling
                 }).ToList();
 
-            return ServiceResult<object>.Success(new
+            return ServiceResult<JobOrderBillingDto>.Success(new JobOrderBillingDto
             {
-                header = new
+                Header = new JobOrderHeaderDto
                 {
-                    vesselId = jobOrder.VesselId,
-                    portId = jobOrder.PortId,
-                    terminalId = jobOrder.TerminalId,
-                    voyageNumber = jobOrder.VoyageNumber,
-                    cosNumber = jobOrder.COSNumber
+                    VesselId = jobOrder.VesselId,
+                    PortId = jobOrder.PortId,
+                    TerminalId = jobOrder.TerminalId,
+                    VoyageNumber = jobOrder.VoyageNumber,
+                    COSNumber = jobOrder.COSNumber
                 },
-                tickets
+                Tickets = tickets
             });
         }
 

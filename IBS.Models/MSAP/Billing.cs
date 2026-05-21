@@ -39,6 +39,15 @@ namespace IBS.Models.MMSI
 
         private string? _voyageNumber;
 
+        [Column(TypeName = "varchar(20)")]
+        public string? COSNumber
+        {
+            get => _cosNumber;
+            set => _cosNumber = value?.Trim();
+        }
+
+        private string? _cosNumber;
+
         [Column("AMOUNT", TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 

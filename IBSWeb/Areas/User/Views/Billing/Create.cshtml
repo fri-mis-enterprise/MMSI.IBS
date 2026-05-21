@@ -180,6 +180,10 @@
                                         <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow-sm" id="VoyageNumber" required>
                                     </div>
                                     <div class="col-12 col-md-6">
+                                        <label asp-for="COSNumber" class="form-label fw-bold small">COS Number</label>
+                                        <input asp-for="COSNumber" type="text" class="form-control border-0 shadow-sm" id="COSNumber">
+                                    </div>
+                                    <div class="col-12 col-md-6">
                                         <label asp-for="Date" class="form-label fw-bold small">Date Created</label>
                                         <input asp-for="Date" type="date" class="form-control border-0 shadow-sm" value="@(Model.Date != default ? Model.Date.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))">
                                     </div>
@@ -490,6 +494,7 @@
                         // Auto-populate header from JO
                         if (response.header) {
                             $("#VoyageNumber").val(response.header.voyageNumber || '');
+                            $("#COSNumber").val(response.header.cosNumber || '');
                             $("#PortSelect").val(response.header.portId).trigger('change');
                             
                             // Since terminal depends on port, we might need to wait for the port change to trigger terminals

@@ -2,6 +2,7 @@ using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using IBS.DTOs;
 
 namespace IBS.Services
 {
@@ -16,7 +17,7 @@ namespace IBS.Services
         Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
         Task<List<object>> SearchPrincipalsAsync(string? term, int customerId, CancellationToken cancellationToken);
         Task<List<object>> SearchJobOrdersAsync(string? term, int customerId, CancellationToken cancellationToken);
-        Task<ServiceResult<object>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken);
+        Task<ServiceResult<JobOrderBillingDto>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken);
         Task<List<SelectListItem>?> GetPrincipalsSelectListAsync(int customerId, CancellationToken cancellationToken);
         Task<List<SelectListItem>?> GetEditTicketsSelectListAsync(int? customerId, int billingId, CancellationToken cancellationToken);
         Task<Billing> PopulateBillingSelectListsAsync(Billing model, CancellationToken cancellationToken);

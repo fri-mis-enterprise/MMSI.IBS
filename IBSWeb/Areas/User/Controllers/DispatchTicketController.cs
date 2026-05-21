@@ -156,14 +156,46 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> SetTariff(int id, string filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
-            var model = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
-            if (model == null)
+            var ticket = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
+            if (ticket == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-            return View(model);
+            var viewModel = new TariffViewModel
+            {
+                DispatchTicketId = ticket.DispatchTicketId,
+                JobOrderId = ticket.JobOrderId,
+                CustomerId = ticket.CustomerId,
+                DispatchNumber = ticket.DispatchNumber,
+                COSNumber = ticket.COSNumber,
+                VoyageNumber = ticket.VoyageNumber,
+                Date = ticket.Date,
+                TugMasterName = ticket.TugMaster?.TugMasterName,
+                DateLeft = ticket.DateLeft,
+                TimeLeft = ticket.TimeLeft,
+                DateArrived = ticket.DateArrived,
+                TimeArrived = ticket.TimeArrived,
+                TugboatName = ticket.Tugboat?.TugboatName,
+                VesselName = ticket.Vessel?.VesselName,
+                VesselType = ticket.Vessel?.VesselType,
+                TerminalName = ticket.Terminal?.TerminalName,
+                PortName = ticket.Terminal?.Port?.PortName,
+                IsTugboatCompanyOwned = ticket.Tugboat?.IsCompanyOwned,
+                TugboatOwnerName = ticket.Tugboat?.TugboatOwner?.TugboatOwnerName,
+                FixedRate = ticket.Tugboat?.TugboatOwner?.FixedRate,
+                Remarks = ticket.Remarks,
+                TotalHours = ticket.TotalHours,
+                CustomerName = ticket.Customer?.CustomerName,
+                DispatchRate = ticket.DispatchRate,
+                DispatchDiscount = ticket.DispatchDiscount,
+                BAFRate = ticket.BAFRate,
+                BAFDiscount = ticket.BAFDiscount,
+                ApOtherTugs = ticket.ApOtherTugs
+            };
+
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            return View(viewModel);
         }
 
         /// <summary>
@@ -172,9 +204,27 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
         public async Task<IActionResult> SetTariff(
-            [Bind("DispatchTicketId,JobOrderId,CustomerId,DispatchRate,DispatchDiscount,DispatchBillingAmount,DispatchNetRevenue,BAFRate,BAFDiscount,BAFBillingAmount,BAFNetRevenue,TotalBilling,TotalNetRevenue,ApOtherTugs")] DispatchTicket model,
+            TariffViewModel viewModel,
             string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
         {
+            var model = new DispatchTicket
+            {
+                DispatchTicketId = viewModel.DispatchTicketId,
+                JobOrderId = viewModel.JobOrderId,
+                CustomerId = viewModel.CustomerId ?? 0,
+                DispatchRate = viewModel.DispatchRate ?? 0,
+                DispatchDiscount = viewModel.DispatchDiscount ?? 0,
+                DispatchBillingAmount = viewModel.DispatchBillingAmount,
+                DispatchNetRevenue = viewModel.DispatchNetRevenue,
+                BAFRate = viewModel.BAFRate ?? 0,
+                BAFDiscount = viewModel.BAFDiscount ?? 0,
+                BAFBillingAmount = viewModel.BAFBillingAmount,
+                BAFNetRevenue = viewModel.BAFNetRevenue,
+                TotalBilling = viewModel.TotalBilling,
+                TotalNetRevenue = viewModel.TotalNetRevenue,
+                ApOtherTugs = viewModel.ApOtherTugs ?? 0
+            };
+
             var result = await dispatchTicketService.SaveTariffAsync(model, chargeType, chargeType2, User.Identity?.Name ?? "System", isEdit: false, cancellationToken);
 
             if (result.IsSuccess)
@@ -201,14 +251,54 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> EditTariff(int id, string filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
-            var model = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
-            if (model == null)
+            var ticket = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
+            if (ticket == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-            return View(model);
+            var viewModel = new TariffViewModel
+            {
+                DispatchTicketId = ticket.DispatchTicketId,
+                JobOrderId = ticket.JobOrderId,
+                CustomerId = ticket.CustomerId,
+                DispatchNumber = ticket.DispatchNumber,
+                COSNumber = ticket.COSNumber,
+                VoyageNumber = ticket.VoyageNumber,
+                Date = ticket.Date,
+                TugMasterName = ticket.TugMaster?.TugMasterName,
+                DateLeft = ticket.DateLeft,
+                TimeLeft = ticket.TimeLeft,
+                DateArrived = ticket.DateArrived,
+                TimeArrived = ticket.TimeArrived,
+                TugboatName = ticket.Tugboat?.TugboatName,
+                VesselName = ticket.Vessel?.VesselName,
+                VesselType = ticket.Vessel?.VesselType,
+                TerminalName = ticket.Terminal?.TerminalName,
+                PortName = ticket.Terminal?.Port?.PortName,
+                IsTugboatCompanyOwned = ticket.Tugboat?.IsCompanyOwned,
+                TugboatOwnerName = ticket.Tugboat?.TugboatOwner?.TugboatOwnerName,
+                FixedRate = ticket.Tugboat?.TugboatOwner?.FixedRate,
+                Remarks = ticket.Remarks,
+                TotalHours = ticket.TotalHours,
+                CustomerName = ticket.Customer?.CustomerName,
+                DispatchRate = ticket.DispatchRate,
+                DispatchDiscount = ticket.DispatchDiscount,
+                DispatchBillingAmount = ticket.DispatchBillingAmount,
+                DispatchNetRevenue = ticket.DispatchNetRevenue,
+                BAFRate = ticket.BAFRate,
+                BAFDiscount = ticket.BAFDiscount,
+                BAFBillingAmount = ticket.BAFBillingAmount,
+                BAFNetRevenue = ticket.BAFNetRevenue,
+                TotalBilling = ticket.TotalBilling,
+                TotalNetRevenue = ticket.TotalNetRevenue,
+                ApOtherTugs = ticket.ApOtherTugs,
+                DispatchChargeType = ticket.DispatchChargeType,
+                BAFChargeType = ticket.BAFChargeType
+            };
+
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            return View(viewModel);
         }
 
         /// <summary>
@@ -217,9 +307,27 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
         public async Task<IActionResult> EditTariff(
-            [Bind("DispatchTicketId,JobOrderId,CustomerId,DispatchRate,DispatchDiscount,DispatchBillingAmount,DispatchNetRevenue,BAFRate,BAFDiscount,BAFBillingAmount,BAFNetRevenue,TotalBilling,TotalNetRevenue,ApOtherTugs")] DispatchTicket model,
+            TariffViewModel viewModel,
             string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
         {
+            var model = new DispatchTicket
+            {
+                DispatchTicketId = viewModel.DispatchTicketId,
+                JobOrderId = viewModel.JobOrderId,
+                CustomerId = viewModel.CustomerId ?? 0,
+                DispatchRate = viewModel.DispatchRate ?? 0,
+                DispatchDiscount = viewModel.DispatchDiscount ?? 0,
+                DispatchBillingAmount = viewModel.DispatchBillingAmount,
+                DispatchNetRevenue = viewModel.DispatchNetRevenue,
+                BAFRate = viewModel.BAFRate ?? 0,
+                BAFDiscount = viewModel.BAFDiscount ?? 0,
+                BAFBillingAmount = viewModel.BAFBillingAmount,
+                BAFNetRevenue = viewModel.BAFNetRevenue,
+                TotalBilling = viewModel.TotalBilling,
+                TotalNetRevenue = viewModel.TotalNetRevenue,
+                ApOtherTugs = viewModel.ApOtherTugs ?? 0
+            };
+
             var result = await dispatchTicketService.SaveTariffAsync(model, chargeType, chargeType2, User.Identity?.Name ?? "System", isEdit: true, cancellationToken);
 
             if (result.IsSuccess)

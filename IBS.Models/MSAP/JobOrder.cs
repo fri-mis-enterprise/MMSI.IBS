@@ -80,24 +80,5 @@ namespace IBS.Models.MMSI
         public Tugboat? PreferredTugboat { get; set; }
 
         public virtual ICollection<DispatchTicket> DispatchTickets { get; set; } = new List<DispatchTicket>();
-
-        #region ---Select Lists (Not Mapped)---
-
-        [NotMapped]
-        public List<SelectListItem>? Customers { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Vessels { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Ports { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Terminals { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Tugboats { get; set; }
-
-        #endregion
     }
 }
