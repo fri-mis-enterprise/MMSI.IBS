@@ -1,8 +1,6 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Models.MMSI;
 using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Utility.Helpers;
@@ -130,7 +128,10 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (result.Status == ServiceResultStatus.NotFound) return NotFound();
+            if (result.Status == ServiceResultStatus.NotFound)
+            {
+                return NotFound();
+            }
 
             TempData["error"] = result.Message;
             var cust = await unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);

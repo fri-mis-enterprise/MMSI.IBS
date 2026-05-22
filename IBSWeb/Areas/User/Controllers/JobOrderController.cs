@@ -2,7 +2,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.MMSI;
 using IBS.Models.MMSI.ViewModels;
-using IBS.Models;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
@@ -370,7 +369,7 @@ namespace IBSWeb.Areas.User.Controllers
                 serviceName = ticket.Service.ServiceName,
                 tugboatName = ticket.Tugboat.TugboatName,
                 tugMasterName = ticket.TugMaster?.TugMasterName,
-                location = $"{ticket.Terminal.Port?.PortName} - {ticket.Terminal.TerminalName}",
+                location = $"{ticket.Terminal.Port.PortName} - {ticket.Terminal.TerminalName}",
                 timeStart = ticket is { DateLeft: not null, TimeLeft: not null }
                     ? $"{ticket.DateLeft.Value:MMM dd, yyyy} {ticket.TimeLeft.Value:HH:mm}"
                     : "-",

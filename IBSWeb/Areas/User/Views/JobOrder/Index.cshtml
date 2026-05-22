@@ -29,6 +29,7 @@
                             <th class="text-start">Customer</th>
                             <th class="text-start">Vessel</th>
                             <th class="text-start">COS #</th>
+                            <th class="text-start">Vessel #</th>
                             <th class="text-center">Tickets</th>
                             <th class="text-start">Status</th>
                             <th class="text-center" style="width: 100px;">Actions</th>
@@ -57,6 +58,9 @@
                                 </td>
                                 <td class="text-start">
                                     <span class="text-muted">@(item.COSNumber ?? "-")</span>
+                                </td>
+                                <td class="text-start">
+                                    <span class="text-truncate">@(item.VoyageNumber)</span>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-secondary">@item.DispatchTickets.Count</span>

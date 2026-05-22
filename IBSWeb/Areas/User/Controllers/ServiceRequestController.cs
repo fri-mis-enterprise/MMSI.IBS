@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.User.Controllers
                         cancellationToken))!;
                 }
 
-                if (imageFile != null && imageFile.Length > 0)
+                if (imageFile is { Length: > 0 })
                 {
                     model.ImageName = GenerateFileNameToSave(imageFile.FileName,
                         "img");
@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.User.Controllers
                         model.ImageName!);
                 }
 
-                if (videoFile != null && videoFile.Length > 0)
+                if (videoFile is { Length: > 0 })
                 {
                     model.VideoName = GenerateFileNameToSave(videoFile.FileName,
                         "vid");
@@ -146,7 +146,7 @@ namespace IBSWeb.Areas.User.Controllers
                         model.VideoName!);
                 }
 
-                if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
+                if (model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
                 {
                     if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
@@ -193,7 +193,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 model.Status = "Incomplete";
 
-                if (model.DateLeft != null && model.TimeLeft != null && model.DateArrived != null && model.TimeArrived != null &&
+                if (model is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
                     model.TerminalId != 0 && model.ServiceId != 0 && model.TugBoatId != 0 && model.TugMasterId != null && model.VesselId != 0)
                 {
                     model.Status = "For Posting";
@@ -340,7 +340,7 @@ namespace IBSWeb.Areas.User.Controllers
                         model.VideoName!);
                 }
 
-                if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
+                if (model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
                 {
                     if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
@@ -428,7 +428,7 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.VesselId = model.VesselId;
                 currentModel.Remarks = model.Remarks;
 
-                if (currentModel.DateLeft != null && currentModel.TimeLeft != null && currentModel.DateArrived != null && currentModel.TimeArrived != null &&
+                if (currentModel is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
                     currentModel.TerminalId != 0 && currentModel.ServiceId != 0 && currentModel.TugBoatId != 0 && currentModel.TugMasterId != null && currentModel.VesselId != 0)
                 {
                     currentModel.Status = "For Posting";

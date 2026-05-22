@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -83,7 +82,10 @@ namespace IBS.Services
             try
             {
                 var currentModel = await unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == viewModel.MMSICollectionId, cancellationToken);
-                if (currentModel == null) return ServiceResult.Failure("Collection not found.", ServiceResultStatus.NotFound);
+                if (currentModel == null)
+                {
+                    return ServiceResult.Failure("Collection not found.", ServiceResultStatus.NotFound);
+                }
 
                 // Revert old allocations
                 var oldBillings = await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == currentModel.MMSICollectionId, cancellationToken);
@@ -110,8 +112,15 @@ namespace IBS.Services
 
                 // Track changes for audit
                 var changes = new List<string>();
-                if (currentModel.CheckNumber != viewModel.CheckNumber) changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {viewModel.CheckNumber}");
-                if (currentModel.Amount != viewModel.Amount) changes.Add($"Amount: {currentModel.Amount} -> {viewModel.Amount}");
+                if (currentModel.CheckNumber != viewModel.CheckNumber)
+                {
+                    changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {viewModel.CheckNumber}");
+                }
+
+                if (currentModel.Amount != viewModel.Amount)
+                {
+                    changes.Add($"Amount: {currentModel.Amount} -> {viewModel.Amount}");
+                }
                 // ... more change tracking if needed
 
                 var audit = new AuditTrail(username, $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}", "Collection");
@@ -185,7 +194,10 @@ namespace IBS.Services
         public async Task<CreateCollectionViewModel?> PopulateEditViewModelAsync(int id, CancellationToken cancellationToken)
         {
             var model = await unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == id, cancellationToken);
-            if (model == null) return null;
+            if (model == null)
+            {
+                return null;
+            }
 
             var viewModel = MapToViewModel(model);
             viewModel.ToCollectBillings = await dbContext.Billings
@@ -250,7 +262,11 @@ namespace IBS.Services
         public async Task<ServiceResult<object>> GetBankAccountDetailsAsync(int bankId, CancellationToken cancellationToken)
         {
             var bank = await unitOfWork.BankAccount.GetAsync(b => b.BankAccountId == bankId, cancellationToken);
-            if (bank == null) return ServiceResult<object>.Failure("Bank not found.", ServiceResultStatus.NotFound);
+            if (bank == null)
+            {
+                return ServiceResult<object>.Failure("Bank not found.", ServiceResultStatus.NotFound);
+            }
+
             return ServiceResult<object>.Success(new { bank = bank.Bank, accountNo = bank.AccountNo, accountName = bank.AccountName });
         }
 

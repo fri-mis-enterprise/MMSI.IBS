@@ -29,7 +29,7 @@ namespace IBS.Services
         {
             try
             {
-                if (model.JobOrderId.HasValue && model.JobOrderId == 0)
+                if (model.JobOrderId is 0)
                 {
                     model.JobOrderId = null;
                 }
@@ -39,17 +39,43 @@ namespace IBS.Services
                     var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(model.JobOrderId.Value, cancellationToken);
                     if (jobOrder != null)
                     {
-                        if (model.CustomerId == 0) model.CustomerId = jobOrder.CustomerId;
-                        if (model.VesselId == 0) model.VesselId = jobOrder.VesselId;
-                        if (model.PortId == 0) model.PortId = jobOrder.PortId;
-                        if (model.TerminalId == 0) model.TerminalId = jobOrder.TerminalId;
-                        if (string.IsNullOrWhiteSpace(model.VoyageNumber)) model.VoyageNumber = jobOrder.VoyageNumber;
-                        if (string.IsNullOrWhiteSpace(model.COSNumber)) model.COSNumber = jobOrder.COSNumber;
+                        if (model.CustomerId == 0)
+                        {
+                            model.CustomerId = jobOrder.CustomerId;
+                        }
+
+                        if (model.VesselId == 0)
+                        {
+                            model.VesselId = jobOrder.VesselId;
+                        }
+
+                        if (model.PortId == 0)
+                        {
+                            model.PortId = jobOrder.PortId;
+                        }
+
+                        if (model.TerminalId == 0)
+                        {
+                            model.TerminalId = jobOrder.TerminalId;
+                        }
+
+                        if (string.IsNullOrWhiteSpace(model.VoyageNumber))
+                        {
+                            model.VoyageNumber = jobOrder.VoyageNumber;
+                        }
+
+                        if (string.IsNullOrWhiteSpace(model.COSNumber))
+                        {
+                            model.COSNumber = jobOrder.COSNumber;
+                        }
                     }
                 }
 
                 var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-                if (customer == null) return ServiceResult<int>.Failure("Customer not found.");
+                if (customer == null)
+                {
+                    return ServiceResult<int>.Failure("Customer not found.");
+                }
 
                 model.Customer = customer;
                 model.IsVatable = customer.VatType == SD.VatType_Vatable;
@@ -61,7 +87,10 @@ namespace IBS.Services
                 if (model.PrincipalId.HasValue && model.PrincipalId != 0)
                 {
                     var principal = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId.Value, cancellationToken);
-                    if (principal != null) model.Principal = principal;
+                    if (principal != null)
+                    {
+                        model.Principal = principal;
+                    }
                 }
 
                 model.Terms = model.PrincipalId != null && model.PrincipalId != 0
@@ -93,7 +122,10 @@ namespace IBS.Services
                 foreach (var ticketIdStr in model.ToBillDispatchTickets)
                 {
                     var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken);
-                    if (dt == null) return ServiceResult<int>.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+                    if (dt == null)
+                    {
+                        return ServiceResult<int>.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+                    }
 
                     if (model.JobOrderId.HasValue && dt.JobOrderId != model.JobOrderId)
                     {
@@ -170,7 +202,10 @@ namespace IBS.Services
                 }
 
                 var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-                if (customer == null) return ServiceResult.Failure("Customer not found.");
+                if (customer == null)
+                {
+                    return ServiceResult.Failure("Customer not found.");
+                }
 
                 currentModel.IsVatable = customer.VatType == SD.VatType_Vatable;
 
@@ -201,7 +236,10 @@ namespace IBS.Services
                     foreach (var ticketIdStr in model.ToBillDispatchTickets)
                     {
                         var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken);
-                        if (dt == null) return ServiceResult.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+                        if (dt == null)
+                        {
+                            return ServiceResult.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+                        }
 
                         total += dt.TotalNetRevenue;
                         dispatch += dt.DispatchNetRevenue;
@@ -237,6 +275,18 @@ namespace IBS.Services
                 if (model == null)
                 {
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
+                }
+
+                // Revert all linked dispatch tickets back to "For Billing" so they can be re-billed.
+                // Without this, deleting a billing leaves tickets stuck in "Billed" status with a
+                // null BILLNUM foreign key (orphaned), making them invisible to the billing queue.
+                var linkedTickets = await unitOfWork.DispatchTicket
+                    .GetAllAsync(dt => dt.BillingId == id, cancellationToken);
+                foreach (var dt in linkedTickets)
+                {
+                    dt.Status = SD.DispatchTicketStatus.ForBilling;
+                    dt.BillingId = null;
+                    dt.BillingNumber = null;
                 }
 
                 await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
@@ -283,8 +333,15 @@ namespace IBS.Services
                     var s = column.Search.Value.ToLower();
                     if (column.Data == "status")
                     {
-                        if (s == "for collection") query = query.Where(x => x.Status == SD.BillingStatus.ForCollection);
-                        if (s == "collected") query = query.Where(x => x.Status == SD.BillingStatus.Collected);
+                        if (s == "for collection")
+                        {
+                            query = query.Where(x => x.Status == SD.BillingStatus.ForCollection);
+                        }
+
+                        if (s == "collected")
+                        {
+                            query = query.Where(x => x.Status == SD.BillingStatus.Collected);
+                        }
                     }
                 }
             }
@@ -309,7 +366,10 @@ namespace IBS.Services
         public async Task<byte[]> GenerateExcelForPrintingAsync(int id, CancellationToken cancellationToken)
         {
             var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
-            if (billing == null) throw new InvalidOperationException("Billing not found");
+            if (billing == null)
+            {
+                throw new InvalidOperationException("Billing not found");
+            }
 
             billing.PaidDispatchTickets = await unitOfWork.Billing.GetPaidDispatchTicketsAsync(billing.MMSIBillingId, cancellationToken);
             billing.UniqueTugboats = await unitOfWork.Billing.GetUniqueTugboatsListAsync(billing.MMSIBillingId, cancellationToken);
@@ -479,10 +539,13 @@ namespace IBS.Services
         public async Task<ServiceResult<JobOrderBillingDto>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken)
         {
             var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(jobOrderId, cancellationToken);
-            if (jobOrder == null) return ServiceResult<JobOrderBillingDto>.Failure("Job Order not found");
+            if (jobOrder == null)
+            {
+                return ServiceResult<JobOrderBillingDto>.Failure("Job Order not found");
+            }
 
             var tickets = jobOrder.DispatchTickets
-                .Where(t => t.Status == SD.DispatchTicketStatus.ForBilling && t.BillingId == null)
+                .Where(t => t is { Status: SD.DispatchTicketStatus.ForBilling, BillingId: null })
                 .Select(t => new JobOrderTicketDto
                 {
                     DispatchTicketId = t.DispatchTicketId,
@@ -550,7 +613,10 @@ namespace IBS.Services
         public async Task<ServiceResult<object>> GetCustomerDetailsAsync(int customerId, CancellationToken cancellationToken)
         {
             var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == customerId, cancellationToken);
-            if (customer == null) return ServiceResult<object>.Failure("Customer not found.", ServiceResultStatus.NotFound);
+            if (customer == null)
+            {
+                return ServiceResult<object>.Failure("Customer not found.", ServiceResultStatus.NotFound);
+            }
 
             return ServiceResult<object>.Success(new
             {

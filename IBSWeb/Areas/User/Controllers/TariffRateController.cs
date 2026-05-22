@@ -57,7 +57,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            if (model.Dispatch <= 0 && model.BAF <= 0)
+            if (model is { Dispatch: <= 0, BAF: <= 0 })
             {
                 TempData["warning"] = "Dispatch and BAF value cannot be both zero.";
                 return View(model);

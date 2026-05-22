@@ -6,7 +6,6 @@ using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 
 namespace IBS.Services
 {
@@ -154,8 +153,7 @@ namespace IBS.Services
                 }
 
                 // Date validation and total hours
-                if (viewModel.DateLeft != null && viewModel.DateArrived != null &&
-                    viewModel.TimeLeft != null && viewModel.TimeArrived != null)
+                if (viewModel is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
                 {
                     var departure = viewModel.DateLeft.Value.ToDateTime(viewModel.TimeLeft.Value);
                     var arrival = viewModel.DateArrived.Value.ToDateTime(viewModel.TimeArrived.Value);

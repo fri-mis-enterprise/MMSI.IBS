@@ -176,25 +176,25 @@ namespace IBSWeb.Areas.User.Controllers
                 TimeLeft = ticket.TimeLeft,
                 DateArrived = ticket.DateArrived,
                 TimeArrived = ticket.TimeArrived,
-                TugboatName = ticket.Tugboat?.TugboatName,
-                VesselName = ticket.Vessel?.VesselName,
-                VesselType = ticket.Vessel?.VesselType,
-                TerminalName = ticket.Terminal?.TerminalName,
-                PortName = ticket.Terminal?.Port?.PortName,
-                IsTugboatCompanyOwned = ticket.Tugboat?.IsCompanyOwned,
-                TugboatOwnerName = ticket.Tugboat?.TugboatOwner?.TugboatOwnerName,
-                FixedRate = ticket.Tugboat?.TugboatOwner?.FixedRate,
+                TugboatName = ticket.Tugboat.TugboatName,
+                VesselName = ticket.Vessel.VesselName,
+                VesselType = ticket.Vessel.VesselType,
+                TerminalName = ticket.Terminal.TerminalName,
+                PortName = ticket.Terminal.Port.PortName,
+                IsTugboatCompanyOwned = ticket.Tugboat.IsCompanyOwned,
+                TugboatOwnerName = ticket.Tugboat.TugboatOwner?.TugboatOwnerName,
+                FixedRate = ticket.Tugboat.TugboatOwner?.FixedRate,
                 Remarks = ticket.Remarks,
                 TotalHours = ticket.TotalHours,
-                CustomerName = ticket.Customer?.CustomerName,
+                CustomerName = ticket.Customer.CustomerName,
                 DispatchRate = ticket.DispatchRate,
                 DispatchDiscount = ticket.DispatchDiscount,
                 BAFRate = ticket.BAFRate,
                 BAFDiscount = ticket.BAFDiscount,
-                ApOtherTugs = ticket.ApOtherTugs
+                ApOtherTugs = ticket.ApOtherTugs,
+                Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
             };
 
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             return View(viewModel);
         }
 
@@ -271,17 +271,17 @@ namespace IBSWeb.Areas.User.Controllers
                 TimeLeft = ticket.TimeLeft,
                 DateArrived = ticket.DateArrived,
                 TimeArrived = ticket.TimeArrived,
-                TugboatName = ticket.Tugboat?.TugboatName,
-                VesselName = ticket.Vessel?.VesselName,
-                VesselType = ticket.Vessel?.VesselType,
-                TerminalName = ticket.Terminal?.TerminalName,
-                PortName = ticket.Terminal?.Port?.PortName,
-                IsTugboatCompanyOwned = ticket.Tugboat?.IsCompanyOwned,
-                TugboatOwnerName = ticket.Tugboat?.TugboatOwner?.TugboatOwnerName,
-                FixedRate = ticket.Tugboat?.TugboatOwner?.FixedRate,
+                TugboatName = ticket.Tugboat.TugboatName,
+                VesselName = ticket.Vessel.VesselName,
+                VesselType = ticket.Vessel.VesselType,
+                TerminalName = ticket.Terminal.TerminalName,
+                PortName = ticket.Terminal.Port.PortName,
+                IsTugboatCompanyOwned = ticket.Tugboat.IsCompanyOwned,
+                TugboatOwnerName = ticket.Tugboat.TugboatOwner?.TugboatOwnerName,
+                FixedRate = ticket.Tugboat.TugboatOwner?.FixedRate,
                 Remarks = ticket.Remarks,
                 TotalHours = ticket.TotalHours,
-                CustomerName = ticket.Customer?.CustomerName,
+                CustomerName = ticket.Customer.CustomerName,
                 DispatchRate = ticket.DispatchRate,
                 DispatchDiscount = ticket.DispatchDiscount,
                 DispatchBillingAmount = ticket.DispatchBillingAmount,
@@ -294,10 +294,10 @@ namespace IBSWeb.Areas.User.Controllers
                 TotalNetRevenue = ticket.TotalNetRevenue,
                 ApOtherTugs = ticket.ApOtherTugs,
                 DispatchChargeType = ticket.DispatchChargeType,
-                BAFChargeType = ticket.BAFChargeType
+                BAFChargeType = ticket.BAFChargeType,
+                Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
             };
 
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             return View(viewModel);
         }
 

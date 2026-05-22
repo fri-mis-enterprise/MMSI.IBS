@@ -1,6 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DTOs;
-using IBS.Models.MMSI;
 
 namespace IBS.Services
 {
@@ -29,7 +28,7 @@ namespace IBS.Services
                 var plannedJobs = jobOrders.Where(j => j.PreferredTugboatId == tugboat.TugboatId && !j.DispatchTickets.Any());
                 foreach (var job in plannedJobs)
                 {
-                    if (job.PlannedStartTime.HasValue && job.PlannedEndTime.HasValue)
+                    if (job is { PlannedStartTime: not null, PlannedEndTime: not null })
                     {
                         tugboatDto.Blocks.Add(new TimelineBlockDto
                         {
@@ -51,13 +50,13 @@ namespace IBS.Services
                 foreach (var ticket in tickets)
                 {
                     DateTime? startTime = null;
-                    if (ticket.DateLeft.HasValue && ticket.TimeLeft.HasValue)
+                    if (ticket is { DateLeft: not null, TimeLeft: not null })
                     {
                         startTime = ticket.DateLeft.Value.ToDateTime(ticket.TimeLeft.Value);
                     }
 
                     DateTime? endTime = null;
-                    if (ticket.DateArrived.HasValue && ticket.TimeArrived.HasValue)
+                    if (ticket is { DateArrived: not null, TimeArrived: not null })
                     {
                         endTime = ticket.DateArrived.Value.ToDateTime(ticket.TimeArrived.Value);
                     }

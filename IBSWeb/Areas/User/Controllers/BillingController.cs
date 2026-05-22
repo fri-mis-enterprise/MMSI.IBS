@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
@@ -30,10 +29,17 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the list of Billings.
         /// </summary>
         [RequireAccess(ProcedureEnum.CreateBilling)]
-        public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
+        public Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
-            ViewBag.FilterType = filterType;
-            return View(Enumerable.Empty<Billing>());
+            try
+            {
+                ViewBag.FilterType = filterType;
+                return Task.FromResult<IActionResult>(View(Enumerable.Empty<Billing>()));
+            }
+            catch (Exception exception)
+            {
+                return Task.FromException<IActionResult>(exception);
+            }
         }
 
         #endregion
@@ -91,11 +97,14 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = await billingService.GetBillingByIdAsync(id, cancellationToken);
-            if (model == null) return NotFound();
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             model = await billingService.PopulateBillingSelectListsAsync(model, cancellationToken);
             model.UnbilledDispatchTickets = await billingService.GetEditTicketsSelectListAsync(model.CustomerId, model.MMSIBillingId, cancellationToken);
-            
+
             if (model.CustomerId != 0)
             {
                 model.CustomerPrincipal = await billingService.GetPrincipalsSelectListAsync(model.CustomerId, cancellationToken);
@@ -104,17 +113,14 @@ namespace IBSWeb.Areas.User.Controllers
             model.ToBillDispatchTickets = await unitOfWork.Billing
                 .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
 
-            ViewData["HasPrincipal"] = model.CustomerPrincipal != null && model.CustomerPrincipal.Count > 0;
+            ViewData["HasPrincipal"] = model.CustomerPrincipal is { Count: > 0 };
 
-            if (model.Customer != null)
-            {
-                ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
-                ViewData["CustomerTIN"] = model.Customer.CustomerTin;
-                ViewData["CustomerTerms"] = model.Customer.CustomerTerms;
-                ViewData["CustomerBusinessStyle"] = model.Customer.BusinessStyle ?? "-";
-                ViewData["CustomerVatType"] = model.Customer.VatType;
-                ViewData["CustomerType"] = model.Customer.Type;
-            }
+            ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
+            ViewData["CustomerTIN"] = model.Customer.CustomerTin;
+            ViewData["CustomerTerms"] = model.Customer.CustomerTerms;
+            ViewData["CustomerBusinessStyle"] = model.Customer.BusinessStyle ?? "-";
+            ViewData["CustomerVatType"] = model.Customer.VatType;
+            ViewData["CustomerType"] = model.Customer.Type;
 
             return View(model);
         }
@@ -135,7 +141,10 @@ namespace IBSWeb.Areas.User.Controllers
                     return Success(result.Message ?? "Entry edited successfully!", new { redirectUrl = Url.Action(nameof(Index)) });
                 }
 
-                if (result.Status == ServiceResultStatus.NotFound) return NotFound();
+                if (result.Status == ServiceResultStatus.NotFound)
+                {
+                    return NotFound();
+                }
 
                 return Failure(null, result.Message);
             }
@@ -313,7 +322,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var result = await billingService.GetDispatchTicketsByJobOrderAsync(jobOrderId, cancellationToken);
 
-            if (result.IsSuccess && result.Data != null)
+            if (result is { IsSuccess: true, Data: not null })
             {
                 return Json(new
                 {
@@ -364,7 +373,11 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> GetCustomerDetails(int customerId, CancellationToken cancellationToken)
         {
             var result = await billingService.GetCustomerDetailsAsync(customerId, cancellationToken);
-            if (result.IsSuccess) return Json(result.Data);
+            if (result.IsSuccess)
+            {
+                return Json(result.Data);
+            }
+
             return result.Status == ServiceResultStatus.NotFound ? NotFound() : BadRequest(result.Message);
         }
 

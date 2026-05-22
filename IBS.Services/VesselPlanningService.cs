@@ -38,7 +38,7 @@ namespace IBS.Services
                 var plannedJobs = jobOrders.Where(j => j.TerminalId == terminal.TerminalId && !j.DispatchTickets.Any());
                 foreach (var job in plannedJobs)
                 {
-                    if (job.PlannedStartTime.HasValue && job.PlannedEndTime.HasValue)
+                    if (job is { PlannedStartTime: not null, PlannedEndTime: not null })
                     {
                         terminalDto.Blocks.Add(new VesselBlockDto
                         {
@@ -100,7 +100,7 @@ namespace IBS.Services
 
         private DateTime? GetTicketStart(DispatchTicket ticket)
         {
-            if (ticket.DateLeft.HasValue && ticket.TimeLeft.HasValue)
+            if (ticket is { DateLeft: not null, TimeLeft: not null })
             {
                 return ticket.DateLeft.Value.ToDateTime(ticket.TimeLeft.Value);
             }
@@ -110,7 +110,7 @@ namespace IBS.Services
 
         private DateTime? GetTicketEnd(DispatchTicket ticket)
         {
-            if (ticket.DateArrived.HasValue && ticket.TimeArrived.HasValue)
+            if (ticket is { DateArrived: not null, TimeArrived: not null })
             {
                 return ticket.DateArrived.Value.ToDateTime(ticket.TimeArrived.Value);
             }

@@ -8,7 +8,6 @@ using IBS.Models.MMSI;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using IBS.DTOs;
 
 namespace IBS.DataAccess.Repository.MMSI
 {

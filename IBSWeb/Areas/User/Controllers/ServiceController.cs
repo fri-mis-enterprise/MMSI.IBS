@@ -41,14 +41,21 @@ namespace IBSWeb.Areas.User.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            if (view == nameof(DynamicView.ServiceMaster))
+            try
             {
-                return View("ExportIndex");
-            }
+                if (view == nameof(DynamicView.ServiceMaster))
+                {
+                    return Task.FromResult<IActionResult>(View("ExportIndex"));
+                }
 
-            return View(Enumerable.Empty<ServiceMaster>());
+                return Task.FromResult<IActionResult>(View(Enumerable.Empty<ServiceMaster>()));
+            }
+            catch (Exception exception)
+            {
+                return Task.FromException<IActionResult>(exception);
+            }
         }
 
         [HttpGet]

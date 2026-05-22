@@ -147,13 +147,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                if (registration != null && registration.Length > 0)
+                if (registration is { Length: > 0 })
                 {
                     model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
                     model.ProofOfRegistrationFilePath = await cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                 }
 
-                if (document != null && document.Length > 0)
+                if (document is { Length: > 0 })
                 {
                     model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
                     model.ProofOfExemptionFilePath = await cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
@@ -318,13 +318,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                if (registration != null && registration.Length > 0)
+                if (registration is { Length: > 0 })
                 {
                     model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
                     model.ProofOfRegistrationFilePath = await cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                 }
 
-                if (document != null && document.Length > 0)
+                if (document is { Length: > 0 })
                 {
                     model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
                     model.ProofOfExemptionFilePath = await cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);

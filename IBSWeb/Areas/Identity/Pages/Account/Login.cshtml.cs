@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using IBS.Models;
@@ -115,7 +114,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                 // Check if user exists and is active BEFORE attempting password sign in
                 var user = await signInManager.UserManager.FindByNameAsync(Input.Username);
                 
-                if (user != null && !user.IsActive)
+                if (user is { IsActive: false })
                 {
                     logger.LogWarning("Deactivated user attempted login: {Username}", Input.Username);
                     ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact the administrator.");
