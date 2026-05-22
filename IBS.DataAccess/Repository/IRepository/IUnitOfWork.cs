@@ -1,6 +1,6 @@
 using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.DataAccess.Repository.MMSI.IRepository;
+using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.Models.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -71,7 +71,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #endregion
 
-        #region --MMSI
+        #region --MSAP
 
         IMsapRepository Msap { get; }
         IServiceRequestRepository ServiceRequest { get; }
@@ -80,7 +80,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IBillingRepository Billing { get; }
         ICollectionRepository Collection { get; }
         IReportRepository Report { get; }
-        MMSI.IRepository.IServiceRepository Service { get; }
+        Msap.IRepository.IServiceRepository Service { get; }
         ITariffTableRepository TariffTable { get; }
         IPortRepository Port { get; }
         IPrincipalRepository Principal { get; }

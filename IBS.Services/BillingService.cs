@@ -1,8 +1,8 @@
-using System.Linq.Dynamic.Core;
+﻿using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Books;
-using IBS.Models.MMSI;
+using IBS.Models.MSAP;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,7 +23,7 @@ namespace IBS.Services
     {
         public async Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+            return await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
         }
 
         public async Task<ServiceResult<int>> CreateBillingAsync(Billing model, string username, string company, CancellationToken cancellationToken)
@@ -107,9 +107,9 @@ namespace IBS.Services
 
                 if (model.IsUndocumented)
                 {
-                    model.MMSIBillingNumber = await unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
+                    model.MsapBillingNumber = await unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
                 }
-                else if (string.IsNullOrWhiteSpace(model.MMSIBillingNumber))
+                else if (string.IsNullOrWhiteSpace(model.MsapBillingNumber))
                 {
                     return ServiceResult<int>.Failure("Billing Number is required.");
                 }
@@ -139,7 +139,7 @@ namespace IBS.Services
 
                     dt.Status = SD.DispatchTicketStatus.Billed;
                     dt.Billing = model;
-                    dt.BillingNumber = model.MMSIBillingNumber;
+                    dt.BillingNumber = model.MsapBillingNumber;
                 }
 
                 model.Amount = model.Balance = total;
@@ -148,10 +148,10 @@ namespace IBS.Services
                 model.IsPaid = false;
 
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
-                
-                return ServiceResult<int>.Success(model.MMSIBillingId, "Billing created successfully. Status: For Posting");
+
+                return ServiceResult<int>.Success(model.MsapBillingId, "Billing created successfully. Status: For Posting");
             }
             catch (Exception ex)
             {
@@ -165,7 +165,7 @@ namespace IBS.Services
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+                var model = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
                 if (model == null)
                 {
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
@@ -173,7 +173,7 @@ namespace IBS.Services
 
                 if (model.Status != SD.BillingStatus.ForPosting)
                 {
-                    return ServiceResult.Failure($"Billing #{model.MMSIBillingNumber} is already {model.Status}.");
+                    return ServiceResult.Failure($"Billing #{model.MsapBillingNumber} is already {model.Status}.");
                 }
 
                 var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
@@ -193,7 +193,7 @@ namespace IBS.Services
                 var salesBook = new SalesBook
                 {
                     TransactionDate = model.Date,
-                    SerialNo = model.MMSIBillingNumber,
+                    SerialNo = model.MsapBillingNumber,
                     SoldTo = soldToName,
                     TinNo = tinNo,
                     Address = address,
@@ -217,7 +217,7 @@ namespace IBS.Services
                 salesBook.CreatedBy = username;
                 salesBook.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 salesBook.DueDate = model.DueDate;
-                salesBook.DocumentId = model.MMSIBillingId;
+                salesBook.DocumentId = model.MsapBillingId;
                 salesBook.Company = model.Company;
 
                 // --- General Ledger Posting ---
@@ -236,7 +236,7 @@ namespace IBS.Services
                 ledgers.Add(new GeneralLedgerBook
                 {
                     Date = model.Date,
-                    Reference = model.MMSIBillingNumber,
+                    Reference = model.MsapBillingNumber,
                     Description = $"Billing for {model.Vessel?.VesselName ?? "Maritime Services"}",
                     AccountId = arTrade!.AccountId,
                     AccountNo = arTrade.AccountNumber,
@@ -256,7 +256,7 @@ namespace IBS.Services
                 ledgers.Add(new GeneralLedgerBook
                 {
                     Date = model.Date,
-                    Reference = model.MMSIBillingNumber,
+                    Reference = model.MsapBillingNumber,
                     Description = $"Billing for {model.Vessel?.VesselName ?? "Maritime Services"}",
                     AccountId = revenue!.AccountId,
                     AccountNo = revenue.AccountNumber,
@@ -275,8 +275,8 @@ namespace IBS.Services
                     ledgers.Add(new GeneralLedgerBook
                     {
                         Date = model.Date,
-                        Reference = model.MMSIBillingNumber,
-                        Description = $"Output VAT for {model.MMSIBillingNumber}",
+                        Reference = model.MsapBillingNumber,
+                        Description = $"Output VAT for {model.MsapBillingNumber}",
                         AccountId = outputVat!.AccountId,
                         AccountNo = outputVat.AccountNumber,
                         AccountTitle = outputVat.AccountName,
@@ -298,11 +298,11 @@ namespace IBS.Services
 
                 await dbContext.SalesBooks.AddAsync(salesBook, cancellationToken);
                 await dbContext.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
-                return ServiceResult.Success($"Billing #{model.MMSIBillingNumber} posted successfully.");
+                return ServiceResult.Success($"Billing #{model.MsapBillingNumber} posted successfully.");
             }
             catch (Exception ex)
             {
@@ -316,7 +316,7 @@ namespace IBS.Services
         {
             try
             {
-                var currentModel = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == model.MMSIBillingId, cancellationToken);
+                var currentModel = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == model.MsapBillingId, cancellationToken);
                 if (currentModel == null)
                 {
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
@@ -331,7 +331,7 @@ namespace IBS.Services
                 currentModel.IsVatable = customer.VatType == SD.VatType_Vatable;
 
                 // Revert old tickets
-                var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MMSIBillingId, cancellationToken);
+                var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MsapBillingId, cancellationToken);
                 foreach (var dt in oldTickets)
                 {
                     dt.Status = SD.DispatchTicketStatus.ForBilling;
@@ -368,7 +368,7 @@ namespace IBS.Services
 
                         dt.Status = SD.DispatchTicketStatus.Billed;
                         dt.Billing = currentModel;
-                        dt.BillingNumber = currentModel.MMSIBillingNumber;
+                        dt.BillingNumber = currentModel.MsapBillingNumber;
                     }
                 }
 
@@ -376,7 +376,7 @@ namespace IBS.Services
                 currentModel.DispatchAmount = dispatch;
                 currentModel.BAFAmount = baf;
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MsapBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Entry edited successfully!");
@@ -392,7 +392,7 @@ namespace IBS.Services
         {
             try
             {
-                var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+                var model = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
                 if (model == null)
                 {
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
@@ -412,7 +412,7 @@ namespace IBS.Services
 
                 if (model.Status != SD.BillingStatus.ForPosting && model.Status != SD.BillingStatus.Cancelled)
                 {
-                    var salesBook = await dbContext.SalesBooks.FirstOrDefaultAsync(s => s.DocumentId == id && s.SerialNo == model.MMSIBillingNumber, cancellationToken);
+                    var salesBook = await dbContext.SalesBooks.FirstOrDefaultAsync(s => s.DocumentId == id && s.SerialNo == model.MsapBillingNumber, cancellationToken);
                     if (salesBook != null)
                     {
                         dbContext.SalesBooks.Remove(salesBook);
@@ -433,7 +433,7 @@ namespace IBS.Services
 
         public async Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
         {
-            var query = dbContext.Billings
+            var query = dbContext.MsapBillings
                 .Include(b => b.Customer)
                 .Include(b => b.Terminal).ThenInclude(b => b.Port)
                 .Include(b => b.Vessel)
@@ -446,7 +446,7 @@ namespace IBS.Services
                     dt.Date.Day.ToString().Contains(s) ||
                     dt.Date.Month.ToString().Contains(s) ||
                     dt.Date.Year.ToString().Contains(s) ||
-                    dt.MMSIBillingNumber.ToLower().Contains(s) ||
+                    dt.MsapBillingNumber.ToLower().Contains(s) ||
                     dt.Amount.ToString().Contains(s) ||
                     dt.Customer.CustomerName.ToLower().Contains(s) ||
                     dt.Terminal.TerminalName.ToLower().Contains(s) ||
@@ -500,17 +500,17 @@ namespace IBS.Services
 
         public async Task<byte[]> GenerateExcelForPrintingAsync(int id, CancellationToken cancellationToken)
         {
-            var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+            var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
             if (billing == null)
             {
                 throw new InvalidOperationException("Billing not found");
             }
 
-            billing.PaidDispatchTickets = await unitOfWork.Billing.GetPaidDispatchTicketsAsync(billing.MMSIBillingId, cancellationToken);
-            billing.UniqueTugboats = await unitOfWork.Billing.GetUniqueTugboatsListAsync(billing.MMSIBillingId, cancellationToken);
+            billing.PaidDispatchTickets = await unitOfWork.Billing.GetPaidDispatchTicketsAsync(billing.MsapBillingId, cancellationToken);
+            billing.UniqueTugboats = await unitOfWork.Billing.GetUniqueTugboatsListAsync(billing.MsapBillingId, cancellationToken);
 
             using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add($"Billing #{billing.MMSIBillingNumber}");
+            var worksheet = package.Workbook.Worksheets.Add($"Billing #{billing.MsapBillingNumber}");
             worksheet.Cells.Style.Font.Name = "Calibri";
             worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
             worksheet.Cells["E2"].Value = $"{billing.Date}";
@@ -598,7 +598,7 @@ namespace IBS.Services
                 .ToListAsync(cancellationToken);
 
             var ids = customers.Select(c => c.value).ToList();
-            var principalsExist = await dbContext.MMSIPrincipals
+            var principalsExist = await dbContext.MsapPrincipals
                 .Where(p => ids.Contains(p.CustomerId))
                 .Select(p => p.CustomerId)
                 .Distinct()
@@ -620,7 +620,7 @@ namespace IBS.Services
 
         public async Task<List<object>> SearchPrincipalsAsync(string? term, int customerId, CancellationToken cancellationToken)
         {
-            var query = dbContext.MMSIPrincipals.AsNoTracking().Where(p => p.CustomerId == customerId);
+            var query = dbContext.MsapPrincipals.AsNoTracking().Where(p => p.CustomerId == customerId);
             if (!string.IsNullOrWhiteSpace(term))
             {
                 var s = term.ToLower();
@@ -646,7 +646,7 @@ namespace IBS.Services
 
         public async Task<List<object>> SearchJobOrdersAsync(string? term, int customerId, CancellationToken cancellationToken)
         {
-            var query = dbContext.MMSIJobOrders.AsNoTracking()
+            var query = dbContext.MsapJobOrders.AsNoTracking()
                 .Where(j => j.CustomerId == customerId &&
                             j.DispatchTickets.Any(dt => dt.Status == SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) &&
                             !j.DispatchTickets.Any(dt => dt.Status == SD.DispatchTicketStatus.Pending || dt.Status == SD.DispatchTicketStatus.ForTariff || dt.Status == SD.DispatchTicketStatus.ForApproval));
@@ -719,13 +719,13 @@ namespace IBS.Services
 
         public async Task<List<SelectListItem>?> GetEditTicketsSelectListAsync(int? customerId, int billingId, CancellationToken cancellationToken)
         {
-            var list = await unitOfWork.Billing.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
+            var list = await unitOfWork.Billing.GetMsapUnbilledTicketsByCustomer(customerId, cancellationToken);
             if (billingId != 0)
             {
                 var billedTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == billingId, cancellationToken);
                 if (billedTickets.Any() && billedTickets.First().CustomerId == customerId)
                 {
-                    list?.AddRange(await unitOfWork.Billing.GetMMSIBilledTicketsById(billingId, cancellationToken));
+                    list?.AddRange(await unitOfWork.Billing.GetMsapBilledTicketsById(billingId, cancellationToken));
                 }
             }
             return list;
@@ -733,13 +733,13 @@ namespace IBS.Services
 
         public async Task<Billing> PopulateBillingSelectListsAsync(Billing model, CancellationToken cancellationToken)
         {
-            model.Vessels = await unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
-            model.Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
-            model.Customers = await unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(model.CustomerId, "", cancellationToken);
+            model.Vessels = await unitOfWork.Vessel.GetMsapVesselsSelectList(cancellationToken);
+            model.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
+            model.Customers = await unitOfWork.Billing.GetMsapCustomersWithBillablesSelectList(model.CustomerId, "", cancellationToken);
 
             if (model.PortId != 0)
             {
-                model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.PortId, cancellationToken);
+                model.Terminals = await unitOfWork.Terminal.GetMsapTerminalsSelectList(model.PortId, cancellationToken);
             }
 
             return model;
@@ -762,3 +762,5 @@ namespace IBS.Services
         }
     }
 }
+
+

@@ -1,7 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +25,7 @@ namespace IBS.Services
             {
                 if (viewModel.JobOrderId.HasValue && !await IsJobOrderEditableAsync(viewModel.JobOrderId, cancellationToken))
                 {
-                    return ServiceResult<int>.Failure("Cannot add ticket — parent Job Order is cancelled or closed.");
+                    return ServiceResult<int>.Failure("Cannot add ticket â€” parent Job Order is cancelled or closed.");
                 }
 
                 var model = viewModel.ToEntity();
@@ -103,7 +103,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(viewModel.DispatchTicketId!.Value, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot edit ticket — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot edit ticket â€” parent Job Order is cancelled or closed.");
                 }
 
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == viewModel.DispatchTicketId, cancellationToken);
@@ -258,7 +258,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(model.DispatchTicketId, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot set/edit tariff — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot set/edit tariff â€” parent Job Order is cancelled or closed.");
                 }
 
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
@@ -339,7 +339,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot approve tariff — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot approve tariff â€” parent Job Order is cancelled or closed.");
                 }
 
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -370,7 +370,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot disapprove tariff — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot disapprove tariff â€” parent Job Order is cancelled or closed.");
                 }
 
                 if (string.IsNullOrWhiteSpace(reason) || reason.Length < 10)
@@ -490,3 +490,5 @@ namespace IBS.Services
         }
     }
 }
+
+

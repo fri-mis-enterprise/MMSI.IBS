@@ -1,9 +1,9 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Linq.Expressions;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.MMSI.IRepository;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.MasterFile;
+using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.MasterFile;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Helpers;
@@ -167,3 +167,5 @@ namespace IBS.Tests.Controllers
         #endregion
     }
 }
+
+

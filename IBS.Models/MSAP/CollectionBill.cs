@@ -1,8 +1,8 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class CollectionBill
     {
@@ -34,3 +34,5 @@ namespace IBS.Models.MMSI
         public Customer Customer { get; set; } = null!;
     }
 }
+
+

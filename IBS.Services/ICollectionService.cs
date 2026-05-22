@@ -1,6 +1,6 @@
-using IBS.Models;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+﻿using IBS.Models;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -21,3 +21,5 @@ namespace IBS.Services
         Task<List<SelectListItem>?> GetUncollectedBillingsSelectListAsync(int? customerId, CancellationToken cancellationToken);
     }
 }
+
+

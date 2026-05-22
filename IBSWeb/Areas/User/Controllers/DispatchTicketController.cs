@@ -1,8 +1,8 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
@@ -364,7 +364,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (!await dispatchTicketService.IsJobOrderEditableAsync(model.JobOrderId, cancellationToken))
             {
-                TempData["error"] = "Cannot edit ticket — parent Job Order is cancelled or closed.";
+                TempData["error"] = "Cannot edit ticket â€” parent Job Order is cancelled or closed.";
                 return RedirectToAction(nameof(Index), new { filterType });
             }
 
@@ -573,3 +573,5 @@ namespace IBSWeb.Areas.User.Controllers
         #endregion
     }
 }
+
+

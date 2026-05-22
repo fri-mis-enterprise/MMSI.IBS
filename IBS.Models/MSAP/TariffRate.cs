@@ -1,10 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class TariffRate
     {
@@ -68,3 +68,5 @@ namespace IBS.Models.MMSI
         #endregion
     }
 }
+
+

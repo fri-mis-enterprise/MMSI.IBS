@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace IBS.Models.MMSI.ViewModels
+namespace IBS.Models.MSAP.ViewModels
 {
     public class ViewModelBook
     {
@@ -11,3 +11,5 @@ namespace IBS.Models.MMSI.ViewModels
         public DateOnly DateTo { get; set; }
     }
 }
+
+

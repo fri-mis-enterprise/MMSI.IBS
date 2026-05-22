@@ -105,23 +105,23 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- MMSI
 
-                MMSIServiceRequestForPosting = await dbContext.MMSIDispatchTickets
+                MsapServiceRequestForPosting = await dbContext.MsapDispatchTickets
                         .Where(po => po.Status == "For Posting")
                         .CountAsync(),
 
-                MMSIDispatchTicketForTariff = await dbContext.MMSIDispatchTickets
+                MsapDispatchTicketForTariff = await dbContext.MsapDispatchTickets
                         .Where(po => po.Status == "For Tariff")
                         .CountAsync(),
 
-                MMSIDispatchTicketForApproval = await dbContext.MMSIDispatchTickets
+                MsapDispatchTicketForApproval = await dbContext.MsapDispatchTickets
                         .Where(po => po.Status == "For Approval")
                         .CountAsync(),
 
-                MMSIDispatchTicketForBilling = await dbContext.MMSIDispatchTickets
+                MsapDispatchTicketForBilling = await dbContext.MsapDispatchTickets
                         .Where(po => po.Status == "For Billing")
                         .CountAsync(),
 
-                MMSIBillingForCollection = await dbContext.Billings
+                MsapBillingForCollection = await dbContext.MsapBillings
                         .Where(po => po.Status == "For Collection")
                         .CountAsync(),
 

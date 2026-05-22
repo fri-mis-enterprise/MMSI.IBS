@@ -1,5 +1,5 @@
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+﻿using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Models;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
@@ -21,3 +21,5 @@ namespace IBS.Services
         Task<bool> IsTicketJobOrderEditableAsync(int dispatchTicketId, CancellationToken cancellationToken);
     }
 }
+
+

@@ -1,7 +1,7 @@
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +17,7 @@ namespace IBSWeb.Areas.User.Controllers
     {
         public IActionResult Index()
         {
-            var activitiesServices = dbContext.MMSIServices.ToList();
+            var activitiesServices = dbContext.MsapServices.ToList();
             return View(activitiesServices);
         }
 
@@ -75,7 +75,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return NotFound();
                 }
 
-                dbContext.MMSIServices.Remove(model);
+                dbContext.MsapServices.Remove(model);
                 await dbContext.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
@@ -142,3 +142,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+
+

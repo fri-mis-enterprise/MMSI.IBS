@@ -15,7 +15,7 @@ namespace IBSWeb.Areas.User.Controllers
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            ViewBag.Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            ViewBag.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
             return View();
         }
 

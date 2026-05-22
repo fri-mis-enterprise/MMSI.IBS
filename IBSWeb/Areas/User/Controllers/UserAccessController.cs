@@ -1,7 +1,7 @@
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +30,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             UserAccess model = new UserAccess
             {
-                Users = await unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken)
+                Users = await unitOfWork.Msap.GetMsapUsersSelectListById(cancellationToken)
             };
 
             return View(model);
@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.User.Controllers
                     "Failed to create user access.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                model.Users = await unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
+                model.Users = await unitOfWork.Msap.GetMsapUsersSelectListById(cancellationToken);
                 return View(model);
             }
         }
@@ -173,9 +173,11 @@ namespace IBSWeb.Areas.User.Controllers
                     "Failed to edit user access.");
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
-                model.Users = await unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
+                model.Users = await unitOfWork.Msap.GetMsapUsersSelectListById(cancellationToken);
                 return View(model);
             }
         }
     }
 }
+
+

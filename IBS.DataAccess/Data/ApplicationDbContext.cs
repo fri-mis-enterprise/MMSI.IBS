@@ -1,8 +1,8 @@
-using IBS.Models;
+﻿using IBS.Models;
 using IBS.Models.Integrated;
 using IBS.Models.MasterFile;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.MasterFile;
 using IBS.Models.Books;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -74,31 +74,31 @@ namespace IBS.DataAccess.Data
 
         #endregion
 
-        #region --MMSI
-        public DbSet<Billing> Billings { get; set; }
-        public DbSet<Collection> MMSICollections { get; set; }
-        public DbSet<DispatchTicket> MMSIDispatchTickets { get; set; }
-        public DbSet<JobOrder> MMSIJobOrders { get; set; }
-        public DbSet<TariffRate> MMSITariffRates { get; set; }
-        public DbSet<BillDispatch> MMSIBillDispatches { get; set; }
-        public DbSet<BillAdjust> MMSIBillAdjustments { get; set; }
-        public DbSet<CollectionBill> MMSICollectionBills { get; set; }
+        #region --MSAP
+        public DbSet<Billing> MsapBillings { get; set; }
+        public DbSet<Collection> MsapCollections { get; set; }
+        public DbSet<DispatchTicket> MsapDispatchTickets { get; set; }
+        public DbSet<JobOrder> MsapJobOrders { get; set; }
+        public DbSet<TariffRate> MsapTariffRates { get; set; }
+        public DbSet<BillDispatch> MsapBillDispatches { get; set; }
+        public DbSet<BillAdjust> MsapBillAdjustments { get; set; }
+        public DbSet<CollectionBill> MsapCollectionBills { get; set; }
 
         #endregion
 
         #region --Master File Entity
 
-        public DbSet<Service> MMSIServices { get; set; }
-        public DbSet<TugboatOwner> MMSITugboatOwners { get; set; }
-        public DbSet<Port> MMSIPorts { get; set; }
-        public DbSet<Principal> MMSIPrincipals { get; set; }
-        public DbSet<Terminal> MMSITerminals { get; set; }
-        public DbSet<Tugboat> MMSITugboats { get; set; }
-        public DbSet<TugMaster> MMSITugMasters { get; set; }
-        public DbSet<UserAccess> MMSIUserAccesses { get; set; }
-        public DbSet<Vessel> MMSIVessels { get; set; }
-        public DbSet<Rate> MMSIRates { get; set; }
-        public DbSet<Module> MMSIModules { get; set; }
+        public DbSet<Service> MsapServices { get; set; }
+        public DbSet<TugboatOwner> MsapTugboatOwners { get; set; }
+        public DbSet<Port> MsapPorts { get; set; }
+        public DbSet<Principal> MsapPrincipals { get; set; }
+        public DbSet<Terminal> MsapTerminals { get; set; }
+        public DbSet<Tugboat> MsapTugboats { get; set; }
+        public DbSet<TugMaster> MsapTugMasters { get; set; }
+        public DbSet<UserAccess> MsapUserAccesses { get; set; }
+        public DbSet<Vessel> MsapVessels { get; set; }
+        public DbSet<Rate> MsapRates { get; set; }
+        public DbSet<Module> MsapModules { get; set; }
 
         #endregion --Master File Entities
 
@@ -366,17 +366,17 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
-            #region --MMSI
+            #region --MSAP
 
             builder.Entity<Billing>(b =>
             {
-                b.HasIndex(x => new { x.MMSIBillingNumber, x.Company }).IsUnique();
+                b.HasIndex(x => new { x.MsapBillingNumber, x.Company }).IsUnique();
                 b.HasIndex(x => x.Date);
             });
 
             builder.Entity<Collection>(c =>
             {
-                c.HasIndex(x => new { x.MMSICollectionNumber, x.Company }).IsUnique();
+                c.HasIndex(x => new { x.MsapCollectionNumber, x.Company }).IsUnique();
                 c.HasIndex(x => x.Date);
 
                 c.HasMany(x => x.PaidBills)
@@ -406,7 +406,9 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
-            #endregion --MMSI
+            #endregion --MSAP
         }
     }
 }
+
+

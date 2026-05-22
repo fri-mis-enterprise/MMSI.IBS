@@ -1,7 +1,7 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class BillAdjust
     {
@@ -31,3 +31,5 @@ namespace IBS.Models.MMSI
         public DispatchTicket DispatchTicket { get; set; } = null!;
     }
 }
+
+

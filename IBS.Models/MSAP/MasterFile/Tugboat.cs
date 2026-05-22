@@ -1,8 +1,8 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI.MasterFile
+namespace IBS.Models.MSAP.MasterFile
 {
     public class Tugboat
     {
@@ -40,3 +40,5 @@ namespace IBS.Models.MMSI.MasterFile
         public List<SelectListItem>? PortList { get; set; }
     }
 }
+
+

@@ -1,7 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.User.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "There was an error creating the collection.";
-                viewModel.Customers = await unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0,
+                viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(0,
                     string.Empty,
                     cancellationToken);
                 return View(viewModel);
@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            viewModel.Customers = await unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0,
+            viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(0,
                 string.Empty,
                 cancellationToken);
             return View(viewModel);
@@ -113,8 +113,8 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 TempData["warning"] = "There was an error updating the collection.";
                 var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
-                viewModel.Customers = await unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(
-                    viewModel.MMSICollectionId ?? 0,
+                viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(
+                    viewModel.MsapCollectionId ?? 0,
                     customer?.Type ?? string.Empty,
                     cancellationToken);
                 return View(viewModel);
@@ -135,8 +135,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             TempData["error"] = result.Message;
             var cust = await unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
-            viewModel.Customers = await unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(
-                viewModel.MMSICollectionId ?? 0,
+            viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(
+                viewModel.MsapCollectionId ?? 0,
                 cust?.Type ?? string.Empty,
                 cancellationToken);
             return View(viewModel);
@@ -236,3 +236,5 @@ namespace IBSWeb.Areas.User.Controllers
         #endregion
     }
 }
+
+

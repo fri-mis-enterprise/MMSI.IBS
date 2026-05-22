@@ -154,9 +154,9 @@
                             <div class="card-body pt-0">
                                 <div class="row g-3">
                                     <div class="col-12 col-md-6">
-                                        <label asp-for="MMSIBillingNumber" class="form-label fw-bold small">Billing Number <span class="text-danger" id="billingNumberRequired">*</span></label>
+                                        <label asp-for="MsapBillingNumber" class="form-label fw-bold small">Billing Number <span class="text-danger" id="billingNumberRequired">*</span></label>
                                         <div class="input-group">
-                                            <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow-sm" id="billingNumber" placeholder="B000000">
+                                            <input asp-for="MsapBillingNumber" type="text" class="form-control border-0 shadow-sm" id="billingNumber" placeholder="B000000">
                                             <div class="input-group-text border-0 shadow-sm bg-white">
                                                 <input type="hidden" asp-for="IsUndocumented" />
                                                 <input class="form-check-input mt-0" type="checkbox" id="isUndocumentedCheckbox">
@@ -489,27 +489,27 @@
                 try {
                     const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrder.value)}`);
                     const response = await res.json();
-                    
+
                     if (response.success) {
                         // Auto-populate header from JO
                         if (response.header) {
                             $("#VoyageNumber").val(response.header.voyageNumber || '');
                             $("#COSNumber").val(response.header.cosNumber || '');
                             $("#PortSelect").val(response.header.portId).trigger('change');
-                            
+
                             // Since terminal depends on port, we might need to wait for the port change to trigger terminals
                             // But since we want "minimal client requests", we should ideally have terminals already
-                            // However, port change triggers an AJAX call currently. 
+                            // However, port change triggers an AJAX call currently.
                             // Let's refine the plan: the unified package should ideally include enough to NOT need the terminal AJAX.
                             // But for now, let's just set the terminal after a short delay or await the cascade.
-                            
+
                             setTimeout(() => {
                                 $("#TerminalSelect").val(response.header.terminalId).trigger('change');
                             }, 500);
 
                             $("#VesselId").val(response.header.vesselId).trigger('change');
                         }
-                        
+
                         renderTicketsTable(response.tickets);
                     } else {
                          $ticketsTableBody.html(`<tr class="text-danger"><td colspan="6" class="text-center py-4"><em>${response.message}</em></td></tr>`);

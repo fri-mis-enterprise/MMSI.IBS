@@ -1,6 +1,6 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.DTOs;
-using IBS.Models.MMSI;
+using IBS.Models.MSAP;
 
 namespace IBS.Services
 {
@@ -168,3 +168,5 @@ namespace IBS.Services
         }
     }
 }
+
+

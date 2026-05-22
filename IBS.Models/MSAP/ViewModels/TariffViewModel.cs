@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI.ViewModels
+namespace IBS.Models.MSAP.ViewModels
 {
     public class TariffViewModel
     {
@@ -99,3 +99,5 @@ public List<SelectListItem>? Customers { get; set; }
 
     }
 }
+
+

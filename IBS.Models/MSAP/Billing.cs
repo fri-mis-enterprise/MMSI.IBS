@@ -1,19 +1,19 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class Billing : BaseEntity
     {
         [Key]
         [Column("RECID")]
-        public int MMSIBillingId { get; set; }
+        public int MsapBillingId { get; set; }
 
         [Column("NUMBER", TypeName = "varchar(10)")]
-        public string MMSIBillingNumber
+        public string MsapBillingNumber
         {
             get => _billingNumber;
             set => _billingNumber = value.Trim();
@@ -169,3 +169,5 @@ namespace IBS.Models.MMSI
         #endregion ---Select Lists---
     }
 }
+
+

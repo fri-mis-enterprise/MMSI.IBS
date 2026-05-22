@@ -1,14 +1,14 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI.ViewModels
+namespace IBS.Models.MSAP.ViewModels
 {
     public class CreateCollectionViewModel
     {
-        public int? MMSICollectionId { get; set; }
+        public int? MsapCollectionId { get; set; }
 
-        public string? MMSICollectionNumber { get; set; }
+        public string? MsapCollectionNumber { get; set; }
 
         public bool IsUndocumented { get; set; }
 
@@ -60,3 +60,5 @@ namespace IBS.Models.MMSI.ViewModels
         public List<SelectListItem>? BankAccounts { get; set; }
     }
 }
+
+

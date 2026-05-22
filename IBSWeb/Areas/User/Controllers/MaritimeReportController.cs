@@ -152,18 +152,18 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var forPnlUseColStart = detailsOfTripOfTugboatsColEnd + 1;
 
-                var mmsiTugboats = await dbContext.MMSITugboats
+                var msapTugboats = await dbContext.MsapTugboats
                     .Where(t => t.IsCompanyOwned)
                     .OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
 
-                var mmsiCustomers = await dbContext.Customers
+                var msapCustomers = await dbContext.Customers
                     .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
 
                 worksheet.Cells[headerRow,
                     col].Value = "NET SALES";
-                foreach (var tugboat in mmsiTugboats)
+                foreach (var tugboat in msapTugboats)
                 {
                     col++;
                     worksheet.Cells[headerRow,
@@ -174,7 +174,7 @@ namespace IBSWeb.Areas.User.Controllers
                 worksheet.Cells[headerRow,
                     col].Value = "INCOME FROM OTHER TUGS";
 
-                foreach (var tugboat in mmsiTugboats)
+                foreach (var tugboat in msapTugboats)
                 {
                     col++;
                     worksheet.Cells[headerRow,
@@ -214,7 +214,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- AP Ledger --
 
                 var apLedgerColStart = col + 1;
-                var tugboatOwners = await dbContext.MMSITugboatOwners
+                var tugboatOwners = await dbContext.MsapTugboatOwners
                     .OrderBy(t => t.TugboatOwnerName)
                     .ToListAsync(cancellationToken);
                 foreach (var tugboatOwner in tugboatOwners)
@@ -317,7 +317,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 foreach (string category in numberOfAssistsCategory)
                 {
-                    foreach (var tugboat in mmsiTugboats)
+                    foreach (var tugboat in msapTugboats)
                     {
                         col++;
                         worksheet.Cells[headerRow,
@@ -370,7 +370,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Number of Tending --
 
                 var numberOfTendingColStart = col + 1;
-                foreach (var tendingTugboat in mmsiTugboats)
+                foreach (var tendingTugboat in msapTugboats)
                 {
                     col++;
                     worksheet.Cells[headerRow,
@@ -418,11 +418,11 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- Number of Tending Hours --
 
-                var numberOfTendingHoursColStart = col + 1; await dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
+                var numberOfTendingHoursColStart = col + 1; await dbContext.MsapTugboats.OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
                 var numberOfTendingHoursCategories = new List<string> { "LOCAL", "FOREIGN" };
 
-                foreach (var tendingTugboat in mmsiTugboats)
+                foreach (var tendingTugboat in msapTugboats)
                 {
                     foreach (string category in numberOfTendingHoursCategories)
                     {
@@ -545,7 +545,7 @@ namespace IBSWeb.Areas.User.Controllers
                         2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                     worksheet.Cells[row,
-                            3].Value = $"{sales.Billing?.MMSIBillingNumber}";
+                            3].Value = $"{sales.Billing?.MsapBillingNumber}";
                     worksheet.Cells[row,
                         3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
@@ -631,7 +631,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     // For PNL Use
                     // Incomes
-                    foreach (var tugboat in mmsiTugboats)
+                    foreach (var tugboat in msapTugboats)
                     {
                         writingCol++;
                         if (sales.Tugboat?.TugboatName == tugboat.TugboatName)
@@ -666,7 +666,7 @@ namespace IBSWeb.Areas.User.Controllers
                     }
 
                     // Total Hours
-                    foreach (var tugboat in mmsiTugboats)
+                    foreach (var tugboat in msapTugboats)
                     {
                         writingCol++;
                         if (sales.Tugboat.TugboatName == tugboat.TugboatName)
@@ -704,7 +704,7 @@ namespace IBSWeb.Areas.User.Controllers
                     decimal? sumOfAr = 0m;
 
                     // write AR Ledgers
-                    foreach (var customer in mmsiCustomers)
+                    foreach (var customer in msapCustomers)
                     {
                         writingCol++;
                         if (sales.Customer?.CustomerName == customer.CustomerName)
@@ -738,7 +738,7 @@ namespace IBSWeb.Areas.User.Controllers
                     // Number of Assists(TO INQUIRE THE VALUES)
                     foreach (string category in numberOfAssistsCategory)
                     {
-                        foreach (var tugboat in mmsiTugboats)
+                        foreach (var tugboat in msapTugboats)
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
@@ -754,7 +754,7 @@ namespace IBSWeb.Areas.User.Controllers
                     writingCol += 2;
 
                     // Number of TENDING
-                    foreach (var tugboat in mmsiTugboats)
+                    foreach (var tugboat in msapTugboats)
                     {
                         writingCol++;
                         if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
@@ -779,7 +779,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     // number of tending hours
                     var numberOfTendingHoursCategory = new List<string> { "LOCAL", "FOREIGN" };
-                    foreach (var tugboat in mmsiTugboats)
+                    foreach (var tugboat in msapTugboats)
                     {
                         foreach (string category in numberOfTendingHoursCategory)
                         {

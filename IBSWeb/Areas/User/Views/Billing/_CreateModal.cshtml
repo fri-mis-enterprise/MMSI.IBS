@@ -113,16 +113,16 @@
                     <div class="card-body pt-0">
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
-                                <label asp-for="MMSIBillingNumber" class="form-label fw-bold">Billing Number <span class="text-danger" id="billingNumberRequired">*</span></label>
+                                <label asp-for="MsapBillingNumber" class="form-label fw-bold">Billing Number <span class="text-danger" id="billingNumberRequired">*</span></label>
                                 <div class="input-group">
-                                    <input asp-for="MMSIBillingNumber" type="text" class="form-control" id="billingNumber" placeholder="B000000">
+                                    <input asp-for="MsapBillingNumber" type="text" class="form-control" id="billingNumber" placeholder="B000000">
                                     <div class="input-group-text">
                                         <input type="hidden" asp-for="IsUndocumented" />
                                         <input class="form-check-input mt-0" type="checkbox" id="isUndocumentedCheckbox" title="Undocumented">
                                         <label class="small ms-1 mb-0" for="isUndocumentedCheckbox">Undoc</label>
                                     </div>
                                 </div>
-                                <span asp-validation-for="MMSIBillingNumber" class="text-danger small"></span>
+                                <span asp-validation-for="MsapBillingNumber" class="text-danger small"></span>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label asp-for="IsVatable" class="form-label fw-bold small">Tax Status</label>

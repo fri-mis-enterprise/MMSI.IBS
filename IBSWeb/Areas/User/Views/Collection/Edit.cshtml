@@ -51,8 +51,8 @@
             <form method="post" class="row">
                 <div class="border-2 px-3">
                     <div asp-validation-summary="ModelOnly"></div>
-                    <input asp-for="MMSICollectionId" value="@Model.MMSICollectionId" id="CollectionId" type="hidden">
-                    
+                    <input asp-for="MsapCollectionId" value="@Model.MsapCollectionId" id="CollectionId" type="hidden">
+
                     <!-- I. Collection Information -->
                     <h5 class="section-header text-secondary border-bottom"><i class="bi bi-wallet2 me-2"></i>I. Collection Information</h5>
                     <div class="row">
@@ -66,9 +66,9 @@
                             <span asp-validation-for="CustomerId" class="text-danger"></span>
                         </div>
                         <div class="form-floating col-md-4 col-6 my-2">
-                            <input asp-for="MMSICollectionNumber" type="text" class="form-control border-0 shadow bg-light" id="MMSICollectionNumber" placeholder=" " readonly>
-                            <label asp-for="MMSICollectionNumber" for="MMSICollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
-                            <span asp-validation-for="MMSICollectionNumber" class="text-danger"></span>
+                            <input asp-for="MsapCollectionNumber" type="text" class="form-control border-0 shadow bg-light" id="MsapCollectionNumber" placeholder=" " readonly>
+                            <label asp-for="MsapCollectionNumber" for="MsapCollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
+                            <span asp-validation-for="MsapCollectionNumber" class="text-danger"></span>
                         </div>
                         <div class="form-check col-md-4 col-6 ps-2 my-2 text-start d-flex align-items-center justify-content-start">
                             <input asp-for="IsUndocumented" value="@Model.IsUndocumented" type="hidden">
@@ -178,7 +178,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             <!-- Hidden Select for Model Binding -->
                             <select asp-for="ToCollectBillings" id="hiddenBillingsSelect" multiple="multiple" style="display: none;"></select>
 
@@ -191,7 +191,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row justify-content-end mt-4 mb-3 gap-2">
                     <div class="text-center" style="width: 200px;">
                         <button class="btn btn-primary custom-btn w-100 shadow" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
@@ -215,7 +215,7 @@
 
             initializeDataTable();
             setupEventListeners();
-            
+
             // Startup logic
             handleCheckboxChanged();
             if ($('#customerId').val()) {
@@ -232,35 +232,35 @@
                     order: [[1, 'asc']],
                     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
                     columns: [
-                        { 
-                            data: 'mmsiBillingId', 
-                            orderable: false, 
+                        {
+                            data: 'msapBillingId',
+                            orderable: false,
                             className: 'text-center',
                             render: function(data, type, row) {
                                 let checked = row.isSelected ? 'checked' : '';
                                 return `<input type="checkbox" class="bill-checkbox" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-net="${row.net}" ${checked}>`;
                             }
                         },
-                        { data: 'mmsiBillingNumber', className: 'text-center' },
-                        { 
-                            data: 'date', 
+                        { data: 'msapBillingNumber', className: 'text-center' },
+                        {
+                            data: 'date',
                             className: 'text-center',
                             render: function(data) {
                                 return data ? new Date(data).toLocaleDateString() : '';
                             }
                         },
-                        { 
-                            data: 'amount', 
+                        {
+                            data: 'amount',
                             className: 'text-end',
                             render: function(data) { return `₱ ${formatNumber(data)}`; }
                         },
-                        { 
-                            data: 'ewt', 
+                        {
+                            data: 'ewt',
                             className: 'text-end',
                             render: function(data) { return `₱ ${formatNumber(data)}`; }
                         },
-                        { 
-                            data: 'net', 
+                        {
+                            data: 'net',
                             className: 'text-end',
                             render: function(data) { return `₱ ${formatNumber(data)}`; }
                         }
@@ -274,7 +274,7 @@
             function setupEventListeners() {
                 $('#isUndocumentedCheckbox').on('change', handleCheckboxChanged);
                 $('#BankId').on('change', handleBankChange);
-                
+
                 // Checkbox interaction
                 $('#billingsTable tbody').on('change', '.bill-checkbox', function() {
                     updateSelectedBillings();
@@ -312,7 +312,7 @@
 
             function handleCheckboxChanged() {
                 const $checkbox = $('#isUndocumentedCheckbox');
-                const $inputField = $('#MMSICollectionNumber');
+                const $inputField = $('#MsapCollectionNumber');
                 const $status = $('#status');
 
                 if ($checkbox.is(':checked')) {

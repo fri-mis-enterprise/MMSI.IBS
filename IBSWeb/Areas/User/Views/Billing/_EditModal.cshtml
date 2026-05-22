@@ -19,13 +19,13 @@
 </style>
 
 <div class="modal-header bg-secondary">
-    <h5 class="modal-title text-white">Edit Billing #@Model.MMSIBillingNumber</h5>
+    <h5 class="modal-title text-white">Edit Billing #@Model.MsapBillingNumber</h5>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
 <form id="billingEditForm" method="post">
     @Html.AntiForgeryToken()
-    <input asp-for="MMSIBillingId" id="billingId" value="@Model.MMSIBillingId" type="hidden">
+    <input asp-for="MsapBillingId" id="billingId" value="@Model.MsapBillingId" type="hidden">
     <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented" />
 
     <div class="modal-body p-4">
@@ -115,8 +115,8 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label fw-bold">Billing Number</label>
-                                <input asp-for="MMSIBillingNumber" type="text" class="form-control bg-light" readonly value="@Model.MMSIBillingNumber">
-                                <span asp-validation-for="MMSIBillingNumber" class="text-danger small"></span>
+                                <input asp-for="MsapBillingNumber" type="text" class="form-control bg-light" readonly value="@Model.MsapBillingNumber">
+                                <span asp-validation-for="MsapBillingNumber" class="text-danger small"></span>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label asp-for="IsVatable" class="form-label fw-bold small">Tax Status</label>

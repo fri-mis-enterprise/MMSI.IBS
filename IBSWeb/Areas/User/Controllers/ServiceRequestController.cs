@@ -1,11 +1,11 @@
-using System.Linq.Dynamic.Core;
+﻿using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -509,7 +509,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = await dbContext.MMSIDispatchTickets
+                var queried = await dbContext.MsapDispatchTickets
                     .Include(dt => dt.Service)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt.Port)
@@ -981,3 +981,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+
+

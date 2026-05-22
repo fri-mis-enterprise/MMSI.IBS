@@ -1,7 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.MMSI.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.Models.MMSI;
+using IBS.Models.MSAP;
 using IBS.Services;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
@@ -12,7 +12,7 @@ using FluentAssertions;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.Models.MasterFile;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using ModuleEnum = IBS.Models.Enums.Module;
 using Microsoft.EntityFrameworkCore;
 using IBS.Models.Books;
@@ -72,7 +72,7 @@ namespace IBS.Tests.Services
                 Date = new DateOnly(2026, 5, 22), 
                 CustomerId = 10,
                 VesselId = 20,
-                MMSIBillingNumber = "BL-001",
+                MsapBillingNumber = "BL-001",
                 ToBillDispatchTickets = new List<string> { "500" }
             };
 
@@ -140,8 +140,8 @@ namespace IBS.Tests.Services
             // Arrange
             var billing = new Billing
             {
-                MMSIBillingId = 1,
-                MMSIBillingNumber = "BL-001",
+                MsapBillingId = 1,
+                MsapBillingNumber = "BL-001",
                 Status = SD.BillingStatus.ForPosting,
                 CustomerId = 10,
                 VesselId = 20,
@@ -187,3 +187,5 @@ namespace IBS.Tests.Services
         }
     }
 }
+
+

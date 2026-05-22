@@ -1,8 +1,8 @@
-using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.MMSI.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
@@ -50,7 +50,7 @@ namespace IBS.Tests.Services
                 { 
                     new BillingPaymentViewModel { BillingId = 100, AmountToPay = 500m } 
                 },
-                MMSICollectionNumber = "COL-001",
+                MsapCollectionNumber = "COL-001",
                 Date = new DateOnly(2026, 5, 22),
                 CustomerId = 1
             };
@@ -59,7 +59,7 @@ namespace IBS.Tests.Services
             _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(customer);
 
-            var billing = new Billing { MMSIBillingId = 100, Status = SD.BillingStatus.ForCollection, Amount = 1000m, Balance = 1000m };
+            var billing = new Billing { MsapBillingId = 100, Status = SD.BillingStatus.ForCollection, Amount = 1000m, Balance = 1000m };
             
             _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(billing);
@@ -77,3 +77,5 @@ namespace IBS.Tests.Services
         }
     }
 }
+
+

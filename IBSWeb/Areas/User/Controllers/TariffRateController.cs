@@ -1,7 +1,7 @@
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI;
+using IBS.Models.MSAP;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -190,8 +190,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             await GetCompanyClaimAsync();
             model.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-            model.Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
-            model.Services = await unitOfWork.Service.GetMMSIActivitiesServicesById(cancellationToken);
+            model.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
+            model.Services = await unitOfWork.Service.GetMsapActivitiesServicesById(cancellationToken);
             if (model.TerminalId == 0)
             {
                 return model;
@@ -199,7 +199,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             model.Terminal = (await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
                 cancellationToken))!;
-            model.Terminals = await unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal.PortId,
+            model.Terminals = await unitOfWork.Terminal.GetMsapTerminalsSelectList(model.Terminal.PortId,
                 cancellationToken);
             return model;
         }
@@ -218,3 +218,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+
+

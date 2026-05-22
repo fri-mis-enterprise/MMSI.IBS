@@ -1,0 +1,78 @@
+using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models.MSAP;
+using Microsoft.EntityFrameworkCore;
+
+namespace IBS.DataAccess.Repository.Msap
+{
+    public class JobOrderRepository(ApplicationDbContext db): Repository<JobOrder>(db), IJobOrderRepository
+    {
+        private readonly ApplicationDbContext _db = db;
+
+        public async Task<IEnumerable<JobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken)
+        {
+            return await _db.MsapJobOrders
+                .Include(j => j.Customer)
+                .Include(j => j.Vessel)
+                .Include(j => j.Port)
+                .Include(j => j.Terminal)
+                .Include(j => j.DispatchTickets)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<JobOrder>> GetJobOrdersWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken)
+        {
+            return await _db.MsapJobOrders
+                .Include(j => j.Customer)
+                .Include(j => j.Vessel)
+                .Include(j => j.Port)
+                .Include(j => j.Terminal)
+                .Include(j => j.DispatchTickets)
+                .Where(j => j.PlannedStartTime <= end && j.PlannedEndTime >= start)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken)
+        {
+            return await _db.MsapJobOrders
+                .Include(j => j.Customer)
+                .Include(j => j.Vessel)
+                .Include(j => j.Port)
+                .Include(j => j.Terminal)
+                .Include(j => j.DispatchTickets)
+                    .ThenInclude(dt => dt.Service)
+                .Include(j => j.DispatchTickets)
+                    .ThenInclude(dt => dt.Terminal)
+                .Include(j => j.DispatchTickets)
+                    .ThenInclude(dt => dt.Tugboat)
+                .Include(j => j.DispatchTickets)
+                    .ThenInclude(dt => dt.TugMaster)
+                .FirstOrDefaultAsync(j => j.JobOrderId == id, cancellationToken);
+        }
+
+        public async Task<string> GenerateJobOrderNumber(CancellationToken cancellationToken)
+        {
+            var year = DateTime.Now.Year;
+            var lastRecord = await _db.MsapJobOrders
+                .Where(j => j.JobOrderNumber.StartsWith($"JO-{year}"))
+                .OrderByDescending(j => j.JobOrderNumber)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (lastRecord == null)
+            {
+                return $"JO-{year}-0001";
+            }
+
+            var parts = lastRecord.JobOrderNumber.Split('-');
+            if (parts.Length >= 3 && int.TryParse(parts[2], out int lastNumber))
+            {
+                return $"JO-{year}-{(lastNumber + 1):D4}";
+            }
+
+            return $"JO-{year}-0001";
+        }
+    }
+}
+
+
+

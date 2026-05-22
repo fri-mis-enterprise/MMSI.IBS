@@ -1,0 +1,16 @@
+using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.MSAP;
+
+namespace IBS.DataAccess.Repository.Msap.IRepository
+{
+    public interface IJobOrderRepository : IRepository<JobOrder>
+    {
+        Task<IEnumerable<JobOrder>> GetAllJobOrdersWithDetailsAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<JobOrder>> GetJobOrdersWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken);
+        Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken);
+        Task<string> GenerateJobOrderNumber(CancellationToken cancellationToken);
+    }
+}
+
+
+

@@ -1,9 +1,9 @@
-using IBS.Models.MasterFile;
+﻿using IBS.Models.MasterFile;
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,22 +48,22 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 await dbContext.Database.ExecuteSqlRawAsync(@"
-                    TRUNCATE TABLE mmsi_bill_dispatches RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_bill_adjustments RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_collection_bills RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_dispatch_tickets RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE billings RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_job_orders RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_collections RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_tariff_rates RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_principals RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_tugboats RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_terminals RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_vessels RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_tug_masters RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_tugboat_owners RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_services RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE mmsi_ports RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_bill_dispatches RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_bill_adjustments RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_collection_bills RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_dispatch_tickets RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_billings RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_job_orders RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_collections RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_tariff_rates RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_principals RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_tugboats RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_terminals RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_vessels RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_tug_masters RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_tugboat_owners RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_services RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE msap_ports RESTART IDENTITY CASCADE;
                     DELETE FROM customers WHERE company = 'MMSI';
                 ");
                 TempData["success"] = "All MSAP tables have been reset successfully.";
@@ -123,7 +123,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var maps = new ImportMaps();
                 await LoadExistingMapsAsync(maps, CancellationToken.None);
 
-                // Level 1 — Independent master files
+                // Level 1 â€” Independent master files
                 if (customerFile != null)
                 {
                     sb.AppendLine(await ImportCustomersAsync(customerFile, maps));
@@ -154,7 +154,7 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportVesselsAsync(vesselFile, maps));
                 }
 
-                // Level 2 — Single dependency
+                // Level 2 â€” Single dependency
                 if (terminalFile != null)
                 {
                     sb.AppendLine(await ImportTerminalsAsync(terminalFile, maps));
@@ -170,7 +170,7 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportPrincipalsAsync(principalFile, maps));
                 }
 
-                // Level 3 — Mixed dependencies
+                // Level 3 â€” Mixed dependencies
                 if (tariffFile != null)
                 {
                     sb.AppendLine(await ImportTariffRatesAsync(tariffFile, maps));
@@ -181,13 +181,13 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportCollectionsAsync(collectionFile, maps));
                 }
 
-                // Level 4 — Transactional
+                // Level 4 â€” Transactional
                 if (billingFile != null)
                 {
                     sb.AppendLine(await ImportBillingsAsync(billingFile, maps));
                 }
 
-                // Level 5 — Final
+                // Level 5 â€” Final
                 if (dispatchTicketFile != null)
                 {
                     sb.AppendLine(await ImportDispatchTicketsAsync(dispatchTicketFile, maps));
@@ -270,7 +270,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             maps.Port.Clear();
             maps.PortLegacyMap.Clear();
-            foreach (var p in await dbContext.MMSIPorts.AsNoTracking().ToListAsync(ct))
+            foreach (var p in await dbContext.MsapPorts.AsNoTracking().ToListAsync(ct))
             {
                 maps.Port[p.PortNumber] = p.PortId;
                 if (!string.IsNullOrEmpty(p.MsapRecId))
@@ -281,7 +281,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Service.Clear();
             maps.ServiceLegacyMap.Clear();
-            foreach (var s in await dbContext.MMSIServices.AsNoTracking().ToListAsync(ct))
+            foreach (var s in await dbContext.MsapServices.AsNoTracking().ToListAsync(ct))
             {
                 maps.Service[s.ServiceNumber] = s.ServiceId;
                 if (!string.IsNullOrEmpty(s.MsapRecId))
@@ -292,7 +292,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Owner.Clear();
             maps.OwnerLegacyMap.Clear();
-            foreach (var o in await dbContext.MMSITugboatOwners.AsNoTracking().ToListAsync(ct))
+            foreach (var o in await dbContext.MsapTugboatOwners.AsNoTracking().ToListAsync(ct))
             {
                 maps.Owner[o.TugboatOwnerNumber] = o.TugboatOwnerId;
                 if (!string.IsNullOrEmpty(o.MsapRecId))
@@ -303,7 +303,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.TugMaster.Clear();
             maps.TugMasterLegacyMap.Clear();
-            foreach (var m in await dbContext.MMSITugMasters.AsNoTracking().ToListAsync(ct))
+            foreach (var m in await dbContext.MsapTugMasters.AsNoTracking().ToListAsync(ct))
             {
                 maps.TugMaster[m.TugMasterNumber] = m.TugMasterId;
                 if (!string.IsNullOrEmpty(m.MsapRecId))
@@ -314,7 +314,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Vessel.Clear();
             maps.VesselLegacyMap.Clear();
-            foreach (var v in await dbContext.MMSIVessels.AsNoTracking().ToListAsync(ct))
+            foreach (var v in await dbContext.MsapVessels.AsNoTracking().ToListAsync(ct))
             {
                 maps.Vessel[v.VesselNumber] = v.VesselId;
                 if (!string.IsNullOrEmpty(v.MsapRecId))
@@ -325,7 +325,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Tugboat.Clear();
             maps.TugboatLegacyMap.Clear();
-            foreach (var t in await dbContext.MMSITugboats.AsNoTracking().ToListAsync(ct))
+            foreach (var t in await dbContext.MsapTugboats.AsNoTracking().ToListAsync(ct))
             {
                 maps.Tugboat[t.TugboatNumber] = t.TugboatId;
                 if (!string.IsNullOrEmpty(t.MsapRecId))
@@ -336,7 +336,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Terminal.Clear();
             maps.TerminalLegacyMap.Clear();
-            foreach (var t in await dbContext.MMSITerminals.Include(x => x.Port).AsNoTracking().ToListAsync(ct))
+            foreach (var t in await dbContext.MsapTerminals.Include(x => x.Port).AsNoTracking().ToListAsync(ct))
             {
                 if (t.Port is { PortNumber: not null })
                 {
@@ -350,17 +350,17 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Billing.Clear();
             maps.BillingByRecId.Clear();
-            foreach (var b in await dbContext.Billings.AsNoTracking().ToListAsync(ct))
+            foreach (var b in await dbContext.MsapBillings.AsNoTracking().ToListAsync(ct))
             {
-                var info = new BillingMapInfo { Id = b.MMSIBillingId, PortId = b.PortId, TerminalId = b.TerminalId };
-                maps.Billing[b.MMSIBillingNumber] = info; // Use Number for lookups from Dispatch
-                maps.BillingByRecId[b.MMSIBillingId.ToString()] = info; // Use RECID for deduplication
+                var info = new BillingMapInfo { Id = b.MsapBillingId, PortId = b.PortId, TerminalId = b.TerminalId };
+                maps.Billing[b.MsapBillingNumber] = info; // Use Number for lookups from Dispatch
+                maps.BillingByRecId[b.MsapBillingId.ToString()] = info; // Use RECID for deduplication
             }
 
             maps.Collection.Clear();
-            foreach (var c in await dbContext.MMSICollections.AsNoTracking().ToListAsync(ct))
+            foreach (var c in await dbContext.MsapCollections.AsNoTracking().ToListAsync(ct))
             {
-                maps.Collection[c.MMSICollectionNumber] = c.MMSICollectionId;
+                maps.Collection[c.MsapCollectionNumber] = c.MsapCollectionId;
             }
 
             maps.Customer.Clear();
@@ -379,7 +379,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             maps.Principal.Clear();
             maps.PrincipalLegacyMap.Clear();
-            foreach (var p in await dbContext.MMSIPrincipals.AsNoTracking().ToListAsync(ct))
+            foreach (var p in await dbContext.MsapPrincipals.AsNoTracking().ToListAsync(ct))
             {
                 // Composite key because Number is only unique per Agent
                 maps.Principal[$"{p.CustomerId}|{p.PrincipalNumber}"] = p.PrincipalId;
@@ -390,19 +390,19 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             maps.TariffRate.Clear();
-            foreach (var tr in await dbContext.MMSITariffRates.AsNoTracking().ToListAsync(ct))
+            foreach (var tr in await dbContext.MsapTariffRates.AsNoTracking().ToListAsync(ct))
             {
                 maps.TariffRate.Add($"{tr.AsOfDate:yyyy-MM-dd}|{tr.CustomerId}|{tr.TerminalId}|{tr.ServiceId}");
             }
 
             maps.DispatchTicket.Clear();
-            foreach (var dt in await dbContext.MMSIDispatchTickets.AsNoTracking().ToListAsync(ct))
+            foreach (var dt in await dbContext.MsapDispatchTickets.AsNoTracking().ToListAsync(ct))
             {
                 maps.DispatchTicket.Add(dt.DispatchTicketId.ToString());
             }
 
             maps.PortToFirstTerminal.Clear();
-            var allTerminals = await dbContext.MMSITerminals.AsNoTracking().OrderBy(t => t.TerminalNumber).ToListAsync(ct);
+            var allTerminals = await dbContext.MsapTerminals.AsNoTracking().OrderBy(t => t.TerminalNumber).ToListAsync(ct);
             foreach (var t in allTerminals)
             {
                 if (!maps.PortToFirstTerminal.ContainsKey(t.PortId))
@@ -525,7 +525,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.PortLegacyMap[recid] = existingId;
-                        var existing = await dbContext.MMSIPorts.FindAsync(existingId);
+                        var existing = await dbContext.MsapPorts.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -548,7 +548,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIPorts.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapPorts.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -581,7 +581,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.ServiceLegacyMap[recid] = existingId;
-                        var existing = await dbContext.MMSIServices.FindAsync(existingId);
+                        var existing = await dbContext.MsapServices.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -605,7 +605,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIServices.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapServices.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -638,7 +638,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.OwnerLegacyMap[recid] = existingId;
-                        var existing = await dbContext.MMSITugboatOwners.FindAsync(existingId);
+                        var existing = await dbContext.MsapTugboatOwners.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -661,7 +661,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITugboatOwners.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapTugboatOwners.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -694,7 +694,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.TugMasterLegacyMap[recid] = existingId;
-                        var existing = await dbContext.MMSITugMasters.FindAsync(existingId);
+                        var existing = await dbContext.MsapTugMasters.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -718,7 +718,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITugMasters.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapTugMasters.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -751,7 +751,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.VesselLegacyMap[recid] = existingId;
-                        var existing = await dbContext.MMSIVessels.FindAsync(existingId);
+                        var existing = await dbContext.MsapVessels.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -775,7 +775,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIVessels.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapVessels.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -816,7 +816,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.TerminalLegacyMap[recid] = (portId, existingId);
-                        var existing = await dbContext.MMSITerminals.FindAsync(existingId);
+                        var existing = await dbContext.MsapTerminals.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -840,7 +840,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITerminals.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapTerminals.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -876,7 +876,7 @@ namespace IBSWeb.Areas.User.Controllers
                     if (recid != "-")
                     {
                         maps.TugboatLegacyMap[recid] = existingId;
-                        var existing = await dbContext.MMSITugboats.FindAsync(existingId);
+                        var existing = await dbContext.MsapTugboats.FindAsync(existingId);
                         if (existing != null && existing.MsapRecId != recid)
                         {
                             existing.MsapRecId = recid;
@@ -917,7 +917,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITugboats.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapTugboats.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -985,7 +985,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIPrincipals.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.MsapPrincipals.AddRangeAsync(newRecords.Select(x => x.Entity));
                 await dbContext.SaveChangesAsync();
                 foreach (var item in newRecords)
                 {
@@ -1008,7 +1008,7 @@ namespace IBSWeb.Areas.User.Controllers
             int count = 0, skipped = 0;
             var newRecords = new List<TariffRate>();
 
-            var terminalToPortMap = await dbContext.MMSITerminals.AsNoTracking().ToDictionaryAsync(t => t.TerminalId, t => t.PortId);
+            var terminalToPortMap = await dbContext.MsapTerminals.AsNoTracking().ToDictionaryAsync(t => t.TerminalId, t => t.PortId);
 
             foreach (var record in records)
             {
@@ -1069,7 +1069,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSITariffRates.AddRangeAsync(newRecords);
+                await dbContext.MsapTariffRates.AddRangeAsync(newRecords);
             }
 
             return $"Tariff Rates: {count} imported, {skipped} already existed.";
@@ -1099,7 +1099,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var entity = new Collection
                 {
-                    MMSICollectionNumber = crNum,
+                    MsapCollectionNumber = crNum,
                     CustomerId = customerId,
                     CheckNumber = GetString(record, "checkno"),
                     Status = "Create",
@@ -1125,11 +1125,11 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (newRecords.Count >= 500)
                 {
-                    await dbContext.MMSICollections.AddRangeAsync(newRecords);
+                    await dbContext.MsapCollections.AddRangeAsync(newRecords);
                     await dbContext.SaveChangesAsync();
                     foreach (var r in newRecords)
                     {
-                        maps.Collection[r.MMSICollectionNumber] = r.MMSICollectionId;
+                        maps.Collection[r.MsapCollectionNumber] = r.MsapCollectionId;
                     }
 
                     newRecords.Clear();
@@ -1138,11 +1138,11 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSICollections.AddRangeAsync(newRecords);
+                await dbContext.MsapCollections.AddRangeAsync(newRecords);
                 await dbContext.SaveChangesAsync();
                 foreach (var r in newRecords)
                 {
-                    maps.Collection[r.MMSICollectionNumber] = r.MMSICollectionId;
+                    maps.Collection[r.MsapCollectionNumber] = r.MsapCollectionId;
                 }
             }
 
@@ -1152,8 +1152,8 @@ namespace IBSWeb.Areas.User.Controllers
         private async Task<string> ImportBillingsAsync(IFormFile file, ImportMaps maps)
         {
             // Clear existing data to fix scrambled IDs as requested by user
-            await dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE mmsi_dispatch_tickets RESTART IDENTITY CASCADE");
-            await dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE billings RESTART IDENTITY CASCADE");
+            await dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE msap_dispatch_tickets RESTART IDENTITY CASCADE");
+            await dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE msap_billings RESTART IDENTITY CASCADE");
             // Clear maps to reflect empty tables
             maps.Billing.Clear();
             maps.BillingByRecId.Clear();
@@ -1224,8 +1224,8 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var entity = new Billing
                 {
-                    MMSIBillingId = legacyRecId, // Force Legacy ID
-                    MMSIBillingNumber = billingNumber,
+                    MsapBillingId = legacyRecId, // Force Legacy ID
+                    MsapBillingNumber = billingNumber,
                     CustomerId = customerId,
                     VesselId = vesselId,
                     PortId = pId.Value,
@@ -1263,7 +1263,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (newRecords.Count >= 500)
                 {
-                    await dbContext.Billings.AddRangeAsync(newRecords);
+                    await dbContext.MsapBillings.AddRangeAsync(newRecords);
                     await dbContext.SaveChangesAsync();
                     newRecords.Clear();
                 }
@@ -1271,12 +1271,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.Billings.AddRangeAsync(newRecords);
+                await dbContext.MsapBillings.AddRangeAsync(newRecords);
                 await dbContext.SaveChangesAsync();
             }
 
             // Sync sequence after manual ID insertion
-            await dbContext.Database.ExecuteSqlRawAsync("SELECT setval(pg_get_serial_sequence('billings', 'RECID'), COALESCE(MAX(\"RECID\"), 1)) FROM billings");
+            await dbContext.Database.ExecuteSqlRawAsync("SELECT setval(pg_get_serial_sequence('msap_billings', 'RECID'), COALESCE(MAX(\"RECID\"), 1)) FROM msap_billings");
 
             return $"Billings: {count} imported (Tables cleared first).";
         }
@@ -1447,7 +1447,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (newRecords.Count >= 500)
                 {
-                    await dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords);
+                    await dbContext.MsapDispatchTickets.AddRangeAsync(newRecords);
                     await dbContext.SaveChangesAsync();
                     newRecords.Clear();
                 }
@@ -1455,12 +1455,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (newRecords.Count > 0)
             {
-                await dbContext.MMSIDispatchTickets.AddRangeAsync(newRecords);
+                await dbContext.MsapDispatchTickets.AddRangeAsync(newRecords);
                 await dbContext.SaveChangesAsync();
             }
 
             // Sync sequence after manual ID insertion
-            await dbContext.Database.ExecuteSqlRawAsync("SELECT setval(pg_get_serial_sequence('mmsi_dispatch_tickets', 'RECID'), COALESCE(MAX(\"RECID\"), 1)) FROM mmsi_dispatch_tickets");
+            await dbContext.Database.ExecuteSqlRawAsync("SELECT setval(pg_get_serial_sequence('msap_dispatch_tickets', 'RECID'), COALESCE(MAX(\"RECID\"), 1)) FROM msap_dispatch_tickets");
 
             return $"Dispatch Tickets: {count} imported, {skipped} already existed.";
         }
@@ -1653,7 +1653,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var val = GetString(record, propertyName).Trim();
 
-            // Handle legacy compact format: "330" → 03:30, "1915" → 19:15
+            // Handle legacy compact format: "330" â†’ 03:30, "1915" â†’ 19:15
             if (int.TryParse(val, out int _) && val.Length <= 4)
             {
                 int hours = 0, minutes;
@@ -1727,3 +1727,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+
+

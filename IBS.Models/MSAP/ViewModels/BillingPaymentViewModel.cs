@@ -1,4 +1,4 @@
-namespace IBS.Models.MMSI.ViewModels
+﻿namespace IBS.Models.MSAP.ViewModels
 {
     public class BillingPaymentViewModel
     {
@@ -6,3 +6,5 @@ namespace IBS.Models.MMSI.ViewModels
         public decimal AmountToPay { get; set; }
     }
 }
+
+

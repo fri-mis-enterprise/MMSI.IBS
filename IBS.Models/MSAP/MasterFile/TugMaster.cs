@@ -1,7 +1,7 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.MMSI.MasterFile
+namespace IBS.Models.MSAP.MasterFile
 {
     public class TugMaster
     {
@@ -23,3 +23,5 @@ namespace IBS.Models.MMSI.MasterFile
         public string? MsapRecId { get; set; }
     }
 }
+
+

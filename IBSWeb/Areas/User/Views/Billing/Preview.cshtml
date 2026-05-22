@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.Billing
+﻿@model IBS.Models.MSAP.Billing
 
 @{
     ViewData["Title"] = "Billing - Preview";
@@ -8,7 +8,7 @@
         .buttons {
             display: none !important;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -25,7 +25,7 @@
         .no-break {
             page-break-inside: avoid;
         }
-        
+
         .page-break-before {
             page-break-before: always;
         }
@@ -69,7 +69,7 @@
         <tbody>
         <tr>
             <td class="col-6 p-0 m-0"></td>
-            <td class="text-danger p-0 m-0"><b>BILLING STATEMENT NO.&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></td>
+            <td class="text-danger p-0 m-0"><b>BILLING STATEMENT NO.&nbsp;@Html.DisplayFor(model => model.MsapBillingNumber)</b></td>
         </tr>
         </tbody>
         </table>
@@ -142,7 +142,7 @@
             }
         </table>
     </div>
-    
+
     <div class="table-responsive mt-3 me-1">
         <table class="table table-bordered border-dark">
             <thead>
@@ -201,7 +201,7 @@
                 <tr class="">
                     <td colspan="8" class="p-0 m-0 pt-4">NAME OF TUGBOAT: @tugboat</td>
                 </tr>
-                
+
                 @foreach (var dt in Model.PaidDispatchTickets!.Where(dt => dt.Tugboat.TugboatName == tugboat))
                 {
                     <tr class="pb-2">
@@ -243,7 +243,7 @@
             </tbody>
         </table>
     </div>
-    
+
     <div class="footer-section p-1 border-top border-bottom border-dark no-break">
         <div class="row">
             <div class="col-12 px-3 pb-3 d-flex justify-content-end" style="font-size: 12px;">
@@ -271,7 +271,7 @@
                     </tr>
                 </table>
             </div>
-            
+
             <div class="col-5">
                 <table class="table-borderless col-12">
                     @if (Model.IsVatable)
@@ -341,14 +341,14 @@
 
         </div>
     </div>
-    
+
     <div class="footer-section pt-3 no-break">
         <div class="row">
             <div class="col-8">
                 <table>
                     <tr>
                         <td>
-                            We hereby certify that this Billing Statement is correct and Just 
+                            We hereby certify that this Billing Statement is correct and Just
                             and the payment thereof has not been received.
                         </td>
                     </tr>
@@ -371,7 +371,7 @@
         </div>
 
         <div class="col-6 col-md-3">
-            <a asp-area="User" asp-controller="Billing" asp-action="Print" asp-route-id="@Model.MMSIBillingId" class="btn btn-primary border form-control"><i class="bi bi-printer"></i> Dot Matrix Print</a>
+            <a asp-area="User" asp-controller="Billing" asp-action="Print" asp-route-id="@Model.MsapBillingId" class="btn btn-primary border form-control"><i class="bi bi-printer"></i> Dot Matrix Print</a>
         </div>
 
         <div class="col-6 col-md-3">
@@ -399,3 +399,4 @@
         });
     </script>
 }
+

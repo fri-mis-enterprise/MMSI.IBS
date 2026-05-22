@@ -1,18 +1,18 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class Collection : BaseEntity
     {
         [Key]
         [Column("RECID")]
-        public int MMSICollectionId { get; set; }
+        public int MsapCollectionId { get; set; }
 
         [Column("CRNUM")]
         [Display(Name = "Collection Receipt #")]
-        public string MMSICollectionNumber
+        public string MsapCollectionNumber
         {
             get => _collectionNumber;
             set => _collectionNumber = value.Trim();
@@ -106,3 +106,5 @@ namespace IBS.Models.MMSI
 
     }
 }
+
+

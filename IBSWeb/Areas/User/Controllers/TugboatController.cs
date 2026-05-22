@@ -1,7 +1,7 @@
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,8 +27,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var tugboat = new Tugboat
             {
-                CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken),
-                PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
+                CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken),
+                PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken)
             };
 
             return View(tugboat);
@@ -39,8 +39,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
-                model.PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+                model.CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken);
+                model.PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
                 TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
@@ -117,8 +117,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
-            model.PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            model.CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken);
+            model.PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
             return View(model);
         }
 
@@ -127,8 +127,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.CompanyList = await unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
-                model.PortList = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+                model.CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken);
+                model.PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
                 TempData["error"] = "Invalid entry, please try again.";
                 return View(model);
             }
@@ -177,3 +177,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+
+

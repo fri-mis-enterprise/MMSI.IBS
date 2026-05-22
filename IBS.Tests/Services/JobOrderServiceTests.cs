@@ -1,7 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.DataAccess.Repository.MMSI.IRepository;
-using IBS.Models.MMSI;
+using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models.MSAP;
 using IBS.Models;
 using IBS.Services;
 using IBS.Utility.Constants;
@@ -110,7 +110,7 @@ namespace IBS.Tests.Services
             };
             var billings = new List<Billing> 
             { 
-                new Billing { MMSIBillingId = 100, JobOrderId = 1, Status = SD.BillingStatus.ForPosting, CustomerId = 1 } 
+                new Billing { MsapBillingId = 100, JobOrderId = 1, Status = SD.BillingStatus.ForPosting, CustomerId = 1 } 
             };
 
             _mockJobOrderRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<JobOrder, bool>>>(), It.IsAny<CancellationToken>()))
@@ -217,3 +217,5 @@ namespace IBS.Tests.Services
         #endregion
     }
 }
+
+

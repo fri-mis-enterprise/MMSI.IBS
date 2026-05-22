@@ -1,8 +1,8 @@
-using System.Linq.Dynamic.Core;
+﻿using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -19,10 +19,10 @@ namespace IBS.Services
     {
         public async Task<Collection?> GetCollectionByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var collection = await unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == id, cancellationToken);
+            var collection = await unitOfWork.Collection.GetAsync(c => c.MsapCollectionId == id, cancellationToken);
             if (collection != null)
             {
-                collection.PaidBills = (await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == collection.MMSICollectionId, cancellationToken)).ToList();
+                collection.PaidBills = (await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == collection.MsapCollectionId, cancellationToken)).ToList();
             }
             return collection;
         }
@@ -38,11 +38,11 @@ namespace IBS.Services
 
                 if (model.IsUndocumented)
                 {
-                    model.MMSICollectionNumber = await unitOfWork.Collection.GenerateCollectionNumber(cancellationToken);
+                    model.MsapCollectionNumber = await unitOfWork.Collection.GenerateCollectionNumber(cancellationToken);
                 }
                 else
                 {
-                    model.MMSICollectionNumber = viewModel.MMSICollectionNumber ?? string.Empty;
+                    model.MsapCollectionNumber = viewModel.MsapCollectionNumber ?? string.Empty;
                 }
 
                 await unitOfWork.Collection.AddAsync(model, cancellationToken);
@@ -50,7 +50,7 @@ namespace IBS.Services
 
                 // Audit trail
                 var billIds = viewModel.BillingPayments?.Select(p => p.BillingId) ?? new List<int>();
-                var audit = new AuditTrail(username, $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", billIds)}", "Collection");
+                var audit = new AuditTrail(username, $"Create collection #{model.MsapCollectionNumber} for billings #{string.Join(", #", billIds)}", "Collection");
                 await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 // Allocate payment
@@ -58,11 +58,11 @@ namespace IBS.Services
                 {
                     foreach (var payment in viewModel.BillingPayments)
                     {
-                        var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == payment.BillingId, cancellationToken);
+                        var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == payment.BillingId, cancellationToken);
                         if (billing != null)
                         {
                             billing.Status = SD.BillingStatus.Collected;
-                            billing.CollectionId = model.MMSICollectionId;
+                            billing.CollectionId = model.MsapCollectionId;
                             await unitOfWork.Collection.UpdateBillingPayment(payment.BillingId, payment.AmountToPay, cancellationToken);
                         }
                     }
@@ -71,7 +71,7 @@ namespace IBS.Services
                 // Post to books
                 await unitOfWork.Collection.PostAsync(model, new List<Offsettings>(), cancellationToken);
 
-                return ServiceResult<int>.Success(model.MMSICollectionId, "Collection created successfully.");
+                return ServiceResult<int>.Success(model.MsapCollectionId, "Collection created successfully.");
             }
             catch (Exception ex)
             {
@@ -84,19 +84,19 @@ namespace IBS.Services
         {
             try
             {
-                var currentModel = await unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == viewModel.MMSICollectionId, cancellationToken);
+                var currentModel = await unitOfWork.Collection.GetAsync(c => c.MsapCollectionId == viewModel.MsapCollectionId, cancellationToken);
                 if (currentModel == null)
                 {
                     return ServiceResult.Failure("Collection not found.", ServiceResultStatus.NotFound);
                 }
 
                 // Revert old allocations
-                var oldBillings = await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == currentModel.MMSICollectionId, cancellationToken);
+                var oldBillings = await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == currentModel.MsapCollectionId, cancellationToken);
                 foreach (var billing in oldBillings)
                 {
                     billing.Status = SD.BillingStatus.ForCollection;
                     billing.CollectionId = 0;
-                    await unitOfWork.Collection.RemoveBillingPayment(billing.MMSIBillingId, billing.Amount, 0, cancellationToken);
+                    await unitOfWork.Collection.RemoveBillingPayment(billing.MsapBillingId, billing.Amount, 0, cancellationToken);
                 }
                 await unitOfWork.SaveAsync(cancellationToken);
 
@@ -105,11 +105,11 @@ namespace IBS.Services
                 {
                     foreach (var payment in viewModel.BillingPayments)
                     {
-                        var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == payment.BillingId, cancellationToken);
+                        var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == payment.BillingId, cancellationToken);
                         if (billing != null)
                         {
                             billing.Status = SD.BillingStatus.Collected;
-                            billing.CollectionId = currentModel.MMSICollectionId;
+                            billing.CollectionId = currentModel.MsapCollectionId;
                             await unitOfWork.Collection.UpdateBillingPayment(payment.BillingId, payment.AmountToPay, cancellationToken);
                         }
                     }
@@ -128,7 +128,7 @@ namespace IBS.Services
                 }
                 // ... more change tracking if needed
 
-                var audit = new AuditTrail(username, $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}", "Collection");
+                var audit = new AuditTrail(username, $"Edit collection #{currentModel.MsapCollectionNumber} {string.Join(", ", changes)}", "Collection");
                 await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 // Update entity
@@ -154,7 +154,7 @@ namespace IBS.Services
 
         public async Task<(IEnumerable<Collection> Data, int RecordsFiltered, int TotalRecords)> GetPagedCollectionsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
         {
-            var query = dbContext.MMSICollections
+            var query = dbContext.MsapCollections
                 .Include(c => c.Customer)
                 .Include(c => c.BankAccount)
                 .AsQueryable();
@@ -163,13 +163,13 @@ namespace IBS.Services
             {
                 var s = parameters.Search.Value.ToLower();
                 query = query.Where(c =>
-                    c.MMSICollectionNumber.ToLower().Contains(s) ||
+                    c.MsapCollectionNumber.ToLower().Contains(s) ||
                     c.Customer.CustomerName.ToLower().Contains(s) ||
                     (c.Status != null && c.Status.ToLower().Contains(s))
                 );
             }
 
-            var totalRecords = await dbContext.MMSICollections.CountAsync(cancellationToken);
+            var totalRecords = await dbContext.MsapCollections.CountAsync(cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
             if (parameters.Order?.Count > 0)
@@ -191,27 +191,27 @@ namespace IBS.Services
         {
             return new CreateCollectionViewModel
             {
-                Customers = await unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, string.Empty, cancellationToken),
+                Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(0, string.Empty, cancellationToken),
                 BankAccounts = await unitOfWork.GetBankAccountListById(cancellationToken)
             };
         }
 
         public async Task<CreateCollectionViewModel?> PopulateEditViewModelAsync(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == id, cancellationToken);
+            var model = await unitOfWork.Collection.GetAsync(c => c.MsapCollectionId == id, cancellationToken);
             if (model == null)
             {
                 return null;
             }
 
             var viewModel = MapToViewModel(model);
-            viewModel.ToCollectBillings = await dbContext.Billings
-                .Where(b => b.CollectionId == model.MMSICollectionId)
-                .Select(b => b.MMSIBillingId.ToString())
+            viewModel.ToCollectBillings = await dbContext.MsapBillings
+                .Where(b => b.CollectionId == model.MsapCollectionId)
+                .Select(b => b.MsapBillingId.ToString())
                 .ToListAsync(cancellationToken);
 
-            viewModel.Customers = await unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(id, model.Customer.Type, cancellationToken);
-            viewModel.Billings = await GetEditBillingsAsync(model.CustomerId, model.MMSICollectionId, cancellationToken);
+            viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(id, model.Customer.Type, cancellationToken);
+            viewModel.Billings = await GetEditBillingsAsync(model.CustomerId, model.MsapCollectionId, cancellationToken);
             viewModel.BankAccounts = await unitOfWork.GetBankAccountListById(cancellationToken);
 
             return viewModel;
@@ -221,7 +221,7 @@ namespace IBS.Services
         {
             try
             {
-                var billings = await unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomerList(customerId, cancellationToken);
+                var billings = await unitOfWork.Collection.GetMsapUncollectedBillingsByCustomerList(customerId, cancellationToken);
                 if (collectionId.HasValue && collectionId.Value != 0)
                 {
                     var alreadyCollected = await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == collectionId.Value, cancellationToken);
@@ -229,11 +229,11 @@ namespace IBS.Services
                 }
 
                 var result = billings
-                    .DistinctBy(b => b.MMSIBillingId)
+                    .DistinctBy(b => b.MsapBillingId)
                     .Select(b => new
                     {
-                        b.MMSIBillingId,
-                        b.MMSIBillingNumber,
+                        b.MsapBillingId,
+                        b.MsapBillingNumber,
                         b.Date,
                         b.Amount,
                         b.Balance,
@@ -254,7 +254,7 @@ namespace IBS.Services
         public async Task<ServiceResult<IEnumerable<Billing>>> GetSelectedBillingsAsync(List<string> billingIds, CancellationToken cancellationToken)
         {
             var ids = billingIds.Select(int.Parse).ToList();
-            var billings = await unitOfWork.Billing.GetAllAsync(b => ids.Contains(b.MMSIBillingId), cancellationToken);
+            var billings = await unitOfWork.Billing.GetAllAsync(b => ids.Contains(b.MsapBillingId), cancellationToken);
             return ServiceResult<IEnumerable<Billing>>.Success(billings);
         }
 
@@ -277,14 +277,14 @@ namespace IBS.Services
 
         public async Task<List<SelectListItem>?> GetUncollectedBillingsSelectListAsync(int? customerId, CancellationToken cancellationToken)
         {
-            return await unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+            return await unitOfWork.Collection.GetMsapUncollectedBillingsByCustomer(customerId, cancellationToken);
         }
 
         private async Task<Collection> MapToEntityAsync(CreateCollectionViewModel viewModel, CancellationToken cancellationToken)
         {
             var model = new Collection
             {
-                MMSICollectionId = viewModel.MMSICollectionId ?? 0,
+                MsapCollectionId = viewModel.MsapCollectionId ?? 0,
                 IsUndocumented = viewModel.IsUndocumented,
                 Date = viewModel.Date,
                 CustomerId = viewModel.CustomerId,
@@ -322,8 +322,8 @@ namespace IBS.Services
         {
             return new CreateCollectionViewModel
             {
-                MMSICollectionId = model.MMSICollectionId,
-                MMSICollectionNumber = model.MMSICollectionNumber,
+                MsapCollectionId = model.MsapCollectionId,
+                MsapCollectionNumber = model.MsapCollectionNumber,
                 IsUndocumented = model.IsUndocumented,
                 Date = model.Date,
                 CustomerId = model.CustomerId,
@@ -345,16 +345,18 @@ namespace IBS.Services
 
         private async Task<List<SelectListItem>?> GetEditBillingsAsync(int? customerId, int? collectionId, CancellationToken cancellationToken)
         {
-            var list = await unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+            var list = await unitOfWork.Collection.GetMsapUncollectedBillingsByCustomer(customerId, cancellationToken);
             if (collectionId.HasValue && collectionId.Value != 0)
             {
-                var model = await unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == collectionId.Value, cancellationToken);
+                var model = await unitOfWork.Collection.GetAsync(c => c.MsapCollectionId == collectionId.Value, cancellationToken);
                 if (model?.CustomerId == customerId)
                 {
-                    list?.AddRange(await unitOfWork.Collection.GetMMSICollectedBillsById(collectionId.Value, cancellationToken));
+                    list?.AddRange(await unitOfWork.Collection.GetMsapCollectedBillsById(collectionId.Value, cancellationToken));
                 }
             }
             return list;
         }
     }
 }
+
+

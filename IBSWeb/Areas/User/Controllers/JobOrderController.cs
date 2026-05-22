@@ -1,7 +1,6 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
@@ -456,3 +455,5 @@ namespace IBSWeb.Areas.User.Controllers
         #endregion
     }
 }
+
+

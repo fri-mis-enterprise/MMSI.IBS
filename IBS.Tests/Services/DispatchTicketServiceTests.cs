@@ -1,7 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.MMSI.IRepository;
-using IBS.Models.MMSI;
-using IBS.Models.MMSI.ViewModels;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
@@ -67,9 +67,9 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            _mockTicketRepo.Verify(u => u.AddAsync(It.Is<DispatchTicket>(dt => 
-                dt.TotalHours == 2.5m && 
-                dt.Status == SD.DispatchTicketStatus.ForTariff), 
+            _mockTicketRepo.Verify(u => u.AddAsync(It.Is<DispatchTicket>(dt =>
+                dt.TotalHours == 2.5m &&
+                dt.Status == SD.DispatchTicketStatus.ForTariff),
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -105,16 +105,16 @@ namespace IBS.Tests.Services
         public async Task UpdateDispatchTicketAsync_PreservesTariffOnNonCriticalChange()
         {
             // Arrange
-            var viewModel = new ServiceRequestViewModel 
-            { 
-                DispatchTicketId = 1, 
+            var viewModel = new ServiceRequestViewModel
+            {
+                DispatchTicketId = 1,
                 Remarks = "New Remark",
                 DispatchNumber = "DT-001" // Same as existing
             };
-            
-            var existingTicket = new DispatchTicket 
-            { 
-                DispatchTicketId = 1, 
+
+            var existingTicket = new DispatchTicket
+            {
+                DispatchTicketId = 1,
                 Status = SD.DispatchTicketStatus.ForBilling,
                 DispatchNumber = "DT-001",
                 DispatchRate = 1000m,
@@ -140,16 +140,16 @@ namespace IBS.Tests.Services
         public async Task UpdateDispatchTicketAsync_ResetsTariffOnCriticalChange()
         {
             // Arrange
-            var viewModel = new ServiceRequestViewModel 
-            { 
-                DispatchTicketId = 1, 
+            var viewModel = new ServiceRequestViewModel
+            {
+                DispatchTicketId = 1,
                 ServiceId = 2, // Critical change
                 DispatchNumber = "DT-001"
             };
-            
-            var existingTicket = new DispatchTicket 
-            { 
-                DispatchTicketId = 1, 
+
+            var existingTicket = new DispatchTicket
+            {
+                DispatchTicketId = 1,
                 ServiceId = 1,
                 Status = SD.DispatchTicketStatus.ForBilling,
                 DispatchNumber = "DT-001",
@@ -172,3 +172,5 @@ namespace IBS.Tests.Services
         }
     }
 }
+
+

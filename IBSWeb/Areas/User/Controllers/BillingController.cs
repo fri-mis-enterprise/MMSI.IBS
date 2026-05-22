@@ -1,7 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
-using IBS.Models.MMSI;
+using IBS.Models.MSAP;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +73,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (result.IsSuccess)
                 {
-                    var msg = model.IsUndocumented ? $"Created. Control No: {model.MMSIBillingNumber}" : $"Billing created successfully.";
+                    var msg = model.IsUndocumented ? $"Created. Control No: {model.MsapBillingNumber}" : $"Billing created successfully.";
                     return Success(msg, new { redirectUrl = Url.Action(nameof(Index)) });
                 }
 
@@ -103,7 +103,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             model = await billingService.PopulateBillingSelectListsAsync(model, cancellationToken);
-            model.UnbilledDispatchTickets = await billingService.GetEditTicketsSelectListAsync(model.CustomerId, model.MMSIBillingId, cancellationToken);
+            model.UnbilledDispatchTickets = await billingService.GetEditTicketsSelectListAsync(model.CustomerId, model.MsapBillingId, cancellationToken);
 
             if (model.CustomerId != 0)
             {
@@ -111,7 +111,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             model.ToBillDispatchTickets = await unitOfWork.Billing
-                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
+                .GetToBillDispatchTicketListAsync(model.MsapBillingId, cancellationToken);
 
             ViewData["HasPrincipal"] = model.CustomerPrincipal is { Count: > 0 };
 
@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [RequireAccess(ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> Edit([Bind("MMSIBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit([Bind("MsapBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId")] Billing model, IFormFile? file, CancellationToken cancellationToken)
         {
             try
             {
@@ -220,13 +220,13 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             model.ToBillDispatchTickets = await unitOfWork.Billing
-                .GetToBillDispatchTicketListAsync(model.MMSIBillingId, cancellationToken);
+                .GetToBillDispatchTicketListAsync(model.MsapBillingId, cancellationToken);
 
             model.PaidDispatchTickets = await unitOfWork.Billing
-                .GetPaidDispatchTicketsAsync(model.MMSIBillingId, cancellationToken);
+                .GetPaidDispatchTicketsAsync(model.MsapBillingId, cancellationToken);
 
             model.UniqueTugboats = await unitOfWork.Billing
-                .GetUniqueTugboatsListAsync(model.MMSIBillingId, cancellationToken);
+                .GetUniqueTugboatsListAsync(model.MsapBillingId, cancellationToken);
 
             unitOfWork.Billing.ProcessAddress(model, cancellationToken);
             return View(model);
@@ -478,3 +478,5 @@ namespace IBSWeb.Areas.User.Controllers
         #endregion
     }
 }
+
+

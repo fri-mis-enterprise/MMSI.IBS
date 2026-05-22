@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.JobOrder
+﻿@model IBS.Models.MSAP.JobOrder
 
 @{
     ViewData["Title"] = $"Job Order {Model.JobOrderNumber}";
@@ -209,7 +209,7 @@
                                     @if (ticket is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null })
                                     {
                                         <span>@ticket.DateLeft.Value.ToString("MMM dd"), @ticket.TimeLeft.Value.ToString("HH:mm")</span>
-                                        <span class="text-muted mx-1">→</span>
+                                        <span class="text-muted mx-1">â†’</span>
                                         <span>@ticket.DateArrived.Value.ToString("MMM dd"), @ticket.TimeArrived.Value.ToString("HH:mm")</span>
                                     }
                                     else
@@ -221,7 +221,7 @@
                                 <td class="text-start">@ticket.Service?.ServiceName</td>
                                 <td class="text-start">@ticket.Tugboat?.TugboatName</td>
                                 <td class="text-center">@ticket.TotalHours.ToString("N2")</td>
-                                <td class="text-end">₱ @ticket.TotalBilling.ToString("N2")</td>
+                                <td class="text-end">â‚± @ticket.TotalBilling.ToString("N2")</td>
                                 <td class="text-start"><span class="badge rounded-pill" data-status="@ticket.Status">@ticket.Status</span></td>
                                 <td class="text-center">
                                     <div class="dropdown">
@@ -514,3 +514,5 @@
         }
     </script>
 }
+
+

@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI.ViewModels
+namespace IBS.Models.MSAP.ViewModels
 {
     public class ServiceRequestViewModel
     {
@@ -127,3 +127,5 @@ namespace IBS.Models.MMSI.ViewModels
         }
     }
 }
+
+

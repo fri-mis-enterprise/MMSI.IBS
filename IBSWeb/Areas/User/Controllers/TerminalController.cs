@@ -1,7 +1,7 @@
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +27,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             Terminal model = new()
             {
-                Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
+                Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken)
             };
 
             return View(model);
@@ -110,7 +110,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            model.Ports = await unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            model.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
             return View(model);
         }
 
@@ -167,3 +167,5 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+
+

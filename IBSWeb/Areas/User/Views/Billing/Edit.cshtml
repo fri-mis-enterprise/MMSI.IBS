@@ -54,14 +54,14 @@
 <div class="card shadow mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center">
-            <h2 class="text-white py-2">@ViewData["Title"] #@Model.MMSIBillingNumber</h2>
+            <h2 class="text-white py-2">@ViewData["Title"] #@Model.MsapBillingNumber</h2>
         </div>
     </div>
 
     <div class="card-body p-4">
         <form id="myForm" method="post">
             @Html.AntiForgeryToken()
-            <input asp-for="MMSIBillingId" id="billingId" value="@Model.MMSIBillingId" type="hidden">
+            <input asp-for="MsapBillingId" id="billingId" value="@Model.MsapBillingId" type="hidden">
             <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented" />
 
             <div class="border-2 px-3">
@@ -155,8 +155,8 @@
                             <div class="card-body pt-0">
                                 <div class="row g-3">
                                     <div class="col-12">
-                                        <label asp-for="MMSIBillingNumber" class="form-label fw-bold small">Billing Number</label>
-                                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow-sm bg-light" readonly>
+                                        <label asp-for="MsapBillingNumber" class="form-label fw-bold small">Billing Number</label>
+                                        <input asp-for="MsapBillingNumber" type="text" class="form-control border-0 shadow-sm bg-light" readonly>
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <label asp-for="IsVatable" class="form-label fw-bold small">Tax Status</label>

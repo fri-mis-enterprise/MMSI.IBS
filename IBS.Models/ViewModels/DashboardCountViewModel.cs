@@ -15,10 +15,10 @@ namespace IBS.Models.ViewModels
         public int ForInvoiceCount { get; set; }
         public int RecordLiftingDateCount { get; set; }
         public int RecordSupplierDetails { get; set; }
-        public int MMSIServiceRequestForPosting { get; set; }
-        public int MMSIDispatchTicketForTariff { get; set; }
-        public int MMSIDispatchTicketForApproval { get; set; }
-        public int MMSIDispatchTicketForBilling { get; set; }
-        public int MMSIBillingForCollection { get; set; }
+        public int MsapServiceRequestForPosting { get; set; }
+        public int MsapDispatchTicketForTariff { get; set; }
+        public int MsapDispatchTicketForApproval { get; set; }
+        public int MsapDispatchTicketForBilling { get; set; }
+        public int MsapBillingForCollection { get; set; }
     }
 }

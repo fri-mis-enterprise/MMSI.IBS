@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class JobOrder : BaseEntity
     {
@@ -81,3 +81,5 @@ namespace IBS.Models.MMSI
         public virtual ICollection<DispatchTicket> DispatchTickets { get; set; } = new List<DispatchTicket>();
     }
 }
+
+

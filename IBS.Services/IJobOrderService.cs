@@ -1,4 +1,4 @@
-using IBS.Models.MMSI;
+﻿using IBS.Models.MSAP;
 using IBS.Utility.Helpers;
 
 namespace IBS.Services
@@ -13,3 +13,5 @@ namespace IBS.Services
         Task<ServiceResult> CloseJobOrderAsync(int id, string username, bool forceClose, CancellationToken cancellationToken);
     }
 }
+
+

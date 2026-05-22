@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MasterFile;
-using IBS.Models.MMSI.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MSAP
 {
     public class DispatchTicket
     {
@@ -201,3 +201,5 @@ namespace IBS.Models.MMSI
         #endregion ---Columns with Table relations---
     }
 }
+
+

@@ -1,5 +1,5 @@
-using IBS.Models;
-using IBS.Models.MMSI;
+﻿using IBS.Models;
+using IBS.Models.MSAP;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using IBS.DTOs;
@@ -25,3 +25,5 @@ namespace IBS.Services
         Task<ServiceResult<object>> GetCustomerDetailsAsync(int customerId, CancellationToken cancellationToken);
     }
 }
+
+
