@@ -38,13 +38,6 @@
         return await AccessControl.HasJobOrderAccessAsync(userId);
     }
 
-    // Helper function to check Treasury access
-    async Task<bool> HasTreasuryAccess()
-    {
-        if (string.IsNullOrEmpty(userId)) return false;
-        return await AccessControl.HasTreasuryAccessAsync(userId);
-    }
-
     // Helper function to check MSAP Import access
     async Task<bool> HasMsapImportAccess()
     {
@@ -80,7 +73,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.1.0/css/buttons.dataTables.min.css"> <!-- DataTables Buttons CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/select/3.1.3/css/select.dataTables.css" /><!--Data table pug-in-->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    
+
     @if (SignInManager.IsSignedIn(User))
     {
         <link rel="stylesheet" href="~/css/quick-access-sidebar.css" asp-append-version="true" />
@@ -105,7 +98,7 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="User" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
-                            
+
                             @if(selectedCompany == "MMSI")
                             {
                                 @if (!User.IsInRole("PortCoordinator"))
@@ -162,18 +155,6 @@
                                             </ul>
                                         </li>
                                     }
-                                }
-
-                                @if (await HasTreasuryAccess())
-                                {
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Treasury</a>
-                                        <ul class="dropdown-menu">
-                                            <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="Disbursement" asp-action="Index">Disbursement</a>
-                                            </li>
-                                        </ul>
-                                    </li>
                                 }
 
                                 @if (await HasReportsAccess())
@@ -321,7 +302,7 @@
                                                 Financial
                                             </a>
                                             <ul class="dropdown-menu">
-                                                
+
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" asp-area="User" asp-controller="FinancialReport" asp-action="LevelOneReport">Level One</a>
                                                 </li>
@@ -330,7 +311,7 @@
                                                     <a class="dropdown-item text-dark" asp-area="User" asp-controller="FinancialReport" asp-action="TrialBalanceReport">Trial Balance</a>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
-                                                
+
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" asp-area="User" asp-controller="FinancialReport" asp-action="ProfitAndLossReport">PNL</a>
                                                 </li>
@@ -390,26 +371,11 @@
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
                                         <ul class="dropdown-menu" style="max-height: 80vh; overflow-y: auto;">
                                             <li><h6 class="dropdown-header">General</h6></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="Admin" asp-controller="User" asp-action="Index">User</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="Admin" asp-controller="AppRole" asp-action="Index">Role</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Employee" asp-action="Index">Employee</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="UserAccess" asp-action="Index">User Access</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Product" asp-action="Index">Product</a></li>
-                                            
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><h6 class="dropdown-header">Accounting</h6></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart of Accounts</a></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="PaymentTerms" asp-action="Index">Payment Terms</a></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="BankAccount" asp-action="Index">Bank Account</a></li>
-                                            
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><h6 class="dropdown-header">Sales & MSAP</h6></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Customer" asp-action="Index">Customer</a></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="CustomerBranch" asp-action="Index">Customer Branch</a></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Supplier" asp-action="Index">Supplier</a></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Service" asp-action="Index">Service</a></li>
-                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="PickupPoint" asp-action="Index">Pickup Points</a></li>
 
                                             <li><hr class="dropdown-divider"></li>
                                             <li><h6 class="dropdown-header">Maritime & MSAP</h6></li>
@@ -422,6 +388,22 @@
                                             <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="TugboatOwner" asp-action="Index"> Tugboat Company/Owner</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Tugboat" asp-action="Index"> Tugboats</a></li>
                                             <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Vessel" asp-action="Index"> Vessels</a></li>
+
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><h6 class="dropdown-header">Accounting</h6></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart of Accounts</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="PaymentTerms" asp-action="Index">Payment Terms</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="BankAccount" asp-action="Index">Bank Account</a></li>
+
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><h6 class="dropdown-header">Sales & MSAP</h6></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Customer" asp-action="Index">Customer</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="CustomerBranch" asp-action="Index">Customer Branch</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Supplier" asp-action="Index">Supplier</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="Service" asp-action="Index">Service</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="User" asp-controller="PickupPoint" asp-action="Index">Pickup Points</a></li>
+
+
                                         </ul>
                                     </li>
                                     <li class="nav-item">
@@ -472,10 +454,10 @@
     <script src="~/js/spinner.js"></script>
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/3.1.3/js/select.dataTables.js"></script>
-    
+
     <!-- Notification partial (must be after SweetAlert2) -->
     <partial name="_Notification" />
-    
+
     @await RenderSectionAsync("Scripts", required: false)
     <script>
     $(document).ready(function () {
@@ -505,11 +487,11 @@
     </script>
     <script>
         const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
         function updateFavicon(e) {
             const faviconLight = document.getElementById('favicon-light');
             const faviconDark = document.getElementById('favicon-dark');
-    
+
             if (e.matches) {
                 faviconDark.rel = 'shortcut icon';
                 faviconLight.rel = '';
@@ -518,10 +500,10 @@
                 faviconLight.rel = 'shortcut icon';
             }
         }
-    
+
         // Initial check
         updateFavicon(darkModeMediaQuery);
-    
+
         // Listen for changes
         darkModeMediaQuery.addEventListener('change', updateFavicon);
     </script>

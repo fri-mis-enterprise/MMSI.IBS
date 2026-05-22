@@ -31,6 +31,7 @@ namespace IBS.Tests.Services
         private readonly Mock<ICustomerRepository> _mockCustomerRepo;
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
+        private readonly Mock<IJobOrderService> _mockJobOrderService;
         private readonly ApplicationDbContext _dbContext;
 
         public BillingServiceTests()
@@ -42,6 +43,7 @@ namespace IBS.Tests.Services
             _mockCustomerRepo = new Mock<ICustomerRepository>();
             _mockTicketRepo = new Mock<IDispatchTicketRepository>();
             _mockVesselRepo = new Mock<IVesselRepository>();
+            _mockJobOrderService = new Mock<IJobOrderService>();
 
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "BillingTestDb")
@@ -58,7 +60,7 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken ct) => _dbContext.SaveChangesAsync(ct));
 
-            _service = new BillingService(_mockUnitOfWork.Object, _dbContext, _mockLogger.Object);
+            _service = new BillingService(_mockUnitOfWork.Object, _dbContext, _mockJobOrderService.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -184,6 +186,57 @@ namespace IBS.Tests.Services
             salesBookEntry.Should().NotBeNull();
             salesBookEntry!.Amount.Should().Be(1000m);
             salesBookEntry.SoldTo.Should().Be("Test Customer");
+        }
+
+        [Fact]
+        public async Task PostBillingAsync_AutomaticallyClosesJobOrder()
+        {
+            // Arrange
+            var billing = new Billing
+            {
+                MsapBillingId = 1,
+                MsapBillingNumber = "BL-001",
+                Status = SD.BillingStatus.ForPosting,
+                CustomerId = 10,
+                VesselId = 20,
+                Amount = 1000m,
+                Date = new DateOnly(2026, 5, 22),
+                IsVatable = true,
+                Company = "MMSI",
+                JobOrderId = 100
+            };
+
+            var customer = new Customer { CustomerId = 10, CustomerName = "Test Customer" };
+            var vessel = new Vessel { VesselId = 20, VesselName = "Tug Titan" };
+
+            _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(billing);
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(customer);
+            _mockVesselRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Vessel, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(vessel);
+
+            _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<AccountTitleDto> 
+                { 
+                    new() { AccountNumber = "101020100", AccountId = 1, AccountName = "AR Trade" },
+                    new() { AccountNumber = "401020100", AccountId = 2, AccountName = "Service Revenue" },
+                    new() { AccountNumber = "201010101", AccountId = 3, AccountName = "Output VAT" }
+                });
+
+            _mockBillingRepo.Setup(u => u.ComputeNetOfVat(It.IsAny<decimal>())).Returns(892.86m);
+            _mockBillingRepo.Setup(u => u.ComputeVatAmount(It.IsAny<decimal>())).Returns(107.14m);
+            _mockBillingRepo.Setup(u => u.IsJournalEntriesBalanced(It.IsAny<List<GeneralLedgerBook>>())).Returns(true);
+
+            _mockJobOrderService.Setup(s => s.CloseJobOrderAsync(100, It.IsAny<string>(), false, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(ServiceResult.Success());
+
+            // Act
+            var result = await _service.PostBillingAsync(1, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            _mockJobOrderService.Verify(s => s.CloseJobOrderAsync(100, "user", false, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

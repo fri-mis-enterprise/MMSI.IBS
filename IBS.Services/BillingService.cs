@@ -19,6 +19,7 @@ namespace IBS.Services
     public class BillingService(
         IUnitOfWork unitOfWork,
         ApplicationDbContext dbContext,
+        IJobOrderService jobOrderService,
         ILogger<BillingService> logger) : IBillingService
     {
         public async Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken)
@@ -300,6 +301,18 @@ namespace IBS.Services
                 await dbContext.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                // --- Automatic Job Order Closure ---
+                if (model.JobOrderId.HasValue)
+                {
+                    var closeResult = await jobOrderService.CloseJobOrderAsync(model.JobOrderId.Value, username, false, cancellationToken);
+                    if (!closeResult.IsSuccess)
+                    {
+                        logger.LogWarning("Billing #{BillingNumber} posted, but associated Job Order #{JobOrderId} could not be closed: {ErrorMessage}",
+                            model.MsapBillingNumber, model.JobOrderId, closeResult.Message);
+                    }
+                }
+
                 await transaction.CommitAsync(cancellationToken);
 
                 return ServiceResult.Success($"Billing #{model.MsapBillingNumber} posted successfully.");
