@@ -77,7 +77,7 @@ namespace IBS.Tests.Controllers
             // Assert
             var redirectResult = result.Should().BeOfType<RedirectToActionResult>().Subject;
             redirectResult.ActionName.Should().Be("Details");
-            redirectResult.RouteValues["id"].Should().Be(123);
+            redirectResult.RouteValues!["id"].Should().Be(123);
         }
 
         #endregion
@@ -145,11 +145,11 @@ namespace IBS.Tests.Controllers
         public async Task Close_Post_RequiresConfirmation_SetsTempDataAndRedirects()
         {
             // Arrange
-            var resultWithConfirmation = new ServiceResult 
-            { 
-                IsSuccess = true, 
-                Message = "Warning: Tickets pending approval", 
-                Status = ServiceResultStatus.ConfirmationRequired 
+            var resultWithConfirmation = new ServiceResult
+            {
+                IsSuccess = true,
+                Message = "Warning: Tickets pending approval",
+                Status = ServiceResultStatus.ConfirmationRequired
             };
 
             _mockJobOrderService.Setup(s => s.CloseJobOrderAsync(1, "testuser", false, It.IsAny<CancellationToken>()))

@@ -122,6 +122,11 @@ ViewData["Title"] = "MSAP Import";
                             <div class="row">
                                 <div class="col-12 col-md-6 border-end">
                                     <div class="import-file-row">
+                                        <span class="import-file-label">Chart of Account</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="coaFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
+                                    <div class="import-file-row">
                                         <span class="import-file-label">Customer</span>
                                         <span class="file-badge badge-step1">Base</span>
                                         <input type="file" name="customerFile" accept=".csv" class="form-control form-control-sm import-file-input" />
@@ -131,13 +136,18 @@ ViewData["Title"] = "MSAP Import";
                                         <span class="file-badge badge-step1">Base</span>
                                         <input type="file" name="portFile" accept=".csv" class="form-control form-control-sm import-file-input" />
                                     </div>
-                                    <div class="import-file-row">
+                                    <div class="import-file-row d-none">
                                         <span class="import-file-label">Service</span>
                                         <span class="file-badge badge-step1">Base</span>
                                         <input type="file" name="serviceFile" accept=".csv" class="form-control form-control-sm import-file-input" />
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6 ps-md-4">
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Service</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="serviceFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
                                     <div class="import-file-row">
                                         <span class="import-file-label">Tugboat Owner</span>
                                         <span class="file-badge badge-step1">Base</span>
@@ -244,9 +254,10 @@ ViewData["Title"] = "MSAP Import";
         const $fileCount = $('#fileCount');
 
         const keywords = {
-            'customerFile': ['customer'],
-            'portFile': ['port'],
-            'terminalFile': ['terminal'],
+            coaFile: ['chart', 'coa', 'account'],
+            customerFile: ['customer'],
+            portFile: ['port'],
+            terminalFile: ['terminal'],
             'principalFile': ['principal'],
             'serviceFile': ['service'],
             'tugboatOwnerFile': ['tugboatowner'],

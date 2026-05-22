@@ -64,6 +64,7 @@ namespace IBSWeb.Areas.User.Controllers
                     TRUNCATE TABLE msap_tugboat_owners RESTART IDENTITY CASCADE;
                     TRUNCATE TABLE msap_services RESTART IDENTITY CASCADE;
                     TRUNCATE TABLE msap_ports RESTART IDENTITY CASCADE;
+                    TRUNCATE TABLE chart_of_accounts RESTART IDENTITY CASCADE;
                     DELETE FROM customers WHERE company = 'MMSI';
                 ");
                 TempData["success"] = "All MSAP tables have been reset successfully.";
@@ -93,6 +94,7 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? dispatchTicketFile,
             IFormFile? billingFile,
             IFormFile? collectionFile,
+            IFormFile? coaFile,
             List<IFormFile>? bulkFiles)
         {
             var sb = new StringBuilder();
@@ -118,12 +120,18 @@ namespace IBSWeb.Areas.User.Controllers
                 dispatchTicketFile = ResolveFile(dispatchTicketFile, bulkFiles, "dispatch", "dispatch.csv");
                 billingFile       = ResolveFile(billingFile, bulkFiles, "billing", "billing.csv");
                 collectionFile    = ResolveFile(collectionFile, bulkFiles, "collection", "collection.csv");
+                coaFile           = ResolveFile(coaFile, bulkFiles, "chart_of_accounts", "filpride_chart_of_accounts.csv");
 
                 // Preload maps from existing DB records
                 var maps = new ImportMaps();
                 await LoadExistingMapsAsync(maps, CancellationToken.None);
 
                 // Level 1 â€” Independent master files
+                if (coaFile != null)
+                {
+                    sb.AppendLine(await ImportChartOfAccountsAsync(coaFile, maps));
+                }
+
                 if (customerFile != null)
                 {
                     sb.AppendLine(await ImportCustomersAsync(customerFile, maps));
@@ -264,10 +272,13 @@ namespace IBSWeb.Areas.User.Controllers
             public HashSet<string> TariffRate { get; } = new();
             public HashSet<string> DispatchTicket { get; } = new();
             public Dictionary<int, int> PortToFirstTerminal { get; } = new();
+            public Dictionary<int, int> ChartOfAccount { get; } = new();
         }
 
         private async Task LoadExistingMapsAsync(ImportMaps maps, CancellationToken ct)
         {
+            maps.ChartOfAccount.Clear();
+
             maps.Port.Clear();
             maps.PortLegacyMap.Clear();
             foreach (var p in await dbContext.MsapPorts.AsNoTracking().ToListAsync(ct))
@@ -415,6 +426,69 @@ namespace IBSWeb.Areas.User.Controllers
         // -------------------------------------------------------------------------
         // Master file imports (Level 1 & 2)
         // -------------------------------------------------------------------------
+
+        private async Task<string> ImportChartOfAccountsAsync(IFormFile file, ImportMaps maps)
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            using var csv = new CsvReader(reader, _csvConfig);
+            var records = csv.GetRecords<dynamic>().ToList();
+            var newRecords = new List<(ChartOfAccount Entity, int LegacyId, int? LegacyParentId)>();
+
+            foreach (var record in records)
+            {
+                int legacyId = (int)ParseDecimal(record, "account_id");
+                int? legacyParentId = null;
+                string parentIdStr = GetString(record, "parent_account_id");
+                if (parentIdStr != "-" && int.TryParse(parentIdStr, out int pid))
+                {
+                    legacyParentId = pid;
+                }
+
+                var entity = new ChartOfAccount
+                {
+                    IsMain = ParseBool(record, "is_main"),
+                    AccountNumber = GetString(record, "account_number") == "-" ? null : GetString(record, "account_number"),
+                    AccountName = GetString(record, "account_name"),
+                    AccountType = GetString(record, "account_type") == "-" ? null : GetString(record, "account_type"),
+                    NormalBalance = GetString(record, "normal_balance") == "-" ? null : GetString(record, "normal_balance"),
+                    Level = (int)ParseDecimal(record, "level"),
+                    HasChildren = ParseBool(record, "has_children"),
+                    FinancialStatementType = GetString(record, "financial_statement_type"),
+                    CreatedBy = GetString(record, "created_by"),
+                    CreatedDate = ParseDateTime(record, "created_date") ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    EditedBy = GetString(record, "edited_by") == "-" ? null : GetString(record, "edited_by"),
+                    EditedDate = ParseDateTime(record, "edited_date")
+                };
+
+                newRecords.Add((entity, legacyId, legacyParentId));
+            }
+
+            await dbContext.ChartOfAccounts.AddRangeAsync(newRecords.Select(x => x.Entity));
+            await dbContext.SaveChangesAsync();
+
+            foreach (var item in newRecords)
+            {
+                maps.ChartOfAccount[item.LegacyId] = item.Entity.AccountId;
+            }
+
+            // Second pass: Update ParentAccountId
+            bool updated = false;
+            foreach (var item in newRecords)
+            {
+                if (item.LegacyParentId.HasValue && maps.ChartOfAccount.TryGetValue(item.LegacyParentId.Value, out int newParentId))
+                {
+                    item.Entity.ParentAccountId = newParentId;
+                    updated = true;
+                }
+            }
+
+            if (updated)
+            {
+                await dbContext.SaveChangesAsync();
+            }
+
+            return $"Chart of Accounts: {newRecords.Count} imported.";
+        }
 
         private async Task<string> ImportCustomersAsync(IFormFile file, ImportMaps maps)
         {

@@ -51,7 +51,7 @@ namespace IBS.Models.MasterFile
 
         [Display(Name = "Edited Date")]
         [Column(TypeName = "timestamp without time zone")]
-        public DateTime EditedDate { get; set; }
+        public DateTime? EditedDate { get; set; }
 
         public bool HasChildren { get; set; }
 

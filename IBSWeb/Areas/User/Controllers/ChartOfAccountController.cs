@@ -379,7 +379,7 @@ namespace IBSWeb.Areas.User.Controllers
                     worksheet.Cells[row,
                         9].Value = item.EditedBy;
                     worksheet.Cells[row,
-                        10].Value = item.EditedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
+                        10].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
                     worksheet.Cells[row,
                         11].Value = item.HasChildren;
                     worksheet.Cells[row,

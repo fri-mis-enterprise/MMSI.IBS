@@ -233,6 +233,16 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(new { success = result.IsSuccess, data = result.Data, message = result.Message });
         }
 
+        /// <summary>
+        /// Searches for customers matching a search term.
+        /// </summary>
+        [HttpGet]
+        public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
+        {
+            var result = await collectionService.SearchCustomersAsync(term, cancellationToken);
+            return Json(result);
+        }
+
         #endregion
     }
 }
