@@ -74,6 +74,9 @@ namespace IBS.Services
                 jobOrder.EditedBy = username;
                 jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
+                // Cascade updates to related records
+                await SyncRelatedRecordsAsync(jobOrder, cancellationToken);
+
                 await RecordAuditAsync($"Edited Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
@@ -83,6 +86,44 @@ namespace IBS.Services
             {
                 logger.LogError(ex, "Error updating Job Order {JobOrderId}", model.JobOrderId);
                 return ServiceResult.Failure("An unexpected error occurred while updating the Job Order.");
+            }
+        }
+
+        private async Task SyncRelatedRecordsAsync(JobOrder jobOrder, CancellationToken cancellationToken)
+        {
+            // 1. Update unbilled dispatch tickets
+            var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
+                dt => dt.JobOrderId == jobOrder.JobOrderId && 
+                      dt.Status != SD.DispatchTicketStatus.Billed && 
+                      dt.Status != SD.DispatchTicketStatus.Cancelled, 
+                cancellationToken);
+
+            foreach (var ticket in tickets)
+            {
+                ticket.CustomerId = jobOrder.CustomerId;
+                ticket.VesselId = jobOrder.VesselId;
+                ticket.VoyageNumber = jobOrder.VoyageNumber;
+                ticket.COSNumber = jobOrder.COSNumber;
+                ticket.PortId = jobOrder.PortId;
+                ticket.TerminalId = jobOrder.TerminalId;
+                ticket.Date = jobOrder.Date;
+            }
+
+            // 2. Update unposted/uncollected billings
+            var billings = await unitOfWork.Billing.GetAllAsync(
+                b => b.JobOrderId == jobOrder.JobOrderId && 
+                     (b.Status == SD.BillingStatus.ForPosting || b.Status == SD.BillingStatus.ForCollection), 
+                cancellationToken);
+
+            foreach (var billing in billings)
+            {
+                billing.CustomerId = jobOrder.CustomerId;
+                billing.VesselId = jobOrder.VesselId;
+                billing.VoyageNumber = jobOrder.VoyageNumber;
+                billing.COSNumber = jobOrder.COSNumber;
+                billing.PortId = jobOrder.PortId;
+                billing.TerminalId = jobOrder.TerminalId;
+                billing.Date = jobOrder.Date;
             }
         }
 
@@ -106,12 +147,12 @@ namespace IBS.Services
                     return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is closed and cannot be cancelled.");
                 }
 
-                var ticketsForBillingOrBilled = jobOrder.DispatchTickets
-                    .Count(dt => dt.Status == "For Billing" || dt.Status == "Billed");
+                var activeTicketsCount = jobOrder.DispatchTickets
+                    .Count(dt => dt.Status != SD.DispatchTicketStatus.Cancelled);
 
-                if (ticketsForBillingOrBilled > 0)
+                if (activeTicketsCount > 0)
                 {
-                    return ServiceResult.Failure($"Cannot cancel Job Order. {ticketsForBillingOrBilled} ticket(s) are already in the billing process.");
+                    return ServiceResult.Failure($"Cannot cancel Job Order. There are {activeTicketsCount} active dispatch ticket(s). Please cancel them first.");
                 }
 
                 jobOrder.Status = SD.JobOrderStatus.Cancelled;
@@ -144,28 +185,16 @@ namespace IBS.Services
 
                 if (jobOrder.DispatchTickets.Any())
                 {
-                    var ticketsWithoutTariff = jobOrder.DispatchTickets
-                        .Count(dt => dt.Status == "Pending" || dt.Status == "For Tariff");
+                    var nonTerminalTickets = jobOrder.DispatchTickets
+                        .Where(dt => dt.Status != SD.DispatchTicketStatus.Billed && 
+                                     dt.Status != SD.DispatchTicketStatus.Cancelled && 
+                                     dt.Status != SD.DispatchTicketStatus.Disapproved)
+                        .ToList();
 
-                    if (ticketsWithoutTariff > 0)
+                    if (nonTerminalTickets.Any())
                     {
-                        return ServiceResult.Failure($"Cannot close Job Order. {ticketsWithoutTariff} dispatch ticket(s) have no tariff set.");
-                    }
-
-                    var ticketsDisapproved = jobOrder.DispatchTickets
-                        .Count(dt => dt.Status == "Disapproved");
-
-                    if (ticketsDisapproved > 0)
-                    {
-                        return ServiceResult.Failure($"Cannot close Job Order. {ticketsDisapproved} dispatch ticket(s) are disapproved.");
-                    }
-
-                    var ticketsForApproval = jobOrder.DispatchTickets
-                        .Count(dt => dt.Status == "For Approval");
-
-                    if (ticketsForApproval > 0 && !forceClose)
-                    {
-                        return ServiceResult.Failure($"Warning: {ticketsForApproval} dispatch ticket(s) are pending approval. These tickets will not be included in billing until approved.", ServiceResultStatus.ConfirmationRequired);
+                        var statuses = string.Join(", ", nonTerminalTickets.Select(t => t.Status).Distinct());
+                        return ServiceResult.Failure($"Cannot close Job Order. {nonTerminalTickets.Count} ticket(s) are in non-terminal states ({statuses}). All tickets must be Billed, Cancelled, or Disapproved.");
                     }
                 }
 

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using FluentAssertions;
+using System.Linq.Expressions;
 
 namespace IBS.Tests.Services
 {
@@ -99,6 +100,75 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Message.Should().Contain("must be strictly after");
+        }
+        [Fact]
+        public async Task UpdateDispatchTicketAsync_PreservesTariffOnNonCriticalChange()
+        {
+            // Arrange
+            var viewModel = new ServiceRequestViewModel 
+            { 
+                DispatchTicketId = 1, 
+                Remarks = "New Remark",
+                DispatchNumber = "DT-001" // Same as existing
+            };
+            
+            var existingTicket = new DispatchTicket 
+            { 
+                DispatchTicketId = 1, 
+                Status = SD.DispatchTicketStatus.ForBilling,
+                DispatchNumber = "DT-001",
+                DispatchRate = 1000m,
+                JobOrderId = 1
+            };
+
+            _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingTicket);
+            _mockUnitOfWork.Setup(u => u.DispatchTicket.IsJobOrderEditableAsync(It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _service.UpdateDispatchTicketAsync(viewModel, null, null, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            existingTicket.Status.Should().Be(SD.DispatchTicketStatus.ForBilling);
+            existingTicket.DispatchRate.Should().Be(1000m);
+            existingTicket.Remarks.Should().Be("New Remark");
+        }
+
+        [Fact]
+        public async Task UpdateDispatchTicketAsync_ResetsTariffOnCriticalChange()
+        {
+            // Arrange
+            var viewModel = new ServiceRequestViewModel 
+            { 
+                DispatchTicketId = 1, 
+                ServiceId = 2, // Critical change
+                DispatchNumber = "DT-001"
+            };
+            
+            var existingTicket = new DispatchTicket 
+            { 
+                DispatchTicketId = 1, 
+                ServiceId = 1,
+                Status = SD.DispatchTicketStatus.ForBilling,
+                DispatchNumber = "DT-001",
+                DispatchRate = 1000m,
+                JobOrderId = 1
+            };
+
+            _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingTicket);
+            _mockUnitOfWork.Setup(u => u.DispatchTicket.IsJobOrderEditableAsync(It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _service.UpdateDispatchTicketAsync(viewModel, null, null, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            existingTicket.Status.Should().Be(SD.DispatchTicketStatus.ForTariff);
+            existingTicket.DispatchRate.Should().Be(0);
         }
     }
 }

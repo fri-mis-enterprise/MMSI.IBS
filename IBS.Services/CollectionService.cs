@@ -49,19 +49,22 @@ namespace IBS.Services
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 // Audit trail
-                var audit = new AuditTrail(username, $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", viewModel.ToCollectBillings!)}", "Collection");
+                var billIds = viewModel.BillingPayments?.Select(p => p.BillingId) ?? new List<int>();
+                var audit = new AuditTrail(username, $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", billIds)}", "Collection");
                 await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                 // Allocate payment
-                foreach (var billingIdStr in viewModel.ToCollectBillings!)
+                if (viewModel.BillingPayments != null)
                 {
-                    var billingId = int.Parse(billingIdStr);
-                    var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == billingId, cancellationToken);
-                    if (billing != null)
+                    foreach (var payment in viewModel.BillingPayments)
                     {
-                        billing.Status = SD.BillingStatus.Collected;
-                        billing.CollectionId = model.MMSICollectionId;
-                        await unitOfWork.Collection.UpdateBillingPayment(billingId, billing.Amount, cancellationToken);
+                        var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == payment.BillingId, cancellationToken);
+                        if (billing != null)
+                        {
+                            billing.Status = SD.BillingStatus.Collected;
+                            billing.CollectionId = model.MMSICollectionId;
+                            await unitOfWork.Collection.UpdateBillingPayment(payment.BillingId, payment.AmountToPay, cancellationToken);
+                        }
                     }
                 }
 
@@ -98,15 +101,17 @@ namespace IBS.Services
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 // Apply new allocations
-                foreach (var billingIdStr in viewModel.ToCollectBillings!)
+                if (viewModel.BillingPayments != null)
                 {
-                    var billingId = int.Parse(billingIdStr);
-                    var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == billingId, cancellationToken);
-                    if (billing != null)
+                    foreach (var payment in viewModel.BillingPayments)
                     {
-                        billing.Status = SD.BillingStatus.Collected;
-                        billing.CollectionId = currentModel.MMSICollectionId;
-                        await unitOfWork.Collection.UpdateBillingPayment(billingId, billing.Amount, cancellationToken);
+                        var billing = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == payment.BillingId, cancellationToken);
+                        if (billing != null)
+                        {
+                            billing.Status = SD.BillingStatus.Collected;
+                            billing.CollectionId = currentModel.MMSICollectionId;
+                            await unitOfWork.Collection.UpdateBillingPayment(payment.BillingId, payment.AmountToPay, cancellationToken);
+                        }
                     }
                 }
 

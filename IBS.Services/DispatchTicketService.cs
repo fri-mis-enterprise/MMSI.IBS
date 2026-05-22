@@ -205,23 +205,36 @@ namespace IBS.Services
                 currentModel.EditedBy = username;
                 currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                // Reset tariff state as per repository logic
-                currentModel.Status = SD.DispatchTicketStatus.ForTariff;
-                currentModel.DispatchRate = 0;
-                currentModel.DispatchBillingAmount = 0;
-                currentModel.DispatchDiscount = 0;
-                currentModel.DispatchNetRevenue = 0;
-                currentModel.BAFRate = 0;
-                currentModel.BAFBillingAmount = 0;
-                currentModel.BAFDiscount = 0;
-                currentModel.BAFNetRevenue = 0;
-                currentModel.TotalBilling = 0;
-                currentModel.TotalNetRevenue = 0;
-                currentModel.ApOtherTugs = 0;
-                currentModel.TariffBy = string.Empty;
-                currentModel.TariffDate = default;
-                currentModel.TariffEditedBy = string.Empty;
-                currentModel.TariffEditedDate = null;
+                // Smart Reset Logic: Only reset tariff if critical fields changed
+                var criticalFieldsChanged = changes.Any(c => 
+                    c.StartsWith("ServiceId:") || 
+                    c.StartsWith("TugBoatId:") || 
+                    c.StartsWith("DateLeft:") || 
+                    c.StartsWith("TimeLeft:") || 
+                    c.StartsWith("DateArrived:") || 
+                    c.StartsWith("TimeArrived:") ||
+                    c.StartsWith("TotalHours:"));
+
+                if (criticalFieldsChanged)
+                {
+                    currentModel.Status = SD.DispatchTicketStatus.ForTariff;
+                    currentModel.DispatchRate = 0;
+                    currentModel.DispatchBillingAmount = 0;
+                    currentModel.DispatchDiscount = 0;
+                    currentModel.DispatchNetRevenue = 0;
+                    currentModel.BAFRate = 0;
+                    currentModel.BAFBillingAmount = 0;
+                    currentModel.BAFDiscount = 0;
+                    currentModel.BAFNetRevenue = 0;
+                    currentModel.TotalBilling = 0;
+                    currentModel.TotalNetRevenue = 0;
+                    currentModel.ApOtherTugs = 0;
+                    currentModel.TariffBy = string.Empty;
+                    currentModel.TariffDate = default;
+                    currentModel.TariffEditedBy = string.Empty;
+                    currentModel.TariffEditedDate = null;
+                    changes.Add("Tariff data reset due to critical field change");
+                }
 
                 var auditMessage = changes.Any()
                     ? $"Edit dispatch ticket #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"

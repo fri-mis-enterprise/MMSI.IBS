@@ -48,6 +48,9 @@ namespace IBS.Models.MMSI.ViewModels
         public List<string>? ToCollectBillings { get; set; }
 
         [NotMapped]
+        public List<BillingPaymentViewModel>? BillingPayments { get; set; }
+
+        [NotMapped]
         public List<SelectListItem>? Customers { get; set; }
 
         [NotMapped]

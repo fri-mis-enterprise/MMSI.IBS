@@ -180,6 +180,30 @@ namespace IBSWeb.Areas.User.Controllers
 
         #endregion
 
+        #region Post to Books
+
+        /// <summary>
+        /// Posts a specific Billing to the Sales Book and General Ledger.
+        /// </summary>
+        [RequireAccess(ProcedureEnum.CreateBilling)]
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
+        {
+            var result = await billingService.PostBillingAsync(id, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+            }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        #endregion
+
         #region Preview & Print
 
         /// <summary>

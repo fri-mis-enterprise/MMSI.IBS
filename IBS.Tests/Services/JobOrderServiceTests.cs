@@ -67,6 +67,10 @@ namespace IBS.Tests.Services
 
             _mockJobOrderRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<JobOrder, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingJob);
+            _mockUnitOfWork.Setup(u => u.DispatchTicket.GetAllAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<DispatchTicket>());
+            _mockUnitOfWork.Setup(u => u.Billing.GetAllAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Billing>());
 
             // Act
             var result = await _service.UpdateJobOrderAsync(updateModel, "user", CancellationToken.None);
@@ -93,6 +97,40 @@ namespace IBS.Tests.Services
             result.Message.Should().Contain("closed and cannot be edited");
         }
 
+        [Fact]
+        public async Task UpdateJobOrderAsync_CascadesToRelatedRecords()
+        {
+            // Arrange
+            var existingJob = new JobOrder { JobOrderId = 1, Status = SD.JobOrderStatus.Open, JobOrderNumber = "JO-001", CustomerId = 1, VesselId = 1 };
+            var updateModel = new JobOrder { JobOrderId = 1, CustomerId = 2, VesselId = 2, VoyageNumber = "V-NEW" };
+
+            var tickets = new List<DispatchTicket> 
+            { 
+                new DispatchTicket { DispatchTicketId = 10, JobOrderId = 1, Status = SD.DispatchTicketStatus.ForTariff, CustomerId = 1 } 
+            };
+            var billings = new List<Billing> 
+            { 
+                new Billing { MMSIBillingId = 100, JobOrderId = 1, Status = SD.BillingStatus.ForPosting, CustomerId = 1 } 
+            };
+
+            _mockJobOrderRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<JobOrder, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(existingJob);
+            _mockUnitOfWork.Setup(u => u.DispatchTicket.GetAllAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(tickets);
+            _mockUnitOfWork.Setup(u => u.Billing.GetAllAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(billings);
+
+            // Act
+            var result = await _service.UpdateJobOrderAsync(updateModel, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            tickets[0].CustomerId.Should().Be(2);
+            tickets[0].VoyageNumber.Should().Be("V-NEW");
+            billings[0].CustomerId.Should().Be(2);
+            billings[0].VoyageNumber.Should().Be("V-NEW");
+        }
+
         #endregion
 
         #region Cancel Tests
@@ -113,14 +151,14 @@ namespace IBS.Tests.Services
         }
 
         [Fact]
-        public async Task CancelJobOrderAsync_Fails_IfTicketsBilled()
+        public async Task CancelJobOrderAsync_Fails_IfHasActiveTickets()
         {
             // Arrange
             var jobOrder = new JobOrder 
             { 
                 JobOrderId = 1, 
                 Status = SD.JobOrderStatus.Open, 
-                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = "Billed" } } 
+                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = SD.DispatchTicketStatus.ForBilling } } 
             };
             _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
 
@@ -129,7 +167,7 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Message.Should().Contain("already in the billing process");
+            result.Message.Should().Contain("active dispatch ticket(s)");
         }
 
         #endregion
@@ -144,7 +182,7 @@ namespace IBS.Tests.Services
             { 
                 JobOrderId = 1, 
                 Status = SD.JobOrderStatus.Open, 
-                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = "For Billing" } } 
+                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = SD.DispatchTicketStatus.Billed } } 
             };
             _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
 
@@ -157,14 +195,14 @@ namespace IBS.Tests.Services
         }
 
         [Fact]
-        public async Task CloseJobOrderAsync_Fails_IfTicketsPendingTariff()
+        public async Task CloseJobOrderAsync_Fails_IfTicketsInNonTerminalState()
         {
             // Arrange
             var jobOrder = new JobOrder 
             { 
                 JobOrderId = 1, 
                 Status = SD.JobOrderStatus.Open, 
-                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = "Pending" } } 
+                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = SD.DispatchTicketStatus.ForApproval } } 
             };
             _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
 
@@ -173,7 +211,7 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Message.Should().Contain("have no tariff set");
+            result.Message.Should().Contain("non-terminal states");
         }
 
         #endregion

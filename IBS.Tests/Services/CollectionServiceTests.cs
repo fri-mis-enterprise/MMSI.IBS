@@ -41,12 +41,15 @@ namespace IBS.Tests.Services
         }
 
         [Fact]
-        public async Task CreateCollectionAsync_UpdatesBillingStatusToCollected()
+        public async Task CreateCollectionAsync_UpdatesBillingStatusToCollected_WithPartialPayment()
         {
             // Arrange
             var viewModel = new CreateCollectionViewModel
             {
-                ToCollectBillings = new List<string> { "100" },
+                BillingPayments = new List<BillingPaymentViewModel> 
+                { 
+                    new BillingPaymentViewModel { BillingId = 100, AmountToPay = 500m } 
+                },
                 MMSICollectionNumber = "COL-001",
                 Date = new DateOnly(2026, 5, 22),
                 CustomerId = 1
@@ -56,7 +59,7 @@ namespace IBS.Tests.Services
             _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(customer);
 
-            var billing = new Billing { MMSIBillingId = 100, Status = SD.BillingStatus.ForCollection };
+            var billing = new Billing { MMSIBillingId = 100, Status = SD.BillingStatus.ForCollection, Amount = 1000m, Balance = 1000m };
             
             _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(billing);
@@ -70,7 +73,7 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeTrue();
             billing.Status.Should().Be(SD.BillingStatus.Collected);
-            _mockCollectionRepo.Verify(u => u.UpdateBillingPayment(100, It.IsAny<decimal>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockCollectionRepo.Verify(u => u.UpdateBillingPayment(100, 500m, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

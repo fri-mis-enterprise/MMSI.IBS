@@ -12,6 +12,7 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using IBS.DataAccess.Data;
 using IBS.DTOs;
+using IBS.Models.Enums;
 
 namespace IBS.Services
 {
@@ -79,7 +80,7 @@ namespace IBS.Services
 
                 model.Customer = customer;
                 model.IsVatable = customer.VatType == SD.VatType_Vatable;
-                model.Status = SD.BillingStatus.ForCollection;
+                model.Status = SD.BillingStatus.ForPosting; // Changed from ForCollection
                 model.CreatedBy = username;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Company = company;
@@ -147,14 +148,55 @@ namespace IBS.Services
                 model.IsPaid = false;
 
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
                 
+                return ServiceResult<int>.Success(model.MMSIBillingId, "Billing created successfully. Status: For Posting");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create billing.");
+                return ServiceResult<int>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<ServiceResult> PostBillingAsync(int id, string username, CancellationToken cancellationToken)
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var model = await unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+                if (model == null)
+                {
+                    return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
+                }
+
+                if (model.Status != SD.BillingStatus.ForPosting)
+                {
+                    return ServiceResult.Failure($"Billing #{model.MMSIBillingNumber} is already {model.Status}.");
+                }
+
+                var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                if (customer == null) return ServiceResult.Failure("Customer not found.");
+                model.Customer = customer;
+
+                if (model.PrincipalId.HasValue && model.PrincipalId != 0)
+                {
+                    model.Principal = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId.Value, cancellationToken);
+                }
+                model.Vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken) ?? null!;
+
+                var soldToName = (model.PrincipalId != null ? model.Principal?.PrincipalName : customer.CustomerName) ?? string.Empty;
+                var tinNo = (model.PrincipalId != null ? model.Principal?.TIN : customer.CustomerTin) ?? string.Empty;
+                var address = (model.PrincipalId != null ? model.Principal?.Address1 : customer.CustomerAddress) ?? string.Empty;
+
                 var salesBook = new SalesBook
                 {
                     TransactionDate = model.Date,
                     SerialNo = model.MMSIBillingNumber,
-                    SoldTo = (model.PrincipalId != null ? model.Principal?.PrincipalName : model.Customer?.CustomerName) ?? string.Empty,
-                    TinNo = (model.PrincipalId != null ? model.Principal?.TIN : model.Customer?.CustomerTin) ?? string.Empty,
-                    Address = (model.PrincipalId != null ? model.Principal?.Address1 : model.Customer?.CustomerAddress) ?? string.Empty,
+                    SoldTo = soldToName,
+                    TinNo = tinNo,
+                    Address = address,
                     Description = model.Vessel?.VesselName ?? "Maritime Services",
                     Amount = model.Amount - model.Discount
                 };
@@ -172,22 +214,101 @@ namespace IBS.Services
                 }
 
                 salesBook.Discount = model.Discount;
-                salesBook.CreatedBy = model.CreatedBy;
-                salesBook.CreatedDate = model.CreatedDate;
+                salesBook.CreatedBy = username;
+                salesBook.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 salesBook.DueDate = model.DueDate;
                 salesBook.DocumentId = model.MMSIBillingId;
                 salesBook.Company = model.Company;
 
+                // --- General Ledger Posting ---
+                var ledgers = new List<GeneralLedgerBook>();
+                var accountTitlesDto = await unitOfWork.Billing.GetListOfAccountTitleDto(cancellationToken);
+
+                var arTrade = accountTitlesDto.Find(c => c.AccountNumber == "101020100"); // AR Trade
+                var revenue = accountTitlesDto.Find(c => c.AccountNumber == "401020100"); // Maritime Service Revenue
+                var outputVat = accountTitlesDto.Find(c => c.AccountNumber == "201010101"); // Output VAT
+
+                if (arTrade == null) return ServiceResult.Failure("Accounting setup incomplete: Account '101020100' (AR Trade) not found in Chart of Accounts.");
+                if (revenue == null) return ServiceResult.Failure("Accounting setup incomplete: Account '401020100' (Service Revenue) not found in Chart of Accounts.");
+                if (model.IsVatable && outputVat == null) return ServiceResult.Failure("Accounting setup incomplete: Account '201010101' (Output VAT) not found in Chart of Accounts.");
+
+                // 1. Debit AR Trade
+                ledgers.Add(new GeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.MMSIBillingNumber,
+                    Description = $"Billing for {model.Vessel?.VesselName ?? "Maritime Services"}",
+                    AccountId = arTrade!.AccountId,
+                    AccountNo = arTrade.AccountNumber,
+                    AccountTitle = arTrade.AccountName,
+                    Debit = salesBook.Amount,
+                    Credit = 0,
+                    Company = model.Company,
+                    CreatedBy = username,
+                    CreatedDate = salesBook.CreatedDate,
+                    ModuleType = nameof(ModuleType.Sales),
+                    SubAccountType = SubAccountType.Customer,
+                    SubAccountId = model.CustomerId,
+                    SubAccountName = customer.CustomerName ?? string.Empty
+                });
+
+                // 2. Credit Service Revenue
+                ledgers.Add(new GeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.MMSIBillingNumber,
+                    Description = $"Billing for {model.Vessel?.VesselName ?? "Maritime Services"}",
+                    AccountId = revenue!.AccountId,
+                    AccountNo = revenue.AccountNumber,
+                    AccountTitle = revenue.AccountName,
+                    Debit = 0,
+                    Credit = model.IsVatable ? salesBook.VatableSales : salesBook.ZeroRated,
+                    Company = model.Company,
+                    CreatedBy = username,
+                    CreatedDate = salesBook.CreatedDate,
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                // 3. Credit Output VAT
+                if (model.IsVatable)
+                {
+                    ledgers.Add(new GeneralLedgerBook
+                    {
+                        Date = model.Date,
+                        Reference = model.MMSIBillingNumber,
+                        Description = $"Output VAT for {model.MMSIBillingNumber}",
+                        AccountId = outputVat!.AccountId,
+                        AccountNo = outputVat.AccountNumber,
+                        AccountTitle = outputVat.AccountName,
+                        Debit = 0,
+                        Credit = salesBook.VatAmount,
+                        Company = model.Company,
+                        CreatedBy = username,
+                        CreatedDate = salesBook.CreatedDate,
+                        ModuleType = nameof(ModuleType.Sales)
+                    });
+                }
+
+                if (!unitOfWork.Billing.IsJournalEntriesBalanced(ledgers))
+                {
+                    return ServiceResult.Failure("Accounting error: Journal entries are not balanced.");
+                }
+
+                model.Status = SD.BillingStatus.ForCollection;
+
                 await dbContext.SalesBooks.AddAsync(salesBook, cancellationToken);
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MMSIBillingNumber}", "Billing"), cancellationToken);
+                await dbContext.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MMSIBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
-                
-                return ServiceResult<int>.Success(model.MMSIBillingId, "Billing created successfully.");
+                await transaction.CommitAsync(cancellationToken);
+
+                return ServiceResult.Success($"Billing #{model.MMSIBillingNumber} posted successfully.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create billing.");
-                return ServiceResult<int>.Failure(ex.Message);
+                await transaction.RollbackAsync(cancellationToken);
+                logger.LogError(ex, "Failed to post billing {BillingId}", id);
+                return ServiceResult.Failure(ex.Message);
             }
         }
 
@@ -289,6 +410,15 @@ namespace IBS.Services
                     dt.BillingNumber = null;
                 }
 
+                if (model.Status != SD.BillingStatus.ForPosting && model.Status != SD.BillingStatus.Cancelled)
+                {
+                    var salesBook = await dbContext.SalesBooks.FirstOrDefaultAsync(s => s.DocumentId == id && s.SerialNo == model.MMSIBillingNumber, cancellationToken);
+                    if (salesBook != null)
+                    {
+                        dbContext.SalesBooks.Remove(salesBook);
+                    }
+                }
+
                 await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
@@ -307,7 +437,7 @@ namespace IBS.Services
                 .Include(b => b.Customer)
                 .Include(b => b.Terminal).ThenInclude(b => b.Port)
                 .Include(b => b.Vessel)
-                .Where(b => b.Status != SD.BillingStatus.ForPosting && b.Status != SD.BillingStatus.Cancelled);
+                .Where(b => b.Status != SD.BillingStatus.Cancelled);
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {
@@ -333,6 +463,11 @@ namespace IBS.Services
                     var s = column.Search.Value.ToLower();
                     if (column.Data == "status")
                     {
+                        if (s == "for posting")
+                        {
+                            query = query.Where(x => x.Status == SD.BillingStatus.ForPosting);
+                        }
+
                         if (s == "for collection")
                         {
                             query = query.Where(x => x.Status == SD.BillingStatus.ForCollection);

@@ -10,6 +10,7 @@ namespace IBS.Services
     {
         Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken);
         Task<ServiceResult<int>> CreateBillingAsync(Billing model, string username, string company, CancellationToken cancellationToken);
+        Task<ServiceResult> PostBillingAsync(int id, string username, CancellationToken cancellationToken);
         Task<ServiceResult> UpdateBillingAsync(Billing model, string username, CancellationToken cancellationToken);
         Task<ServiceResult> DeleteBillingAsync(int id, CancellationToken cancellationToken);
         Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
