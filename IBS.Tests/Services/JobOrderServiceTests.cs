@@ -54,6 +54,25 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Verify(u => u.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        [Fact]
+        public async Task CreateJobOrderAsync_Fails_IfEndTimeBeforeStartTime()
+        {
+            // Arrange
+            var jobOrder = new JobOrder 
+            { 
+                CustomerId = 1,
+                PlannedStartTime = new DateTime(2026, 5, 22, 10, 0, 0),
+                PlannedEndTime = new DateTime(2026, 5, 22, 9, 0, 0) // Invalid
+            };
+
+            // Act
+            var result = await _service.CreateJobOrderAsync(jobOrder, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Message.Should().Contain("must be strictly after");
+        }
+
         #endregion
 
         #region Update Tests

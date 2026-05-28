@@ -12,6 +12,7 @@ using Xunit;
 using FluentAssertions;
 using IBS.Models.Enums;
 using IBS.Models.MasterFile;
+using IBS.Models;
 
 namespace IBS.Tests.Services
 {
@@ -36,8 +37,15 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.Customer).Returns(_mockCustomerRepo.Object);
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            _mockCollectionRepo.Setup(u => u.AddAsync(It.IsAny<Collection>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            _mockCollectionRepo.Setup(u => u.PostAsync(It.IsAny<Collection>(), It.IsAny<List<Offsettings>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-            _service = new CollectionService(_mockUnitOfWork.Object, null!, _mockLogger.Object);
+            _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Callback<Func<Task>, CancellationToken>(async (action, ct) => await action())
+                .Returns(Task.CompletedTask);
+
+            _service = new CollectionService(_mockUnitOfWork.Object, _mockLogger.Object);
         }
 
         [Fact]

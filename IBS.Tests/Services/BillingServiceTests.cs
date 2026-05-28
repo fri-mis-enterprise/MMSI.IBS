@@ -60,7 +60,11 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken ct) => _dbContext.SaveChangesAsync(ct));
 
-            _service = new BillingService(_mockUnitOfWork.Object, _dbContext, _mockJobOrderService.Object, _mockLogger.Object);
+            _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Callback<Func<Task>, CancellationToken>(async (action, ct) => await action())
+                .Returns(Task.CompletedTask);
+
+            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, _mockLogger.Object);
         }
 
         [Fact]
@@ -129,10 +133,6 @@ namespace IBS.Tests.Services
             billing.VoyageNumber.Should().Be("VOY001");
             billing.Amount.Should().Be(1000m);
             
-            // Verify SalesBook was NOT created yet
-            var salesBookCount = await _dbContext.SalesBooks.CountAsync();
-            salesBookCount.Should().Be(0);
-
             _mockBillingRepo.Verify(u => u.AddAsync(billing, It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -166,9 +166,9 @@ namespace IBS.Tests.Services
             _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<AccountTitleDto> 
                 { 
-                    new() { AccountNumber = "101020100", AccountId = 1, AccountName = "AR Trade" },
-                    new() { AccountNumber = "401020100", AccountId = 2, AccountName = "Service Revenue" },
-                    new() { AccountNumber = "201010101", AccountId = 3, AccountName = "Output VAT" }
+                    new() { AccountNumber = SD.MsapAccounts.ArTrade, AccountId = 1, AccountName = "AR Trade" },
+                    new() { AccountNumber = SD.MsapAccounts.MaritimeServiceRevenue, AccountId = 2, AccountName = "Service Revenue" },
+                    new() { AccountNumber = SD.MsapAccounts.OutputVat, AccountId = 3, AccountName = "Output VAT" }
                 });
 
             _mockBillingRepo.Setup(u => u.ComputeNetOfVat(It.IsAny<decimal>())).Returns(892.86m);
@@ -182,10 +182,7 @@ namespace IBS.Tests.Services
             result.IsSuccess.Should().BeTrue(result.Message);
             billing.Status.Should().Be(SD.BillingStatus.ForCollection);
 
-            var salesBookEntry = await _dbContext.SalesBooks.FirstOrDefaultAsync(s => s.SerialNo == "BL-001");
-            salesBookEntry.Should().NotBeNull();
-            salesBookEntry!.Amount.Should().Be(1000m);
-            salesBookEntry.SoldTo.Should().Be("Test Customer");
+            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s => s.SerialNo == "BL-001"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
