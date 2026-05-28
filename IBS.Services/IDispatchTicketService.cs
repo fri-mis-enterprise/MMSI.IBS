@@ -19,6 +19,7 @@ namespace IBS.Services
         Task<ServiceResult<object>> CheckForTariffRateAsync(int customerId, int dispatchTicketId, CancellationToken cancellationToken);
         Task<bool> IsJobOrderEditableAsync(int? jobOrderId, CancellationToken cancellationToken);
         Task<bool> IsTicketJobOrderEditableAsync(int dispatchTicketId, CancellationToken cancellationToken);
+        Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
     }
 }
 

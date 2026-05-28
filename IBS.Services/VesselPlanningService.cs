@@ -31,7 +31,7 @@ namespace IBS.Services
                 var terminalDto = new TerminalTimelineDto
                 {
                     TerminalId = terminal.TerminalId,
-                    TerminalName = terminal.TerminalName ?? "Unknown Terminal"
+                    TerminalName = terminal.TerminalName
                 };
 
                 // Planned from JobOrders (not yet dispatched)
@@ -44,7 +44,6 @@ namespace IBS.Services
                         {
                             Id = $"JO-{job.JobOrderId}",
                             VesselName = job.Vessel?.VesselName ?? "Unknown Vessel",
-                            ServiceType = job.ServiceType,
                             RequiredTugs = job.RequiredTugCount,
                             Start = job.PlannedStartTime.Value,
                             End = job.PlannedEndTime.Value,

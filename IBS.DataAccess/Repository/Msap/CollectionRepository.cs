@@ -475,7 +475,7 @@ namespace IBS.DataAccess.Repository.Msap
                 if (billing.Balance <= 0)
                 {
                     billing.IsPaid = true;
-                    billing.Status = IBS.Utility.Constants.SD.BillingStatus.Paid;
+                    billing.Status = SD.BillingStatus.Paid;
                 }
                 await _db.SaveChangesAsync(cancellationToken);
             }
@@ -490,7 +490,7 @@ namespace IBS.DataAccess.Repository.Msap
                 billing.AmountPaid -= total;
                 billing.Balance += total;
                 billing.IsPaid = false;
-                billing.Status = IBS.Utility.Constants.SD.BillingStatus.ForCollection;
+                billing.Status = SD.BillingStatus.ForCollection;
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }

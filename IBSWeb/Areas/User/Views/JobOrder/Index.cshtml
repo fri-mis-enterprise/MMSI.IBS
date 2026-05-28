@@ -6,10 +6,6 @@
 
 <link rel="stylesheet" href="~/css/index-style.css">
 
-@{
-    var isAdmin = User.IsInRole("Admin");
-}
-
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
@@ -38,7 +34,7 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            var isCancelled = item.Status == IBS.Utility.Constants.SD.JobOrderStatus.Cancelled;
+                            var isCancelled = item.Status == SD.JobOrderStatus.Cancelled;
                             <tr>
                                 <td class="text-start">
                                     <a asp-action="Details" asp-route-id="@item.JobOrderId" class="text-decoration-none text-primary fw-bold">
@@ -72,7 +68,7 @@
                                     }
                                     else
                                     {
-                                        <span class="badge rounded-pill @(item.Status == IBS.Utility.Constants.SD.JobOrderStatus.Open ? "bg-success" : "bg-secondary")">
+                                        <span class="badge rounded-pill @(item.Status == SD.JobOrderStatus.Open ? "bg-success" : "bg-secondary")">
                                             @item.Status
                                         </span>
                                     }

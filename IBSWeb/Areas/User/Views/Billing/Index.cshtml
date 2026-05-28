@@ -157,13 +157,13 @@
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
                             let statusColor = ``;
-                            if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.ForPosting"){
+                            if (row.status === "@SD.BillingStatus.ForPosting"){
                                 statusColor = `bg-warning`
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.ForCollection"){
+                            if (row.status === "@SD.BillingStatus.ForCollection"){
                                 statusColor = `bg-info`
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.Collected"){
+                            if (row.status === "@SD.BillingStatus.Collected"){
                                 statusColor = `bg-success`
                             }
 
@@ -179,7 +179,7 @@
                             const postUrl = '@Url.Action("Post", "Billing")';
                             let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
 
-                            if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.ForPosting")
+                            if (row.status === "@SD.BillingStatus.ForPosting")
                             {
                                 actions += `<div class="dropdown align-content-center">
                                         <button class="btn btn-warning dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Post</button>
@@ -190,7 +190,7 @@
                                         </ul>
                                     </div>`
                             }
-                            else if (row.status === "@IBS.Utility.Constants.SD.BillingStatus.ForCollection")
+                            else if (row.status === "@SD.BillingStatus.ForCollection")
                             {
                                 actions += `<div class="dropdown align-content-center">
                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
@@ -217,17 +217,17 @@
 
             $('#filterForPosting').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                table.columns(6).search('@IBS.Utility.Constants.SD.BillingStatus.ForPosting', true, true).draw();
+                table.columns(6).search('@SD.BillingStatus.ForPosting', true, true).draw();
             });
 
             $('#filterForCollection').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                table.columns(6).search('@IBS.Utility.Constants.SD.BillingStatus.ForCollection', true, true).draw();
+                table.columns(6).search('@SD.BillingStatus.ForCollection', true, true).draw();
             });
 
             $('#filterCollected').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                table.columns(6).search('@IBS.Utility.Constants.SD.BillingStatus.Collected', true, true).draw();
+                table.columns(6).search('@SD.BillingStatus.Collected', true, true).draw();
             });
 
             $('.btn-group button').on('click', function() {

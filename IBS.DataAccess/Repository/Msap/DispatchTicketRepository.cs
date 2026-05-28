@@ -123,7 +123,7 @@ namespace IBS.DataAccess.Repository.Msap
             }
 
             var jobOrder = await _db.MsapJobOrders.FindAsync(new object[] { jobOrderId.Value }, cancellationToken);
-            return jobOrder?.Status == IBS.Utility.Constants.SD.JobOrderStatus.Open;
+            return jobOrder?.Status == Utility.Constants.SD.JobOrderStatus.Open;
         }
 
         public async Task<(IEnumerable<DispatchTicket> Data, int RecordsFiltered, int TotalRecords)> GetPagedDispatchTicketsAsync(DataTablesParameters parameters, string filterType, CancellationToken cancellationToken = default)

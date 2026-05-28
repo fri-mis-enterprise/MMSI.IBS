@@ -35,7 +35,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Index()
         {
             var findUser = await dbContext.ApplicationUsers
-                .Where(user => user.Id == userManager.GetUserId(this.User))
+                .Where(user => user.Id == userManager.GetUserId(User))
                 .FirstOrDefaultAsync();
 
             ViewBag.GetUserDepartment = findUser?.Department;

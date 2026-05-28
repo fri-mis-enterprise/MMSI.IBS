@@ -393,7 +393,7 @@
                 let dispatchTicketId = $("#DispatchTicketId").val();
 
                 $.ajax({
-                    url: '/User/DispatchTicket/CheckForTariffRate',
+                    url: '@Url.Action("CheckForTariffRate", "DispatchTicket", new { area = "User" })',
                     type: 'POST',
                     data: { customerId : customerId, dispatchTicketId : dispatchTicketId },
                     success: function(result) {

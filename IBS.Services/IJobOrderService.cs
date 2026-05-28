@@ -11,6 +11,7 @@ namespace IBS.Services
         Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken);
         Task<ServiceResult> CancelJobOrderAsync(int id, string username, CancellationToken cancellationToken);
         Task<ServiceResult> CloseJobOrderAsync(int id, string username, bool forceClose, CancellationToken cancellationToken);
+        Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
     }
 }
 

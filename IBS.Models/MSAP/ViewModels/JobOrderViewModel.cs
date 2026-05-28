@@ -48,9 +48,6 @@ namespace IBS.Models.MSAP.ViewModels
         [Range(1, 10, ErrorMessage = "Tug count must be between 1 and 10")]
         public int RequiredTugCount { get; set; } = 1;
 
-        [Display(Name = "Service Type")]
-        public string? ServiceType { get; set; }
-
         [Display(Name = "Is Confirmed")]
         public bool IsConfirmed { get; set; }
 
@@ -67,8 +64,6 @@ namespace IBS.Models.MSAP.ViewModels
         public List<SelectListItem> Terminals { get; set; } = new();
 
         public List<SelectListItem> Tugboats { get; set; } = new();
-
-        public List<SelectListItem> Services { get; set; } = new();
 
         #endregion
     }

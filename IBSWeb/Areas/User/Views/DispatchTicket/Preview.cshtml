@@ -87,7 +87,7 @@
                         <h5>TARIFF DETAILS</h5>
                     </div>
                     <div class="col-5">
-                        @if (Model.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval)
+                        @if (Model.Status == SD.DispatchTicketStatus.ForApproval)
                         {
                             <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
                                 <img alt="OrangePendingIcon" src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
@@ -95,7 +95,7 @@
                             </div>
                         }
 
-                        @if (Model.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling)
+                        @if (Model.Status == SD.DispatchTicketStatus.ForBilling)
                         {
                             <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
                                 <img alt="greenCheckIcon" src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
@@ -103,7 +103,7 @@
                             </div>
                         }
 
-                        @if (Model.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.Disapproved)
+                        @if (Model.Status == SD.DispatchTicketStatus.Disapproved)
                         {
                             <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
                                 <img alt="RedCrossIcon" src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
@@ -116,42 +116,42 @@
                     <tbody>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString(SD.Two_Decimal_Format)</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString(SD.Two_Decimal_Format)</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString(SD.Two_Decimal_Format)</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString(SD.Two_Decimal_Format)</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString(SD.Two_Decimal_Format)</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString(SD.Two_Decimal_Format)</td>
                     </tr>
                     @if  (Model.Tugboat is { IsCompanyOwned: false })
                     {
                         <tr>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>AP OTHER TUGS: </b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.ApOtherTugs.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.ApOtherTugs.ToString(SD.Two_Decimal_Format)</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>TUGBOAT OWNER:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatOwner?.TugboatOwnerName</td>
                         </tr>
                     }
                     <tr>
                         <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
-                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</b></td>
+                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString(SD.Two_Decimal_Format)</b></td>
                         <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
-                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString(IBS.Utility.Constants.SD.Two_Decimal_Format)</b></td>
+                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString(SD.Two_Decimal_Format)</b></td>
                     </tr>
                     </tbody>
                 </table>
@@ -161,7 +161,7 @@
 
     <div class="row">
         <div class="row col-12 justify-content-end mb-4">
-            @if (Model.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval)
+            @if (Model.Status == SD.DispatchTicketStatus.ForApproval)
             {
                 <div class="text-center" style="width: 250px;">
                     <button type="button" id="approveTariff" data-id="@Model.DispatchTicketId" class="btn btn-success col-12 align-content-center">
@@ -174,7 +174,7 @@
                     </button>
                 </div>
             }
-            else if (Model.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling)
+            else if (Model.Status == SD.DispatchTicketStatus.ForBilling)
             {
                 <div class="text-center" style="width: 250px;">
                     <button type="button" id="revokeApproval" data-id="@Model.DispatchTicketId" class="btn btn-warning col-12 align-content-center">
@@ -280,7 +280,7 @@
                             headers: {
                                 'Content-Type': 'application/x-www-form-urlencoded',
                             },
-                            body: `id=${id}&status=@IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval&activity=Revoked approval&docType=Dispatch Ticket&successMessage=Approval revoked successfully.`
+                            body: `id=${id}&status=@SD.DispatchTicketStatus.ForApproval&activity=Revoked approval&docType=Dispatch Ticket&successMessage=Approval revoked successfully.`
                         })
                         .then(() => {
                             location.reload();

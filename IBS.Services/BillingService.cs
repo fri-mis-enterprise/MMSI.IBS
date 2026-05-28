@@ -1,16 +1,13 @@
-﻿using System.Linq.Dynamic.Core;
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Books;
 using IBS.Models.MSAP;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using IBS.DataAccess.Data;
 using IBS.DTOs;
 using IBS.Models.Enums;
 

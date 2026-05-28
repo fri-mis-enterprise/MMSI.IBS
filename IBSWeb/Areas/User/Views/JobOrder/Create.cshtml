@@ -27,18 +27,21 @@
                     </div>
 
                     <!-- Customer -->
-                    <div class="col-12 col-md-6">
-                        <label asp-for="CustomerId" class="form-label fw-bold"></label>
-                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" required>
-                            <option value="">-- Select Customer --</option>
-                        </select>
+                    <div class="col-12 col-md-6 position-relative">
+                        <label class="form-label fw-bold">Customer <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="CustomerSearch" class="form-control border-start-0" placeholder="Type to search customers..." autocomplete="off">
+                            <input type="hidden" asp-for="CustomerId" id="CustomerId" />
+                        </div>
+                        <div id="CustomerSearchResults" class="list-group position-absolute w-100 shadow d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto;"></div>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
 
                     <!-- Vessel -->
                     <div class="col-12 col-md-6">
                         <label asp-for="VesselId" class="form-label fw-bold"></label>
-                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2" required>
+                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2" required id="VesselSelect">
                             <option value="">-- Select Vessel --</option>
                         </select>
                         <span asp-validation-for="VesselId" class="text-danger"></span>
@@ -77,22 +80,17 @@
                     <!-- Planning -->
                     <div class="col-12 col-md-3">
                         <label asp-for="PlannedStartTime" class="form-label fw-bold"></label>
-                        <input asp-for="PlannedStartTime" type="datetime-local" class="form-control" />
+                        <input asp-for="PlannedStartTime" type="datetime-local" class="form-control timeline-input" id="PlannedStartTime" />
                         <span asp-validation-for="PlannedStartTime" class="text-danger"></span>
                     </div>
 
                     <div class="col-12 col-md-3">
                         <label asp-for="PlannedEndTime" class="form-label fw-bold"></label>
-                        <input asp-for="PlannedEndTime" type="datetime-local" class="form-control" />
+                        <input asp-for="PlannedEndTime" type="datetime-local" class="form-control timeline-input" id="PlannedEndTime" />
                         <span asp-validation-for="PlannedEndTime" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label asp-for="ServiceType" class="form-label fw-bold"></label>
-                        <select asp-for="ServiceType" asp-items="@Model.Services" class="form-select js-select2">
-                            <option value="">-- Select Service Type --</option>
-                        </select>
-                        <span asp-validation-for="ServiceType" class="text-danger"></span>
+                        <div id="durationWarning" class="text-danger small mt-1" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill"></i> End time must be after start time.
+                        </div>
                     </div>
 
                     <div class="col-12 col-md-3">
@@ -148,6 +146,85 @@
                 width: '100%'
             });
 
+            // ── Customer Live Search ───────────────────────────────────────
+            let customerSearchTimeout;
+            const $customerSearch = $("#CustomerSearch");
+            const $customerResults = $("#CustomerSearchResults");
+            const $customerId = $("#CustomerId");
+
+            async function performCustomerSearch(searchTerm) {
+                try {
+                    const res = await fetch(`@Url.Action("SearchCustomers", "JobOrder", new { area = "User" })?term=${encodeURIComponent(searchTerm)}`);
+                    const data = await res.json();
+                    $customerResults.empty();
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(item => {
+                            $customerResults.append(
+                                $('<a href="#" class="list-group-item list-group-item-action py-2">')
+                                    .data('customer', item)
+                                    .html(`<span>${item.name}</span>`)
+                            );
+                        });
+                    } else {
+                        $customerResults.append($('<div class="list-group-item py-2 text-muted"><em>No customers found</em></div>'));
+                    }
+                    $customerResults.removeClass('d-none');
+                } catch {
+                    $customerResults.empty().addClass('d-none');
+                }
+            }
+
+            $customerSearch.on('input', function () {
+                clearTimeout(customerSearchTimeout);
+                const searchTerm = $(this).val().trim();
+                if (searchTerm.length === 0) $customerId.val('');
+                customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
+            });
+
+            $customerSearch.on('focus', function () {
+                performCustomerSearch($(this).val().trim());
+            });
+
+            $customerResults.on('click', 'a', function (e) {
+                e.preventDefault();
+                const customer = $(this).data('customer');
+                if (!customer) return;
+
+                $customerSearch.val(customer.name);
+                $customerId.val(customer.value);
+                $customerResults.empty().addClass('d-none');
+            });
+
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('#CustomerSearch, #CustomerSearchResults').length) {
+                    $customerResults.addClass('d-none');
+                }
+            });
+
+            // ── Planned Duration Validation ────────────────────────────────
+            function validatePlannedTimes() {
+                const start = new Date($("#PlannedStartTime").val());
+                const end = new Date($("#PlannedEndTime").val());
+                const $warning = $("#durationWarning");
+                const $submitBtn = $("button[type='submit']");
+
+                if (!isNaN(start) && !isNaN(end)) {
+                    if (end <= start) {
+                        $warning.show();
+                        $submitBtn.prop("disabled", true);
+                    } else {
+                        $warning.hide();
+                        $submitBtn.prop("disabled", false);
+                    }
+                } else {
+                    $warning.hide();
+                    $submitBtn.prop("disabled", false);
+                }
+            }
+
+            $(".timeline-input").on("change input", validatePlannedTimes);
+
+            // ── Port-Terminal Cascade ──────────────────────────────────────
             $('#PortId').on('change', function () {
                 var portId = $(this).val();
                 var terminalSelect = $('#TerminalId');
@@ -164,8 +241,8 @@
                     success: function (data) {
                         $.each(data, function (i, item) {
                             terminalSelect.append($('<option>', {
-                                value: item.Value || item.value,
-                                text: item.Text || item.text
+                                value: item.value,
+                                text: item.text
                             }));
                         });
                         terminalSelect.trigger('change');

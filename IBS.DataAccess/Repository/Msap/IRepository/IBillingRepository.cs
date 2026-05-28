@@ -35,9 +35,9 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
 
         Task<List<Billing>> GetBillingsByCollectionIdAsync(int collectionId, CancellationToken cancellationToken);
 
-        Task AddSalesBookAsync(IBS.Models.Books.SalesBook salesBook, CancellationToken cancellationToken);
+        Task AddSalesBookAsync(Models.Books.SalesBook salesBook, CancellationToken cancellationToken);
 
-        Task AddGeneralLedgerEntriesAsync(List<IBS.Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken);
+        Task AddGeneralLedgerEntriesAsync(List<Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken);
     }
 }
 

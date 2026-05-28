@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -570,8 +570,16 @@ namespace IBSWeb.Areas.User.Controllers
             return RedirectToAction(nameof(Index), new { filterType });
         }
 
+        /// <summary>
+        /// Searches for customers matching a search term.
+        /// </summary>
+        [HttpGet]
+        public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
+        {
+            var result = await dispatchTicketService.SearchCustomersAsync(term, cancellationToken);
+            return Json(result);
+        }
+
         #endregion
     }
 }
-
-

@@ -187,19 +187,19 @@
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
                             let statusColor = ``;
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForTariff"){
+                            if (row.status === "@SD.DispatchTicketStatus.ForTariff"){
                                 statusColor = `bg-info`
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval"){
+                            if (row.status === "@SD.DispatchTicketStatus.ForApproval"){
                                 statusColor = `bg-warning`
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.Disapproved") {
+                            if (row.status === "@SD.DispatchTicketStatus.Disapproved") {
                                 statusColor = `bg-danger`
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling"){
+                            if (row.status === "@SD.DispatchTicketStatus.ForBilling"){
                                 statusColor = `bg-success`
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.Billed") {
+                            if (row.status === "@SD.DispatchTicketStatus.Billed") {
                                 statusColor = `bg-success`
                             }
 
@@ -214,12 +214,12 @@
                         "render": function(data, type, row) {
                             let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
                             
-                            if (row.status !== "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForTariff" && row.status !== "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval" && row.status !== "@IBS.Utility.Constants.SD.DispatchTicketStatus.Pending")
+                            if (row.status !== "@SD.DispatchTicketStatus.ForTariff" && row.status !== "@SD.DispatchTicketStatus.ForApproval" && row.status !== "@SD.DispatchTicketStatus.Pending")
                             {
                                 actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>`;
                             }
                             
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval") {
+                            if (row.status === "@SD.DispatchTicketStatus.ForApproval") {
                                 actions += `<div class="dropdown align-content-center">
                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                         <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
@@ -233,7 +233,7 @@
                                         </ul>
                                     </div>`;
                             }
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.ForTariff")
+                            if (row.status === "@SD.DispatchTicketStatus.ForTariff")
                             {
                                 //actions += `<a class="btn btn-primary col-12" href="${setTariffUrl}?id=${row.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>`;
                                 actions += `<div class="dropdown align-content-center">
@@ -249,7 +249,7 @@
                                     </div>`;
                             }
 
-                            if (row.status === "@IBS.Utility.Constants.SD.DispatchTicketStatus.Pending")
+                            if (row.status === "@SD.DispatchTicketStatus.Pending")
                             {
                                 actions += `<a class="btn btn-primary col-12" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}"><i class="bi bi-pencil-square"></i> Edit Ticket</a>`;
                             }

@@ -488,6 +488,17 @@ namespace IBS.Services
             var ticket = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == dispatchTicketId, cancellationToken);
             return ticket != null && await IsJobOrderEditableAsync(ticket.JobOrderId, cancellationToken);
         }
+
+        public async Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken)
+        {
+            var customers = await unitOfWork.Customer.SearchCustomersAsync(term ?? string.Empty, 10, cancellationToken);
+
+            return customers.Select(c => (object)new
+            {
+                value = c.CustomerId,
+                name = c.CustomerName
+            }).ToList();
+        }
     }
 }
 

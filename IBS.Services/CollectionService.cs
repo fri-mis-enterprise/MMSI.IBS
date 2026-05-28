@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP;
@@ -6,9 +5,7 @@ using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using IBS.DataAccess.Data;
 
 namespace IBS.Services
 {

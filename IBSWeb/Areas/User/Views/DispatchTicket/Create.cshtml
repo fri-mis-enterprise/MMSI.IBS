@@ -155,16 +155,26 @@
                 <!-- III. Service Details -->
                 <h5 class="section-header text-secondary border-bottom"><i class="bi bi-geo-alt me-2"></i>III. Service Details</h5>
                 <div class="row">
-                    <div class="form-group col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required disabled="@(Model.JobOrderId.HasValue)">
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span class="text-danger"></span>
+                    <div class="form-group col-12 my-2 position-relative">
+                        <label class="control-label ps-1 pb-1">Customer <span class="text-danger">*</span></label>
                         @if (Model.JobOrderId.HasValue)
                         {
-                            <input type="hidden" asp-for="CustomerId" />
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 shadow-sm"><i class="bi bi-person text-muted"></i></span>
+                                <input type="text" class="form-control border-0 shadow-sm bg-light" value="@Model.Customers?.FirstOrDefault(c => c.Value == Model.CustomerId.ToString())?.Text" readonly>
+                                <input type="hidden" asp-for="CustomerId" id="CustomerId" />
+                            </div>
                         }
+                        else
+                        {
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 shadow-sm"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="CustomerSearch" class="form-control border-0 shadow-sm" placeholder="Type to search customers..." autocomplete="off">
+                                <input type="hidden" asp-for="CustomerId" id="CustomerId" />
+                            </div>
+                            <div id="CustomerSearchResults" class="list-group position-absolute w-100 shadow d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto; left: 0;"></div>
+                        }
+                        <span asp-validation-for="CustomerId" class="text-danger small"></span>
                     </div>
                 </div>
                 <div class="row">
@@ -259,6 +269,63 @@
             const terminalSelectVar = $("#TerminalSelect");
             const terminalLoading = $("#terminalLoading");
 
+            // ── Customer Live Search ───────────────────────────────────────
+            if ($("#CustomerSearch").length > 0) {
+                let customerSearchTimeout;
+                const $customerSearch = $("#CustomerSearch");
+                const $customerResults = $("#CustomerSearchResults");
+                const $customerId = $("#CustomerId");
+
+                async function performCustomerSearch(searchTerm) {
+                    try {
+                        const res = await fetch(`@Url.Action("SearchCustomers", "DispatchTicket", new { area = "User" })?term=${encodeURIComponent(searchTerm)}`);
+                        const data = await res.json();
+                        $customerResults.empty();
+                        if (Array.isArray(data) && data.length > 0) {
+                            data.forEach(item => {
+                                $customerResults.append(
+                                    $('<a href="#" class="list-group-item list-group-item-action py-2">')
+                                        .data('customer', item)
+                                        .html(`<span>${item.name}</span>`)
+                                );
+                            });
+                        } else {
+                            $customerResults.append($('<div class="list-group-item py-2 text-muted"><em>No customers found</em></div>'));
+                        }
+                        $customerResults.removeClass('d-none');
+                    } catch {
+                        $customerResults.empty().addClass('d-none');
+                    }
+                }
+
+                $customerSearch.on('input', function () {
+                    clearTimeout(customerSearchTimeout);
+                    const searchTerm = $(this).val().trim();
+                    if (searchTerm.length === 0) $customerId.val('');
+                    customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
+                });
+
+                $customerSearch.on('focus', function () {
+                    performCustomerSearch($(this).val().trim());
+                });
+
+                $customerResults.on('click', 'a', function (e) {
+                    e.preventDefault();
+                    const customer = $(this).data('customer');
+                    if (!customer) return;
+
+                    $customerSearch.val(customer.name);
+                    $customerId.val(customer.value);
+                    $customerResults.empty().addClass('d-none');
+                });
+
+                $(document).on('click', function (e) {
+                    if (!$(e.target).closest('#CustomerSearch, #CustomerSearchResults').length) {
+                        $customerResults.addClass('d-none');
+                    }
+                });
+            }
+
             // Port Change Logic
             function HandlePortChange() {
                 let portId = port.val();
@@ -303,6 +370,7 @@
             const timeArrived = $("#TimeArrived");
             const durationDisplay = $("#durationDisplay");
             const totalHoursSpan = $("#totalHours");
+            const submitBtn = $("#submitButton");
 
             function calculateDuration() {
                 const startStr = `${dateLeft.val()}T${timeLeft.val()}`;
@@ -317,10 +385,12 @@
                         if (diffMs < 0) {
                             durationDisplay.removeClass("bg-secondary").addClass("bg-danger").show();
                             totalHoursSpan.text("Invalid (End is before Start)");
+                            submitBtn.prop("disabled", true);
                         } else {
                             const diffHrs = (diffMs / (1000 * 60 * 60)).toFixed(2);
                             durationDisplay.removeClass("bg-danger").addClass("bg-secondary").show();
                             totalHoursSpan.text(diffHrs);
+                            submitBtn.prop("disabled", false);
                         }
                     }
                 }

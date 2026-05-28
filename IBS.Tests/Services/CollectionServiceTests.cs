@@ -5,7 +5,6 @@ using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Constants;
-using IBS.Utility.Helpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -64,12 +63,12 @@ namespace IBS.Tests.Services
             };
 
             var customer = new Customer { CustomerId = 1, CustomerName = "Test Customer" };
-            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(customer);
 
             var billing = new Billing { MsapBillingId = 100, Status = SD.BillingStatus.ForCollection, Amount = 1000m, Balance = 1000m };
             
-            _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
+            _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(billing);
 
             _mockUnitOfWork.Setup(u => u.IsPeriodPostedAsync(It.IsAny<Module>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))

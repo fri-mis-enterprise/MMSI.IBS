@@ -100,7 +100,7 @@ namespace IBS.DataAccess.Repository.Msap
         public async Task<List<SelectListItem>?> GetMsapCustomersWithBillablesSelectList(int? currentCustomerId, string type, CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _db.MsapDispatchTickets
-                .Where(t => t.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling || (currentCustomerId.GetValueOrDefault() != 0 && t.CustomerId == currentCustomerId))
+                .Where(t => t.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling || (currentCustomerId.GetValueOrDefault() != 0 && t.CustomerId == currentCustomerId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -124,7 +124,7 @@ namespace IBS.DataAccess.Repository.Msap
         public async Task<List<SelectListItem>> GetMsapUnbilledTicketsById(string type, CancellationToken cancellationToken = default)
         {
             var dispatchTicketList = await _db.MsapDispatchTickets
-                .Where(dt => dt.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling)
+                .Where(dt => dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling)
                 .OrderBy(dt => dt.DispatchNumber)
                 .Select(s => new SelectListItem
                 {
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository.Msap
         {
             var tickets = await _db
                 .MsapDispatchTickets
-                .Where(b => b.CustomerId == customerId && b.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling)
+                .Where(b => b.CustomerId == customerId && b.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling)
                 .Include(b => b.Customer)
                 .OrderBy(b => b.DispatchNumber)
                 .ToListAsync(cancellationToken);
@@ -246,7 +246,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(b => b.Customer)
                 .Include(b => b.Terminal).ThenInclude(b => b.Port)
                 .Include(b => b.Vessel)
-                .Where(b => b.Status != IBS.Utility.Constants.SD.BillingStatus.Cancelled);
+                .Where(b => b.Status != Utility.Constants.SD.BillingStatus.Cancelled);
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {
@@ -293,12 +293,12 @@ namespace IBS.DataAccess.Repository.Msap
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task AddSalesBookAsync(IBS.Models.Books.SalesBook salesBook, CancellationToken cancellationToken)
+        public async Task AddSalesBookAsync(Models.Books.SalesBook salesBook, CancellationToken cancellationToken)
         {
             await _db.SalesBooks.AddAsync(salesBook, cancellationToken);
         }
 
-        public async Task AddGeneralLedgerEntriesAsync(List<IBS.Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken)
+        public async Task AddGeneralLedgerEntriesAsync(List<Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken)
         {
             await _db.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
         }

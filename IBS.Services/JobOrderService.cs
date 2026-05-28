@@ -84,7 +84,6 @@ namespace IBS.Services
                 jobOrder.PlannedEndTime = model.PlannedEndTime;
                 jobOrder.PreferredTugboatId = model.PreferredTugboatId;
                 jobOrder.RequiredTugCount = model.RequiredTugCount;
-                jobOrder.ServiceType = model.ServiceType;
                 jobOrder.IsConfirmed = model.IsConfirmed;
                 jobOrder.Remarks = model.Remarks;
                 jobOrder.EditedBy = username;
@@ -225,6 +224,20 @@ namespace IBS.Services
                 logger.LogError(ex, "Error closing Job Order {JobOrderId}", id);
                 return ServiceResult.Failure("An unexpected error occurred while closing the Job Order.");
             }
+        }
+
+        public async Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken)
+        {
+            var customers = await unitOfWork.Customer.SearchCustomersAsync(term ?? string.Empty, 10, cancellationToken);
+
+            return customers.Select(c => (object)new
+            {
+                value = c.CustomerId,
+                name = c.CustomerName,
+                address = c.CustomerAddress,
+                tinNo = c.CustomerTin,
+                terms = c.CustomerTerms
+            }).ToList();
         }
 
         private async Task RecordAuditAsync(string activity, string username, CancellationToken cancellationToken)

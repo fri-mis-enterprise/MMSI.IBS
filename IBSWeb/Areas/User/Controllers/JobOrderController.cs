@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
@@ -86,7 +86,6 @@ namespace IBSWeb.Areas.User.Controllers
                 PlannedEndTime = viewModel.PlannedEndTime,
                 PreferredTugboatId = viewModel.PreferredTugboatId,
                 RequiredTugCount = viewModel.RequiredTugCount,
-                ServiceType = viewModel.ServiceType,
                 IsConfirmed = viewModel.IsConfirmed,
                 Remarks = viewModel.Remarks
             };
@@ -182,7 +181,6 @@ namespace IBSWeb.Areas.User.Controllers
                 PlannedEndTime = jobOrder.PlannedEndTime,
                 PreferredTugboatId = jobOrder.PreferredTugboatId,
                 RequiredTugCount = jobOrder.RequiredTugCount,
-                ServiceType = jobOrder.ServiceType,
                 IsConfirmed = jobOrder.IsConfirmed,
                 Remarks = jobOrder.Remarks
             };
@@ -221,7 +219,6 @@ namespace IBSWeb.Areas.User.Controllers
                 PlannedEndTime = viewModel.PlannedEndTime,
                 PreferredTugboatId = viewModel.PreferredTugboatId,
                 RequiredTugCount = viewModel.RequiredTugCount,
-                ServiceType = viewModel.ServiceType,
                 IsConfirmed = viewModel.IsConfirmed,
                 Remarks = viewModel.Remarks
             };
@@ -389,6 +386,16 @@ namespace IBSWeb.Areas.User.Controllers
             });
         }
 
+        /// <summary>
+        /// Searches for customers matching a search term.
+        /// </summary>
+        [HttpGet]
+        public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
+        {
+            var result = await jobOrderService.SearchCustomersAsync(term, cancellationToken);
+            return Json(result);
+        }
+
         #endregion
 
         #region Private Helpers
@@ -440,20 +447,8 @@ namespace IBSWeb.Areas.User.Controllers
                     Text = t.TugboatName
                 })
                 .ToList();
-
-            var services = await unitOfWork.Service.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Services = services
-                .OrderBy(s => s.ServiceName)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceName,
-                    Text = s.ServiceName
-                })
-                .ToList();
         }
 
         #endregion
     }
 }
-
-

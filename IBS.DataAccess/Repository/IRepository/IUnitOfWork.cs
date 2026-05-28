@@ -80,7 +80,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IBillingRepository Billing { get; }
         ICollectionRepository Collection { get; }
         IReportRepository Report { get; }
-        Msap.IRepository.IServiceRepository Service { get; }
+        IServiceRepository Service { get; }
         ITariffTableRepository TariffTable { get; }
         IPortRepository Port { get; }
         IPrincipalRepository Principal { get; }

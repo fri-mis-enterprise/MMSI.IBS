@@ -126,7 +126,7 @@ namespace IBS.DataAccess.Repository
         public ITariffTableRepository TariffTable { get; private set; }
         public IPortRepository Port { get; private set; }
         public IPrincipalRepository Principal { get; private set; }
-        public Msap.IRepository.IServiceRepository Service { get; private set; }
+        public IServiceRepository Service { get; private set; }
         public ITerminalRepository Terminal { get; private set; }
         public ITugboatRepository Tugboat { get; private set; }
         public ITugMasterRepository TugMaster { get; private set; }
@@ -175,7 +175,7 @@ namespace IBS.DataAccess.Repository
             Msap = new MsapRepository(_db);
             Port = new PortRepository(_db);
             Principal = new PrincipalRepository(_db);
-            Service = new Msap.ServiceRepository(_db);
+            Service = new ServiceRepository(_db);
             ServiceRequest = new ServiceRequestRepository(_db);
             TariffTable = new TariffTableRepository(_db);
             Terminal = new TerminalRepository(_db);
