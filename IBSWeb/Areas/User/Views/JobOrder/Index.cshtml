@@ -101,13 +101,32 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $('#jobOrdersTable').DataTable({
+            // Get search term from URL on load
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchTerm = urlParams.get('q') || '';
+
+            let table = $('#jobOrdersTable').DataTable({
                 responsive: true,
                 order: [[0, 'desc']],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search Job Orders..."
+                },
+                search: {
+                    search: searchTerm
                 }
+            });
+
+            // Update URL when search changes
+            table.on('search.dt', function () {
+                const query = table.search();
+                const url = new URL(window.location);
+                if (query) {
+                    url.searchParams.set('q', query);
+                } else {
+                    url.searchParams.delete('q');
+                }
+                window.history.replaceState({}, '', url);
             });
         });
     </script>

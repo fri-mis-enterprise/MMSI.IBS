@@ -533,10 +533,25 @@ namespace IBS.DataAccess.Repository.Msap
                 );
             }
 
+            // Column-specific search
+            if (parameters.Columns != null)
+            {
+                foreach (var column in parameters.Columns)
+                {
+                    if (column.Search?.Value is { Length: > 0 } searchValue)
+                    {
+                        if (column.Data == "status")
+                        {
+                            query = query.Where(c => c.Status != null && c.Status.ToLower() == searchValue);
+                        }
+                    }
+                }
+            }
+
             var totalRecords = await dbSet.CountAsync(cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
-            if (parameters.Order?.Count > 0)
+            if (parameters.Order?.Count > 0 && parameters.Columns != null)
             {
                 var col = parameters.Columns[parameters.Order[0].Column].Data;
                 var dir = parameters.Order[0].Dir.ToLower() == "asc" ? "ascending" : "descending";

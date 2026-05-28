@@ -97,6 +97,10 @@
             const editTicketUrl = '@Url.Action("EditTicket", "DispatchTicket")';
             const filterType = '@ViewBag.FilterType';
 
+            // Get status from URL on load
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusFilter = urlParams.get('status') || '';
+
             let table = $('#paginatedTable').DataTable({
                 "order": [[1, 'asc']],
                 "columnDefs": [
@@ -130,6 +134,7 @@
                     $('#paginatedTable').addClass('table-loading');
                 },
                 "drawCallback": function () {
+                    $('#paginatedTable').removeClass('removeClass');
                     $('#paginatedTable').removeClass('table-loading');
 
                     // Initialize all tooltips
@@ -258,45 +263,77 @@
                             return actions;
                         }
                     }
-                ]
+                ],
+                "initComplete": function(settings, json) {
+                    if (statusFilter) {
+                        this.api().column(10).search(statusFilter).draw();
+
+                        // Set active button
+                        $('.btn-group button').removeClass('active');
+                        if (statusFilter === "@SD.DispatchTicketStatus.ForTariff") $('#filterForTariff').addClass('active');
+                        else if (statusFilter === "@SD.DispatchTicketStatus.ForApproval") $('#filterForApproval').addClass('active');
+                        else if (statusFilter === "@SD.DispatchTicketStatus.Disapproved") $('#filterDisapproved').addClass('active');
+                        else if (statusFilter === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
+                        else if (statusFilter === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
+                        else $('#filterAll').addClass('active');
+                    }
+                }
             });
+
+            function updateUrl(status) {
+                const url = new URL(window.location);
+                if (status) {
+                    url.searchParams.set('status', status);
+                } else {
+                    url.searchParams.delete('status');
+                }
+                window.history.replaceState({}, '', url);
+            }
 
             $('#filterAll').on('click', function() {
                 table.columns().search('').draw();
+                updateUrl('');
             });
 
             $('#filterForTariff').on('click', function() {
+                const status = '@SD.DispatchTicketStatus.ForTariff';
                 table.columns().search(''); // Clear previous filters
-                table.columns(10).search('For Tariff', true, true).draw();
+                table.columns(10).search(status).draw();
+                updateUrl(status);
             });
 
             $('#filterForApproval').on('click', function() {
+                const status = '@SD.DispatchTicketStatus.ForApproval';
                 table.columns().search(''); // Clear previous filters
-                table.columns(10).search('For Approval', true, true).draw();
+                table.columns(10).search(status).draw();
+                updateUrl(status);
             });
 
             $('#filterDisapproved').on('click', function() {
+                const status = '@SD.DispatchTicketStatus.Disapproved';
                 table.columns().search(''); // Clear previous filters
-                table.columns(10).search('Disapproved', true, true).draw();
+                table.columns(10).search(status).draw();
+                updateUrl(status);
             });
 
             $('#filterForBilling').on('click', function() {
+                const status = '@SD.DispatchTicketStatus.ForBilling';
                 table.columns().search(''); // Clear previous filters
-                table.columns(10).search('For Billing', true, true).draw();
+                table.columns(10).search(status).draw();
+                updateUrl(status);
             });
 
             $('#filterBilled').on('click', function() {
+                const status = '@SD.DispatchTicketStatus.Billed';
                 table.columns().search(''); // Clear previous filters
-                table.columns(10).search('Billed', true, true).draw();
+                table.columns(10).search(status).draw();
+                updateUrl(status);
             });
 
             $('.btn-group button').on('click', function() {
                 $('.btn-group button').removeClass('active');
                 $(this).addClass('active');
             });
-            
-            table.columns().search(''); // Clear previous filters
-            table.columns(11).search('For Posting', true, true).draw();
         });
     </script>
 }

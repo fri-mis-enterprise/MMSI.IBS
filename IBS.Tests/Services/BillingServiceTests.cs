@@ -24,7 +24,6 @@ namespace IBS.Tests.Services
     public class BillingServiceTests
     {
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-        private readonly Mock<ILogger<BillingService>> _mockLogger;
         private readonly BillingService _service;
         private readonly Mock<IBillingRepository> _mockBillingRepo;
         private readonly Mock<IJobOrderRepository> _mockJobOrderRepo;
@@ -32,12 +31,11 @@ namespace IBS.Tests.Services
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
         private readonly Mock<IJobOrderService> _mockJobOrderService;
-        private readonly ApplicationDbContext _dbContext;
 
         public BillingServiceTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockLogger = new Mock<ILogger<BillingService>>();
+            var mockLogger = new Mock<ILogger<BillingService>>();
             _mockBillingRepo = new Mock<IBillingRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockCustomerRepo = new Mock<ICustomerRepository>();
@@ -49,7 +47,7 @@ namespace IBS.Tests.Services
                 .UseInMemoryDatabase(databaseName: "BillingTestDb")
                 .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
-            _dbContext = new ApplicationDbContext(options);
+            var dbContext = new ApplicationDbContext(options);
 
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
@@ -58,55 +56,55 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(_mockVesselRepo.Object);
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
             _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>()))
-                .Returns((CancellationToken ct) => _dbContext.SaveChangesAsync(ct));
+                .Returns((CancellationToken ct) => dbContext.SaveChangesAsync(ct));
 
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
-                .Callback<Func<Task>, CancellationToken>(async (action, ct) => await action())
+                .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);
 
-            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, _mockLogger.Object);
+            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object);
         }
 
         [Fact]
         public async Task CreateBillingAsync_InheritsDataFromJobOrder()
         {
             // Arrange
-            var billing = new Billing 
-            { 
-                JobOrderId = 1, 
-                Company = "MMSI", 
-                Date = new DateOnly(2026, 5, 22), 
+            var billing = new Billing
+            {
+                JobOrderId = 1,
+                Company = "MMSI",
+                Date = new DateOnly(2026, 5, 22),
                 CustomerId = 10,
                 VesselId = 20,
                 MsapBillingNumber = "BL-001",
                 ToBillDispatchTickets = new List<string> { "500" }
             };
 
-            var jobOrder = new JobOrder 
-            { 
-                JobOrderId = 1, 
-                CustomerId = 10, 
-                VesselId = 20, 
+            var jobOrder = new JobOrder
+            {
+                JobOrderId = 1,
+                CustomerId = 10,
+                VesselId = 20,
                 PortId = 30,
                 TerminalId = 40,
                 VoyageNumber = "VOY001"
             };
 
             var customer = new Customer { CustomerId = 10, CustomerName = "Test Customer", VatType = SD.VatType_Vatable };
-            
-            var ticket = new DispatchTicket 
-            { 
-                DispatchTicketId = 500, 
-                JobOrderId = 1, 
+
+            var ticket = new DispatchTicket
+            {
+                DispatchTicketId = 500,
+                JobOrderId = 1,
                 DispatchNumber = "DT-001",
-                TotalNetRevenue = 1000m 
+                TotalNetRevenue = 1000m
             };
 
             var vessel = new Vessel { VesselId = 20, VesselName = "Tug Titan" };
 
             _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(jobOrder);
-            
+
             _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(customer);
 
@@ -132,7 +130,7 @@ namespace IBS.Tests.Services
             billing.VesselId.Should().Be(20);
             billing.VoyageNumber.Should().Be("VOY001");
             billing.Amount.Should().Be(1000m);
-            
+
             _mockBillingRepo.Verify(u => u.AddAsync(billing, It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -164,8 +162,8 @@ namespace IBS.Tests.Services
                 .ReturnsAsync(vessel);
 
             _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<AccountTitleDto> 
-                { 
+                .ReturnsAsync(new List<AccountTitleDto>
+                {
                     new() { AccountNumber = SD.MsapAccounts.ArTrade, AccountId = 1, AccountName = "AR Trade" },
                     new() { AccountNumber = SD.MsapAccounts.MaritimeServiceRevenue, AccountId = 2, AccountName = "Service Revenue" },
                     new() { AccountNumber = SD.MsapAccounts.OutputVat, AccountId = 3, AccountName = "Output VAT" }
@@ -214,8 +212,8 @@ namespace IBS.Tests.Services
                 .ReturnsAsync(vessel);
 
             _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<AccountTitleDto> 
-                { 
+                .ReturnsAsync(new List<AccountTitleDto>
+                {
                     new() { AccountNumber = "101020100", AccountId = 1, AccountName = "AR Trade" },
                     new() { AccountNumber = "401020100", AccountId = 2, AccountName = "Service Revenue" },
                     new() { AccountNumber = "201010101", AccountId = 3, AccountName = "Output VAT" }

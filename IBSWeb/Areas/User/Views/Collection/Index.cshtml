@@ -57,6 +57,11 @@
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-3">
             <div class="table-responsive" style="max-height: 70vh">
+                <div class="btn-group mb-3" role="group" aria-label="Filter Options">
+                    <button id="filterAll" class="btn btn-outline-primary active"> All</button>
+                    <button id="filterPending" class="btn btn-outline-primary"> Pending</button>
+                    <button id="filterPosted" class="btn btn-outline-primary"> Posted</button>
+                </div>
                 <table class="table table-hover mb-0" id="paginatedTable">
                     <thead class="bg-light">
                     <tr>
@@ -66,6 +71,7 @@
                         <th class="text-start">DATE DEPOSITED</th>
                         <th class="text-start">AMOUNT</th>
                         <th class="text-start">CUSTOMER</th>
+                        <th class="text-start">STATUS</th>
                         <th class="text-center" style="width: 100px;">ACTIONS</th>
                     </tr>
                     </thead>
@@ -82,10 +88,14 @@
             const previewUrl = '@Url.Action("Preview", "Collection")';
             const editUrl = '@Url.Action("Edit", "Collection")';
 
+            // Get status from URL on load
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusFilter = urlParams.get('status') || '';
+
             let table = $('#paginatedTable').DataTable({
                 "order": [[1, 'asc']],
                 "columnDefs": [
-                    { "orderable": false, "targets": [6] }
+                    { "orderable": false, "targets": [7] }
                 ],
                 "processing": true,
                 "serverSide": true,
@@ -132,6 +142,21 @@
                     },
                     {"data": "customer.customerName"},
                     {
+                        "data": "status",
+                        "orderable": true,
+                        "className": "text-center",
+                        "render": function(data, type, row) {
+                            let statusColor = ``;
+                            if (row.status === "@SD.CollectionStatus.Pending") statusColor = `bg-warning`;
+                            if (row.status === "@SD.CollectionStatus.Posted") statusColor = `bg-success`;
+                            if (row.status === "@SD.CollectionStatus.Cancelled") statusColor = `bg-secondary`;
+
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
+                    {
                         "data": "null",
                         "orderable": false,
                         "render": function(data, type, row) {
@@ -147,7 +172,52 @@
                             return actions;
                         }
                     }
-                ]
+                ],
+                "initComplete": function(settings, json) {
+                    if (statusFilter) {
+                        this.api().column(6).search(statusFilter).draw();
+
+                        // Set active button
+                        $('.btn-group button').removeClass('active');
+                        if (statusFilter === "@SD.CollectionStatus.Pending") $('#filterPending').addClass('active');
+                        else if (statusFilter === "@SD.CollectionStatus.Posted") $('#filterPosted').addClass('active');
+                        else $('#filterAll').addClass('active');
+                    }
+                }
+            });
+
+            function updateUrl(status) {
+                const url = new URL(window.location);
+                if (status) {
+                    url.searchParams.set('status', status);
+                } else {
+                    url.searchParams.delete('status');
+                }
+                window.history.replaceState({}, '', url);
+            }
+
+            $('#filterAll').on('click', function() {
+                table.columns().search('').draw();
+                updateUrl('');
+            });
+
+            $('#filterPending').on('click', function() {
+                const status = '@SD.CollectionStatus.Pending';
+                table.columns().search('');
+                table.columns(6).search(status).draw();
+                updateUrl(status);
+            });
+
+            $('#filterPosted').on('click', function() {
+                const status = '@SD.CollectionStatus.Posted';
+                table.columns().search('');
+                table.columns(6).search(status).draw();
+                updateUrl(status);
+            });
+
+            $('.btn-group button').on('click', function() {
+                $('.btn-group button').removeClass('active');
+                $(this).addClass('active');
             });
         });
     </script>
