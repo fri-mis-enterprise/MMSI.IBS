@@ -131,5 +131,21 @@ namespace IBS.Utility.Constants
             public const string Posted = "Posted";
             public const string Cancelled = "Cancelled";
         }
+
+        #region MSAP Accounting Accounts
+
+        public static class MsapAccounts
+        {
+            public const string CashInBank = "101010100";
+            public const string ArTrade = "101020100";
+            public const string ArTradeCwt = "101020200";
+            public const string ArTradeCwv = "101020300";
+            public const string Cwt = "101060400";
+            public const string Cwv = "101060600";
+            public const string OutputVat = "201010101";
+            public const string MaritimeServiceRevenue = "401020100";
+        }
+
+        #endregion
     }
 }

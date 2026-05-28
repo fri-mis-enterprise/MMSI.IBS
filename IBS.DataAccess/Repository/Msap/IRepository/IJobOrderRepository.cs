@@ -9,6 +9,7 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
         Task<IEnumerable<JobOrder>> GetJobOrdersWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken);
         Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken);
         Task<string> GenerateJobOrderNumber(CancellationToken cancellationToken);
+        Task<List<JobOrder>> SearchBillableJobOrdersAsync(string term, int customerId, int limit, CancellationToken cancellationToken);
     }
 }
 

@@ -41,6 +41,20 @@ namespace IBS.DataAccess.Repository.Msap
 
             return ports;
         }
+        public async Task<List<Principal>> SearchPrincipalsAsync(string term, int customerId, int limit, CancellationToken cancellationToken)
+        {
+            var query = dbSet.AsNoTracking().Where(p => p.CustomerId == customerId);
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var s = term.ToLower();
+                query = query.Where(p => p.PrincipalName.ToLower().Contains(s) || p.PrincipalNumber.ToLower().Contains(s));
+            }
+
+            return await query
+                .OrderBy(p => p.PrincipalName)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
 

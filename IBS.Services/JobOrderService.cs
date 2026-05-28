@@ -24,6 +24,14 @@ namespace IBS.Services
         {
             try
             {
+                if (jobOrder.PlannedStartTime.HasValue && jobOrder.PlannedEndTime.HasValue)
+                {
+                    if (jobOrder.PlannedEndTime <= jobOrder.PlannedStartTime)
+                    {
+                        return ServiceResult<int>.Failure("Planned End Time must be strictly after Planned Start Time.");
+                    }
+                }
+
                 jobOrder.Status = SD.JobOrderStatus.Open;
                 jobOrder.JobOrderNumber = await unitOfWork.JobOrder.GenerateJobOrderNumber(cancellationToken);
                 jobOrder.CreatedBy = username;
@@ -55,6 +63,14 @@ namespace IBS.Services
                 if (jobOrder.Status == SD.JobOrderStatus.Closed || jobOrder.Status == SD.JobOrderStatus.Cancelled)
                 {
                     return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is {jobOrder.Status.ToLower()} and cannot be edited.");
+                }
+
+                if (model.PlannedStartTime.HasValue && model.PlannedEndTime.HasValue)
+                {
+                    if (model.PlannedEndTime <= model.PlannedStartTime)
+                    {
+                        return ServiceResult.Failure("Planned End Time must be strictly after Planned Start Time.");
+                    }
                 }
 
                 jobOrder.Date = model.Date;

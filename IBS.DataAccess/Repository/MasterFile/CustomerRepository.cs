@@ -125,5 +125,19 @@ namespace IBS.DataAccess.Repository.MasterFile
 
             return await query.ToListAsync(cancellationToken);
         }
+        public async Task<List<Customer>> SearchCustomersAsync(string term, int limit, CancellationToken cancellationToken)
+        {
+            var query = dbSet.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var s = term.ToLower();
+                query = query.Where(c => c.CustomerName.ToLower().Contains(s) || c.CustomerCode.ToLower().Contains(s));
+            }
+
+            return await query
+                .OrderBy(c => c.CustomerName)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

@@ -7,6 +7,7 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
     {
         Task SaveAsync(CancellationToken cancellationToken);
 
+        Task<List<Principal>> SearchPrincipalsAsync(string term, int customerId, int limit, CancellationToken cancellationToken);
     }
 }
 

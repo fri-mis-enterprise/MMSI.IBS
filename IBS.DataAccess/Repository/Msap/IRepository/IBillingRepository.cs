@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MSAP;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -27,6 +28,16 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
         Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default);
 
         Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default);
+
+        Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
+
+        Task RemoveSalesBookEntryAsync(int documentId, string serialNo, CancellationToken cancellationToken);
+
+        Task<List<Billing>> GetBillingsByCollectionIdAsync(int collectionId, CancellationToken cancellationToken);
+
+        Task AddSalesBookAsync(IBS.Models.Books.SalesBook salesBook, CancellationToken cancellationToken);
+
+        Task AddGeneralLedgerEntriesAsync(List<IBS.Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken);
     }
 }
 

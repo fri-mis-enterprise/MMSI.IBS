@@ -71,6 +71,24 @@ namespace IBS.DataAccess.Repository.Msap
 
             return $"JO-{year}-0001";
         }
+        public async Task<List<JobOrder>> SearchBillableJobOrdersAsync(string term, int customerId, int limit, CancellationToken cancellationToken)
+        {
+            var query = dbSet.AsNoTracking()
+                .Where(j => j.CustomerId == customerId &&
+                            j.DispatchTickets.Any(dt => dt.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) &&
+                            !j.DispatchTickets.Any(dt => dt.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.Pending || dt.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForTariff || dt.Status == IBS.Utility.Constants.SD.DispatchTicketStatus.ForApproval));
+
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var s = term.ToLower();
+                query = query.Where(j => j.JobOrderNumber.ToLower().Contains(s));
+            }
+
+            return await query
+                .OrderByDescending(j => j.Date)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
 

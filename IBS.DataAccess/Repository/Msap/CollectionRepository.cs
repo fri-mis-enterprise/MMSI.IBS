@@ -1,10 +1,12 @@
 using IBS.Models.Books;
 using System.Linq.Expressions;
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.Models.Enums;
 using IBS.Models;
 using IBS.Models.MSAP;
+using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -135,12 +137,12 @@ namespace IBS.DataAccess.Repository.Msap
         {
             var ledgers = new List<GeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
-            var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
-            var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
-            var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
-            var cwt = accountTitlesDto.Find(c => c.AccountNumber == "101060400") ?? throw new ArgumentException("Account title '101060400' not found.");
-            var cwv = accountTitlesDto.Find(c => c.AccountNumber == "101060600") ?? throw new ArgumentException("Account title '101060600' not found.");
+            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.CashInBank) ?? throw new ArgumentException($"Account title '{SD.MsapAccounts.CashInBank}' not found.");
+            var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.ArTrade) ?? throw new ArgumentException($"Account title '{SD.MsapAccounts.ArTrade}' not found.");
+            var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.ArTradeCwt) ?? throw new ArgumentException($"Account title '{SD.MsapAccounts.ArTradeCwt}' not found.");
+            var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.ArTradeCwv) ?? throw new ArgumentException($"Account title '{SD.MsapAccounts.ArTradeCwv}' not found.");
+            var cwt = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.Cwt) ?? throw new ArgumentException($"Account title '{SD.MsapAccounts.Cwt}' not found.");
+            var cwv = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.Cwv) ?? throw new ArgumentException($"Account title '{SD.MsapAccounts.Cwv}' not found.");
             var offsetAmount = 0m;
 
             var customerName = collection.Customer?.CustomerName ?? "Unknown Customer";
@@ -512,6 +514,41 @@ namespace IBS.DataAccess.Repository.Msap
             }
 
             return "CL" + (DateTime.Now.Ticks % 100000000).ToString("D8");
+        }
+
+        public async Task<(IEnumerable<Collection> Data, int RecordsFiltered, int TotalRecords)> GetPagedCollectionsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            var query = dbSet
+                .Include(c => c.Customer)
+                .Include(c => c.BankAccount)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(parameters.Search.Value))
+            {
+                var s = parameters.Search.Value.ToLower();
+                query = query.Where(c =>
+                    c.MsapCollectionNumber.ToLower().Contains(s) ||
+                    c.Customer.CustomerName.ToLower().Contains(s) ||
+                    (c.Status != null && c.Status.ToLower().Contains(s))
+                );
+            }
+
+            var totalRecords = await dbSet.CountAsync(cancellationToken);
+            var recordsFiltered = await query.CountAsync(cancellationToken);
+
+            if (parameters.Order?.Count > 0)
+            {
+                var col = parameters.Columns[parameters.Order[0].Column].Data;
+                var dir = parameters.Order[0].Dir.ToLower() == "asc" ? "ascending" : "descending";
+                query = query.OrderBy($"{col} {dir}");
+            }
+
+            var data = await query
+                .Skip(parameters.Start)
+                .Take(parameters.Length)
+                .ToListAsync(cancellationToken);
+
+            return (data, recordsFiltered, totalRecords);
         }
     }
 }

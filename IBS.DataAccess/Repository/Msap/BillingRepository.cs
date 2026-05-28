@@ -1,9 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models;
 using IBS.Models.MSAP;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Linq.Dynamic.Core;
 
 namespace IBS.DataAccess.Repository.Msap
 {
@@ -189,7 +191,7 @@ namespace IBS.DataAccess.Repository.Msap
 
         public Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default)
         {
-            // Splitting the address for the view
+            // ... (rest of ProcessAddress implementation)
             var words = model.PrincipalId != null
                 ? model.Principal?.Address1.Split(' ')
                 : model.Customer?.CustomerAddress.Split(' ');
@@ -236,6 +238,69 @@ namespace IBS.DataAccess.Repository.Msap
             model.AddressLine4 = fourthString;
 
             return model;
+        }
+
+        public async Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            var query = dbSet
+                .Include(b => b.Customer)
+                .Include(b => b.Terminal).ThenInclude(b => b.Port)
+                .Include(b => b.Vessel)
+                .Where(b => b.Status != IBS.Utility.Constants.SD.BillingStatus.Cancelled);
+
+            if (!string.IsNullOrEmpty(parameters.Search.Value))
+            {
+                var s = parameters.Search.Value.ToLower();
+                query = query.Where(dt =>
+                    dt.MsapBillingNumber.ToLower().Contains(s) ||
+                    dt.Customer.CustomerName.ToLower().Contains(s) ||
+                    dt.Vessel.VesselName.ToLower().Contains(s) ||
+                    dt.Status.ToLower().Contains(s)
+                );
+            }
+
+            var totalRecords = await dbSet.CountAsync(cancellationToken);
+            var recordsFiltered = await query.CountAsync(cancellationToken);
+
+            if (parameters.Order?.Count > 0)
+            {
+                var col = parameters.Columns[parameters.Order[0].Column].Data;
+                var dir = parameters.Order[0].Dir.ToLower() == "asc" ? "ascending" : "descending";
+                query = query.OrderBy($"{col} {dir}");
+            }
+
+            var data = await query
+                .Skip(parameters.Start)
+                .Take(parameters.Length)
+                .ToListAsync(cancellationToken);
+
+            return (data, recordsFiltered, totalRecords);
+        }
+
+        public async Task RemoveSalesBookEntryAsync(int documentId, string serialNo, CancellationToken cancellationToken)
+        {
+            var salesBook = await _db.SalesBooks.FirstOrDefaultAsync(s => s.DocumentId == documentId && s.SerialNo == serialNo, cancellationToken);
+            if (salesBook != null)
+            {
+                _db.SalesBooks.Remove(salesBook);
+            }
+        }
+
+        public async Task<List<Billing>> GetBillingsByCollectionIdAsync(int collectionId, CancellationToken cancellationToken)
+        {
+            return await _db.MsapBillings
+                .Where(b => b.CollectionId == collectionId)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task AddSalesBookAsync(IBS.Models.Books.SalesBook salesBook, CancellationToken cancellationToken)
+        {
+            await _db.SalesBooks.AddAsync(salesBook, cancellationToken);
+        }
+
+        public async Task AddGeneralLedgerEntriesAsync(List<IBS.Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken)
+        {
+            await _db.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
         }
     }
 }

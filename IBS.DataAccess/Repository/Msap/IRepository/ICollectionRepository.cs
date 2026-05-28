@@ -29,6 +29,8 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
         Task UpdateBillingPayment(int billingId, decimal paidAmount, CancellationToken cancellationToken = default);
 
         Task RemoveBillingPayment(int billingId, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
+
+        Task<(IEnumerable<Collection> Data, int RecordsFiltered, int TotalRecords)> GetPagedCollectionsAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
     }
 }
 
