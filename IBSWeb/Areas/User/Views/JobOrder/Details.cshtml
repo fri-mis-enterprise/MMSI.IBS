@@ -140,16 +140,6 @@
                                 <div class="text-muted small">No planned schedule set</div>
                             }
                         </div>
-                        <div class="col-6">
-                            <label class="text-muted small mb-1"><i class="bi bi-water me-1"></i>Preferred Tugboat</label>
-                            <div class="fw-bold">@(Model.PreferredTugboat?.TugboatName ?? "-")</div>
-                        </div>
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">Required Tugs</label>
-                            <div>
-                                <span class="badge bg-secondary">@Model.RequiredTugCount</span>
-                            </div>
-                        </div>
                     </div>
 
                     @if (!string.IsNullOrEmpty(Model.Remarks))

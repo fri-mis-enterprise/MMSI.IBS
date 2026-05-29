@@ -6,6 +6,16 @@
 
 <link rel="stylesheet" href="~/css/index-style.css">
 
+<style>
+    .form-control, .form-select, .input-group-text {
+        border: 1px solid #ced4da !important;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
+</style>
+
 <div class="container-fluid mt-4">
     <div class="card shadow border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center p-3">
@@ -17,9 +27,9 @@
         <div class="card-body p-4">
             <form asp-action="Edit" method="post">
                 <input type="hidden" asp-for="JobOrderId" />
-                
+
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                
+
                 @if (ViewData["HasTickets"] as bool? == true)
                 {
                     <div class="alert alert-warning d-flex align-items-start mb-3" role="alert">
@@ -27,7 +37,7 @@
                         <div>
                             <strong>Warning: Existing Dispatch Tickets</strong>
                             <p class="mb-0 small">
-                                This Job Order has existing dispatch tickets. Changing details (especially Port, Terminal, or Vessel) 
+                                This Job Order has existing dispatch tickets. Changing details (especially Port, Terminal, or Vessel)
                                 may require you to review and update the affected tickets to ensure consistency.
                             </p>
                         </div>
@@ -101,20 +111,6 @@
                         <label asp-for="PlannedEndTime" class="form-label fw-bold"></label>
                         <input asp-for="PlannedEndTime" type="datetime-local" class="form-control" />
                         <span asp-validation-for="PlannedEndTime" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-12 col-md-3">
-                        <label asp-for="RequiredTugCount" class="form-label fw-bold"></label>
-                        <input asp-for="RequiredTugCount" type="number" class="form-control" min="1" max="10" />
-                        <span asp-validation-for="RequiredTugCount" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label asp-for="PreferredTugboatId" class="form-label fw-bold"></label>
-                        <select asp-for="PreferredTugboatId" asp-items="@Model.Tugboats" class="form-select js-select2">
-                            <option value="">-- No Preferred Tugboat --</option>
-                        </select>
-                        <span asp-validation-for="PreferredTugboatId" class="text-danger"></span>
                     </div>
 
                     <div class="col-12 col-md-6 d-flex align-items-end">

@@ -451,6 +451,28 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(new { success = result.IsSuccess, message = result.Message });
         }
 
+        /// <summary>
+        /// Generic endpoint to change the status of a Dispatch Ticket and log the activity.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ChangeStatus(int id, string status, string activity, string docType, string successMessage, CancellationToken cancellationToken)
+        {
+            var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+            if (model == null)
+            {
+                return Json(new { success = false, message = "Ticket not found." });
+            }
+
+            model.Status = status;
+            model.EditedBy = User.Identity?.Name ?? "System";
+            model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+            await unitOfWork.AuditTrail.AddAsync(new AuditTrail(model.EditedBy, $"{activity} for {docType} #{model.DispatchNumber}", docType), cancellationToken);
+            await unitOfWork.SaveAsync(cancellationToken);
+
+            return Json(new { success = true, message = successMessage });
+        }
+
         #endregion
 
         #region AJAX Endpoints

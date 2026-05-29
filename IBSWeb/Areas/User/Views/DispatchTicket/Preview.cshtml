@@ -1,382 +1,384 @@
-﻿@model IBS.Models.MSAP.DispatchTicket
+@model IBS.Models.MSAP.DispatchTicket
 
 @{
-    ViewData["Title"] = "Dispatch Ticket - Preview";
-
+    ViewData["Title"] = $"Dispatch Ticket - {Model.DispatchNumber}";
     var filterType = ViewBag.FilterType as string;
 }
 
-<div class="card text-dark bg-white  m-4">
+<style>
+    .sticky-panel {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 150px);
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
 
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center">
-            <h2 class="text-white py-2">@ViewData["Title"]</h2>
-        </div>
-    </div>
-
-    <div class="card-body p-3 m-0">
-        <div class="row g-0 justify-content-center">
-            <div class="col p-2 border rounded">
-                <div class="row m-2">
-                    <div class="col">
-                        <h5>DISPATCH TICKET DETAILS</h5>
-                    </div>
-                </div>
-                <table class="table table-borderless" style="font-size: 18px;">
-                    <tbody>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH #:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNumber</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>COS #:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.COSNumber</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>CUSTOMER: </b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Customer?.CustomerName</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VOYAGE #:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.VoyageNumber</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Date</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGMASTER:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster?.TugMasterName</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGBOAT:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat?.TugboatName</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel?.VesselName</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
-                            @if (Model.Terminal is not null)
-                            {
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">
-                                    @Model.Terminal.Port?.PortName - @Model.Terminal.TerminalName
-                                </td>
-                            }
-                            else
-                            {
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;"></td>
-                            }
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL TYPE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel?.VesselType</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-3 ps-4" style="width: 120px;"><b>REMARKS: </b></td>
-                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;" colspan="3">@Model.Remarks</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="card-body p-3 m-0">
-        <div class="row g-0 justify-content-center">
-            <div class="col p-3 border rounded">
-                <div class="row m-2 justify-content-start d-flex">
-                    <div class="col-3">
-                        <h5>TARIFF DETAILS</h5>
-                    </div>
-                    <div class="col-5">
-                        @if (Model.Status == SD.DispatchTicketStatus.ForApproval)
-                        {
-                            <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                <img alt="OrangePendingIcon" src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
-                                <h5 class="text-warning ms-2 mb-0">For Approval</h5>
-                            </div>
-                        }
-
-                        @if (Model.Status == SD.DispatchTicketStatus.ForBilling)
-                        {
-                            <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                <img alt="greenCheckIcon" src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
-                                <h5 class="text-success ms-2 mb-0">Tariff Approved</h5>
-                            </div>
-                        }
-
-                        @if (Model.Status == SD.DispatchTicketStatus.Disapproved)
-                        {
-                            <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                <img alt="RedCrossIcon" src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
-                                <h5 class="text-danger ms-2 mb-0">Tariff Disapproved</h5>
-                            </div>
-                        }
-                    </div>
-                </div>
-                <table class="table table-borderless" style="font-size: 18px;">
-                    <tbody>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString(SD.Two_Decimal_Format)</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString(SD.Two_Decimal_Format)</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString(SD.Two_Decimal_Format)</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString(SD.Two_Decimal_Format)</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
-                    </tr>
-                    <tr>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString(SD.Two_Decimal_Format)</td>
-                        <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString(SD.Two_Decimal_Format)</td>
-                    </tr>
-                    @if  (Model.Tugboat is { IsCompanyOwned: false })
-                    {
-                        <tr>
-                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>AP OTHER TUGS: </b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.ApOtherTugs.ToString(SD.Two_Decimal_Format)</td>
-                            <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>TUGBOAT OWNER:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatOwner?.TugboatOwnerName</td>
-                        </tr>
-                    }
-                    <tr>
-                        <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
-                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString(SD.Two_Decimal_Format)</b></td>
-                        <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
-                        <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString(SD.Two_Decimal_Format)</b></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="row col-12 justify-content-end mb-4">
-            @if (Model.Status == SD.DispatchTicketStatus.ForApproval)
-            {
-                <div class="text-center" style="width: 250px;">
-                    <button type="button" id="approveTariff" data-id="@Model.DispatchTicketId" class="btn btn-success col-12 align-content-center">
-                        <i class="bi bi-check-circle"></i> Approve
-                    </button>
-                </div>
-                <div class="text-center" style="width: 250px;">
-                    <button type="button" id="disapproveTariff" data-id="@Model.DispatchTicketId" class="btn btn-danger col-12 align-content-center">
-                        <i class="bi bi-x-circle"></i> Disapprove
-                    </button>
-                </div>
-            }
-            else if (Model.Status == SD.DispatchTicketStatus.ForBilling)
-            {
-                <div class="text-center" style="width: 250px;">
-                    <button type="button" id="revokeApproval" data-id="@Model.DispatchTicketId" class="btn btn-warning col-12 align-content-center">
-                        <i class="bi bi-arrow-counterclockwise"></i> Revoke Approval
-                    </button>
-                </div>
-            }
-
-            <div class="text-center" style="width: 250px;">
+<div class="container-fluid mt-4">
+    <!-- Header Card -->
+    <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center p-3">
+            <h5 class="m-0"><i class="bi bi-file-earmark-text me-2"></i>@Model.DispatchNumber</h5>
+            <div class="d-flex gap-2">
                 @if (Model.JobOrderId.HasValue)
                 {
-                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value">
-                        <i class="bi bi-arrow-90deg-left"></i> Back to Job Order
+                    <a class="btn btn-light" asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value">
+                        <i class="bi bi-arrow-left"></i> Back to Job Order
                     </a>
                 }
                 else
                 {
-                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index" asp-area="User" asp-route-filterType="@filterType">
-                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    <a class="btn btn-light" asp-controller="DispatchTicket" asp-action="Index" asp-area="User" asp-route-filterType="@filterType">
+                        <i class="bi bi-arrow-left"></i> Back to List
                     </a>
                 }
+            </div>
+        </div>
+    </div>
+
+    <!-- 2-Panel Layout -->
+    <div class="row g-4">
+        <!-- Left Panel: Dispatch Information (35%) -->
+        <div class="col-lg-4 col-md-5">
+            <div class="card shadow border-0 sticky-panel">
+                <div class="card-header bg-primary text-white p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0"><i class="bi bi-info-circle me-2"></i>Dispatch Details</h6>
+                        <span class="badge @(Model.Status == SD.DispatchTicketStatus.ForBilling ? "bg-success" : (Model.Status == SD.DispatchTicketStatus.Disapproved ? "bg-danger" : "bg-warning text-dark")) fs-6">
+                            @Model.Status
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <!-- Customer & Vessel -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="text-muted small mb-1">Customer</label>
+                            <div class="fw-bold text-primary">@Model.Customer?.CustomerName</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-muted small mb-1">Vessel</label>
+                            <div class="fw-bold">@Model.Vessel?.VesselName <span class="badge bg-info text-dark ms-1 fw-normal">@Model.Vessel?.VesselType</span></div>
+                        </div>
+                    </div>
+
+                    <hr class="my-2">
+
+                    <!-- Logistics Info -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">COS #</label>
+                            <div class="fw-bold">@(Model.COSNumber ?? "-")</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small mb-1">Voyage #</label>
+                            <div class="fw-bold">@(Model.VoyageNumber ?? "-")</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-muted small mb-1">Tugboat / Tugmaster</label>
+                            <div class="fw-bold small">@Model.Tugboat?.TugboatName / @Model.TugMaster?.TugMasterName</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-muted small mb-1">Port - Terminal</label>
+                            <div class="small">
+                                @if (Model.Terminal?.Port != null)
+                                {
+                                    <text>@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</text>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-2">
+
+                    <!-- Timeline -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="text-muted small mb-1"><i class="bi bi-clock-history me-1"></i>Timeline</label>
+                            <div class="small">
+                                <div class="text-success"><i class="bi bi-play-circle me-1"></i>Start: @Model.DateLeft?.ToString("MMM dd"), @Model.TimeLeft</div>
+                                <div class="text-danger"><i class="bi bi-stop-circle me-1"></i>End: @Model.DateArrived?.ToString("MMM dd"), @Model.TimeArrived</div>
+                                <div class="mt-1 fw-bold">Duration: @Model.TotalHours.ToString("N2") hrs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Remarks))
+                    {
+                        <hr class="my-2">
+                        <div>
+                            <label class="text-muted small mb-1">Remarks</label>
+                            <p class="mb-0 small text-muted">@Model.Remarks</p>
+                        </div>
+                    }
+
+                    <!-- Attachments Section in Side Panel -->
+                    <hr class="my-3">
+                    <h6 class="small fw-bold text-muted mb-3"><i class="bi bi-paperclip me-1"></i>ATTACHMENTS</h6>
+                    <div class="row g-2">
+                        @if (!string.IsNullOrEmpty(Model.ImageName))
+                        {
+                            <div class="col-6">
+                                <div class="border rounded p-1 text-center bg-light">
+                                    <img src="@Model.ImageSignedUrl" class="img-fluid rounded cursor-pointer" id="viewUpload" alt="Ticket" style="max-height: 80px;" />
+                                    <div class="small mt-1 text-primary cursor-pointer" onclick="$('#viewUpload').click()">View Image</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.VideoName))
+                        {
+                            <div class="col-6">
+                                <div class="border rounded p-1 text-center bg-light d-flex flex-column align-items-center justify-content-center" style="height: 106px;">
+                                    <i class="bi bi-play-btn fs-2 text-primary"></i>
+                                    <div class="small mt-1 text-primary cursor-pointer view-video" data-videolink="@Model.VideoSignedUrl">Play Video</div>
+                                </div>
+                            </div>
+                        }
+                        @if (string.IsNullOrEmpty(Model.ImageName) && string.IsNullOrEmpty(Model.VideoName))
+                        {
+                            <div class="col-12 text-center py-2 text-muted small">No attachments</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Tariff Details (65%) -->
+        <div class="col-lg-8 col-md-7">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white p-3">
+                    <h5 class="m-0 text-primary"><i class="bi bi-cash-stack me-2"></i>Tariff Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Revenue Breakdown -->
+                        <div class="col-md-6">
+                            <div class="card border shadow-sm">
+                                <div class="card-header bg-light py-2 px-3 fw-bold small text-secondary">DISPATCH REVENUE</div>
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Rate:</span>
+                                        <span class="fw-bold">@Model.DispatchRate.ToString("C2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Discount:</span>
+                                        <span class="text-danger">@Model.DispatchDiscount%</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted small">Billing Amount:</span>
+                                        <span class="fw-bold text-primary">@Model.DispatchBillingAmount.ToString("C2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <span class="text-muted small">Net Revenue:</span>
+                                        <span class="fw-bold text-success">@Model.DispatchNetRevenue.ToString("C2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border shadow-sm">
+                                <div class="card-header bg-light py-2 px-3 fw-bold small text-secondary">BAF REVENUE</div>
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Rate:</span>
+                                        <span class="fw-bold">@Model.BAFRate.ToString("C2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Discount:</span>
+                                        <span class="text-danger">@Model.BAFDiscount%</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted small">Billing Amount:</span>
+                                        <span class="fw-bold text-primary">@Model.BAFBillingAmount.ToString("C2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <span class="text-muted small">Net Revenue:</span>
+                                        <span class="fw-bold text-success">@Model.BAFNetRevenue.ToString("C2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grand Summary -->
+                        <div class="col-12">
+                            <div class="p-4 border rounded bg-primary bg-opacity-10 border-primary">
+                                <div class="row align-items-center text-center">
+                                    @if (Model.Tugboat is { IsCompanyOwned: false })
+                                    {
+                                        <div class="col-md-4 border-end border-primary">
+                                            <label class="text-muted small d-block">Provider: @Model.Tugboat.TugboatOwner?.TugboatOwnerName</label>
+                                            <span class="fw-bold text-danger">AP Other Tugs: @Model.ApOtherTugs.ToString("C2")</span>
+                                        </div>
+                                        <div class="col-md-4 border-end border-primary">
+                                            <label class="text-muted small d-block">TOTAL BILLING</label>
+                                            <span class="fw-bold fs-4 text-primary">@Model.TotalBilling.ToString("C2")</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="text-muted small d-block">TOTAL NET REVENUE</label>
+                                            <span class="fw-bold fs-4 text-success">@Model.TotalNetRevenue.ToString("C2")</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="col-md-6 border-end border-primary">
+                                            <label class="text-muted small d-block">TOTAL BILLING</label>
+                                            <span class="fw-bold fs-3 text-primary">@Model.TotalBilling.ToString("C2")</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted small d-block">TOTAL NET REVENUE</label>
+                                            <span class="fw-bold fs-3 text-success">@Model.TotalNetRevenue.ToString("C2")</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                        @if (Model.Status == SD.DispatchTicketStatus.ForApproval)
+                        {
+                            <button type="button" id="approveTariff" data-id="@Model.DispatchTicketId" class="btn btn-success px-4">
+                                <i class="bi bi-check-circle me-1"></i> Approve Tariff
+                            </button>
+                            <button type="button" id="disapproveTariff" data-id="@Model.DispatchTicketId" class="btn btn-danger px-4">
+                                <i class="bi bi-x-circle me-1"></i> Disapprove
+                            </button>
+                        }
+                        else if (Model.Status == SD.DispatchTicketStatus.ForBilling)
+                        {
+                            <button type="button" id="revokeApproval" data-id="@Model.DispatchTicketId" class="btn btn-warning px-4">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Revoke Approval
+                            </button>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         $(document).ready(function () {
-            document.getElementById('viewUpload')?.addEventListener('click', function () {
-                let maxHeight = window.innerHeight * 0.8;
-
+            // Image Preview
+            $('#viewUpload').on('click', function () {
                 Swal.fire({
-                    imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
-                    imageAlt: "Custom image",
+                    imageUrl: $(this).attr('src'),
+                    imageAlt: "Dispatch Ticket",
                     showConfirmButton: false,
                     background: 'transparent',
-                    customClass: {
-                        popup: 'custom-image-popup' // Unique class for this modal
-                    },
                     padding: 0,
                     width: 'auto',
                     heightAuto: true,
                     didOpen: () => {
-                        let swal2Image = $('.swal2-image');
-                        swal2Image.css('max-height', maxHeight + 'px');
-                        swal2Image.css('height', 'auto');
+                        $('.swal2-image').css({'max-height': '80vh', 'height': 'auto'});
                     }
                 });
             });
 
-            document.getElementById('approveTariff')?.addEventListener('click', function () {
-                let id = this.getAttribute('data-id');
-                Swal.fire({
-                    title: "Approve this Tariff?",
-                    text: "The ticket will be available for billing.",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `id=${id}`
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire("Approved!", data.message, "success").then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire("Error!", data.message, "error");
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire("Error!", "An unexpected error occurred.", "error");
-                        });
-                    }
-                });
-            });
-
-            document.getElementById('revokeApproval')?.addEventListener('click', function () {
-
-                let id = this.getAttribute('data-id');
-
-                Swal.fire({
-                    title: "Revoke tariff status?",
-                    text: "This tariff will be editable again.",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch('@Url.Action("ChangeStatus", "DispatchTicket", new { area = "User" })', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `id=${id}&status=@SD.DispatchTicketStatus.ForApproval&activity=Revoked approval&docType=Dispatch Ticket&successMessage=Approval revoked successfully.`
-                        })
-                        .then(() => {
-                            location.reload();
-                        });
-                    }
-                });
-            });
-
-            document.getElementById('disapproveTariff')?.addEventListener('click', function () {
-                let id = this.getAttribute('data-id');
-                Swal.fire({
-                    title: "Disapprove this Tariff?",
-                    text: "Please provide a reason for disapproval:",
-                    input: 'text',
-                    inputPlaceholder: 'Reason (at least 10 characters)',
-                    showCancelButton: true,
-                    confirmButtonText: "Disapprove",
-                    inputValidator: (value) => {
-                        if (!value || value.length < 10) {
-                            return 'Please provide a detailed reason (at least 10 characters)';
-                        }
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `id=${id}&reason=${encodeURIComponent(result.value)}`
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire("Disapproved!", data.message, "success").then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire("Error!", data.message, "error");
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire("Error!", "An unexpected error occurred.", "error");
-                        });
-                    }
-                });
-            });
-
-            document.getElementById('deleteEntry')?.addEventListener('click', function () {
-
-                let id = this.getAttribute('data-id');
-
-                Swal.fire({
-                    title: "Delete this Dispatch Ticket?",
-                    text: "This action cannot be undone.",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '@Url.Action("Delete", "DispatchTicket", new { area = "User" })' + '/' + id;
-                    }
-                });
-            });
-
+            // Video Player
             $(document).on("click", ".view-video", function () {
-                const videoLink = this.getAttribute("data-videolink");
-                if (!videoLink) {
-                    console.error("No video found.");
-                    return;
-                }
-
-                const maxHeight = window.innerHeight * 0.8;
+                const videoLink = $(this).data("videolink");
+                if (!videoLink) return;
                 Swal.fire({
-                    html: `
-                            <video width="1280" height="720" controls>
-                                <source src="${videoLink}" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                            `,
+                    html: `<video width="100%" height="auto" controls autoplay class="rounded shadow"><source src="${videoLink}" type="video/mp4"></video>`,
                     showConfirmButton: false,
                     padding: 0,
-                    width: "auto",
-                    heightAuto: true,
+                    width: '80%',
                     background: "transparent",
-                    didOpen: () => {
-                        $(".swal2-image").css({
-                            "max-height": `${maxHeight}px`,
-                            "height": "auto"
+                });
+            });
+
+            // Approve Action
+            $('#approveTariff').on('click', function () {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Approve Tariff?',
+                    text: "This ticket will be marked for billing.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    confirmButtonText: 'Yes, Approve'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', { id: id }, function(data) {
+                            if (data.success) {
+                                Swal.fire('Approved!', data.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Error!', data.message, 'error');
+                            }
                         });
                     }
                 });
             });
 
+            // Revoke Approval
+            $('#revokeApproval').on('click', function () {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Revoke Approval?',
+                    text: "The tariff status will be reverted to For Approval.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ffc107',
+                    confirmButtonText: 'Yes, Revoke'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("ChangeStatus", "DispatchTicket", new { area = "User" })', {
+                            id: id,
+                            status: '@SD.DispatchTicketStatus.ForApproval',
+                            activity: 'Revoked approval',
+                            docType: 'Dispatch Ticket',
+                            successMessage: 'Approval revoked successfully.'
+                        }, function(data) {
+                            if (data.success) {
+                                Swal.fire('Revoked!', data.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Error!', data.message, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Disapprove
+            $('#disapproveTariff').on('click', function () {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Disapprove Tariff',
+                    text: "Please provide a reason (min 10 characters):",
+                    input: 'text',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    inputValidator: (value) => {
+                        if (!value || value.length < 10) return 'Reason must be at least 10 characters';
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
+                            id: id,
+                            reason: result.value
+                        }, function(data) {
+                            if (data.success) {
+                                Swal.fire('Disapproved!', data.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Error!', data.message, 'error');
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 }
-
-

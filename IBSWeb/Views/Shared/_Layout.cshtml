@@ -24,13 +24,6 @@
         return await AccessControl.HasMsapAccessAsync(userId);
     }
 
-    // Helper function to check specific JobOrder access
-    async Task<bool> HasJobOrderAccess()
-    {
-        if (string.IsNullOrEmpty(userId)) return false;
-        return await AccessControl.HasJobOrderAccessAsync(userId);
-    }
-
     // Helper function to check MSAP Import access
     async Task<bool> HasMsapImportAccess()
     {
@@ -92,21 +85,10 @@
                                         <li class="nav-item dropdown">
                                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">MSAP</a>
                                             <ul class="dropdown-menu">
-                                                @if (await HasJobOrderAccess())
-                                                {
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="User" title="Vessel Arrival Planning & Resource Scheduling" asp-controller="VesselPlanning" asp-action="Index">Vessel Planning</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="User" title="Tugboat Monitoring & Scheduling" asp-controller="TugboatMonitoring" asp-action="Index">Tugboat Monitoring</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="User" title="Manage Job Orders" asp-controller="JobOrder" asp-action="Index">Job Orders</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                }
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="User" title="Manage Job Orders" asp-controller="JobOrder" asp-action="Index">Job Orders</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" title="Create, Tariff, and Approve Dispatch Tickets" asp-area="User" asp-controller="DispatchTicket" asp-action="Index">Dispatch Tickets</a>
                                                 </li>
@@ -125,6 +107,14 @@
                                                         <a class="dropdown-item text-dark" asp-area="User" title="MSAP Data Import" asp-controller="MsapImport" asp-action="Index">MSAP Import</a>
                                                     </li>
                                                 }
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="User" title="Vessel Arrival Planning & Resource Scheduling" asp-controller="VesselPlanning" asp-action="Index">Vessel Planning</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="User" title="Tugboat Monitoring & Scheduling" asp-controller="TugboatMonitoring" asp-action="Index">Tugboat Monitoring</a>
+                                                </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li class="nav-item dropend">
                                                     <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
