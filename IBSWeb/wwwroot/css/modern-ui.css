@@ -241,7 +241,21 @@ textarea.form-control {
 
 /* Tables */
 .modern-table-container {
+    width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-xl);
+}
+
+.dt-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure the table itself is contained */
+.dt-container table {
+    width: 100% !important;
 }
 
 .modern-table {
@@ -250,29 +264,35 @@ textarea.form-control {
     border-collapse: collapse;
 }
 
-.modern-table thead {
-    background-color: var(--surface-container-low);
+.modern-table thead,
+table.dataTable thead {
+    background-color: var(--surface-container-low) !important;
 }
 
-.modern-table th {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #727878;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--outline-variant);
-    white-space: nowrap;
+.modern-table th,
+table.dataTable thead th {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: var(--on-surface-variant) !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--outline-variant) !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.02em !important;
 }
 
-.modern-table td {
-    padding: 12px 16px;
-    font-size: 13px;
-    border-bottom: 1px solid var(--surface-container-low);
-    white-space: nowrap;
+.modern-table td,
+table.dataTable tbody td {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    border-bottom: 1px solid var(--surface-container-low) !important;
+    white-space: nowrap !important;
+    color: var(--on-surface) !important;
 }
 
-.modern-table tr:hover {
-    background-color: rgba(222, 233, 252, 0.4);
+.modern-table tr:hover,
+table.dataTable tbody tr:hover {
+    background-color: rgba(222, 233, 252, 0.2) !important;
 }
 
 /* Badges */
@@ -540,11 +560,15 @@ textarea.form-control {
 }
 
 /* DataTables Controls Refinement - Supporting v2.0+ classes */
+.dt-container .flex-stack {
+    margin: 0 !important; /* Eliminate vertical margin bleed */
+}
+
 .dataTables_filter input,
 .dt-search input,
 .dt-input {
     width: 300px !important;
-    padding: 0.375rem 0.75rem 0.375rem 2.5rem !important;
+    padding: 0.5rem 0.75rem 0.5rem 2.5rem !important;
     border: 1px solid var(--outline-variant) !important;
     border-radius: var(--radius-xl) !important;
     background-color: #ffffff !important;
@@ -576,26 +600,118 @@ textarea.form-control {
 .dt-search label {
     font-size: 0.875rem !important;
     color: var(--on-surface-variant) !important;
-    margin-left: 0.5rem !important;
-    margin-right: 0.5rem !important;
+    margin: 0 !important; /* Kill default margin-bottom */
 }
 
-.dataTables_paginate .paginate_button {
+/* Pagination Styling (v2.0+) */
+.dt-paging {
+    display: flex !important;
+    gap: 4px !important;
+    align-items: center !important;
+}
+
+.dt-paging-button {
+    background-color: #ffffff !important;
+    border: 1px solid var(--outline-variant) !important;
+    color: var(--on-surface) !important;
     padding: 0.375rem 0.75rem !important;
     border-radius: var(--radius-lg) !important;
-    border: 1px solid var(--outline-variant) !important;
-    background: #ffffff !important;
-    color: var(--on-surface) !important;
-    margin-left: 4px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none !important;
 }
 
-.dataTables_paginate .paginate_button.current {
-    background: var(--primary) !important;
-    color: #ffffff !important;
-    border-color: var(--primary) !important;
+.dt-paging-button:hover:not(.disabled) {
+    background-color: var(--surface-container-high) !important;
+    border-color: var(--outline-variant) !important;
+    color: var(--primary) !important;
 }
 
-.dataTables_info {
-    font-size: 0.875rem !important;
+.dt-paging-button.current {
+    background-color: var(--surface-container-high) !important;
+    color: var(--primary) !important;
+    border-color: var(--outline-variant) !important;
+    font-weight: 700 !important;
+}
+
+.dt-paging-button.disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+    background-color: var(--surface-container-low) !important;
+}
+
+.dt-info {
+    font-size: 0.8125rem !important;
     color: var(--on-surface-variant) !important;
+    font-weight: 400 !important;
+}
+
+@media (max-width: 768px) {
+    /* Side-by-side header controls with switched order */
+    .dt-container .flex-stack:first-of-type {
+        flex-direction: row-reverse !important; /* Switch Search to left, Length to right */
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        margin-bottom: 1rem !important; /* Add space between header and table */
+    }
+
+    .dt-length {
+        width: auto !important;
+        margin: 0 !important;
+    }
+
+    .dt-search {
+        margin: 0 !important; /* Override DataTables mobile default margin-top: 0.5em */
+    }
+
+    .dt-length label,
+    .dt-search label {
+        display: none !important;
+    }
+
+    .dataTables_length select,
+    .dt-length select {
+        width: 70px !important;
+        height: 42px !important; /* Matched height */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin: 0 !important;
+    }
+
+    .dt-search {
+        flex: 1;
+        width: auto !important;
+    }
+
+    .dataTables_filter input,
+    .dt-search input,
+    .dt-input {
+        width: 100% !important;
+        height: 42px !important; /* Matched height */
+        margin: 0 !important;
+    }
+
+    /* Force footer DataTables internal layouts to stack */
+    .dt-container .flex-stack.mt-2,
+    .dt-layout-row:last-of-type {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1rem !important;
+    }
+
+    .dt-layout-cell {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .dt-paging {
+        justify-content: center !important;
+    }
 }

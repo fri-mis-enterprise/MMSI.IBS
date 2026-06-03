@@ -311,7 +311,15 @@
         };
 
         $(document).ready(function () {
-            // Dropdown toggle logic
+            let table = $('.modern-table').DataTable({
+                responsive: false,
+                pageLength: 10,
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search tickets..."
+                },
+                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>'
+            });
             $(document).on('click', '.dropdown-trigger', function(e) {
                 e.stopPropagation();
                 const $trigger = $(this);

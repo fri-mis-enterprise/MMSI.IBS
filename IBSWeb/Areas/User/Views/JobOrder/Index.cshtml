@@ -34,8 +34,7 @@
                 </div>
             </div>
             <div class="modern-card-body">
-                <div class="modern-table-container">
-                    <table class="modern-table" id="jobOrdersTable">
+                <table class="modern-table" id="jobOrdersTable">
                         <thead>
                             <tr>
                                 <th>Job Order #</th>
@@ -158,7 +157,7 @@
                 search: {
                     search: searchTerm
                 },
-                dom: '<"flex-stack mb-2"lf>rt<"flex-stack mt-2"ip>',
+                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
                 initComplete: function() {
                     // Custom styles are now handled by modern-ui.css
                 }
