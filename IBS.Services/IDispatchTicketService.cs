@@ -9,6 +9,7 @@ namespace IBS.Services
     public interface IDispatchTicketService
     {
         Task<DispatchTicket?> GetDispatchTicketByIdAsync(int id, CancellationToken cancellationToken);
+        Task<ServiceRequestViewModel> PopulateServiceRequestViewModelAsync(ServiceRequestViewModel? viewModel, int? jobOrderId, CancellationToken cancellationToken);
         Task<ServiceResult<int>> CreateDispatchTicketAsync(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, string username, CancellationToken cancellationToken);
         Task<ServiceResult> UpdateDispatchTicketAsync(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, string username, CancellationToken cancellationToken);
         Task<ServiceResult> SaveTariffAsync(DispatchTicket model, string chargeType, string chargeType2, string username, bool isEdit, CancellationToken cancellationToken);

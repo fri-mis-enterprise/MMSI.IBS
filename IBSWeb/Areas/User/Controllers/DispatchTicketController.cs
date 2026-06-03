@@ -52,28 +52,7 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
         public async Task<IActionResult> Create(int? jobOrderId, CancellationToken cancellationToken = default)
         {
-            var viewModel = new ServiceRequestViewModel();
-            ViewData["PortId"] = 0;
-
-            if (jobOrderId.HasValue)
-            {
-                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == jobOrderId.Value, cancellationToken);
-                if (jobOrder != null)
-                {
-                    viewModel.JobOrderId = jobOrderId;
-                    viewModel.CustomerId = jobOrder.CustomerId;
-                    viewModel.VesselId = jobOrder.VesselId;
-                    viewModel.PortId = jobOrder.PortId;
-                    viewModel.TerminalId = jobOrder.TerminalId;
-                    viewModel.VoyageNumber = jobOrder.VoyageNumber;
-                    viewModel.COSNumber = jobOrder.COSNumber;
-                    viewModel.Date = jobOrder.Date;
-                    ViewData["PortId"] = jobOrder.PortId;
-                }
-            }
-
-            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            var viewModel = await dispatchTicketService.PopulateServiceRequestViewModelAsync(null, jobOrderId, cancellationToken);
             return View(viewModel);
         }
 
@@ -90,8 +69,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+                await dispatchTicketService.PopulateServiceRequestViewModelAsync(viewModel, null, cancellationToken);
                 TempData["warning"] = "Can't create entry, please review your input.";
                 return View(viewModel);
             }
@@ -106,8 +84,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            await dispatchTicketService.PopulateServiceRequestViewModelAsync(viewModel, null, cancellationToken);
             return View(viewModel);
         }
 

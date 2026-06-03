@@ -3,8 +3,8 @@ using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
+using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -16,9 +16,7 @@ namespace IBSWeb.Areas.User.Controllers
     public class CollectionController(
         ICollectionService collectionService,
         IUnitOfWork unitOfWork,
-        UserManager<ApplicationUser> userManager,
-        ILogger<CollectionController> logger,
-        IUserAccessService userAccessService)
+        ILogger<CollectionController> logger)
         : Controller
     {
         #region Index
@@ -26,6 +24,9 @@ namespace IBSWeb.Areas.User.Controllers
         /// <summary>
         /// Displays the list of Collections.
         /// </summary>
+        [RequireAnyAccess(
+            "Access denied. You don't have permission to access Collections.",
+            ProcedureEnum.CreateCollection)]
         public IActionResult Index()
         {
             return View();
@@ -39,16 +40,9 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the form to create a new Collection.
         /// </summary>
         [HttpGet]
+        [RequireAccess(ProcedureEnum.CreateCollection, "Access denied. You don't have permission to create Collections.")]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
-                    ProcedureEnum.CreateCollection,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var model = await collectionService.PopulateCreateViewModelAsync(cancellationToken);
             return View(model);
         }
@@ -57,6 +51,8 @@ namespace IBSWeb.Areas.User.Controllers
         /// Processes the creation of a new Collection, including billing allocation and accounting posting.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateCollection, "Access denied. You don't have permission to create Collections.")]
         public async Task<IActionResult> Create(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
@@ -91,6 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the form to edit an existing Collection.
         /// </summary>
         [HttpGet]
+        [RequireAccess(ProcedureEnum.CreateCollection, "Access denied. You don't have permission to edit Collections.")]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
             var viewModel = await collectionService.PopulateEditViewModelAsync(id, cancellationToken);
@@ -107,6 +104,8 @@ namespace IBSWeb.Areas.User.Controllers
         /// Processes the update of an existing Collection, including reverting old allocations and applying new ones.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateCollection, "Access denied. You don't have permission to edit Collections.")]
         public async Task<IActionResult> Edit(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
@@ -149,6 +148,9 @@ namespace IBSWeb.Areas.User.Controllers
         /// <summary>
         /// Displays the details of a specific Collection, including associated paid billings.
         /// </summary>
+        [RequireAnyAccess(
+            "Access denied. You don't have permission to view Collections.",
+            ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken = default)
         {
             var collection = await collectionService.GetCollectionByIdAsync(id, cancellationToken);
@@ -167,6 +169,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> GetCollectionList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -197,6 +200,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves detailed information for a list of selected billings.
         /// </summary>
         [HttpPost]
+        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> GetSelectedBillings(List<string> billingIds, CancellationToken cancellationToken = default)
         {
             var result = await collectionService.GetSelectedBillingsAsync(billingIds, cancellationToken);
@@ -207,6 +211,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Checks if a customer is vatable based on their ID.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> IsCustomerVatable(int customerId, CancellationToken cancellationToken = default)
         {
             var isVatable = await collectionService.IsCustomerVatableAsync(customerId, cancellationToken);
@@ -217,6 +222,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves detailed information for a specific bank account.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> GetBankAccountDetails(int bankId, CancellationToken cancellationToken = default)
         {
             var result = await collectionService.GetBankAccountDetailsAsync(bankId, cancellationToken);
@@ -227,6 +233,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves uncollected billings (and optionally currently associated ones) for a specific customer in a detailed format for DataTables.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> GetUncollectedBillingsForTable(int customerId, int? collectionId, CancellationToken cancellationToken = default)
         {
             var result = await collectionService.GetUncollectedBillingsForTableAsync(customerId, collectionId, cancellationToken);
@@ -237,6 +244,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Searches for customers matching a search term.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
         {
             var result = await collectionService.SearchCustomersAsync(term, cancellationToken);

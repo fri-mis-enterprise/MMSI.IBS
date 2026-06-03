@@ -2,7 +2,9 @@ using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.ViewModels;
+using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@ using OfficeOpenXml.Style;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [RequireAccess(ProcedureEnum.ViewMaritimeReport)]
     public class MaritimeReportController(
         ApplicationDbContext dbContext,
         UserManager<ApplicationUser> userManager,

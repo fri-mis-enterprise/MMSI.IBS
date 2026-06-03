@@ -7,6 +7,7 @@ using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
+using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +19,10 @@ using Newtonsoft.Json;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [RequireAnyAccess(
+        "Access denied. You don't have permission to access Service Requests.",
+        ProcedureEnum.CreateServiceRequest,
+        ProcedureEnum.PostServiceRequest)]
     public class ServiceRequestController(
         ApplicationDbContext dbContext,
         IUnitOfWork unitOfWork,
@@ -67,33 +72,15 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
-            if (!await HasServiceRequestAccessAsync(cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction("Index",
-                    "Home",
-                    new
-                    {
-                        area = "User"
-                    });
-            }
-
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(Enumerable.Empty<DispatchTicket>());
         }
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to create Service Requests.")]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
-                    ProcedureEnum.CreateServiceRequest,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
-
             await GetCompanyClaimAsync();
             var viewModel = new ServiceRequestViewModel();
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,

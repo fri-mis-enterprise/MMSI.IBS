@@ -20,6 +20,7 @@ namespace IBS.Tests.Controllers
     {
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IJobOrderService> _mockJobOrderService;
+        private readonly Mock<IDispatchTicketService> _mockDispatchTicketService;
         private readonly Mock<IHubContext<TugboatHub>> _mockHubContext;
         private readonly JobOrderController _controller;
         private readonly Mock<ITempDataDictionary> _mockTempData;
@@ -28,6 +29,7 @@ namespace IBS.Tests.Controllers
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockJobOrderService = new Mock<IJobOrderService>();
+            _mockDispatchTicketService = new Mock<IDispatchTicketService>();
             _mockHubContext = new Mock<IHubContext<TugboatHub>>();
             _mockTempData = new Mock<ITempDataDictionary>();
 
@@ -40,6 +42,7 @@ namespace IBS.Tests.Controllers
             _controller = new JobOrderController(
                 _mockUnitOfWork.Object,
                 _mockJobOrderService.Object,
+                _mockDispatchTicketService.Object,
                 _mockHubContext.Object);
 
             // Mock User Identity

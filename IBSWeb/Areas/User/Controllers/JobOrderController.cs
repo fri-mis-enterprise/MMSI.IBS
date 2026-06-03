@@ -21,6 +21,7 @@ namespace IBSWeb.Areas.User.Controllers
     public class JobOrderController(
         IUnitOfWork unitOfWork,
         IJobOrderService jobOrderService,
+        IDispatchTicketService dispatchTicketService,
         IHubContext<TugboatHub> hubContext) : Controller
     {
         private const string _closeConfirmKey = "JobOrder_PendingCloseId";
@@ -53,8 +54,7 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateJobOrder, "Access denied. You don't have permission to create Job Orders.")]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new JobOrderViewModel { Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()) };
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
+            var viewModel = await jobOrderService.PopulateJobOrderViewModelAsync(null, cancellationToken);
 
             return View(viewModel);
         }
@@ -69,7 +69,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                await PopulateSelectListsAsync(viewModel, cancellationToken);
+                await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
                 return View(viewModel);
             }
 
@@ -100,7 +100,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
+            await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
             return View(viewModel);
         }
 
@@ -125,19 +125,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var ticketViewModel = new ServiceRequestViewModel
-            {
-                JobOrderId = jobOrder.JobOrderId,
-                CustomerId = jobOrder.CustomerId,
-                VesselId = jobOrder.VesselId,
-                PortId = jobOrder.PortId,
-                TerminalId = jobOrder.TerminalId,
-                COSNumber = jobOrder.COSNumber,
-                VoyageNumber = jobOrder.VoyageNumber,
-                Date = jobOrder.Date
-            };
-
-            ticketViewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(ticketViewModel, cancellationToken);
+            var ticketViewModel = await dispatchTicketService.PopulateServiceRequestViewModelAsync(null, id, cancellationToken);
             ViewData["TicketViewModel"] = ticketViewModel;
 
             return View(jobOrder);
@@ -185,7 +173,7 @@ namespace IBSWeb.Areas.User.Controllers
                 Remarks = jobOrder.Remarks
             };
 
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
+            await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
             ViewData["HasTickets"] = jobOrder.DispatchTickets.Any();
 
             return View(viewModel);
@@ -201,7 +189,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                await PopulateSelectListsAsync(viewModel, cancellationToken);
+                await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
                 return View(viewModel);
             }
 
@@ -238,7 +226,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
-            await PopulateSelectListsAsync(viewModel, cancellationToken);
+            await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
             return View(viewModel);
         }
 
@@ -394,59 +382,6 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var result = await jobOrderService.SearchCustomersAsync(term, cancellationToken);
             return Json(result);
-        }
-
-        #endregion
-
-        #region Private Helpers
-
-        /// <summary>
-        /// Populates the dropdown lists in the JobOrderViewModel.
-        /// </summary>
-        private async Task PopulateSelectListsAsync(JobOrderViewModel viewModel, CancellationToken cancellationToken)
-        {
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-
-            var vessels = await unitOfWork.Vessel.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Vessels = vessels
-                .OrderBy(v => v.VesselName)
-                .Select(v => new SelectListItem
-                {
-                    Value = v.VesselId.ToString(),
-                    Text = $"{v.VesselName} ({v.VesselType})"
-                })
-                .ToList();
-
-            var ports = await unitOfWork.Port.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Ports = ports
-                .OrderBy(p => p.PortName)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.PortId.ToString(),
-                    Text = p.PortName
-                })
-                .ToList();
-
-            viewModel.Terminals = viewModel.PortId != 0
-                ? (await unitOfWork.Terminal.GetAllAsync(t => t.PortId == viewModel.PortId, cancellationToken: cancellationToken))
-                    .OrderBy(t => t.TerminalName)
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.TerminalId.ToString(),
-                        Text = t.TerminalName
-                    })
-                    .ToList()
-                : new List<SelectListItem>();
-
-            var tugboats = await unitOfWork.Tugboat.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Tugboats = tugboats
-                .OrderBy(t => t.TugboatName)
-                .Select(t => new SelectListItem
-                {
-                    Value = t.TugboatId.ToString(),
-                    Text = t.TugboatName
-                })
-                .ToList();
         }
 
         #endregion

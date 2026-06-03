@@ -1,8 +1,10 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Models;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
@@ -18,6 +20,56 @@ namespace IBS.Services
         public async Task<JobOrder?> GetJobOrderByIdAsync(int id, CancellationToken cancellationToken)
         {
             return await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
+        }
+
+        public async Task<JobOrderViewModel> PopulateJobOrderViewModelAsync(JobOrderViewModel? viewModel, CancellationToken cancellationToken)
+        {
+            viewModel ??= new JobOrderViewModel { Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()) };
+
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+
+            var vessels = await unitOfWork.Vessel.GetAllAsync(cancellationToken: cancellationToken);
+            viewModel.Vessels = vessels
+                .OrderBy(v => v.VesselName)
+                .Select(v => new SelectListItem
+                {
+                    Value = v.VesselId.ToString(),
+                    Text = $"{v.VesselName} ({v.VesselType})"
+                })
+                .ToList();
+
+            var ports = await unitOfWork.Port.GetAllAsync(cancellationToken: cancellationToken);
+            viewModel.Ports = ports
+                .OrderBy(p => p.PortName)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.PortId.ToString(),
+                    Text = p.PortName
+                })
+                .ToList();
+
+            viewModel.Terminals = viewModel.PortId != 0
+                ? (await unitOfWork.Terminal.GetAllAsync(t => t.PortId == viewModel.PortId, cancellationToken: cancellationToken))
+                    .OrderBy(t => t.TerminalName)
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.TerminalId.ToString(),
+                        Text = t.TerminalName
+                    })
+                    .ToList()
+                : new List<SelectListItem>();
+
+            var tugboats = await unitOfWork.Tugboat.GetAllAsync(cancellationToken: cancellationToken);
+            viewModel.Tugboats = tugboats
+                .OrderBy(t => t.TugboatName)
+                .Select(t => new SelectListItem
+                {
+                    Value = t.TugboatId.ToString(),
+                    Text = t.TugboatName
+                })
+                .ToList();
+
+            return viewModel;
         }
 
         public async Task<ServiceResult<int>> CreateJobOrderAsync(JobOrder jobOrder, string username, CancellationToken cancellationToken)

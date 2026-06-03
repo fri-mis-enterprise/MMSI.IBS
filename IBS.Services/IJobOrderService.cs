@@ -1,4 +1,5 @@
 ﻿using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Helpers;
 
 namespace IBS.Services
@@ -7,6 +8,7 @@ namespace IBS.Services
     {
         Task<IEnumerable<JobOrder>> GetAllJobOrdersAsync(CancellationToken cancellationToken);
         Task<JobOrder?> GetJobOrderByIdAsync(int id, CancellationToken cancellationToken);
+        Task<JobOrderViewModel> PopulateJobOrderViewModelAsync(JobOrderViewModel? viewModel, CancellationToken cancellationToken);
         Task<ServiceResult<int>> CreateJobOrderAsync(JobOrder jobOrder, string username, CancellationToken cancellationToken);
         Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken);
         Task<ServiceResult> CancelJobOrderAsync(int id, string username, CancellationToken cancellationToken);

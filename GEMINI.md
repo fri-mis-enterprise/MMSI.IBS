@@ -1,38 +1,44 @@
 # MMSI-IBS Gemini Workspace
 
-This workspace is powered by a custom MCP server designed to handle the complexity of the MMSI-IBS N-Tier architecture.
+This workspace is powered by a custom MCP server designed to handle the complexity of the MMSI-IBS N-Tier architecture and MSAP modules.
 
 ## 🛠️ Specialized Tools
 
 ### 1. Code Oracle (`search_code_context`)
-Deep-dives into C# methods. It doesn't just show the code; it fetches the definitions of every DTO, Model, and Enum referenced in that method.
-- **Use for**: Understanding how a specific operation works without jumping between files.
+Deep-dives into C# methods. It fetches the method body plus definitions of every DTO, Model, and Enum referenced.
 - **Example**: `search_code_context(methodName: "Create")`
 
 ### 2. Logic Mapper (`trace_workflow`)
-Maps the execution path across layers. It follows the chain from Controller -> Service -> Repository.
-- **Use for**: Tracing complex business logic that spans multiple projects and files.
+Recursively maps the execution path from Controller ⮕ Service ⮕ Repository.
 - **Example**: `trace_workflow(methodName: "PostCheckVoucher", filePath: "IBSWeb/Areas/User/Controllers/CheckVoucherController.cs")`
 
-### 3. Data Guardian (`execute_sql`)
-Direct access to the PostgreSQL database (`mmsi_ibs_dev`). 
-- **Safety**: Automatically detects connection strings. **Prompt on Write** is enforced for any data modification.
-- **Use for**: Verifying data state, checking constraints, or performing safe data fixes.
+### 3. Action Analyst (`analyze_action`)
+Deep-dives into a specific Controller Action, showing its dependencies and related DTOs in one view.
+- **Example**: `analyze_action(methodName: "Index", filePath: "IBSWeb/Areas/User/Controllers/JobOrderController.cs")`
+
+### 4. Model Inspector (`read_model`)
+Provides a concise summary of a Model or DTO's properties and types.
+- **Example**: `read_model(modelName: "JobOrderDto")`
+
+### 5. Data Guardian (`execute_sql`)
+Direct access to the PostgreSQL database. **Prompt on Write** is enforced.
 - **Example**: `execute_sql(sql: "SELECT * FROM public.customer LIMIT 10")`
 
-### 4. Build Guard (`check_build_status`)
-Integrates the .NET build system.
-- **Use for**: Checking for compilation errors and warnings after making changes.
-- **Example**: `check_build_status()`
+### 6. Build Guard (`check_build_status`)
+Runs `dotnet build` and returns structured errors/warnings.
+
+### 7. CSV Explorer (`list_csv_files` & `query_csv`)
+Lists and queries legacy data or export logs stored in CSV format within the `Imports/` or `Exported/` directories.
 
 ## 📂 Project Structure
-- **Web UI**: `IBSWeb/`
-- **Services**: `IBS.Services/`
-- **Data Access**: `IBS.DataAccess/`
+- **Web UI**: `IBSWeb/` (Areas: Admin, User, Identity)
+- **Services**: `IBS.Services/` (Business Logic & Audit)
+- **Data Access**: `IBS.DataAccess/` (Repositories & DbContext)
 - **Models/DTOs**: `IBS.Models/` & `IBS.DTOs/`
-- **MCP Server**: `mcp-server/`
+- **Legacy/Static Data**: `Imports/` & `Exported/`
 
 ## 📜 Development Guidelines
-- Always verify your changes with `check_build_status`.
-- Use `trace_workflow` before refactoring core services to understand the impact on other layers.
-- Database connection settings are managed in `IBSWeb/appsettings.Development.json`.
+- **Architecture**: Strictly follow the 4-Tier pattern defined in `MSAP_ARCHITECTURAL_GUIDE.md`.
+- **Validation**: Always verify changes with `check_build_status`.
+- **Audit**: Every state-changing operation must be logged via the Audit Trail system.
+- **Traceability**: Use `trace_workflow` before refactoring to avoid breaking downstream dependencies.

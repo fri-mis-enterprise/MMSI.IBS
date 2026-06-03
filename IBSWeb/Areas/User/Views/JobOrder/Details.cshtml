@@ -1,301 +1,301 @@
-﻿@model IBS.Models.MSAP.JobOrder
+@model IBS.Models.MSAP.JobOrder
 
 @{
     ViewData["Title"] = $"Job Order {Model.JobOrderNumber}";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/index-style.css">
-
-<style>
-    .sticky-panel {
-        position: sticky;
-        top: 20px;
-        max-height: calc(100vh - 150px);
-    }
-</style>
-
-<div class="container-fluid mt-4">
-    <!-- Header Card -->
-    <div class="card shadow border-0 mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center p-3">
-            <h5 class="m-0"><i class="bi bi-folder2-open"></i> @Model.JobOrderNumber</h5>
-            <div class="d-flex gap-2">
+<div class="modern-layout">
+    <main class="max-w-[1440px] mx-auto p-6 flex flex-col gap-6">
+        <!-- Breadcrumbs & Actions Row -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-on-surface-variant text-label-sm uppercase mb-1">
+                    <a class="hover:underline" asp-action="Index">Job Orders</a>
+                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <span class="text-on-surface">@Model.JobOrderNumber</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <h1 class="font-headline-lg text-headline-lg text-on-surface">Job Order #@Model.JobOrderNumber</h1>
+                    <span class="px-3 py-0.5 rounded-full text-badge font-badge status-open uppercase">@Model.Status</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
                 @if (Model.Status == SD.JobOrderStatus.Open)
                 {
-                    <button type="button" class="btn btn-warning" onclick="confirmClose()">
-                        <i class="bi bi-lock"></i> Close Job Order
+                    <button type="button" class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity font-body-md" onclick="confirmClose()">
+                        <span class="material-symbols-outlined text-[18px]">lock</span> Close Order
                     </button>
-                    <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm" class="d-none"></form>
+                    <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm" class="hidden"></form>
                 }
-                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="btn btn-light">
-                    <i class="bi bi-pencil"></i> Edit Details
+                
+                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors font-body-md text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">edit</span> Edit Details
                 </a>
+
                 @if (Model.Status == SD.JobOrderStatus.Open && User.IsInRole("Admin"))
                 {
-                    <button type="button" class="btn btn-outline-danger" onclick="confirmCancel()">
-                        <i class="bi bi-slash-circle"></i> Cancel
+                    <button type="button" class="flex items-center gap-2 px-4 py-2 border border-error/30 text-error rounded-lg hover:bg-error-container/20 transition-colors font-body-md" onclick="confirmCancel()">
+                        <span class="material-symbols-outlined text-[18px]">cancel</span> Cancel Order
                     </button>
-                    <form asp-action="Cancel" asp-route-id="@Model.JobOrderId" method="post" id="cancelForm" class="d-none"></form>
+                    <form asp-action="Cancel" asp-route-id="@Model.JobOrderId" method="post" id="cancelForm" class="hidden"></form>
                 }
-                <a asp-action="Index" class="btn btn-outline-light">
-                    <i class="bi bi-arrow-left"></i> Back to List
+
+                <a asp-action="Index" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors font-body-md text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back
                 </a>
             </div>
         </div>
-    </div>
 
-    <!-- 2-Panel Layout -->
-    <div class="row g-4">
-        <!-- Left Panel: Job Order Details (35%) -->
-        <div class="col-lg-4 col-md-5">
-            <div class="card shadow border-0 sticky-panel">
-                <div class="card-header bg-primary text-white p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="m-0"><i class="bi bi-info-circle me-2"></i>Job Order Details</h6>
-                        </div>
-                        <span class="badge @(Model.Status == SD.JobOrderStatus.Open ? "bg-success" : "bg-secondary") fs-6">@Model.Status</span>
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-12 gap-6 items-start">
+            <!-- Left Column: Job Order Details -->
+            <section class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden sticky top-24">
+                    <div class="p-4 bg-primary-container flex items-center gap-2">
+                        <span class="material-symbols-outlined text-on-primary-container">info</span>
+                        <h2 class="text-on-primary font-headline-md text-headline-md">Job Order Details</h2>
                     </div>
-                </div>
-                <div class="card-body p-3">
-                    <!-- Job Order Information -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">Date</label>
-                            <div class="fw-bold">@Model.Date.ToString("MMM dd, yyyy")</div>
-                        </div>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <!-- Customer & Vessel -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-12">
-                            <label class="text-muted small mb-1">Customer</label>
-                            <div class="fw-bold">@Model.Customer.CustomerName</div>
-                        </div>
-                        <div class="col-12">
-                            <label class="text-muted small mb-1">Vessel</label>
-                            <div class="fw-bold">@Model.Vessel.VesselName</div>
-                        </div>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <!-- Location -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">Port</label>
-                            <div>@Model.Port.PortName</div>
-                        </div>
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">Terminal</label>
-                            <div>@Model.Terminal.TerminalName</div>
-                        </div>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <!-- Voyage Details -->
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">COS #</label>
-                            <div>@(Model.COSNumber ?? "-")</div>
-                        </div>
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">Voyage #</label>
-                            <div>@(Model.VoyageNumber ?? "-")</div>
-                        </div>
-                        <div class="col-6">
-                            <label class="text-muted small mb-1">Confirmation</label>
+                    <div class="p-5 flex flex-col gap-6">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Date</p>
+                                <p class="text-on-surface font-body-lg">@Model.Date.ToString("MMM dd, yyyy")</p>
+                            </div>
+                            <div>
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Confirmation</p>
                                 @if (Model.IsConfirmed)
                                 {
-                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmed</span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded status-confirmed font-badge text-[10px] uppercase">
+                                        <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span> Confirmed
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Tentative</span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-warning/20 text-warning-700 font-badge text-[10px] uppercase" style="color: #856404; background-color: #fff3cd;">
+                                        <span class="material-symbols-outlined text-[12px]">schedule</span> Tentative
+                                    </span>
                                 }
                             </div>
                         </div>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <!-- Planning Details -->
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="text-muted small mb-1"><i class="bi bi-calendar-event me-1"></i>Planned Schedule</label>
-                            @if (Model is { PlannedStartTime: not null, PlannedEndTime: not null })
-                            {
-                                <div class="small">
-                                    <span class="text-primary fw-bold">@Model.PlannedStartTime.Value.ToString("MMM dd, HH:mm")</span>
-                                    to
-                                    <span class="text-primary fw-bold">@Model.PlannedEndTime.Value.ToString("HH:mm")</span>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="text-muted small">No planned schedule set</div>
-                            }
+                        <div class="border-t border-outline-variant/50 pt-4">
+                            <p class="text-on-surface-variant text-label-sm uppercase mb-1">Customer</p>
+                            <p class="text-on-surface font-body-lg">@Model.Customer.CustomerName</p>
                         </div>
-                    </div>
-
-                    @if (!string.IsNullOrEmpty(Model.Remarks))
-                    {
-                        <hr class="my-3">
-                        <div>
-                            <label class="text-muted small mb-1"><i class="bi bi-chat-left-text me-1"></i>Remarks</label>
-                            <p class="mb-0 small text-muted">@Model.Remarks</p>
+                        <div class="border-t border-outline-variant/50 pt-4">
+                            <p class="text-on-surface-variant text-label-sm uppercase mb-1">Vessel</p>
+                            <p class="text-on-surface font-body-lg uppercase font-bold tracking-tight">@Model.Vessel.VesselName</p>
                         </div>
-                    }
+                        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/50 pt-4">
+                            <div>
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Port</p>
+                                <p class="text-on-surface font-body-md font-semibold">@Model.Port.PortName</p>
+                            </div>
+                            <div>
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Terminal</p>
+                                <p class="text-on-surface font-body-md font-semibold">@Model.Terminal.TerminalName</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/50 pt-4">
+                            <div>
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">COS #</p>
+                                <p class="text-on-surface font-body-md">@(Model.COSNumber ?? "-")</p>
+                            </div>
+                            <div>
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Voyage #</p>
+                                <p class="text-on-surface font-body-md">@(Model.VoyageNumber ?? "-")</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-outline-variant/50 pt-4 flex items-start gap-3 bg-surface-container-low/30 p-3 rounded-lg">
+                            <span class="material-symbols-outlined text-on-surface-variant mt-1">calendar_month</span>
+                            <div>
+                                <p class="text-on-surface-variant text-label-sm font-semibold uppercase">Planned Schedule</p>
+                                @if (Model is { PlannedStartTime: not null, PlannedEndTime: not null })
+                                {
+                                    <p class="text-on-surface font-body-md mt-0.5">
+                                        <span class="text-primary font-bold">@Model.PlannedStartTime.Value.ToString("MMM dd, HH:mm")</span>
+                                        to
+                                        <span class="text-primary font-bold">@Model.PlannedEndTime.Value.ToString("HH:mm")</span>
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="text-on-surface-variant italic font-body-md mt-0.5">No planned schedule set</p>
+                                }
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Remarks))
+                        {
+                            <div class="border-t border-outline-variant/50 pt-4">
+                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Remarks</p>
+                                <p class="text-on-surface font-body-md italic text-sm">@Model.Remarks</p>
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Right Panel: Dispatch Tickets (65%) -->
-        <div class="col-lg-8 col-md-7">
-            <div class="card shadow border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
-                    <h5 class="m-0 text-primary"><i class="bi bi-list-task me-2"></i>Dispatch Tickets</h5>
-                    @if (Model.Status == SD.JobOrderStatus.Open)
-                    {
-                        <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Add Ticket
-                        </a>
-                    }
-                </div>
-                <div class="card-body p-3">
-                    <div class="table-responsive overflow-visible">
-                        <table class="table table-hover mb-0" id="ticketsTable" style="width:100%">
-                            <thead class="bg-light">
+            <!-- Right Column: Dispatch Tickets Table -->
+            <section class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-outline-variant flex justify-between items-center bg-white">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">list_alt</span>
+                            <h2 class="font-headline-md text-on-surface">Dispatch Tickets</h2>
+                        </div>
+                        @if (Model.Status == SD.JobOrderStatus.Open)
+                        {
+                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-sm text-sm hover:opacity-90 active:scale-95 transition-all">
+                                <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                ADD TICKET
+                            </a>
+                        }
+                    </div>
+                    <!-- Desktop Data Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-surface-container-low">
                                 <tr>
-                                    <th class="text-start">Ticket #</th>
-                                    <th class="text-center">Timeline</th>
-                                    <th class="text-start">Date</th>
-                                    <th class="text-start">Service</th>
-                                    <th class="text-start">Tugboat</th>
-                                    <th class="text-center">Total Hrs</th>
-                                    <th class="text-end">Billing</th>
-                                    <th class="text-start">Status</th>
-                                    <th class="text-center" style="width: 120px;">Actions</th>
+                                    <th class="table-header">Ticket #</th>
+                                    <th class="table-header">Timeline</th>
+                                    <th class="table-header">Date</th>
+                                    <th class="table-header">Service</th>
+                                    <th class="table-header">Tugboat</th>
+                                    <th class="table-header text-right">Hrs</th>
+                                    <th class="table-header text-right">Billing (PHP)</th>
+                                    <th class="table-header">Status</th>
+                                    <th class="table-header text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                            @foreach (var ticket in Model.DispatchTickets)
-                            {
-                            <tr>
-                                <td class="text-start">
-                                    <span class="fw-bold">@ticket.DispatchNumber</span>
-                                </td>
-                                <td class="text-start small">
-                                    @if (ticket is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null })
-                                    {
-                                        <span>@ticket.DateLeft.Value.ToString("MMM dd"), @ticket.TimeLeft.Value.ToString("HH:mm")</span>
-                                        <span class="text-muted mx-1">-</span>
-                                        <span>@ticket.DateArrived.Value.ToString("MMM dd"), @ticket.TimeArrived.Value.ToString("HH:mm")</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td class="text-start">@ticket.Date.ToString("MMM dd, yyyy")</td>
-                                <td class="text-start">@ticket.Service.ServiceName</td>
-                                <td class="text-start">@ticket.Tugboat.TugboatName</td>
-                                <td class="text-center">@ticket.TotalHours.ToString("N2")</td>
-                                <td class="text-end">@ticket.TotalBilling.ToString("N2")</td>
-                                <td class="text-start"><span class="badge rounded-pill" data-status="@ticket.Status">@ticket.Status</span></td>
-                                <td class="text-center">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Actions
-                                        </button>
-                                        <ul class="dropdown-menu shadow" >
-                                            <li>
-                                                <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="dropdown-item" target="_blank">
-                                                    <i class="bi bi-eye-fill"></i> View Ticket
-                                                </a>
-                                            </li>
+                                @foreach (var ticket in Model.DispatchTickets)
+                                {
+                                    <tr class="hover:bg-surface-container-high/40 transition-colors">
+                                        <td class="table-cell font-bold text-on-surface">@ticket.DispatchNumber</td>
+                                        <td class="table-cell text-on-surface-variant text-xs">
+                                            @if (ticket is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null })
+                                            {
+                                                <span>@ticket.DateLeft.Value.ToString("MMM dd"), @ticket.TimeLeft.Value.ToString("HH:mm")</span>
+                                                <span class="text-muted mx-1">-</span>
+                                                <span>@ticket.DateArrived.Value.ToString("MMM dd"), @ticket.TimeArrived.Value.ToString("HH:mm")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="table-cell text-on-surface-variant">@ticket.Date.ToString("MMM dd, yyyy")</td>
+                                        <td class="table-cell font-medium">@ticket.Service.ServiceName</td>
+                                        <td class="table-cell">@ticket.Tugboat.TugboatName</td>
+                                        <td class="table-cell text-right">@ticket.TotalHours.ToString("N2")</td>
+                                        <td class="table-cell text-right font-bold text-primary">@ticket.TotalBilling.ToString("N2")</td>
+                                        <td class="table-cell">
+                                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md @(getStatusBadgeClass(ticket.Status))">@ticket.Status</span>
+                                        </td>
+                                        <td class="table-cell text-center">
+                                            <div class="relative inline-block text-left dropdown-container">
+                                                <button type="button" class="inline-flex items-center gap-1 bg-primary text-on-primary px-3 py-1.5 rounded-md text-[11px] font-bold hover:bg-primary/90 transition-colors dropdown-trigger">
+                                                    ACTIONS <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+                                                </button>
+                                                <!-- Dropdown Menu -->
+                                                <div class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 dropdown-menu">
+                                                    <div class="py-1" role="menu" aria-orientation="vertical">
+                                                        <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" target="_blank">
+                                                            <span class="material-symbols-outlined text-[18px] mr-2">visibility</span> View Ticket
+                                                        </a>
 
-                                            @if (ticket.Status is "For Tariff" or "Pending")
-                                            {
-                                                <li>
-                                                    <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="dropdown-item text-primary">
-                                                        <i class="bi bi-currency-dollar"></i> Set Tariff
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="dropdown-item text-danger" onclick="confirmCancelTicket(@ticket.DispatchTicketId)">
-                                                        <i class="bi bi-x-circle"></i> Cancel Ticket
-                                                    </button>
-                                                </li>
-                                                @if (Model.Status == SD.JobOrderStatus.Open)
-                                                {
-                                                    <li>
-                                                        <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="dropdown-item">
-                                                            <i class="bi bi-pencil"></i> Edit Ticket
-                                                        </a>
-                                                    </li>
-                                                }
-                                            }
-                                            else if (ticket.Status == "For Approval")
-                                            {
-                                                <li>
-                                                    <button type="button" class="dropdown-item text-success"
-                                                            data-id="@ticket.DispatchTicketId"
-                                                            onclick="confirmApprove(this)">
-                                                        <i class="bi bi-check-circle"></i> Approve Tariff
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="dropdown-item text-danger" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
-                                                        <i class="bi bi-x-circle"></i> Disapprove Tariff
-                                                    </button>
-                                                </li>
-                                                @if (Model.Status == SD.JobOrderStatus.Open)
-                                                {
-                                                    <li>
-                                                        <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="dropdown-item">
-                                                            <i class="bi bi-pencil"></i> Edit Ticket
-                                                        </a>
-                                                    </li>
-                                                }
-                                            }
-                                            else if (ticket.Status == "Disapproved")
-                                            {
-                                                <li>
-                                                    <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="dropdown-item text-warning">
-                                                        <i class="bi bi-pencil"></i> Edit Tariff
-                                                    </a>
-                                                </li>
-                                            }
-                                            else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
-                                            {
-                                                @if (Model.Status == SD.JobOrderStatus.Open)
-                                                {
-                                                    <li>
-                                                        <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="dropdown-item">
-                                                            <i class="bi bi-pencil"></i> Edit Ticket
-                                                        </a>
-                                                    </li>
-                                                }
-                                            }
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                            }
+                                                        @if (ticket.Status is "For Tariff" or "Pending")
+                                                        {
+                                                            <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="flex items-center px-4 py-2 text-sm text-primary hover:bg-gray-100">
+                                                                <span class="material-symbols-outlined text-[18px] mr-2">payments</span> Set Tariff
+                                                            </a>
+                                                            <button type="button" class="flex items-center w-full text-left px-4 py-2 text-sm text-error hover:bg-gray-100" onclick="confirmCancelTicket(@ticket.DispatchTicketId)">
+                                                                <span class="material-symbols-outlined text-[18px] mr-2">cancel</span> Cancel Ticket
+                                                            </button>
+                                                            @if (Model.Status == SD.JobOrderStatus.Open)
+                                                            {
+                                                                <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                    <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Ticket
+                                                                </a>
+                                                            }
+                                                        }
+                                                        else if (ticket.Status == "For Approval")
+                                                        {
+                                                            <button type="button" class="flex items-center w-full text-left px-4 py-2 text-sm text-secondary hover:bg-gray-100" data-id="@ticket.DispatchTicketId" onclick="confirmApprove(this)">
+                                                                <span class="material-symbols-outlined text-[18px] mr-2">check_circle</span> Approve Tariff
+                                                            </button>
+                                                            <button type="button" class="flex items-center w-full text-left px-4 py-2 text-sm text-error hover:bg-gray-100" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
+                                                                <span class="material-symbols-outlined text-[18px] mr-2">block</span> Disapprove Tariff
+                                                            </button>
+                                                            @if (Model.Status == SD.JobOrderStatus.Open)
+                                                            {
+                                                                <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                    <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Ticket
+                                                                </a>
+                                                            }
+                                                        }
+                                                        else if (ticket.Status == "Disapproved")
+                                                        {
+                                                            <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="flex items-center px-4 py-2 text-sm text-orange-600 hover:bg-gray-100">
+                                                                <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Tariff
+                                                            </a>
+                                                        }
+                                                        else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
+                                                        {
+                                                            @if (Model.Status == SD.JobOrderStatus.Open)
+                                                            {
+                                                                <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                    <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Ticket
+                                                                </a>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
+                    <!-- Footer / End of record for the table -->
+                    <div class="p-4 bg-surface-container-lowest flex justify-center border-t border-outline-variant/30">
+                        <div class="flex items-center gap-2 opacity-40">
+                            <span class="material-symbols-outlined text-[18px]">anchor</span>
+                            <p class="font-label-sm text-[10px] uppercase tracking-[0.2em]">End of Ticket Records</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
+    </main>
 
-    </div>
+    <!-- Sticky Footer Actions -->
+    <footer class="fixed bottom-0 w-full h-12 bg-surface-container border-t border-outline-variant flex items-center px-6 justify-between text-on-surface-variant text-sm z-40">
+        <div class="flex items-center gap-6">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">description</span> @Model.DispatchTickets.Count() Total Tickets</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">payments</span> Total Billing: ₱ @Model.DispatchTickets.Sum(t => t.TotalBilling).ToString("N2")</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> Last Updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</span>
+        </div>
+    </footer>
 </div>
+
+@functions {
+    string getStatusBadgeClass(string status) {
+        return status switch {
+            "Pending" => "bg-gray-500 text-white",
+            "For Tariff" => "status-tariff",
+            "For Approval" => "status-approval",
+            "For Billing" => "status-billing",
+            "Billed" => "bg-green-600 text-white",
+            "Disapproved" => "bg-red-600 text-white",
+            "Cancelled" => "bg-red-600 text-white",
+            _ => "bg-gray-400 text-white"
+        };
+    }
+}
 
 @section Scripts {
     <script>
@@ -311,10 +311,16 @@
         };
 
         $(document).ready(function () {
-            // Apply status badge classes
-            $('[data-status]').each(function() {
-                const status = $(this).data('status');
-                $(this).addClass(getStatusBadgeClass(status));
+            // Dropdown toggle logic
+            $(document).on('click', '.dropdown-trigger', function(e) {
+                e.stopPropagation();
+                const menu = $(this).siblings('.dropdown-menu');
+                $('.dropdown-menu').not(menu).addClass('hidden');
+                menu.toggleClass('hidden');
+            });
+
+            $(document).on('click', function() {
+                $('.dropdown-menu').addClass('hidden');
             });
 
             // Show TempData messages
@@ -337,27 +343,14 @@
             }
         });
 
-        function getStatusBadgeClass(status) {
-            const classes = {
-                'Pending':      'bg-secondary',
-                'For Tariff':   'bg-warning text-dark',
-                'For Approval': 'bg-orange',
-                'For Billing':  'bg-primary',
-                'Billed':       'bg-success',
-                'Disapproved':  'bg-danger',
-                'Cancelled':    'bg-danger'
-            };
-            return classes[status] || 'bg-secondary';
-        }
-
         function confirmClose() {
             Swal.fire({
                 title: 'Close Job Order?',
                 text: "Closing this Job Order will prevent adding new tickets to it.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#ffc107',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#051616',
+                cancelButtonColor: '#727878',
                 confirmButtonText: 'Yes, close it!'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -368,13 +361,13 @@
 
         function confirmCancel() {
             const htmlContent = `
-                <div class="text-start">
+                <div class="text-left">
                     <p class="mb-2"><strong>This will:</strong></p>
-                    <ul class="mb-2">
+                    <ul class="mb-2 list-disc ml-5">
                         <li>Mark Job Order as "Cancelled"</li>
                         <li>Prevent adding new dispatch tickets</li>
                     </ul>
-                    <p class="text-danger small mb-0">
+                    <p class="text-error text-xs mb-0">
                         Admin-only action. Tickets in billing process (For Billing/Billed) will block cancellation.
                     </p>
                 </div>
@@ -385,8 +378,8 @@
                 title: 'Cancel Job Order?',
                 html: htmlContent,
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#ba1a1a',
+                cancelButtonColor: '#727878',
                 confirmButtonText: 'Yes, cancel it!',
                 cancelButtonText: 'Review'
             }).then((result) => {
@@ -403,7 +396,7 @@
                 text: "This ticket will be marked for billing.",
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#198754',
+                confirmButtonColor: '#406915',
                 confirmButtonText: 'Yes, approve it!',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
@@ -445,7 +438,7 @@
                 },
                 showCancelButton: true,
                 confirmButtonText: 'Submit',
-                confirmButtonColor: '#dc3545',
+                confirmButtonColor: '#ba1a1a',
                 showLoaderOnConfirm: true,
                 preConfirm: (reason) => {
                     if (!reason || reason.length < 10) {
@@ -488,7 +481,7 @@
                 text: "This action will mark the ticket as Cancelled.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
+                confirmButtonColor: '#ba1a1a',
                 confirmButtonText: 'Yes, cancel it!'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -498,5 +491,3 @@
         }
     </script>
 }
-
-
