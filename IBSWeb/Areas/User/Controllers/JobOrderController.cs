@@ -148,6 +148,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
+            ViewData["JobOrderNumber"] = jobOrder.JobOrderNumber;
+
             // Prevent editing if the Job Order is already Closed or Cancelled.
             if (jobOrder.Status == SD.JobOrderStatus.Closed || jobOrder.Status == SD.JobOrderStatus.Cancelled)
             {

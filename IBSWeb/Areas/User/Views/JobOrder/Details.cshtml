@@ -6,113 +6,115 @@
 }
 
 <div class="modern-layout">
-    <main class="max-w-[1440px] mx-auto p-6 flex flex-col gap-6">
+    <main class="modern-container">
         <!-- Breadcrumbs & Actions Row -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex-stack" style="width: 100%;">
             <div>
-                <div class="flex items-center gap-2 text-on-surface-variant text-label-sm uppercase mb-1">
-                    <a class="hover:underline" asp-action="Index">Job Orders</a>
-                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-                    <span class="text-on-surface">@Model.JobOrderNumber</span>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <a class="modern-label" style="text-decoration:none;" asp-action="Index">Job Orders</a>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">@Model.JobOrderNumber</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <h1 class="font-headline-lg text-headline-lg text-on-surface">Job Order #@Model.JobOrderNumber</h1>
-                    <span class="px-3 py-0.5 rounded-full text-badge font-badge status-open uppercase">@Model.Status</span>
+                    <h1 class="modern-headline-lg">Job Order #@Model.JobOrderNumber</h1>
+                    <span class="modern-badge @(Model.Status == SD.JobOrderStatus.Open ? "status-open" : "status-closed")">@Model.Status</span>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex gap-2" style="flex-wrap: wrap;">
                 @if (Model.Status == SD.JobOrderStatus.Open)
                 {
-                    <button type="button" class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity font-body-md" onclick="confirmClose()">
-                        <span class="material-symbols-outlined text-[18px]">lock</span> Close Order
+                    <button type="button" class="modern-btn-primary" onclick="confirmClose()">
+                        <span class="material-symbols-outlined">lock</span> Close Order
                     </button>
                     <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm" class="hidden"></form>
                 }
                 
-                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors font-body-md text-on-surface">
-                    <span class="material-symbols-outlined text-[18px]">edit</span> Edit Details
+                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">edit</span> Edit Details
                 </a>
 
                 @if (Model.Status == SD.JobOrderStatus.Open && User.IsInRole("Admin"))
                 {
-                    <button type="button" class="flex items-center gap-2 px-4 py-2 border border-error/30 text-error rounded-lg hover:bg-error-container/20 transition-colors font-body-md" onclick="confirmCancel()">
-                        <span class="material-symbols-outlined text-[18px]">cancel</span> Cancel Order
+                    <button type="button" class="modern-btn-error" onclick="confirmCancel()">
+                        <span class="material-symbols-outlined">cancel</span> Cancel Order
                     </button>
                     <form asp-action="Cancel" asp-route-id="@Model.JobOrderId" method="post" id="cancelForm" class="hidden"></form>
                 }
 
-                <a asp-action="Index" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors font-body-md text-on-surface">
-                    <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back
+                <a asp-action="Index" class="modern-btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span> Back
                 </a>
             </div>
         </div>
 
-        <!-- Main Grid Layout -->
-        <div class="grid grid-cols-12 gap-6 items-start">
-            <!-- Left Column: Job Order Details -->
-            <section class="col-span-12 lg:col-span-4 flex flex-col gap-6">
-                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden sticky top-24">
-                    <div class="p-4 bg-primary-container flex items-center gap-2">
-                        <span class="material-symbols-outlined text-on-primary-container">info</span>
-                        <h2 class="text-on-primary font-headline-md text-headline-md">Job Order Details</h2>
+        <!-- Main Grid Layout - Now explicitly using Grid classes for side-by-side -->
+        <div class="modern-grid">
+            <!-- Left Column: Job Order Details (col-4) -->
+            <section class="modern-col-4">
+                <div class="modern-card sticky top-24">
+                    <div class="modern-card-header-info">
+                        <span class="material-symbols-outlined">info</span>
+                        <h2 class="modern-headline-md">Job Order Details</h2>
                     </div>
-                    <div class="p-5 flex flex-col gap-6">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Date</p>
-                                <p class="text-on-surface font-body-lg">@Model.Date.ToString("MMM dd, yyyy")</p>
+                    <div class="modern-card-body">
+                        <div class="flex gap-4">
+                            <div style="flex:1">
+                                <p class="modern-label">Date</p>
+                                <p class="modern-value-lg">@Model.Date.ToString("MMM dd, yyyy")</p>
                             </div>
-                            <div>
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Confirmation</p>
+                            <div style="flex:1">
+                                <p class="modern-label">Confirmation</p>
                                 @if (Model.IsConfirmed)
                                 {
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded status-confirmed font-badge text-[10px] uppercase">
-                                        <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span> Confirmed
+                                    <span class="modern-badge status-confirmed">
+                                        <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">check_circle</span> Confirmed
                                     </span>
                                 }
                                 else
                                 {
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-warning/20 text-warning-700 font-badge text-[10px] uppercase" style="color: #856404; background-color: #fff3cd;">
-                                        <span class="material-symbols-outlined text-[12px]">schedule</span> Tentative
+                                    <span class="modern-badge" style="color: #856404; background-color: #fff3cd;">
+                                        <span class="material-symbols-outlined text-xs">schedule</span> Tentative
                                     </span>
                                 }
                             </div>
                         </div>
-                        <div class="border-t border-outline-variant/50 pt-4">
-                            <p class="text-on-surface-variant text-label-sm uppercase mb-1">Customer</p>
-                            <p class="text-on-surface font-body-lg">@Model.Customer.CustomerName</p>
+                        <div style="border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
+                            <p class="modern-label">Customer</p>
+                            <p class="modern-value-lg">@Model.Customer.CustomerName</p>
                         </div>
-                        <div class="border-t border-outline-variant/50 pt-4">
-                            <p class="text-on-surface-variant text-label-sm uppercase mb-1">Vessel</p>
-                            <p class="text-on-surface font-body-lg uppercase font-bold tracking-tight">@Model.Vessel.VesselName</p>
+                        <div style="border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
+                            <p class="modern-label">Vessel</p>
+                            <p class="modern-value-lg font-bold" style="text-transform: uppercase;">@Model.Vessel.VesselName</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/50 pt-4">
-                            <div>
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Port</p>
-                                <p class="text-on-surface font-body-md font-semibold">@Model.Port.PortName</p>
+                        <div class="flex gap-4" style="border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
+                            <div style="flex:1">
+                                <p class="modern-label">Port</p>
+                                <p class="modern-value-md font-bold">@Model.Port.PortName</p>
                             </div>
-                            <div>
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Terminal</p>
-                                <p class="text-on-surface font-body-md font-semibold">@Model.Terminal.TerminalName</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/50 pt-4">
-                            <div>
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">COS #</p>
-                                <p class="text-on-surface font-body-md">@(Model.COSNumber ?? "-")</p>
-                            </div>
-                            <div>
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Voyage #</p>
-                                <p class="text-on-surface font-body-md">@(Model.VoyageNumber ?? "-")</p>
+                            <div style="flex:1">
+                                <p class="modern-label">Terminal</p>
+                                <p class="modern-value-md font-bold">@Model.Terminal.TerminalName</p>
                             </div>
                         </div>
-                        <div class="border-t border-outline-variant/50 pt-4 flex items-start gap-3 bg-surface-container-low/30 p-3 rounded-lg">
-                            <span class="material-symbols-outlined text-on-surface-variant mt-1">calendar_month</span>
+                        <div class="flex gap-4" style="border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
+                            <div style="flex:1">
+                                <p class="modern-label">COS #</p>
+                                <p class="modern-value-md">@(Model.COSNumber ?? "-")</p>
+                            </div>
+                            <div style="flex:1">
+                                <p class="modern-label">Voyage #</p>
+                                <p class="modern-value-md">@(Model.VoyageNumber ?? "-")</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3" style="border-top: 1px solid var(--outline-variant); padding-top: 1rem; background-color: var(--surface-container-low); padding: 0.75rem; border-radius: var(--radius-xl);">
+                            <span class="material-symbols-outlined" style="color: var(--on-surface-variant)">calendar_month</span>
                             <div>
-                                <p class="text-on-surface-variant text-label-sm font-semibold uppercase">Planned Schedule</p>
+                                <p class="modern-label font-bold">Planned Schedule</p>
                                 @if (Model is { PlannedStartTime: not null, PlannedEndTime: not null })
                                 {
-                                    <p class="text-on-surface font-body-md mt-0.5">
+                                    <p class="modern-value-md" style="margin-top: 0.25rem;">
                                         <span class="text-primary font-bold">@Model.PlannedStartTime.Value.ToString("MMM dd, HH:mm")</span>
                                         to
                                         <span class="text-primary font-bold">@Model.PlannedEndTime.Value.ToString("HH:mm")</span>
@@ -120,136 +122,134 @@
                                 }
                                 else
                                 {
-                                    <p class="text-on-surface-variant italic font-body-md mt-0.5">No planned schedule set</p>
+                                    <p class="modern-label italic" style="margin-top: 0.25rem;">No planned schedule set</p>
                                 }
                             </div>
                         </div>
                         @if (!string.IsNullOrEmpty(Model.Remarks))
                         {
-                            <div class="border-t border-outline-variant/50 pt-4">
-                                <p class="text-on-surface-variant text-label-sm uppercase mb-1">Remarks</p>
-                                <p class="text-on-surface font-body-md italic text-sm">@Model.Remarks</p>
+                            <div style="border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
+                                <p class="modern-label">Remarks</p>
+                                <p class="modern-value-md italic text-sm">@Model.Remarks</p>
                             </div>
                         }
                     </div>
                 </div>
             </section>
 
-            <!-- Right Column: Dispatch Tickets Table -->
-            <section class="col-span-12 lg:col-span-8 flex flex-col gap-4">
-                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-outline-variant flex justify-between items-center bg-white">
+            <!-- Right Column: Dispatch Tickets Table (col-8) -->
+            <section class="modern-col-8">
+                <div class="modern-card">
+                    <div class="modern-card-header-action">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary">list_alt</span>
-                            <h2 class="font-headline-md text-on-surface">Dispatch Tickets</h2>
+                            <h2 class="modern-headline-md">Dispatch Tickets</h2>
                         </div>
                         @if (Model.Status == SD.JobOrderStatus.Open)
                         {
-                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-sm text-sm hover:opacity-90 active:scale-95 transition-all">
-                                <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm">
+                                <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
                                 ADD TICKET
                             </a>
                         }
                     </div>
-                    <!-- Desktop Data Table -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-surface-container-low">
+                    
+                    <div class="modern-table-container">
+                        <table class="modern-table">
+                            <thead>
                                 <tr>
-                                    <th class="table-header">Ticket #</th>
-                                    <th class="table-header">Timeline</th>
-                                    <th class="table-header">Date</th>
-                                    <th class="table-header">Service</th>
-                                    <th class="table-header">Tugboat</th>
-                                    <th class="table-header text-right">Hrs</th>
-                                    <th class="table-header text-right">Billing (PHP)</th>
-                                    <th class="table-header">Status</th>
-                                    <th class="table-header text-center">Actions</th>
+                                    <th>Ticket #</th>
+                                    <th>Timeline</th>
+                                    <th>Date</th>
+                                    <th>Service</th>
+                                    <th>Tugboat</th>
+                                    <th class="text-right">Hrs</th>
+                                    <th class="text-right">Billing (PHP)</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var ticket in Model.DispatchTickets)
                                 {
-                                    <tr class="hover:bg-surface-container-high/40 transition-colors">
-                                        <td class="table-cell font-bold text-on-surface">@ticket.DispatchNumber</td>
-                                        <td class="table-cell text-on-surface-variant text-xs">
+                                    <tr>
+                                        <td class="font-bold">@ticket.DispatchNumber</td>
+                                        <td class="text-xs" style="color: var(--on-surface-variant)">
                                             @if (ticket is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null })
                                             {
                                                 <span>@ticket.DateLeft.Value.ToString("MMM dd"), @ticket.TimeLeft.Value.ToString("HH:mm")</span>
-                                                <span class="text-muted mx-1">-</span>
+                                                <span style="color: var(--outline-variant); margin: 0 0.25rem;">-</span>
                                                 <span>@ticket.DateArrived.Value.ToString("MMM dd"), @ticket.TimeArrived.Value.ToString("HH:mm")</span>
                                             }
                                             else
                                             {
-                                                <span class="text-muted">-</span>
+                                                <span>-</span>
                                             }
                                         </td>
-                                        <td class="table-cell text-on-surface-variant">@ticket.Date.ToString("MMM dd, yyyy")</td>
-                                        <td class="table-cell font-medium">@ticket.Service.ServiceName</td>
-                                        <td class="table-cell">@ticket.Tugboat.TugboatName</td>
-                                        <td class="table-cell text-right">@ticket.TotalHours.ToString("N2")</td>
-                                        <td class="table-cell text-right font-bold text-primary">@ticket.TotalBilling.ToString("N2")</td>
-                                        <td class="table-cell">
-                                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md @(getStatusBadgeClass(ticket.Status))">@ticket.Status</span>
+                                        <td style="color: var(--on-surface-variant)">@ticket.Date.ToString("MMM dd, yyyy")</td>
+                                        <td style="font-weight: 500;">@ticket.Service.ServiceName</td>
+                                        <td>@ticket.Tugboat.TugboatName</td>
+                                        <td class="text-right">@ticket.TotalHours.ToString("N2")</td>
+                                        <td class="text-right font-bold text-primary">@ticket.TotalBilling.ToString("N2")</td>
+                                        <td>
+                                            <span class="modern-badge-sm @(getStatusBadgeClass(ticket.Status))">@ticket.Status</span>
                                         </td>
-                                        <td class="table-cell text-center">
+                                        <td class="text-center">
                                             <div class="relative inline-block text-left dropdown-container">
-                                                <button type="button" class="inline-flex items-center gap-1 bg-primary text-on-primary px-3 py-1.5 rounded-md text-[11px] font-bold hover:bg-primary/90 transition-colors dropdown-trigger">
-                                                    ACTIONS <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+                                                <button type="button" class="modern-btn-dropdown dropdown-trigger">
+                                                    ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
                                                 </button>
                                                 <!-- Dropdown Menu -->
-                                                <div class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 dropdown-menu">
-                                                    <div class="py-1" role="menu" aria-orientation="vertical">
-                                                        <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" target="_blank">
-                                                            <span class="material-symbols-outlined text-[18px] mr-2">visibility</span> View Ticket
-                                                        </a>
+                                                <div class="modern-dropdown-menu dropdown-menu">
+                                                    <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" target="_blank">
+                                                        <span class="material-symbols-outlined">visibility</span> View Ticket
+                                                    </a>
 
-                                                        @if (ticket.Status is "For Tariff" or "Pending")
+                                                    @if (ticket.Status is "For Tariff" or "Pending")
+                                                    {
+                                                        <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
+                                                            <span class="material-symbols-outlined">payments</span> Set Tariff
+                                                        </a>
+                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmCancelTicket(@ticket.DispatchTicketId)">
+                                                            <span class="material-symbols-outlined">cancel</span> Cancel Ticket
+                                                        </button>
+                                                        @if (Model.Status == SD.JobOrderStatus.Open)
                                                         {
-                                                            <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="flex items-center px-4 py-2 text-sm text-primary hover:bg-gray-100">
-                                                                <span class="material-symbols-outlined text-[18px] mr-2">payments</span> Set Tariff
-                                                            </a>
-                                                            <button type="button" class="flex items-center w-full text-left px-4 py-2 text-sm text-error hover:bg-gray-100" onclick="confirmCancelTicket(@ticket.DispatchTicketId)">
-                                                                <span class="material-symbols-outlined text-[18px] mr-2">cancel</span> Cancel Ticket
-                                                            </button>
-                                                            @if (Model.Status == SD.JobOrderStatus.Open)
-                                                            {
-                                                                <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                                    <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Ticket
-                                                                </a>
-                                                            }
-                                                        }
-                                                        else if (ticket.Status == "For Approval")
-                                                        {
-                                                            <button type="button" class="flex items-center w-full text-left px-4 py-2 text-sm text-secondary hover:bg-gray-100" data-id="@ticket.DispatchTicketId" onclick="confirmApprove(this)">
-                                                                <span class="material-symbols-outlined text-[18px] mr-2">check_circle</span> Approve Tariff
-                                                            </button>
-                                                            <button type="button" class="flex items-center w-full text-left px-4 py-2 text-sm text-error hover:bg-gray-100" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
-                                                                <span class="material-symbols-outlined text-[18px] mr-2">block</span> Disapprove Tariff
-                                                            </button>
-                                                            @if (Model.Status == SD.JobOrderStatus.Open)
-                                                            {
-                                                                <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                                    <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Ticket
-                                                                </a>
-                                                            }
-                                                        }
-                                                        else if (ticket.Status == "Disapproved")
-                                                        {
-                                                            <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="flex items-center px-4 py-2 text-sm text-orange-600 hover:bg-gray-100">
-                                                                <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Tariff
+                                                            <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
                                                             </a>
                                                         }
-                                                        else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
+                                                    }
+                                                    else if (ticket.Status == "For Approval")
+                                                    {
+                                                        <button type="button" class="modern-dropdown-item" style="color: #406915; width: 100%; border: none; background: none; cursor: pointer;" data-id="@ticket.DispatchTicketId" onclick="confirmApprove(this)">
+                                                            <span class="material-symbols-outlined">check_circle</span> Approve Tariff
+                                                        </button>
+                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
+                                                            <span class="material-symbols-outlined">block</span> Disapprove Tariff
+                                                        </button>
+                                                        @if (Model.Status == SD.JobOrderStatus.Open)
                                                         {
-                                                            @if (Model.Status == SD.JobOrderStatus.Open)
-                                                            {
-                                                                <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                                    <span class="material-symbols-outlined text-[18px] mr-2">edit</span> Edit Ticket
-                                                                </a>
-                                                            }
+                                                            <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
+                                                            </a>
                                                         }
-                                                    </div>
+                                                    }
+                                                    else if (ticket.Status == "Disapproved")
+                                                    {
+                                                        <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
+                                                            <span class="material-symbols-outlined">edit</span> Edit Tariff
+                                                        </a>
+                                                    }
+                                                    else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
+                                                    {
+                                                        @if (Model.Status == SD.JobOrderStatus.Open)
+                                                        {
+                                                            <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
+                                                            </a>
+                                                        }
+                                                    }
                                                 </div>
                                             </div>
                                         </td>
@@ -258,41 +258,41 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- Footer / End of record for the table -->
-                    <div class="p-4 bg-surface-container-lowest flex justify-center border-t border-outline-variant/30">
-                        <div class="flex items-center gap-2 opacity-40">
-                            <span class="material-symbols-outlined text-[18px]">anchor</span>
-                            <p class="font-label-sm text-[10px] uppercase tracking-[0.2em]">End of Ticket Records</p>
+                    
+                    <div class="text-center" style="padding: 1rem; border-top: 1px solid rgba(194, 200, 199, 0.3)">
+                        <div class="flex items-center justify-center gap-2" style="opacity: 0.4">
+                            <span class="material-symbols-outlined" style="font-size:18px">anchor</span>
+                            <p class="modern-label" style="font-size:10px; margin-bottom:0">End of Ticket Records</p>
                         </div>
                     </div>
                 </div>
             </section>
         </div>
-    </main>
 
-    <!-- Sticky Footer Actions -->
-    <footer class="fixed bottom-0 w-full h-12 bg-surface-container border-t border-outline-variant flex items-center px-6 justify-between text-on-surface-variant text-sm z-40">
-        <div class="flex items-center gap-6">
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">description</span> @Model.DispatchTickets.Count() Total Tickets</span>
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">payments</span> Total Billing: ₱ @Model.DispatchTickets.Sum(t => t.TotalBilling).ToString("N2")</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> Last Updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</span>
-        </div>
-    </footer>
+        <!-- Job Order Specific Footer - Now in flow and contained -->
+        <footer class="modern-sticky-footer">
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">description</span> @Model.DispatchTickets.Count() Total Tickets</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">payments</span> Total Billing: ₱ @Model.DispatchTickets.Sum(t => t.TotalBilling).ToString("N2")</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">schedule</span> Last Updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</span>
+            </div>
+        </footer>
+    </main>
 </div>
 
 @functions {
     string getStatusBadgeClass(string status) {
         return status switch {
-            "Pending" => "bg-gray-500 text-white",
+            "Pending" => "status-closed",
             "For Tariff" => "status-tariff",
             "For Approval" => "status-approval",
             "For Billing" => "status-billing",
-            "Billed" => "bg-green-600 text-white",
-            "Disapproved" => "bg-red-600 text-white",
-            "Cancelled" => "bg-red-600 text-white",
-            _ => "bg-gray-400 text-white"
+            "Billed" => "status-open",
+            "Disapproved" => "status-closed",
+            "Cancelled" => "status-closed",
+            _ => "status-closed"
         };
     }
 }
@@ -314,13 +314,37 @@
             // Dropdown toggle logic
             $(document).on('click', '.dropdown-trigger', function(e) {
                 e.stopPropagation();
-                const menu = $(this).siblings('.dropdown-menu');
-                $('.dropdown-menu').not(menu).addClass('hidden');
-                menu.toggleClass('hidden');
+                const $trigger = $(this);
+                const $menu = $trigger.siblings('.modern-dropdown-menu');
+                
+                // Close other menus
+                $('.modern-dropdown-menu').not($menu).removeClass('show');
+                
+                // Toggle current menu
+                $menu.toggleClass('show');
+                
+                if ($menu.hasClass('show')) {
+                    const rect = $trigger[0].getBoundingClientRect();
+                    const menuWidth = $menu.outerWidth();
+                    
+                    // Position fixed to bypass parent overflow:hidden
+                    $menu.css({
+                        'position': 'fixed',
+                        'top': (rect.bottom + 4) + 'px',
+                        'left': (rect.right - menuWidth) + 'px',
+                        'z-index': '9999'
+                    });
+
+                    // Flip up if hitting bottom of viewport
+                    const menuHeight = $menu.outerHeight();
+                    if (rect.bottom + menuHeight > window.innerHeight) {
+                        $menu.css('top', (rect.top - menuHeight - 4) + 'px');
+                    }
+                }
             });
 
             $(document).on('click', function() {
-                $('.dropdown-menu').addClass('hidden');
+                $('.modern-dropdown-menu').removeClass('show');
             });
 
             // Show TempData messages
@@ -329,7 +353,7 @@
                     icon: 'error',
                     title: 'Error',
                     html: PageConfig.messages.error,
-                    confirmButtonColor: '#d33'
+                    confirmButtonColor: '#ba1a1a'
                 });
             }
             if (PageConfig.messages.success) {
@@ -361,14 +385,14 @@
 
         function confirmCancel() {
             const htmlContent = `
-                <div class="text-left">
-                    <p class="mb-2"><strong>This will:</strong></p>
-                    <ul class="mb-2 list-disc ml-5">
+                <div style="text-align:left">
+                    <p style="margin-bottom:0.5rem"><strong>This will:</strong></p>
+                    <ul style="margin-bottom:0.5rem; padding-left:1.5rem">
                         <li>Mark Job Order as "Cancelled"</li>
                         <li>Prevent adding new dispatch tickets</li>
                     </ul>
-                    <p class="text-error text-xs mb-0">
-                        Admin-only action. Tickets in billing process (For Billing/Billed) will block cancellation.
+                    <p style="color:var(--error); font-size:12px; margin-bottom:0">
+                        Admin-only action. Tickets in billing process will block cancellation.
                     </p>
                 </div>
             `;
