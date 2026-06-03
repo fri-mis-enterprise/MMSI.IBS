@@ -2,46 +2,85 @@
 
 @{
     ViewData["Title"] = "Dispatch Ticket - Edit Tariff";
+    ViewData["IsFullWidth"] = true;
     var filterType = ViewBag.FilterType as string;
 }
 
 <style>
-    .form-control, .form-select, .input-group-text {
-        border: 1px solid #ced4da !important;
+    .dispatch-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0.25rem 0;
     }
-    .form-control:focus, .form-select:focus {
-        border-color: #86b7fe !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+
+    .timeline-item {
+        display: flex;
+        gap: 1.25rem;
+        position: relative;
+        padding-bottom: 1.25rem;
     }
-    .sticky-panel {
-        position: sticky;
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 7px;
         top: 20px;
-        max-height: calc(100vh - 150px);
+        width: 2px;
+        height: calc(100% - 10px);
+        background-color: var(--outline-variant);
+        z-index: 1;
+    }
+
+    .timeline-item:last-child::before {
+        display: none;
+    }
+
+    .timeline-marker {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        border: 3px solid var(--outline-variant);
+        z-index: 2;
+        margin-top: 4px;
+        flex-shrink: 0;
+    }
+
+    .timeline-marker.start { border-color: var(--secondary); }
+    .timeline-marker.end { border-color: var(--error); }
+
+    .timeline-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .timeline-duration {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background-color: var(--surface-container-low);
+        border-radius: var(--radius-xl);
+        border: 1px dashed var(--outline-variant);
+    }
+
+    .duration-box {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .duration-box .material-symbols-outlined {
+        font-size: 24px;
+        color: var(--primary);
     }
 </style>
 
-<div class="container-fluid mt-4">
-    <!-- Header Card -->
-    <div class="card shadow border-0 mb-4">
-        <div class="card-header bg-secondary bg-gradient text-white d-flex justify-content-between align-items-center p-3">
-            <h5 class="m-0"><i class="bi bi-pencil-square me-2"></i>Edit Tariff: @Model.DispatchNumber</h5>
-            <div class="d-flex gap-2">
-                @if (Model.JobOrderId.HasValue)
-                {
-                    <a asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value" class="btn btn-light btn-sm">
-                        <i class="bi bi-arrow-left"></i> Back to Job Order
-                    </a>
-                }
-                else
-                {
-                    <a asp-action="Index" asp-route-filterType="@filterType" class="btn btn-light btn-sm">
-                        <i class="bi bi-arrow-left"></i> Back to List
-                    </a>
-                }
-            </div>
-        </div>
-    </div>
-
+<div class="modern-layout">
     <form id="myForm" method="post" asp-action="EditTariff" asp-controller="DispatchTicket" asp-area="User">
         <input type="hidden" name="filterType" value="@filterType" />
         <input type="hidden" asp-for="DispatchNumber">
@@ -49,164 +88,283 @@
         <input asp-for="JobOrderId" type="hidden" />
         <input asp-for="CustomerId" id="CustomerId" type="hidden" />
 
-        <div class="row g-4">
-            <!-- Left Panel: Dispatch Details (35%) -->
-            <div class="col-lg-4 col-md-5">
-                <div class="card shadow border-0 sticky-panel">
-                    <div class="card-header bg-primary text-white p-3">
-                        <h6 class="m-0"><i class="bi bi-info-circle me-2"></i>Dispatch Details</h6>
+        <main class="modern-container">
+            <!-- Header -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Dispatch Tickets</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">@Model.DispatchNumber</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit Tariff</span>
                     </div>
-                    <div class="card-body p-3">
-                        <div class="mb-3">
-                            <label class="text-muted small fw-bold mb-1">Customer</label>
-                            <div class="fw-bold text-primary">@Model.CustomerName</div>
+                    <h1 class="modern-headline-lg">Edit Tariff: @Model.DispatchNumber</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" id="submitButton">
+                        <span class="material-symbols-outlined">save</span> UPDATE TARIFF
+                    </button>
+                    @if (Model.JobOrderId.HasValue)
+                    {
+                        <a asp-controller="JobOrder" asp-action="Details" asp-route-id="@Model.JobOrderId.Value" class="modern-btn-secondary">
+                            <span class="material-symbols-outlined">arrow_back</span> BACK
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" asp-route-filterType="@filterType" class="modern-btn-secondary">
+                            <span class="material-symbols-outlined">arrow_back</span> BACK
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="modern-grid">
+                <!-- Left Column: Dispatch Details -->
+                <div class="modern-col-4">
+                    <div class="modern-card sticky top-24">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">info</span>
+                            <h2 class="modern-headline-md">Dispatch Details</h2>
                         </div>
-                        <div class="mb-3">
-                            <label class="text-muted small fw-bold mb-1">Vessel</label>
-                            <div class="fw-bold">@Model.VesselName (@Model.VesselType)</div>
-                        </div>
-                        
-                        <hr class="my-2">
-                        
-                        <div class="mb-3">
-                            <label class="text-muted small fw-bold mb-1">Timeline</label>
-                            <div class="small">
-                                <div><i class="bi bi-calendar-event me-1"></i> Date: @Model.Date</div>
-                                <div class="text-success"><i class="bi bi-play-circle me-1"></i> Start: @Model.DateLeft @Model.TimeLeft</div>
-                                <div class="text-danger"><i class="bi bi-stop-circle me-1"></i> End: @Model.DateArrived @Model.TimeArrived</div>
+                        <div class="modern-card-body" style="gap: 1.25rem;">
+                            <!-- Customer & Vessel -->
+                            <div>
+                                <p class="modern-label">Customer</p>
+                                <p class="modern-value-lg text-primary" style="font-size: 18px;">@Model.CustomerName</p>
+                                
+                                <div class="mt-3">
+                                    <p class="modern-label">Vessel</p>
+                                    <p class="modern-value-md font-bold uppercase">@Model.VesselName <span class="modern-badge-sm" style="background-color: var(--surface-container-high); text-transform: none; font-weight: 500; margin-left: 4px;">@Model.VesselType</span></p>
+                                </div>
+                            </div>
+
+                            <!-- Logistics Row -->
+                            <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                                <div class="modern-col-6">
+                                    <p class="modern-label">COS #</p>
+                                    <p class="modern-value-md font-bold">@(Model.COSNumber ?? "-")</p>
+                                </div>
+                                <div class="modern-col-6">
+                                    <p class="modern-label">Voyage #</p>
+                                    <p class="modern-value-md font-bold">@(Model.VoyageNumber ?? "-")</p>
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="border-t border-outline-variant pt-3">
+                                <p class="modern-label">Location</p>
+                                <div class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined text-primary" style="font-size: 18px; margin-top: 2px;">location_on</span>
+                                    <p class="modern-value-md">
+                                        <span class="font-bold">@Model.PortName</span><br/>
+                                        <span class="text-xs opacity-60">@Model.TerminalName</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Timeline -->
+                            <div class="border-t border-outline-variant pt-3">
+                                <p class="modern-label mb-3">Service Timeline</p>
+                                <div class="dispatch-timeline">
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker start"></div>
+                                        <div class="timeline-content">
+                                            <p class="text-xs font-bold uppercase opacity-50">Departure</p>
+                                            <p class="modern-value-md font-bold">@Model.DateLeft?.ToString("MMM dd, yyyy")</p>
+                                            <p class="text-xs opacity-60">@Model.TimeLeft?.ToString("HH:mm")</p>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker end"></div>
+                                        <div class="timeline-content">
+                                            <p class="text-xs font-bold uppercase opacity-50">Arrival</p>
+                                            <p class="modern-value-md font-bold">@Model.DateArrived?.ToString("MMM dd, yyyy")</p>
+                                            <p class="text-xs opacity-60">@Model.TimeArrived?.ToString("HH:mm")</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="timeline-duration">
+                                    <div class="duration-box">
+                                        <span class="material-symbols-outlined">schedule</span>
+                                        <div>
+                                            <p class="modern-label" style="margin-bottom: 0;">Net Duration</p>
+                                            <p class="modern-headline-md text-primary" style="font-size: 20px;">@Model.TotalHours?.ToString("N2") <span class="text-xs opacity-60">HRS</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Provider -->
+                            <div class="border-t border-outline-variant pt-3">
+                                <p class="modern-label">Provider Details</p>
+                                <div class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined text-primary" style="font-size: 18px; margin-top: 2px;">directions_boat</span>
+                                    <div>
+                                        <p class="modern-value-md font-bold">@Model.TugboatName</p>
+                                        <p class="text-xs italic opacity-60">Master: @Model.TugMasterName</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Remarks))
+                            {
+                                <div class="border-t border-outline-variant pt-3">
+                                    <p class="modern-label">Remarks</p>
+                                    <p class="modern-value-md italic opacity-70" style="font-size: 13px;">@Model.Remarks</p>
+                                </div>
+                            }
+
+                            <!-- Attachments -->
+                            <div class="border-t border-outline-variant pt-3">
+                                <p class="modern-label mb-2">Media Attachments</p>
+                                <div class="modern-grid-compact">
+                                    @if (!string.IsNullOrEmpty(Model.ImageSignedUrl))
+                                    {
+                                        <div class="modern-col-6">
+                                            <div class="modern-card" style="background-color: var(--surface-container-low); cursor: pointer;" id="viewSidebarImage">
+                                                <div class="modern-card-body items-center p-2" style="gap: 4px;">
+                                                    <img src="@Model.ImageSignedUrl" class="rounded" alt="Ticket" style="height: 50px; width: 100%; object-fit: cover;" />
+                                                    <span class="text-xs text-primary font-bold">View Image</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.VideoSignedUrl))
+                                    {
+                                        <div class="modern-col-6">
+                                            <div class="modern-card view-video" style="background-color: var(--surface-container-low); cursor: pointer;" data-videolink="@Model.VideoSignedUrl">
+                                                <div class="modern-card-body items-center p-2" style="gap: 4px;">
+                                                    <span class="material-symbols-outlined text-primary" style="font-size: 32px">play_circle</span>
+                                                    <span class="text-xs text-primary font-bold">Play Video</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (string.IsNullOrEmpty(Model.ImageSignedUrl) && string.IsNullOrEmpty(Model.VideoSignedUrl))
+                                    {
+                                        <p class="text-sm italic opacity-50 modern-col-12 text-center">No attachments</p>
+                                    }
+                                </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="text-muted small fw-bold mb-1">Location</label>
-                            <div class="small">@Model.PortName - @Model.TerminalName</div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Calculation -->
+                <div class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">calculate</span>
+                            <h2 class="modern-headline-md">Tariff Calculation</h2>
                         </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
 
-                        <hr class="my-2">
+                            <!-- 1. Dispatch Service -->
+                            <div class="mb-3">
+                                <h3 class="modern-label font-bold text-xs uppercase opacity-50 border-b border-outline-variant pb-1 mb-2">1. Dispatch Service</h3>
+                                <div class="modern-grid-compact">
+                                    <div class="modern-col-12">
+                                        <label class="modern-label mb-1 d-block">Charge Type</label>
+                                        <div class="radio-group">
+                                            <input type="radio" class="radio-tab-input" name="chargeType" id="dispatchHour" value="Per hour" @(Model.DispatchChargeType == null || Model.DispatchChargeType == "Per hour" ? "checked" : "")>
+                                            <label class="radio-tab-label" for="dispatchHour">Per Hour</label>
 
-                        <div class="d-flex justify-content-between align-items-center">
-                            <label class="text-muted small fw-bold">Total Duration:</label>
-                            <span class="badge bg-primary fs-6">@Model.TotalHours?.ToString("N2") hours</span>
+                                            <input type="radio" class="radio-tab-input" name="chargeType" id="dispatchMove" value="Per move" @(Model.DispatchChargeType == "Per move" ? "checked" : "")>
+                                            <label class="radio-tab-label" for="dispatchMove">Per Move</label>
+                                        </div>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Dispatch Rate</label>
+                                        <input asp-for="DispatchRate" id="DispatchRate" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Discount (%)</label>
+                                        <input asp-for="DispatchDiscount" id="DispatchDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Billing Amount</label>
+                                        <input asp-for="DispatchBillingAmount" id="DispatchBillingAmount" class="modern-input" style="background-color: var(--surface-container-low)" readonly placeholder="0.00">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Net Revenue</label>
+                                        <input asp-for="DispatchNetRevenue" id="DispatchNetRevenue" class="modern-input font-bold text-success" style="background-color: var(--surface-container-low)" readonly placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. BAF -->
+                            <div class="mb-3">
+                                <h3 class="modern-label font-bold text-xs uppercase opacity-50 border-b border-outline-variant pb-1 mb-2">2. BAF (Bunker Adjustment Factor)</h3>
+                                <div class="modern-grid-compact">
+                                    <div class="modern-col-12">
+                                        <label class="modern-label mb-1 d-block">Charge Type</label>
+                                        <div class="radio-group">
+                                            <input type="radio" class="radio-tab-input" name="chargeType2" id="bafHour" value="Per hour" @(Model.BAFChargeType == null || Model.BAFChargeType == "Per hour" ? "checked" : "")>
+                                            <label class="radio-tab-label" for="bafHour">Per Hour</label>
+
+                                            <input type="radio" class="radio-tab-input" name="chargeType2" id="bafMove" value="Per move" @(Model.BAFChargeType == "Per move" ? "checked" : "")>
+                                            <label class="radio-tab-label" for="bafMove">Per Move</label>
+                                        </div>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">BAF Rate</label>
+                                        <input asp-for="BAFRate" id="BAFRate" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Discount (%)</label>
+                                        <input asp-for="BAFDiscount" id="BAFDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Billing Amount</label>
+                                        <input asp-for="BAFBillingAmount" id="BAFBillingAmount" class="modern-input" style="background-color: var(--surface-container-low)" readonly placeholder="0.00">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Net Revenue</label>
+                                        <input asp-for="BAFNetRevenue" id="BAFNetRevenue" class="modern-input font-bold text-success" style="background-color: var(--surface-container-low)" readonly placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Outsourced -->
+                            @if (Model.IsTugboatCompanyOwned == false)
+                            {
+                                <div class="mb-3">
+                                    <h3 class="modern-label font-bold text-xs uppercase text-error border-b border-outline-variant pb-1 mb-2">3. Outsourced Tug Details</h3>
+                                    <div class="modern-grid-compact">
+                                        <div class="modern-col-6">
+                                            <label class="modern-label">Tug Provider</label>
+                                            <input class="modern-input" style="background-color: var(--surface-container-low)" id="TugProvider" value="@Model.TugboatOwnerName" readonly>
+                                        </div>
+                                        <div class="modern-col-6">
+                                            <label class="modern-label">AP Other Tugs (Expense)</label>
+                                            <input asp-for="ApOtherTugs" id="ApOtherTugs" type="number" step="0.01" class="modern-input" style="border-color: var(--error)" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Financial Summary Card -->
+                            <div class="financial-summary-card mt-4">
+                                <div class="financial-item">
+                                    <span class="financial-label">Grand Total Billing</span>
+                                    <input asp-for="TotalBilling" id="TotalBilling" class="financial-value primary bg-transparent border-0 w-full p-0 text-center" readonly>
+                                </div>
+                                <div class="financial-divider"></div>
+                                <div class="financial-item">
+                                    <span class="financial-label">Net Revenue Realized</span>
+                                    <input asp-for="TotalNetRevenue" id="TotalNetRevenue" class="financial-value secondary bg-transparent border-0 w-full p-0 text-center" readonly>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Right Panel: Tariff Calculation (65%) -->
-            <div class="col-lg-8 col-md-7">
-                <div class="card shadow border-0 mb-4">
-                    <div class="card-header bg-white p-3">
-                        <h5 class="m-0 text-primary"><i class="bi bi-calculator me-2"></i>Tariff Calculation</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                        <!-- Dispatch Configuration -->
-                        <div class="mb-4">
-                            <h6 class="text-secondary border-bottom pb-2 mb-3 fw-bold small text-uppercase">1. Dispatch Service</h6>
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="small fw-bold text-muted mb-2 d-block">Charge Type</label>
-                                    <div class="btn-group w-100" role="group">
-                                        <input type="radio" class="btn-check" name="chargeType" id="dispatchHour" value="Per hour" autocomplete="off" @(Model.DispatchChargeType == null || Model.DispatchChargeType == "Per hour" ? "checked" : "")>
-                                        <label class="btn btn-outline-secondary" for="dispatchHour">Per Hour</label>
-
-                                        <input type="radio" class="btn-check" name="chargeType" id="dispatchMove" value="Per move" autocomplete="off" @(Model.DispatchChargeType == "Per move" ? "checked" : "")>
-                                        <label class="btn btn-outline-secondary" for="dispatchMove">Per Move</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Dispatch Rate</label>
-                                    <input asp-for="DispatchRate" id="DispatchRate" step="0.01" type="number" class="form-control" placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Discount (%)</label>
-                                    <input asp-for="DispatchDiscount" id="DispatchDiscount" step="0.01" type="number" class="form-control" placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Billing Amount</label>
-                                    <input asp-for="DispatchBillingAmount" id="DispatchBillingAmount" class="form-control bg-light" readonly placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Net Revenue</label>
-                                    <input asp-for="DispatchNetRevenue" id="DispatchNetRevenue" class="form-control bg-light fw-bold text-success" readonly placeholder="0.00">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- BAF Configuration -->
-                        <div class="mb-4">
-                            <h6 class="text-secondary border-bottom pb-2 mb-3 fw-bold small text-uppercase">2. BAF (Bunker Adjustment Factor)</h6>
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="small fw-bold text-muted mb-2 d-block">Charge Type</label>
-                                    <div class="btn-group w-100" role="group">
-                                        <input type="radio" class="btn-check" name="chargeType2" id="bafHour" value="Per hour" autocomplete="off" @(Model.BAFChargeType == null || Model.BAFChargeType == "Per hour" ? "checked" : "")>
-                                        <label class="btn btn-outline-secondary" for="bafHour">Per Hour</label>
-
-                                        <input type="radio" class="btn-check" name="chargeType2" id="bafMove" value="Per move" autocomplete="off" @(Model.BAFChargeType == "Per move" ? "checked" : "")>
-                                        <label class="btn btn-outline-secondary" for="bafMove">Per Move</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">BAF Rate</label>
-                                    <input asp-for="BAFRate" id="BAFRate" step="0.01" type="number" class="form-control" placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Discount (%)</label>
-                                    <input asp-for="BAFDiscount" id="BAFDiscount" step="0.01" type="number" class="form-control" placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Billing Amount</label>
-                                    <input asp-for="BAFBillingAmount" id="BAFBillingAmount" class="form-control bg-light" readonly placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Net Revenue</label>
-                                    <input asp-for="BAFNetRevenue" id="BAFNetRevenue" class="form-control bg-light fw-bold text-success" readonly placeholder="0.00">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- AP Other Tugs -->
-                        @if (Model.IsTugboatCompanyOwned == false)
-                        {
-                            <div class="mb-4">
-                                <h6 class="text-danger border-bottom pb-2 mb-3 fw-bold small text-uppercase">3. Outsourced Tug Details</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Tug Provider</label>
-                                        <input class="form-control bg-light" id="TugProvider" value="@Model.TugboatOwnerName" readonly>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">AP Other Tugs (Expense)</label>
-                                        <input asp-for="ApOtherTugs" id="ApOtherTugs" type="number" step="0.01" class="form-control border-danger" placeholder="0.00">
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        <!-- Summary Section -->
-                        <div class="p-4 border rounded bg-primary bg-opacity-10 border-primary mt-4">
-                            <div class="row g-3 text-center">
-                                <div class="col-md-6 border-end border-primary">
-                                    <label class="form-label fw-bold small text-muted d-block">TOTAL BILLING</label>
-                                    <input asp-for="TotalBilling" id="TotalBilling" class="form-control-plaintext bg-transparent fw-bold fs-4 text-primary text-center" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold small text-muted d-block">TOTAL NET REVENUE</label>
-                                    <input asp-for="TotalNetRevenue" id="TotalNetRevenue" class="form-control-plaintext bg-transparent fw-bold fs-4 text-success text-center" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 pt-3 border-top d-flex justify-content-end">
-                            <button class="btn btn-primary px-5 shadow-sm" type="submit" id="submitButton">
-                                <i class="bi bi-save me-2"></i> Update Tariff
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </main>
     </form>
 </div>
 
@@ -297,6 +455,28 @@
                     confirmButtonText: 'Yes, Update'
                 }).then((result) => {
                     if (result.isConfirmed) $('#myForm').submit();
+                });
+            });
+
+            $('#viewSidebarImage').on('click', function () {
+                Swal.fire({
+                    imageUrl: $(this).attr('src'),
+                    showConfirmButton: false,
+                    background: 'transparent',
+                    width: 'auto'
+                });
+            });
+
+            // Video Player
+            $(document).on("click", ".view-video", function () {
+                const videoLink = $(this).data("videolink");
+                if (!videoLink) return;
+                Swal.fire({
+                    html: `<video width="100%" height="auto" controls autoplay class="rounded shadow"><source src="${videoLink}" type="video/mp4"></video>`,
+                    showConfirmButton: false,
+                    padding: 0,
+                    width: '80%',
+                    background: "transparent",
                 });
             });
         });

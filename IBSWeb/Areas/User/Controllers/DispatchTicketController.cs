@@ -172,6 +172,16 @@ namespace IBSWeb.Areas.User.Controllers
                 Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
             };
 
+            if (!string.IsNullOrEmpty(ticket.ImageName))
+            {
+                viewModel.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.ImageName);
+            }
+
+            if (!string.IsNullOrEmpty(ticket.VideoName))
+            {
+                viewModel.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.VideoName);
+            }
+
             return View(viewModel);
         }
 
@@ -274,6 +284,16 @@ namespace IBSWeb.Areas.User.Controllers
                 BAFChargeType = ticket.BAFChargeType,
                 Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
             };
+
+            if (!string.IsNullOrEmpty(ticket.ImageName))
+            {
+                viewModel.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.ImageName);
+            }
+
+            if (!string.IsNullOrEmpty(ticket.VideoName))
+            {
+                viewModel.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.VideoName);
+            }
 
             return View(viewModel);
         }

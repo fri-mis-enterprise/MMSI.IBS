@@ -82,6 +82,8 @@ namespace IBS.Models.MSAP.ViewModels
 
         public string? ImageSignedUrl { get; set; }
 
+        public string? VideoSignedUrl { get; set; }
+
         public string? TariffBy { get; set; }
 
         public DateTime TariffDate { get; set; }

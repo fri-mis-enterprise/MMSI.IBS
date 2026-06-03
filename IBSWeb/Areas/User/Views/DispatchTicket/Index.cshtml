@@ -1,95 +1,81 @@
-﻿@model IEnumerable<IBS.Models.MSAP.DispatchTicket>
+@model IEnumerable<IBS.Models.MSAP.DispatchTicket>
 
 @{
-    ViewData["Title"] = "Dispatch Ticket";
+    ViewData["Title"] = "Dispatch Tickets";
+    ViewData["IsFullWidth"] = true;
 }
 
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Dispatch Tickets</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <!-- Add New Button if needed in future -->
+            </div>
+        </div>
+
+        <!-- Filter Group -->
+        <div class="flex flex-wrap gap-2">
+            <button id="filterAll" class="modern-btn-secondary active">ALL</button>
+            <button id="filterForTariff" class="modern-btn-secondary">FOR TARIFF</button>
+            <button id="filterForApproval" class="modern-btn-secondary">FOR APPROVAL</button>
+            <button id="filterDisapproved" class="modern-btn-secondary">DISAPPROVED</button>
+            <button id="filterForBilling" class="modern-btn-secondary">FOR BILLING</button>
+            <button id="filterBilled" class="modern-btn-secondary">BILLED</button>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">confirmation_number</span>
+                    <h2 class="modern-headline-md">Ticket Registry</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <div class="modern-table-container">
+                    <table class="modern-table" id="paginatedTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>COS #</th>
+                                <th>Ticket #</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Activity/Service</th>
+                                <th>Port-Terminal</th>
+                                <th>Tugboat</th>
+                                <th>Customer</th>
+                                <th>Vessel</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
 <style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-    .actions-dropdown .dropdown-item:hover {
-        background-color: #f3f4f6;
+    .modern-btn-secondary.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
     }
 </style>
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-primary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-    </div>
-
-    <div class="card shadow border-0 mt-3">
-        <div class="card-body p-3">
-            <div class="table-responsive" style="max-height: 70vh">
-                <div class="btn-group mb-3" role="group" aria-label="Filter Options">
-                    <button id="filterAll" class="btn btn-outline-primary active"> All</button>
-                    <button id="filterForTariff" class="btn btn-outline-primary"> For Tariff</button>
-                    <button id="filterForApproval" class="btn btn-outline-primary"> For Approval</button>
-                    <button id="filterDisapproved" class="btn btn-outline-primary"> Disapproved</button>
-                    <button id="filterForBilling" class="btn btn-outline-primary"> For Billing</button>
-                    <button id="filterBilled" class="btn btn-outline-primary"> Billed</button>
-                </div>
-                <table class="table table-hover mb-0" id="paginatedTable">
-                    <thead class="bg-light">
-                    <tr>
-                        <th class="text-start">DATE</th>
-                        <th class="text-start">COS #</th>
-                        <th class="text-start">DISPATCH/ <br/> MOORING TICKET</th>
-                        <th class="text-start">DATE/TIME START</th>
-                        <th class="text-start">DATE/TIME END</th>
-                        <th class="text-start">ACTIVITY/ <br/>SERVICE TYPE</th>
-                        <th class="text-start">PORT-<br/> TERMINAL</th>
-                        <th class="text-start">TUGBOAT</th>
-                        <th class="text-start">CUSTOMER</th>
-                        <th class="text-start">VESSEL</th>
-                        <th class="text-start">STATUS</th>
-                        <th class="text-center" style="width: 100px;">Actions</th>
-                    </tr>
-                    </thead>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
-        // Event listeners
         $(document).ready(function () {
             const previewUrl = '@Url.Action("Preview", "DispatchTicket")';
             const setTariffUrl = '@Url.Action("SetTariff", "DispatchTicket")';
@@ -97,166 +83,132 @@
             const editTicketUrl = '@Url.Action("EditTicket", "DispatchTicket")';
             const filterType = '@ViewBag.FilterType';
 
-            // Get status from URL on load
             const urlParams = new URLSearchParams(window.location.search);
             const statusFilter = urlParams.get('status') || '';
 
             let table = $('#paginatedTable').DataTable({
-                "order": [[1, 'asc']],
-                "columnDefs": [
-                    { "orderable": false, "targets": [11] }
+                order: [[1, 'asc']],
+                columnDefs: [
+                    { orderable: false, targets: [11] }
                 ],
-                "processing": true,
-                "serverSide": true,
-                "stateDuration": 86400,
-                "language": {
-                    "processing": `<div class="d-flex justify-content-center">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
+                processing: true,
+                serverSide: true,
+                stateDuration: 86400,
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search tickets...",
+                    processing: `<div class="text-center p-3">
+                                    <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
                                  </div>`
                 },
-                "ajax": {
-                    "url": "@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })",
-                    "type": "POST",
-                    "data": function (d) {
+                ajax: {
+                    url: "@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })",
+                    type: "POST",
+                    data: function (d) {
                         return $.extend({}, d, {
                             filterType: '@ViewBag.FilterType',
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
-                    },
-                    "error": function (xhr, error) {
-                        console.error('DataTables error:', error);
-                        alert('An error occurred while loading the data');
                     }
                 },
-                "preDrawCallback": function () {
-                    $('#paginatedTable').addClass('table-loading');
-                },
-                "drawCallback": function () {
-                    $('#paginatedTable').removeClass('removeClass');
-                    $('#paginatedTable').removeClass('table-loading');
-
-                    // Initialize all tooltips
+                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
+                drawCallback: function () {
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
-                "columns": [
-                    {"data": "date"},
-                    {"data": "cosNumber"},
-                    {"data": "dispatchNumber"},
+                columns: [
+                    { data: "date" },
+                    { data: "cosNumber" },
+                    { data: "dispatchNumber" },
                     {
-                        "data": "dateLeft",
-                        "render": function(data, type, row) {
+                        data: "dateLeft",
+                        render: function(data, type, row) {
                             return `${row.dateLeft} ${row.timeLeft}`;
                         }
                     },
                     {
-                        "data": "dateArrived",
-                        "render": function(data, type, row) {
+                        data: "dateArrived",
+                        render: function(data, type, row) {
                             return `${row.dateArrived} ${row.timeArrived}`;
                         }
                     },
-                    {"data": "service.serviceName"},
+                    { data: "service.serviceName" },
                     {
-                        "data": null,
-                        "name": "terminal.port.portName",
-                        "render": function (data, type, row) {
+                        data: null,
+                        name: "terminal.port.portName",
+                        render: function (data, type, row) {
                             const portName = row.terminal?.port?.portName ?? "";
                             const terminalName = row.terminal?.terminalName ?? "";
-
-                            return portName || terminalName
-                                ? `${portName} - ${terminalName}`
-                                : "";
+                            return portName || terminalName ? `${portName} - ${terminalName}` : "";
                         }
                     },
-                    {"data": "tugboat.tugboatName"},
+                    { data: "tugboat.tugboatName" },
                     {
-                        "data": "customer.customerName",
-                        "orderable": true,
-                        "className": "text-center", // Center the <td> content
-                        "render": function(data, type, row) {
-
-                            let customerIdVariable = row.customerId;
-                            if (customerIdVariable !== null){
-                                return `${row.customer.customerName}`;
-                            }
-                            else{
-                                return `(For Customer Assigning)`;
-                            }
+                        data: "customer.customerName",
+                        render: function(data, type, row) {
+                            return row.customerId ? row.customer.customerName : `<span class="italic text-xs" style="color: var(--on-surface-variant)">(For Customer Assigning)</span>`;
                         }
                     },
-                    {"data": "vessel.vesselName"},
+                    { data: "vessel.vesselName" },
                     {
-                        "data": "status",
-                        "orderable": true,
-                        "className": "text-center", // Center the <td> content
-                        "render": function(data, type, row) {
-                            let statusColor = ``;
-                            if (row.status === "@SD.DispatchTicketStatus.ForTariff"){
-                                statusColor = `bg-info`
-                            }
-                            if (row.status === "@SD.DispatchTicketStatus.ForApproval"){
-                                statusColor = `bg-warning`
-                            }
-                            if (row.status === "@SD.DispatchTicketStatus.Disapproved") {
-                                statusColor = `bg-danger`
-                            }
-                            if (row.status === "@SD.DispatchTicketStatus.ForBilling"){
-                                statusColor = `bg-success`
-                            }
-                            if (row.status === "@SD.DispatchTicketStatus.Billed") {
-                                statusColor = `bg-success`
-                            }
+                        data: "status",
+                        className: "text-center",
+                        render: function(data, type, row) {
+                            let statusClass = "";
+                            if (row.status === "@SD.DispatchTicketStatus.ForTariff") statusClass = "status-tariff";
+                            else if (row.status === "@SD.DispatchTicketStatus.ForApproval") statusClass = "status-approval";
+                            else if (row.status === "@SD.DispatchTicketStatus.Disapproved") statusClass = "status-error";
+                            else if (row.status === "@SD.DispatchTicketStatus.ForBilling") statusClass = "status-billing";
+                            else if (row.status === "@SD.DispatchTicketStatus.Billed") statusClass = "status-confirmed";
 
-                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
-                                                ${row.status}
-                                            </span>`;
+                            return `<span class="modern-badge-sm ${statusClass}">${row.status}</span>`;
                         }
                     },
                     {
-                        "data": "null",
-                        "orderable": false,
-                        "render": function(data, type, row) {
-                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: function(data, type, row) {
+                            let actions = `<div class="relative inline-block text-left dropdown-container">
+                                            <button type="button" class="modern-btn-dropdown dropdown-trigger">
+                                                ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
+                                            </button>
+                                            <div class="modern-dropdown-menu dropdown-menu">`;
                             
-                            if (row.status !== "@SD.DispatchTicketStatus.ForTariff" && row.status !== "@SD.DispatchTicketStatus.ForApproval" && row.status !== "@SD.DispatchTicketStatus.Pending")
-                            {
-                                actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>`;
+                            if (row.status !== "@SD.DispatchTicketStatus.ForTariff" && row.status !== "@SD.DispatchTicketStatus.ForApproval" && row.status !== "@SD.DispatchTicketStatus.Pending") {
+                                actions += `<a class="modern-dropdown-item" href="${previewUrl}?id=${row.dispatchTicketId}">
+                                                <span class="material-symbols-outlined">visibility</span> View Details
+                                            </a>`;
                             }
                             
                             if (row.status === "@SD.DispatchTicketStatus.ForApproval") {
-                                actions += `<div class="dropdown align-content-center">
-                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
-                                            <li><a class="dropdown-item" href="${previewUrl}?id=${row.dispatchTicketId}"><i class="bi bi-eye-fill"></i> View</a></li>`
-
-                                            if (row.customerId !== null) {
-                                                actions += `<li><a class="dropdown-item" href="${editTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}"><i class="bi bi-pencil-square"></i> Edit Tariff</a></li>`;
-                                            }
-                                    
-                                            actions += `<li><a class="dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}" id="editTicket"><i class="bi bi-pencil-square"></i> Edit Ticket</a></li>
-                                        </ul>
-                                    </div>`;
-                            }
-                            if (row.status === "@SD.DispatchTicketStatus.ForTariff")
-                            {
-                                //actions += `<a class="btn btn-primary col-12" href="${setTariffUrl}?id=${row.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>`;
-                                actions += `<div class="dropdown align-content-center">
-                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">`;
-                                
-                                            if (row.customerId !== null) {
-                                                actions += `<li><a class="dropdown-item" href="${setTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}"><i class="bi bi-cash-coin"></i> Set</a></li>`;
-                                            }
-                                            
-                                        actions += `<li><a class="dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}" id="editTicket"><i class="bi bi-pencil-square"></i> Edit Ticket</a></li>
-                                        </ul>
-                                    </div>`;
+                                actions += `<a class="modern-dropdown-item" href="${previewUrl}?id=${row.dispatchTicketId}">
+                                                <span class="material-symbols-outlined">visibility</span> View Details
+                                            </a>`;
+                                if (row.customerId !== null) {
+                                    actions += `<a class="modern-dropdown-item" href="${editTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
+                                                    <span class="material-symbols-outlined">edit_note</span> Edit Tariff
+                                                </a>`;
+                                }
+                                actions += `<a class="modern-dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
+                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
+                                            </a>`;
                             }
 
-                            if (row.status === "@SD.DispatchTicketStatus.Pending")
-                            {
-                                actions += `<a class="btn btn-primary col-12" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}"><i class="bi bi-pencil-square"></i> Edit Ticket</a>`;
+                            if (row.status === "@SD.DispatchTicketStatus.ForTariff") {
+                                if (row.customerId !== null) {
+                                    actions += `<a class="modern-dropdown-item" href="${setTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
+                                                    <span class="material-symbols-outlined">payments</span> Set Tariff
+                                                </a>`;
+                                }
+                                actions += `<a class="modern-dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
+                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
+                                            </a>`;
+                            }
+
+                            if (row.status === "@SD.DispatchTicketStatus.Pending") {
+                                actions += `<a class="modern-dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
+                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
+                                            </a>`;
                             }
                             
                             actions += `</div></div>`;
@@ -264,77 +216,101 @@
                         }
                     }
                 ],
-                "initComplete": function(settings, json) {
+                initComplete: function(settings, json) {
                     if (statusFilter) {
                         this.api().column(10).search(statusFilter).draw();
-
-                        // Set active button
-                        $('.btn-group button').removeClass('active');
-                        if (statusFilter === "@SD.DispatchTicketStatus.ForTariff") $('#filterForTariff').addClass('active');
-                        else if (statusFilter === "@SD.DispatchTicketStatus.ForApproval") $('#filterForApproval').addClass('active');
-                        else if (statusFilter === "@SD.DispatchTicketStatus.Disapproved") $('#filterDisapproved').addClass('active');
-                        else if (statusFilter === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
-                        else if (statusFilter === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
-                        else $('#filterAll').addClass('active');
+                        updateFilterButtons(statusFilter);
                     }
                 }
             });
 
+            // Action dropdown positioning logic
+            $(document).on('click', '.dropdown-trigger', function(e) {
+                e.stopPropagation();
+                const $trigger = $(this);
+                const $menu = $trigger.siblings('.modern-dropdown-menu');
+                
+                $('.modern-dropdown-menu').not($menu).removeClass('show');
+                $menu.toggleClass('show');
+                
+                if ($menu.hasClass('show')) {
+                    const rect = $trigger[0].getBoundingClientRect();
+                    const menuWidth = $menu.outerWidth();
+                    $menu.css({
+                        'position': 'fixed',
+                        'top': (rect.bottom + 4) + 'px',
+                        'left': (rect.right - menuWidth) + 'px',
+                        'z-index': '9999'
+                    });
+                }
+            });
+
+            $(document).on('click', function() {
+                $('.modern-dropdown-menu').removeClass('show');
+            });
+
             function updateUrl(status) {
                 const url = new URL(window.location);
-                if (status) {
-                    url.searchParams.set('status', status);
-                } else {
-                    url.searchParams.delete('status');
-                }
+                if (status) url.searchParams.set('status', status);
+                else url.searchParams.delete('status');
                 window.history.replaceState({}, '', url);
+            }
+
+            function updateFilterButtons(status) {
+                $('.modern-btn-secondary').removeClass('active');
+                if (!status) $('#filterAll').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.ForTariff") $('#filterForTariff').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.ForApproval") $('#filterForApproval').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.Disapproved") $('#filterDisapproved').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
             }
 
             $('#filterAll').on('click', function() {
                 table.columns().search('').draw();
                 updateUrl('');
+                updateFilterButtons('');
             });
 
             $('#filterForTariff').on('click', function() {
                 const status = '@SD.DispatchTicketStatus.ForTariff';
-                table.columns().search(''); // Clear previous filters
+                table.columns().search('');
                 table.columns(10).search(status).draw();
                 updateUrl(status);
+                updateFilterButtons(status);
             });
 
             $('#filterForApproval').on('click', function() {
                 const status = '@SD.DispatchTicketStatus.ForApproval';
-                table.columns().search(''); // Clear previous filters
+                table.columns().search('');
                 table.columns(10).search(status).draw();
                 updateUrl(status);
+                updateFilterButtons(status);
             });
 
             $('#filterDisapproved').on('click', function() {
                 const status = '@SD.DispatchTicketStatus.Disapproved';
-                table.columns().search(''); // Clear previous filters
+                table.columns().search('');
                 table.columns(10).search(status).draw();
                 updateUrl(status);
+                updateFilterButtons(status);
             });
 
             $('#filterForBilling').on('click', function() {
                 const status = '@SD.DispatchTicketStatus.ForBilling';
-                table.columns().search(''); // Clear previous filters
+                table.columns().search('');
                 table.columns(10).search(status).draw();
                 updateUrl(status);
+                updateFilterButtons(status);
             });
 
             $('#filterBilled').on('click', function() {
                 const status = '@SD.DispatchTicketStatus.Billed';
-                table.columns().search(''); // Clear previous filters
+                table.columns().search('');
                 table.columns(10).search(status).draw();
                 updateUrl(status);
-            });
-
-            $('.btn-group button').on('click', function() {
-                $('.btn-group button').removeClass('active');
-                $(this).addClass('active');
+                updateFilterButtons(status);
             });
         });
     </script>
 }
-

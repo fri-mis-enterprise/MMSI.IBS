@@ -136,6 +136,33 @@ h1, h2, h3, h4, p {
     max-width: 100%;
 }
 
+.modern-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-xl);
+    background-color: #ffffff;
+    font-size: 14px;
+    color: var(--on-surface);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-height: 38px;
+}
+
+.modern-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(5, 22, 22, 0.1);
+}
+
+.modern-input:read-only {
+    background-color: var(--surface-container-low);
+}
+
+textarea.modern-input {
+    resize: vertical;
+    min-height: 80px;
+}
+
 textarea.form-control {
     resize: vertical; /* Prevent breaking horizontal layout */
     min-height: 80px;
@@ -279,6 +306,62 @@ table.dataTable thead th {
     border-bottom: 1px solid var(--outline-variant) !important;
     white-space: nowrap !important;
     letter-spacing: 0.02em !important;
+    text-align: left !important;
+    position: relative !important;
+}
+
+.modern-table th.text-right,
+table.dataTable thead th.text-right {
+    text-align: right !important;
+}
+
+.modern-table th.text-center,
+table.dataTable thead th.text-center {
+    text-align: center !important;
+}
+
+/* Force right-aligned columns to stay right-aligned */
+.modern-table th.text-right,
+table.dataTable thead th.text-right {
+    text-align: right !important;
+}
+
+/* Reset DataTables sort icon padding */
+table.dataTable thead th.sorting,
+table.dataTable thead th.sorting_asc,
+table.dataTable thead th.sorting_desc,
+table.dataTable thead th.dt-ordering-asc,
+table.dataTable thead th.dt-ordering-desc {
+    padding-right: 16px !important;
+    background-image: none !important;
+}
+
+/* Hide default indicators */
+table.dataTable thead .dt-column-order,
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc:after {
+    display: none !important;
+}
+
+/* Custom Sort Indicators */
+table.dataTable thead th.dt-ordering-asc:after,
+table.dataTable thead th.sorting_asc:after {
+    content: ' \2191' !important;
+    display: inline-block !important;
+    margin-left: 4px !important;
+    color: var(--primary) !important;
+}
+
+table.dataTable thead th.dt-ordering-desc:after,
+table.dataTable thead th.sorting_desc:after {
+    content: ' \2193' !important;
+    display: inline-block !important;
+    margin-left: 4px !important;
+    color: var(--primary) !important;
 }
 
 .modern-table td,
@@ -357,12 +440,58 @@ table.dataTable tbody tr:hover {
     gap: 1.5rem;
 }
 
+.modern-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 0.75rem;
+}
+
 .modern-col-4 { grid-column: span 12; }
+.modern-col-6 { grid-column: span 12; }
 .modern-col-8 { grid-column: span 12; }
+.modern-col-12 { grid-column: span 12; }
 
 @media (min-width: 1024px) {
     .modern-col-4 { grid-column: span 4; }
+    .modern-col-6 { grid-column: span 6; }
     .modern-col-8 { grid-column: span 8; }
+    .modern-col-12 { grid-column: span 12; }
+}
+
+/* Radio Tab Group */
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.radio-tab-input {
+    display: none;
+}
+
+.radio-tab-label {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    background-color: #ffffff;
+    color: var(--on-surface-variant);
+}
+
+.radio-tab-input:checked + .radio-tab-label {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.radio-tab-label:hover:not(.radio-tab-input:checked + .radio-tab-label) {
+    background-color: var(--surface-container-low);
 }
 
 /* Responsive Utilities */
@@ -493,9 +622,73 @@ table.dataTable tbody tr:hover {
     transform: rotate(180deg);
 }
 
+/* Financial Summary Component */
+.financial-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    background-color: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-xl);
+}
+
+@media (min-width: 768px) {
+    .financial-summary-card {
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+.financial-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.financial-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--on-surface-variant);
+    letter-spacing: 0.05em;
+}
+
+.financial-value {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+@media (min-width: 1024px) {
+    .financial-value {
+        font-size: 32px;
+    }
+}
+
+.financial-value.primary { color: var(--primary); }
+.financial-value.secondary { color: var(--secondary); }
+
+.financial-divider {
+    display: none;
+    width: 1px;
+    height: 40px;
+    background-color: var(--outline-variant);
+}
+
+@media (min-width: 768px) {
+    .financial-divider {
+        display: block;
+    }
+}
+
 /* Utilities */
-.hidden { display: none; }
 .flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-column { display: flex; flex-direction: column; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
 .gap-2 { gap: 0.5rem; }
