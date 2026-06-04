@@ -93,6 +93,7 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? tariffFile,
             IFormFile? dispatchTicketFile,
             IFormFile? billingFile,
+            IFormFile? bankAccountFile,
             IFormFile? collectionFile,
             IFormFile? collectBillFile,
             IFormFile? coaFile,
@@ -120,6 +121,7 @@ namespace IBSWeb.Areas.User.Controllers
                 tariffFile        = ResolveFile(tariffFile, bulkFiles, "tariff", "tariff.csv");
                 dispatchTicketFile = ResolveFile(dispatchTicketFile, bulkFiles, "dispatch", "dispatch.csv");
                 billingFile       = ResolveFile(billingFile, bulkFiles, "billing", "billing.csv");
+                bankAccountFile   = ResolveFile(bankAccountFile, bulkFiles, "bank", "bankacct.csv");
                 collectionFile    = ResolveFile(collectionFile, bulkFiles, "collection", "collection.csv");
                 collectBillFile   = ResolveFile(collectBillFile, bulkFiles, "collect_bill", "collect_bill.csv");
                 coaFile           = ResolveFile(coaFile, bulkFiles, "chart_of_accounts", "filpride_chart_of_accounts.csv");
@@ -132,6 +134,11 @@ namespace IBSWeb.Areas.User.Controllers
                 if (coaFile != null)
                 {
                     sb.AppendLine(await ImportChartOfAccountsAsync(coaFile, maps));
+                }
+
+                if (bankAccountFile != null)
+                {
+                    sb.AppendLine(await ImportBankAccountsAsync(bankAccountFile, maps));
                 }
 
                 if (customerFile != null)
@@ -274,6 +281,7 @@ namespace IBSWeb.Areas.User.Controllers
             public Dictionary<string, int> Principal { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<string, int> PrincipalLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<string, int> Collection { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> BankAccount { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<string, List<string>> CollectBill { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<string, BillingMapInfo> Billing { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<string, BillingMapInfo> BillingByRecId { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -410,6 +418,15 @@ namespace IBSWeb.Areas.User.Controllers
                 maps.Collection[c.MsapCollectionNumber] = c.MsapCollectionId;
             }
 
+            maps.BankAccount.Clear();
+            foreach (var b in await dbContext.BankAccounts.AsNoTracking().ToListAsync(ct))
+            {
+                if (b.BankAccountCode != null)
+                {
+                    maps.BankAccount[b.BankAccountCode] = b.BankAccountId;
+                }
+            }
+
             maps.Customer.Clear();
             maps.CustomerLegacyMap.Clear();
             foreach (var c in await dbContext.Customers.AsNoTracking().Where(x => x.Company == "MMSI").ToListAsync(ct))
@@ -524,6 +541,57 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             return $"Chart of Accounts: {newRecords.Count} imported.";
+        }
+
+        private async Task<string> ImportBankAccountsAsync(IFormFile file, ImportMaps maps)
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            using var csv = new CsvReader(reader, _csvConfig);
+            var records = csv.GetRecords<dynamic>().ToList();
+            int count = 0, skipped = 0;
+            var newRecords = new List<BankAccount>();
+
+            foreach (var record in records)
+            {
+                string code = GetString(record, "code").TrimStart('0');
+                if (string.IsNullOrEmpty(code)) code = "0";
+
+                if (maps.BankAccount.ContainsKey(code) || maps.BankAccount.ContainsKey(GetString(record, "code")))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                var entity = new BankAccount
+                {
+                    BankAccountCode = code,
+                    Bank = GetString(record, "bank"),
+                    Branch = GetString(record, "bankname"), // bankname often contains branch
+                    AccountNo = GetString(record, "accountno"),
+                    AccountName = GetString(record, "accountnam"),
+                    Company = "MMSI",
+                    CreatedBy = $"Import: {GetUserFullName()}",
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                };
+
+                newRecords.Add(entity);
+                count++;
+            }
+
+            if (newRecords.Count > 0)
+            {
+                await dbContext.BankAccounts.AddRangeAsync(newRecords);
+                await dbContext.SaveChangesAsync();
+                foreach (var r in newRecords)
+                {
+                    if (r.BankAccountCode != null)
+                    {
+                        maps.BankAccount[r.BankAccountCode] = r.BankAccountId;
+                    }
+                }
+            }
+
+            return $"Bank Accounts: {count} imported, {skipped} already existed.";
         }
 
         private async Task<string> ImportCustomersAsync(IFormFile file, ImportMaps maps)
@@ -1206,11 +1274,24 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 string checkDate = GetString(record, "checkdate");
+                string bankCode = GetString(record, "bankacctco").TrimStart('0');
+                if (string.IsNullOrEmpty(bankCode)) bankCode = "0";
+
+                int? bankId = null;
+                if (maps.BankAccount.TryGetValue(bankCode, out int bid))
+                {
+                    bankId = bid;
+                }
+                else if (maps.BankAccount.TryGetValue(GetString(record, "bankacctco"), out bid))
+                {
+                    bankId = bid;
+                }
 
                 var entity = new Collection
                 {
                     MsapCollectionNumber = crNum,
                     CustomerId = customerId,
+                    BankId = bankId,
                     CheckNumber = GetString(record, "checkno"),
                     Company = "MMSI",
                     CashAmount = 0,

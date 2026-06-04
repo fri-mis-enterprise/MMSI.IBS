@@ -136,6 +136,11 @@ ViewData["Title"] = "MSAP Import";
                                         <span class="file-badge badge-step1">Base</span>
                                         <input type="file" name="portFile" accept=".csv" class="form-control form-control-sm import-file-input" />
                                     </div>
+                                    <div class="import-file-row">
+                                        <span class="import-file-label">Bank Account</span>
+                                        <span class="file-badge badge-step1">Base</span>
+                                        <input type="file" name="bankAccountFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                                    </div>
                                     <div class="import-file-row d-none">
                                         <span class="import-file-label">Service</span>
                                         <span class="file-badge badge-step1">Base</span>
@@ -271,10 +276,11 @@ ViewData["Title"] = "MSAP Import";
             'vesselFile': ['vessel'],
             'tariffFile': ['tariff'],
             'dispatchTicketFile': ['dispatch'],
-            'billingFile': ['billing'],
-            'collectionFile': ['collection'],
-            'collectBillFile': ['collect_bill', 'collect-bill']
-        };
+            billingFile: ['billing'],
+            bankAccountFile: ['bank', 'bankacct'],
+            collectionFile: ['collection'],
+            collectBillFile: ['collect_bill', 'collect-bill']
+            };
 
         function updateFileCount() {
             const seen = new Set();
@@ -322,6 +328,7 @@ ViewData["Title"] = "MSAP Import";
                 else if (name === 'tariff.csv') matchedKey = 'tariffFile';
                 else if (name === 'dispatch.csv') matchedKey = 'dispatchTicketFile';
                 else if (name === 'billing.csv') matchedKey = 'billingFile';
+                else if (name === 'bankacct.csv') matchedKey = 'bankAccountFile';
                 else if (name === 'collection.csv') matchedKey = 'collectionFile';
                 else if (name === 'collect_bill.csv') matchedKey = 'collectBillFile';
                 
