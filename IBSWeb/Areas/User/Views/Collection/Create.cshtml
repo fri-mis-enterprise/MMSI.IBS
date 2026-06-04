@@ -2,349 +2,285 @@
 
 @{
     ViewData["Title"] = "Create Collection";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
 <style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    .sticky-panel {
-        /* Default for mobile: no sticky */
-        position: relative;
-        top: 0;
-        max-height: none;
-    }
-
-    @@media (min-width: 992px) {
-        .sticky-panel {
-            position: sticky;
-            top: 80px;
-            max-height: calc(100vh - 140px);
-            overflow-y: auto;
-            padding-right: 5px; /* Space for scrollbar if it appears */
-        }
-        
-        /* Hide scrollbar but keep functionality */
-        .sticky-panel::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sticky-panel::-webkit-scrollbar-thumb {
-            background: #e3e6f0;
-            border-radius: 10px;
-        }
-    }
-
-    .form-container-bottom {
-        padding-bottom: 5rem; /* Extra space to prevent footer overlap */
-    }
-
-    .section-title {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 0;
-    }
-
-    .card {
-        border-radius: 0.25rem;
-    }
-
-    .summary-box {
-        background-color: #f8f9fc;
-        border-radius: 0.35rem;
-        padding: 1rem;
-        border: 1px solid #e3e6f0;
-    }
-
-    .summary-label {
-        font-size: 0.75rem;
-        color: #858796;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 700;
-    }
-
-    .summary-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #4e73df;
-    }
-
-    .form-label-custom {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 700;
-        color: #858796;
-        margin-bottom: 0.25rem;
-        display: block;
-    }
-
-    .required-star {
-        color: #e74a3b;
-    }
-
-    #billingsTable thead th {
-        background-color: #f8f9fc;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #4e73df;
-    }
-
-    #CustomerSearchResults {
-        z-index: 1050;
-        max-height: 250px;
-        overflow-y: auto;
-        border: 1px solid #e3e6f0;
-    }
-
-    .list-group-item-action {
+    #undocBadge {
         cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
     }
-
-    .list-group-item-action:hover {
-        background-color: #f8f9fc;
+    #undocBadge.is-undoc {
+        background-color: var(--secondary-container);
+        color: var(--on-secondary-container);
+        border: 1px solid var(--secondary);
+    }
+    #undocBadge:not(.is-undoc) {
+        background-color: var(--surface-container-high);
+        color: var(--on-surface-variant);
+        border: 1px solid var(--outline-variant);
+    }
+    #undocBadge:hover {
+        filter: brightness(0.95);
+        transform: translateY(-1px);
+    }
+    #undocBadge:active {
+        transform: translateY(0);
     }
 </style>
 
-<div class="container-fluid mt-4 form-container-bottom">
+<div class="modern-layout">
     <form id="myForm" method="post">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-        <!-- Header Card -->
-        <div class="card shadow border-0 mb-4">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center p-3">
-                <h5 class="m-0"><i class="bi bi-wallet2 me-2"></i> @ViewData["Title"]</h5>
-                <div class="d-flex gap-2">
-                    <a asp-action="Index" class="btn btn-outline-light">
-                        <i class="bi bi-arrow-left"></i> Back to List
-                    </a>
-                    <button type="submit" class="btn btn-light" id="submitButton">
-                        <i class="bi bi-check-circle"></i> Save Collection
+        @Html.AntiForgeryToken()
+        <main class="modern-container">
+            <!-- Header -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Collections</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Create</span>
+                    </div>
+                    <h1 class="modern-headline-lg">Record New Collection</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" id="submitButton">
+                        <span class="material-symbols-outlined">save</span> SAVE COLLECTION
                     </button>
+                    <a class="modern-btn-secondary" asp-action="Index">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <div class="row g-4">
-            <!-- Left Column: Information & Billings -->
-            <div class="col-lg-8">
-                <!-- Collection Information -->
-                <div class="card shadow border-0 mb-4">
-                    <div class="card-header bg-primary text-white p-3">
-                        <h6 class="m-0 section-title"><i class="bi bi-info-circle me-2"></i>Collection Information</h6>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-6 position-relative">
-                                <label class="form-label-custom">Customer <span class="required-star">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                                    <input type="text" id="CustomerSearch" class="form-control border-start-0" placeholder="Type to search customers..." autocomplete="off">
-                                    <input type="hidden" asp-for="CustomerId" id="customerId" />
-                                </div>
-                                <div id="CustomerSearchResults" class="list-group position-absolute w-100 shadow d-none"></div>
-                                <span asp-validation-for="CustomerId" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label-custom" id="statusLabel">Collection Receipt # <span class="required-star">*</span></label>
-                                <input asp-for="MsapCollectionNumber" type="text" class="form-control" id="msapCollectionNumber">
-                                <span asp-validation-for="MsapCollectionNumber" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end pb-1">
-                                <div class="form-check form-switch mb-2">
-                                    <input type="hidden" asp-for="IsUndocumented" id="IsUndocumented" />
-                                    <input class="form-check-input" type="checkbox" id="isUndocumentedCheckbox" @(Model.IsUndocumented ? "checked" : "") disabled>
-                                    <label class="form-check-label small fw-bold text-muted" for="isUndocumentedCheckbox">Undocumented</label>
-                                </div>
-                            </div>
+            <div class="modern-grid">
+                <!-- Left Column: Logistics & Billings (col-8) -->
+                <div class="modern-col-8 flex flex-column" style="gap: 1.25rem;">
+                    <!-- Customer & Collection Info -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">person</span>
+                            <h2 class="modern-headline-md">1. Customer & General Information</h2>
+                        </div>
+                        <div class="modern-card-body" style="gap: 0.5rem;">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
                             
-                            <!-- Customer Details Display (Hidden by default) -->
-                            <div id="CustomerDetailsSection" class="col-12 d-none">
-                                <div class="p-3 bg-light rounded border small">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Address:</span><br>
-                                            <span id="CustomerAddress" class="fw-semibold">-</span>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">TIN:</span><br>
-                                            <span id="CustomerTIN" class="fw-semibold">-</span>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Terms:</span><br>
-                                            <span id="CustomerTerms" class="fw-semibold">-</span>
-                                        </div>
+                            <div class="modern-grid-compact" style="gap: 0.5rem;">
+                                <div class="modern-col-8">
+                                    <label class="modern-label">Customer <span class="text-error">*</span></label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">search</span>
+                                        <input type="text" id="CustomerSearch" class="modern-input" style="padding-left: 40px;" placeholder="Type to search..." autocomplete="off">
+                                    </div>
+                                    <input type="hidden" asp-for="CustomerId" id="customerId" />
+                                    <div id="CustomerSearchResults" class="modern-dropdown-menu w-full" style="max-height: 250px; overflow-y: auto;"></div>
+                                    <span asp-validation-for="CustomerId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label class="modern-label">Collection Date</label>
+                                    <input asp-for="Date" type="date" class="modern-input" value="@(Model.Date != default ? Model.Date.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))">
+                                    <span asp-validation-for="Date" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <!-- Customer Metadata -->
+                            <div id="CustomerDetailsSection" class="border-t border-outline-variant pt-2 mt-1" style="display: none; gap: 0.5rem; flex-direction: column;">
+                                <div>
+                                    <p class="modern-label">Address</p>
+                                    <p id="CustomerAddress" class="modern-value-md">-</p>
+                                </div>
+                                <div class="modern-grid-compact" style="gap: 0.5rem;">
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">TIN</p>
+                                        <p id="CustomerTIN" class="modern-value-md font-bold">-</p>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">Terms</p>
+                                        <p id="CustomerTerms" class="modern-value-md font-bold">-</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-12"><hr class="my-2"></div>
+                            <div class="modern-grid-compact mt-2 pt-2 border-t border-outline-variant" style="gap: 0.5rem;">
+                                <div class="modern-col-6">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="modern-label mb-0">Collection # <span class="text-error" id="receiptNumberRequired">*</span></label>
+                                        <span id="undocBadge" class="modern-badge-sm">DOCUMENTED</span>
+                                    </div>
+                                    <input asp-for="MsapCollectionNumber" type="text" class="modern-input" id="msapCollectionNumber" placeholder="OR000000">
+                                    <input type="hidden" asp-for="IsUndocumented" id="IsUndocumented" />
+                                    <input type="checkbox" id="isUndocumentedCheckbox" style="display: none;" @(Model.IsUndocumented ? "checked" : "")>
+                                    <span asp-validation-for="MsapCollectionNumber" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label" style="margin-bottom: 5px; display: block;">Reference Number</label>
+                                    <input asp-for="ReferenceNo" type="text" class="modern-input" placeholder="e.g. OR#, Check #">
+                                </div>
+                            </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label-custom">Collection Date</label>
-                                <input asp-for="Date" type="date" id="Date" value="@(Model.Date != default ? Model.Date.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="form-control">
-                                <span asp-validation-for="Date" class="text-danger"></span>
+                            <div class="mt-1">
+                                <label class="modern-label">Remarks</label>
+                                <textarea asp-for="Remarks" class="modern-input" style="min-height: 60px;" placeholder="Optional remarks..."></textarea>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label-custom">Reference Number</label>
-                                <input asp-for="ReferenceNo" type="text" class="form-control" placeholder="e.g. OR#, Check #">
+                        </div>
+                    </div>
+
+                    <!-- Billing Settlement Table -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">receipt_long</span>
+                            <h2 class="modern-headline-md">2. Billing Settlement</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="modern-table-container border border-outline-variant">
+                                <table id="billingsTable" class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" style="width: 48px;"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                                            <th>BILLING #</th>
+                                            <th class="text-center">DATE</th>
+                                            <th class="text-right">GROSS</th>
+                                            <th class="text-right">EWT</th>
+                                            <th class="text-right">NET</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center py-5 opacity-60 italic">
+                                                Please select a customer first to load unpaid billings.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label-custom">Remarks</label>
-                                <input asp-for="Remarks" type="text" class="form-control">
-                            </div>
+                            <!-- Hidden Select for Model Binding -->
+                            <select asp-for="ToCollectBillings" id="hiddenBillingsSelect" multiple="multiple" style="display: none;"></select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Billing Settlement -->
-                <div class="card shadow border-0">
-                    <div class="card-header bg-primary text-white p-3">
-                        <h6 class="m-0 section-title"><i class="bi bi-list-check me-2"></i>Billing Settlement</h6>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="table-responsive">
-                            <table id="billingsTable" class="table table-hover align-middle mb-0" style="width: 100%">
-                                <thead>
-                                    <tr>
-                                        <th class="text-center" width="40"><input type="checkbox" id="selectAll" class="form-check-input"></th>
-                                        <th>Billing #</th>
-                                        <th class="text-center">Date</th>
-                                        <th class="text-end">Gross</th>
-                                        <th class="text-end">EWT</th>
-                                        <th class="text-end">Net</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Populated via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Hidden Select for Model Binding -->
-                        <select asp-for="ToCollectBillings" id="hiddenBillingsSelect" multiple="multiple" style="display: none;"></select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Payments & Summary (Sticky) -->
-            <div class="col-lg-4">
-                <div class="sticky-panel">
+                <!-- Right Column: Payment & Deposit (col-4) -->
+                <div class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
                     <!-- Payment Summary -->
-                    <div class="card shadow border-0 mb-4">
-                        <div class="card-header bg-primary text-white p-3">
-                            <h6 class="m-0 section-title"><i class="bi bi-calculator me-2"></i>Payment Summary</h6>
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">payments</span>
+                            <h2 class="modern-headline-md">3. Payment Summary</h2>
                         </div>
-                        <div class="card-body p-3">
-                            <div class="summary-box mb-4">
-                                <div class="row g-2 mb-3 text-center">
-                                    <div class="col-6 border-end">
-                                        <div class="summary-label">Total Gross</div>
-                                        <div id="billingsTotal" class="fw-bold">₱ 0.00</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="summary-label">Total EWT</div>
-                                        <div id="ewtTotalDisplay" class="text-danger fw-bold">₱ 0.00</div>
-                                    </div>
+                        <div class="modern-card-body">
+                            <div class="financial-summary-card mb-4" style="flex-direction: column; gap: 0.75rem;">
+                                <div class="financial-item">
+                                    <span class="financial-label">Settlement Net</span>
+                                    <span class="financial-value primary" id="netAmountDisplay">₱ 0.00</span>
                                 </div>
-                                <hr class="my-2">
-                                <div class="text-center py-2">
-                                    <div class="summary-label">Net Amount to Collect</div>
-                                    <div id="netAmountDisplay" class="summary-value">₱ 0.00</div>
+                                <div class="financial-divider" style="width: 100%; height: 1px;"></div>
+                                <div class="financial-item">
+                                    <span class="financial-label">Total Input</span>
+                                    <span class="financial-value secondary" id="manualTotalDisplay">₱ 0.00</span>
                                 </div>
                             </div>
 
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label-custom">Cash Payment</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">₱</span>
-                                        <input asp-for="CashAmount" type="number" step="0.01" class="form-control fw-bold text-success" id="cashAmount">
+                            <div class="flex flex-column" style="gap: 1rem;">
+                                <div>
+                                    <label class="modern-label">Cash Payment</label>
+                                    <div class="relative">
+                                        <span class="absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; opacity: 0.5;">₱</span>
+                                        <input asp-for="CashAmount" type="number" step="0.01" class="modern-input" style="padding-left: 30px; font-weight: bold; color: var(--primary);" id="cashAmount">
                                     </div>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label-custom">Check Payment</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">₱</span>
-                                        <input asp-for="CheckAmount" type="number" step="0.01" class="form-control fw-bold text-primary" id="checkAmount">
+                                <div>
+                                    <label class="modern-label">Check Payment</label>
+                                    <div class="relative">
+                                        <span class="absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; opacity: 0.5;">₱</span>
+                                        <input asp-for="CheckAmount" type="number" step="0.01" class="modern-input" style="padding-left: 30px; font-weight: bold; color: var(--primary);" id="checkAmount">
                                     </div>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label-custom">WVAT Withheld</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">₱</span>
-                                        <input asp-for="WVAT" type="number" step="0.01" class="form-control" id="wvat">
+                                <div>
+                                    <label class="modern-label">WVAT Withheld</label>
+                                    <div class="relative">
+                                        <span class="absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; opacity: 0.5;">₱</span>
+                                        <input asp-for="WVAT" type="number" step="0.01" class="modern-input" style="padding-left: 30px;" id="wvat">
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-outline-variant pt-3 modern-grid-compact">
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">Gross Total</p>
+                                        <p id="billingsTotal" class="modern-value-md font-bold">₱ 0.00</p>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <p class="modern-label">Total EWT</p>
+                                        <p id="ewtTotalDisplay" class="modern-value-md font-bold text-error">₱ 0.00</p>
                                     </div>
                                 </div>
                                 
-                                <!-- Hidden technical fields -->
                                 <input type="hidden" asp-for="Amount" id="amount">
                                 <input type="hidden" asp-for="EWT" id="ewt">
                             </div>
                         </div>
-                        <div class="card-footer bg-light py-3 border-top d-flex justify-content-between align-items-center">
-                            <span class="summary-label">Total Input:</span>
-                            <span id="manualTotalDisplay" class="h5 mb-0 fw-bold text-primary">₱ 0.00</span>
-                        </div>
                     </div>
 
                     <!-- Deposit Details -->
-                    <div class="card shadow border-0">
-                        <div class="card-header bg-primary text-white p-3">
-                            <h6 class="m-0 section-title"><i class="bi bi-bank me-2"></i>Deposit & Check Details</h6>
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">account_balance</span>
+                            <h2 class="modern-headline-md">4. Deposit & Check Details</h2>
                         </div>
-                        <div class="card-body p-3">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label-custom">Deposit To Bank</label>
-                                    <select asp-for="BankId" id="BankId" asp-items="@Model.BankAccounts" class="form-select">
+                        <div class="modern-card-body">
+                            <div class="flex flex-column" style="gap: 1rem;">
+                                <div>
+                                    <label class="modern-label">Deposit To Bank</label>
+                                    <select asp-for="BankId" id="BankId" asp-items="@Model.BankAccounts" class="js-modern-select" data-placeholder="Select Bank Account...">
                                         <option value="">-- Select Bank --</option>
                                     </select>
                                 </div>
-                                
-                                <div class="col-12 p-2 bg-light rounded small border" id="bankInfoPanel" style="display: none;">
-                                    <div class="row g-1">
-                                        <div class="col-4 text-muted">Bank:</div>
-                                        <div class="col-8 fw-bold" id="displayBank"></div>
-                                        <div class="col-4 text-muted">Acc #:</div>
-                                        <div class="col-8 fw-bold" id="displayAccountNo"></div>
-                                        <div class="col-4 text-muted">Name:</div>
-                                        <div class="col-8 fw-bold" id="displayAccountName"></div>
+
+                                <div id="bankInfoPanel" class="bg-surface-container-low p-3 rounded-md border border-outline-variant" style="display: none;">
+                                    <div class="modern-grid-compact">
+                                        <div class="modern-col-4 opacity-60 text-xs uppercase font-bold">Bank</div>
+                                        <div class="modern-col-8 text-xs font-bold" id="displayBank"></div>
+                                        <div class="modern-col-4 opacity-60 text-xs uppercase font-bold">Acc #</div>
+                                        <div class="modern-col-8 text-xs font-bold" id="displayAccountNo"></div>
+                                        <div class="modern-col-4 opacity-60 text-xs uppercase font-bold">Name</div>
+                                        <div class="modern-col-8 text-xs font-bold" id="displayAccountName"></div>
                                     </div>
                                 </div>
 
-                                <div class="col-6">
-                                    <label class="form-label-custom">Check #</label>
-                                    <input asp-for="CheckNumber" id="CheckNumber" type="text" class="form-control">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label-custom">Check Date</label>
-                                    <input asp-for="CheckDate" id="CheckDate" type="date" value="@(Model.CheckDate.HasValue ? Model.CheckDate.Value.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="form-control">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label-custom">Date Deposited</label>
-                                    <input asp-for="DepositDate" id="DepositDate" type="date" value="@(Model.DepositDate.HasValue ? Model.DepositDate.Value.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="form-control">
+                                <div class="modern-grid-compact">
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Check #</label>
+                                        <input asp-for="CheckNumber" id="CheckNumber" type="text" class="modern-input">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Check Date</label>
+                                        <input asp-for="CheckDate" id="CheckDate" type="date" value="@(Model.CheckDate.HasValue ? Model.CheckDate.Value.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="modern-input">
+                                    </div>
                                 </div>
 
-                                <div class="col-6 border-top pt-2">
-                                    <label class="form-label-custom">Issuing Bank</label>
-                                    <input asp-for="CheckBank" type="text" class="form-control" placeholder="e.g. BDO">
+                                <div>
+                                    <label class="modern-label">Date Deposited</label>
+                                    <input asp-for="DepositDate" id="DepositDate" type="date" value="@(Model.DepositDate.HasValue ? Model.DepositDate.Value.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))" class="modern-input">
                                 </div>
-                                <div class="col-6 border-top pt-2">
-                                    <label class="form-label-custom">Issuing Branch</label>
-                                    <input asp-for="CheckBranch" type="text" class="form-control" placeholder="e.g. Makati">
+
+                                <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Issuing Bank</label>
+                                        <input asp-for="CheckBank" type="text" class="modern-input" placeholder="e.g. BDO">
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label class="modern-label">Issuing Branch</label>
+                                        <input asp-for="CheckBranch" type="text" class="modern-input" placeholder="e.g. Makati">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </form>
 </div>
 
@@ -359,7 +295,7 @@
             setupEventListeners();
 
             // Initial state triggers
-            handleCheckboxChanged();
+            handleCheckboxChange();
             if ($('#customerId').val()) {
                 loadBillings($('#customerId').val());
             }
@@ -374,49 +310,65 @@
                     paging: true,
                     info: true,
                     order: [[1, 'asc']],
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                    dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                         "<'row'<'col-sm-12'tr>>" +
-                         "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                    dom: '<"modern-table-container"t><"flex-stack mt-2"ip>',
                     columns: [
                         {
                             data: 'msapBillingId',
                             orderable: false,
                             className: 'text-center',
+                            defaultContent: '',
                             render: function(data, type, row) {
-                                return `<input type="checkbox" class="bill-checkbox form-check-input" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-net="${row.net}">`;
+                                return `<input type="checkbox" class="bill-checkbox form-check-input" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-net="${row.net}" style="width: 18px; height: 18px; cursor: pointer;">`;
                             }
                         },
                         { 
                             data: 'msapBillingNumber', 
-                            className: 'fw-bold text-primary' 
+                            className: 'font-bold',
+                            defaultContent: ''
                         },
                         {
                             data: 'date',
-                            className: 'text-center small',
+                            className: 'text-center',
+                            defaultContent: '',
                             render: function(data) {
-                                return data ? new Date(data).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '';
+                                return data ? new Date(data).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-';
                             }
                         },
                         {
                             data: 'amount',
-                            className: 'text-end fw-bold',
-                            render: function(data) { return `₱ ${formatNumber(data)}`; }
+                            className: 'text-right font-bold',
+                            defaultContent: '0.00',
+                            render: function(data) { return `₱${formatNumber(data)}`; }
                         },
                         {
                             data: 'ewt',
-                            className: 'text-end text-danger',
-                            render: function(data) { return `₱ ${formatNumber(data)}`; }
+                            className: 'text-right text-error',
+                            defaultContent: '0.00',
+                            render: function(data) { return `₱${formatNumber(data)}`; }
                         },
                         {
                             data: 'net',
-                            className: 'text-end fw-bold text-success',
-                            render: function(data) { return `₱ ${formatNumber(data)}`; }
+                            className: 'text-right font-bold',
+                            defaultContent: '0.00',
+                            render: function(data) { return `₱${formatNumber(data)}`; }
                         }
                     ],
                     language: {
                         emptyTable: "No unpaid billings found for this customer."
                     }
+                });
+            }
+
+            function positionDropdown($input, $results) {
+                const rect = $input[0].getBoundingClientRect();
+                $results.css({
+                    'position': 'fixed',
+                    'top': (rect.bottom + 4) + 'px',
+                    'left': rect.left + 'px',
+                    'width': rect.width + 'px',
+                    'z-index': '9999',
+                    'display': 'block',
+                    'right': 'auto'
                 });
             }
 
@@ -428,6 +380,10 @@
                 const $customerId = $("#customerId");
 
                 async function performCustomerSearch(searchTerm) {
+                    if (!searchTerm || searchTerm.trim().length === 0) {
+                        $customerResults.empty().removeClass('show').hide();
+                        return;
+                    }
                     try {
                         const res = await fetch(`@Url.Action("SearchCustomers", "Collection", new { area = "User" })?term=${encodeURIComponent(searchTerm)}`);
                         const data = await res.json();
@@ -435,17 +391,18 @@
                         if (Array.isArray(data) && data.length > 0) {
                             data.forEach(item => {
                                 $customerResults.append(
-                                    $('<a href="#" class="list-group-item list-group-item-action py-2">')
+                                    $('<a href="#" class="modern-dropdown-item">')
                                         .data('customer', item)
-                                        .html(`<span>${item.name}</span>`)
+                                        .html(`<span class="material-symbols-outlined">person</span> ${item.name}`)
                                 );
                             });
                         } else {
-                            $customerResults.append($('<div class="list-group-item py-2 text-muted"><em>No customers found</em></div>'));
+                            $customerResults.append($('<div class="p-3 text-center italic opacity-60 text-xs">No customers found</div>'));
                         }
-                        $customerResults.removeClass('d-none');
+                        positionDropdown($customerSearch, $customerResults);
+                        $customerResults.addClass('show');
                     } catch {
-                        $customerResults.empty().addClass('d-none');
+                        $customerResults.empty().removeClass('show').hide();
                     }
                 }
 
@@ -455,22 +412,25 @@
                     if (searchTerm.length === 0) {
                         $customerId.val('');
                         clearForm();
+                        $customerResults.empty().removeClass('show').hide();
+                    } else {
+                        customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
                     }
-                    customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
                 });
 
                 $customerSearch.on('focus', function () {
-                    performCustomerSearch($(this).val().trim());
+                    const searchTerm = $(this).val().trim();
+                    if (searchTerm.length > 0) performCustomerSearch(searchTerm);
                 });
 
-                $customerResults.on('click', 'a', function (e) {
+                $customerResults.on('click', '.modern-dropdown-item', function (e) {
                     e.preventDefault();
                     const customer = $(this).data('customer');
                     if (!customer) return;
 
                     $customerSearch.val(customer.name);
                     $customerId.val(customer.value);
-                    $customerResults.empty().addClass('d-none');
+                    $customerResults.empty().removeClass('show').hide();
                     currentCustomerId = customer.value;
 
                     handleCustomerSelected(customer);
@@ -478,16 +438,21 @@
 
                 $(document).on('click', function (e) {
                     if (!$(e.target).closest('#CustomerSearch, #CustomerSearchResults').length) {
-                        $customerResults.addClass('d-none');
+                        $customerResults.removeClass('show').hide();
                     }
                 });
 
-                $('#isUndocumentedCheckbox').on('change', handleCheckboxChanged);
+                $("#undocBadge").on("click", function() {
+                    const isChecked = !$("#isUndocumentedCheckbox").is(":checked");
+                    $("#isUndocumentedCheckbox").prop("checked", isChecked).trigger('change');
+                });
+
+                $("#isUndocumentedCheckbox").on("change", handleCheckboxChange);
                 $('#BankId').on('change', handleBankChange);
 
                 // Row click selects checkbox
                 $('#billingsTable tbody').on('click', 'tr', function(e) {
-                    if (e.target.type !== 'checkbox') {
+                    if (e.target.type !== 'checkbox' && !$(e.target).closest('a').length) {
                         const $cb = $(this).find('.bill-checkbox');
                         $cb.prop('checked', !$cb.prop('checked')).trigger('change');
                     }
@@ -504,18 +469,21 @@
                 $('#cashAmount, #checkAmount, #wvat').on('input', function() {
                     calculateManualTotal();
                 });
+                
+                $('#submitButton').on('click', areYouSureToSave);
+                $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show').hide());
             }
 
             function handleCustomerSelected(customer) {
                 clearForm();
 
-                $("#CustomerDetailsSection").removeClass("d-none");
+                $("#CustomerDetailsSection").show().css('display', 'flex');
                 $("#CustomerAddress").text(customer.address || '-');
                 $("#CustomerTIN").text(customer.tinNo || '-');
                 $("#CustomerTerms").text(customer.terms || '-');
 
                 $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
-                handleCheckboxChanged();
+                handleCheckboxChange();
 
                 if (customer.value) {
                     loadBillings(customer.value);
@@ -543,21 +511,24 @@
                 }
             }
 
-            function handleCheckboxChanged() {
-                const $checkbox = $('#isUndocumentedCheckbox');
-                const $inputField = $('#msapCollectionNumber');
-                const $statusLabel = $('#statusLabel');
+            function handleCheckboxChange() {
+                const $checkbox = $("#isUndocumentedCheckbox");
+                const $inputField = $("#msapCollectionNumber");
+                const $required = $("#receiptNumberRequired");
                 const $hiddenInput = $("#IsUndocumented");
+                const $badge = $("#undocBadge");
 
-                $hiddenInput.val($checkbox.is(":checked") ? "true" : "false");
+                const isChecked = $checkbox.is(":checked");
+                $hiddenInput.val(isChecked ? "true" : "false");
 
-                if ($checkbox.is(':checked')) {
-                    $statusLabel.text('Undocumented Collection');
-                    $inputField.val('UNDOCUMENTED').prop({ required: false, readonly: true }).addClass('bg-light');
+                if (isChecked) {
+                    $required.hide();
+                    $inputField.prop("required", false).prop("readonly", true).val("").attr("placeholder", "Auto-generated").css('background-color', 'var(--surface-container-low)');
+                    $badge.text("UNDOCUMENTED").addClass("is-undoc");
                 } else {
-                    $statusLabel.html('Collection Receipt # <span class="required-star">*</span>');
-                    if ($inputField.val() === 'UNDOCUMENTED') $inputField.val('');
-                    $inputField.prop({ required: true, readonly: false }).removeClass('bg-light');
+                    $required.show();
+                    $inputField.prop("required", true).prop("readonly", false).attr("placeholder", "OR000000").css('background-color', 'transparent');
+                    $badge.text("DOCUMENTED").removeClass("is-undoc");
                 }
             }
 
@@ -593,14 +564,16 @@
                     $hiddenSelect.append(`<option value="${id}" selected>${id}</option>`);
                 });
 
-                $('#billingsTotal').text(`₱ ${formatNumber(grossTotal)}`);
-                $('#ewtTotalDisplay').text(`₱ ${formatNumber(ewtTotal)}`);
-                $('#netAmountDisplay').text(`₱ ${formatNumber(netTotal)}`);
+                $('#billingsTotal').text(`₱${formatNumber(grossTotal)}`);
+                $('#ewtTotalDisplay').text(`₱${formatNumber(ewtTotal)}`);
+                $('#netAmountDisplay').text(`₱${formatNumber(netTotal)}`);
                 
                 $('#ewt').val(ewtTotal.toFixed(2));
                 
                 const currentCash = parseFloat($('#cashAmount').val()) || 0;
-                if (currentCash === 0) {
+                const currentCheck = parseFloat($('#checkAmount').val()) || 0;
+                
+                if (currentCash === 0 && currentCheck === 0) {
                     $('#checkAmount').val(netTotal.toFixed(2));
                 }
                 
@@ -615,27 +588,68 @@
                 const total = cash + check + wvat;
                 
                 $('#amount').val(total.toFixed(2));
-                $('#manualTotalDisplay').text(`₱ ${formatNumber(total)}`);
+                $('#manualTotalDisplay').text(`₱${formatNumber(total)}`);
                 
-                const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱ ', '').replace(/,/g, '')) || 0;
+                const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱', '').replace(/,/g, '')) || 0;
                 if (Math.abs(total - netToMatch) > 0.01 && netToMatch > 0) {
-                    $('#manualTotalDisplay').removeClass('text-primary text-success').addClass('text-danger');
+                    $('#manualTotalDisplay').css('color', 'var(--error)');
                 } else if (netToMatch > 0) {
-                    $('#manualTotalDisplay').removeClass('text-primary text-danger').addClass('text-success');
+                    $('#manualTotalDisplay').css('color', 'var(--secondary)');
                 } else {
-                    $('#manualTotalDisplay').removeClass('text-success text-danger').addClass('text-primary');
+                    $('#manualTotalDisplay').css('color', 'var(--primary)');
                 }
             }
 
             function clearForm() {
                 table.clear().draw();
-                $('#billingsTotal, #ewtTotalDisplay, #netAmountDisplay, #manualTotalDisplay').text('₱ 0.00');
-                $('#amount, #ewt, #cashAmount, #checkAmount, #wvat').val('0.00');
+                $('#billingsTotal, #ewtTotalDisplay, #netAmountDisplay, #manualTotalDisplay').text('₱0.00');
+                $('#amount, #ewt').val('0.00');
+                $('#cashAmount, #checkAmount, #wvat').val('');
                 $('#hiddenBillingsSelect').empty();
                 $('#bankInfoPanel').hide();
-                $('#BankId').val('');
+                $('#BankId').val('').trigger('change');
                 $('#CheckNumber, #CheckBank, #CheckBranch').val('');
-                $("#CustomerDetailsSection").addClass("d-none");
+                $("#CustomerDetailsSection").hide();
+            }
+
+            function areYouSureToSave(event) {
+                event.preventDefault();
+                const form = document.getElementById("myForm");
+                if (!form.checkValidity()) { form.reportValidity(); return; }
+
+                // Clear any existing hidden billing payments
+                $('input[name^="BillingPayments"]').remove();
+
+                // Append new hidden inputs for BillingPayments
+                let index = 0;
+                $('.bill-checkbox:checked').each(function() {
+                    const id = $(this).val();
+                    const net = parseFloat($(this).data('net'));
+                    $(form).append(`<input type="hidden" name="BillingPayments[${index}].BillingId" value="${id}" />`);
+                    $(form).append(`<input type="hidden" name="BillingPayments[${index}].AmountToPay" value="${net.toFixed(2)}" />`);
+                    index++;
+                });
+                
+                const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱', '').replace(/,/g, '')) || 0;
+                const totalInput = parseFloat($('#amount').val()) || 0;
+                
+                if (netToMatch > 0 && Math.abs(totalInput - netToMatch) > 0.01) {
+                    Swal.fire({ 
+                        title: "Amount Mismatch", 
+                        text: "The total payment input doesn't match the selected billings net amount. Do you want to proceed?", 
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, proceed"
+                    }).then(result => { if (result.isConfirmed) form.submit(); });
+                } else {
+                    Swal.fire({ 
+                        title: "Save Collection?", 
+                        text: "Review all details before proceeding.", 
+                        icon: "question", 
+                        showCancelButton: true, 
+                        confirmButtonText: "Yes, save" 
+                    }).then(result => { if (result.isConfirmed) form.submit(); });
+                }
             }
         });
     </script>

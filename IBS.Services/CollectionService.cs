@@ -40,7 +40,6 @@ namespace IBS.Services
                     var model = await MapToEntityAsync(viewModel, cancellationToken);
                     model.CreatedBy = username;
                     model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = SD.CollectionStatus.Create;
 
                     if (model.IsUndocumented)
                     {
@@ -217,14 +216,14 @@ namespace IBS.Services
                     .DistinctBy(b => b.MsapBillingId)
                     .Select(b => new
                     {
-                        b.MsapBillingId,
-                        b.MsapBillingNumber,
-                        b.Date,
-                        b.Amount,
-                        b.Balance,
-                        Ewt = b.BilledTo == SD.BilledTo_Local ? (b.Amount / 1.12m) * 0.02m : 0m,
-                        Net = b.BilledTo == SD.BilledTo_Local ? b.Amount - ((b.Amount / 1.12m) * 0.02m) : b.Amount,
-                        IsSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
+                        msapBillingId = b.MsapBillingId,
+                        msapBillingNumber = b.MsapBillingNumber,
+                        date = b.Date,
+                        amount = b.Amount,
+                        balance = b.Balance,
+                        ewt = b.BilledTo == SD.BilledTo_Local ? (b.Amount / 1.12m) * 0.02m : 0m,
+                        net = b.BilledTo == SD.BilledTo_Local ? b.Amount - ((b.Amount / 1.12m) * 0.02m) : b.Amount,
+                        isSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
                     });
 
                 return ServiceResult<object>.Success(result);

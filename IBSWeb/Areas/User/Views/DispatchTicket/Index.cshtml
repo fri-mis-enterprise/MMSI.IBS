@@ -86,167 +86,107 @@
             const urlParams = new URLSearchParams(window.location.search);
             const statusFilter = urlParams.get('status') || '';
 
-            let table = $('#paginatedTable').DataTable({
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
                 order: [[1, 'asc']],
-                columnDefs: [
-                    { orderable: false, targets: [11] }
-                ],
-                processing: true,
-                serverSide: true,
-                stateDuration: 86400,
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search tickets...",
-                    processing: `<div class="text-center p-3">
-                                    <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
-                                 </div>`
-                },
-                ajax: {
-                    url: "@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })",
-                    type: "POST",
-                    data: function (d) {
-                        return $.extend({}, d, {
-                            filterType: '@ViewBag.FilterType',
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        });
-                    }
-                },
-                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
-                drawCallback: function () {
-                    $('[data-bs-toggle="tooltip"]').tooltip();
-                },
+                columnDefs: [{ orderable: false, targets: [11] }],
+                ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })", (d) => {
+                    d.filterType = filterType;
+                    return d;
+                }),
                 columns: [
-                    { data: "date" },
-                    { data: "cosNumber" },
-                    { data: "dispatchNumber" },
+                    { data: "date", defaultContent: "" },
+                    { data: "cosNumber", defaultContent: "" },
+                    { data: "dispatchNumber", defaultContent: "" },
                     {
                         data: "dateLeft",
-                        render: function(data, type, row) {
-                            return `${row.dateLeft} ${row.timeLeft}`;
-                        }
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateLeft, row.timeLeft)
                     },
                     {
                         data: "dateArrived",
-                        render: function(data, type, row) {
-                            return `${row.dateArrived} ${row.timeArrived}`;
-                        }
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateArrived, row.timeArrived)
                     },
-                    { data: "service.serviceName" },
+                    { data: "service.serviceName", defaultContent: "" },
                     {
                         data: null,
                         name: "terminal.port.portName",
-                        render: function (data, type, row) {
+                        render: (data, type, row) => {
                             const portName = row.terminal?.port?.portName ?? "";
                             const terminalName = row.terminal?.terminalName ?? "";
                             return portName || terminalName ? `${portName} - ${terminalName}` : "";
                         }
                     },
-                    { data: "tugboat.tugboatName" },
+                    { data: "tugboat.tugboatName", defaultContent: "" },
                     {
                         data: "customer.customerName",
-                        render: function(data, type, row) {
-                            return row.customerId ? row.customer.customerName : `<span class="italic text-xs" style="color: var(--on-surface-variant)">(For Customer Assigning)</span>`;
-                        }
+                        render: (data, type, row) => row.customerId ? data : `<span class="italic text-xs opacity-60">(For Customer Assigning)</span>`
                     },
-                    { data: "vessel.vesselName" },
+                    { data: "vessel.vesselName", defaultContent: "" },
                     {
                         data: "status",
                         className: "text-center",
-                        render: function(data, type, row) {
+                        render: (data) => {
                             let statusClass = "";
-                            if (row.status === "@SD.DispatchTicketStatus.ForTariff") statusClass = "status-tariff";
-                            else if (row.status === "@SD.DispatchTicketStatus.ForApproval") statusClass = "status-approval";
-                            else if (row.status === "@SD.DispatchTicketStatus.Disapproved") statusClass = "status-error";
-                            else if (row.status === "@SD.DispatchTicketStatus.ForBilling") statusClass = "status-billing";
-                            else if (row.status === "@SD.DispatchTicketStatus.Billed") statusClass = "status-confirmed";
-
-                            return `<span class="modern-badge-sm ${statusClass}">${row.status}</span>`;
+                            if (data === "@SD.DispatchTicketStatus.ForTariff") statusClass = "status-tariff";
+                            else if (data === "@SD.DispatchTicketStatus.ForApproval") statusClass = "status-approval";
+                            else if (data === "@SD.DispatchTicketStatus.Disapproved") statusClass = "status-error";
+                            else if (data === "@SD.DispatchTicketStatus.ForBilling") statusClass = "status-billing";
+                            else if (data === "@SD.DispatchTicketStatus.Billed") statusClass = "status-confirmed";
+                            return ModernTable.render.badge(data, statusClass);
                         }
                     },
                     {
                         data: null,
                         orderable: false,
                         className: "text-center",
-                        render: function(data, type, row) {
-                            let actions = `<div class="relative inline-block text-left dropdown-container">
-                                            <button type="button" class="modern-btn-dropdown dropdown-trigger">
-                                                ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
-                                            </button>
-                                            <div class="modern-dropdown-menu dropdown-menu">`;
-                            
-                            if (row.status !== "@SD.DispatchTicketStatus.ForTariff" && row.status !== "@SD.DispatchTicketStatus.ForApproval" && row.status !== "@SD.DispatchTicketStatus.Pending") {
-                                actions += `<a class="modern-dropdown-item" href="${previewUrl}?id=${row.dispatchTicketId}">
-                                                <span class="material-symbols-outlined">visibility</span> View Details
-                                            </a>`;
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            {
+                                label: 'View Details',
+                                icon: 'visibility',
+                                url: `${previewUrl}?id=${row.dispatchTicketId}`,
+                                condition: row.status !== "@SD.DispatchTicketStatus.Pending"
+                            },
+                            {
+                                label: 'Set Tariff',
+                                icon: 'payments',
+                                url: `${setTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
+                                condition: row.status === "@SD.DispatchTicketStatus.ForTariff" && row.customerId !== null
+                            },
+                            {
+                                label: 'Edit Tariff',
+                                icon: 'edit_note',
+                                url: `${editTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
+                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval" && row.customerId !== null
+                            },
+                            {
+                                label: 'Edit Ticket',
+                                icon: 'edit',
+                                url: `${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
+                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status)
                             }
-                            
-                            if (row.status === "@SD.DispatchTicketStatus.ForApproval") {
-                                actions += `<a class="modern-dropdown-item" href="${previewUrl}?id=${row.dispatchTicketId}">
-                                                <span class="material-symbols-outlined">visibility</span> View Details
-                                            </a>`;
-                                if (row.customerId !== null) {
-                                    actions += `<a class="modern-dropdown-item" href="${editTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
-                                                    <span class="material-symbols-outlined">edit_note</span> Edit Tariff
-                                                </a>`;
-                                }
-                                actions += `<a class="modern-dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
-                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
-                                            </a>`;
-                            }
-
-                            if (row.status === "@SD.DispatchTicketStatus.ForTariff") {
-                                if (row.customerId !== null) {
-                                    actions += `<a class="modern-dropdown-item" href="${setTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
-                                                    <span class="material-symbols-outlined">payments</span> Set Tariff
-                                                </a>`;
-                                }
-                                actions += `<a class="modern-dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
-                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
-                                            </a>`;
-                            }
-
-                            if (row.status === "@SD.DispatchTicketStatus.Pending") {
-                                actions += `<a class="modern-dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}">
-                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
-                                            </a>`;
-                            }
-                            
-                            actions += `</div></div>`;
-                            return actions;
-                        }
+                        ])
                     }
                 ],
-                initComplete: function(settings, json) {
+                initComplete: function() {
                     if (statusFilter) {
                         this.api().column(10).search(statusFilter).draw();
                         updateFilterButtons(statusFilter);
                     }
                 }
-            });
+            }));
 
-            // Action dropdown positioning logic
-            $(document).on('click', '.dropdown-trigger', function(e) {
-                e.stopPropagation();
-                const $trigger = $(this);
-                const $menu = $trigger.siblings('.modern-dropdown-menu');
-                
-                $('.modern-dropdown-menu').not($menu).removeClass('show');
-                $menu.toggleClass('show');
-                
-                if ($menu.hasClass('show')) {
-                    const rect = $trigger[0].getBoundingClientRect();
-                    const menuWidth = $menu.outerWidth();
-                    $menu.css({
-                        'position': 'fixed',
-                        'top': (rect.bottom + 4) + 'px',
-                        'left': (rect.right - menuWidth) + 'px',
-                        'z-index': '9999'
-                    });
-                }
-            });
+            // Filter button handlers
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let status = '';
+                if (id === 'filterForTariff') status = '@SD.DispatchTicketStatus.ForTariff';
+                else if (id === 'filterForApproval') status = '@SD.DispatchTicketStatus.ForApproval';
+                else if (id === 'filterDisapproved') status = '@SD.DispatchTicketStatus.Disapproved';
+                else if (id === 'filterForBilling') status = '@SD.DispatchTicketStatus.ForBilling';
+                else if (id === 'filterBilled') status = '@SD.DispatchTicketStatus.Billed';
 
-            $(document).on('click', function() {
-                $('.modern-dropdown-menu').removeClass('show');
+                table.column(10).search(status).draw();
+                updateUrl(status);
+                updateFilterButtons(status);
             });
 
             function updateUrl(status) {
@@ -265,52 +205,6 @@
                 else if (status === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
                 else if (status === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
             }
-
-            $('#filterAll').on('click', function() {
-                table.columns().search('').draw();
-                updateUrl('');
-                updateFilterButtons('');
-            });
-
-            $('#filterForTariff').on('click', function() {
-                const status = '@SD.DispatchTicketStatus.ForTariff';
-                table.columns().search('');
-                table.columns(10).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
-
-            $('#filterForApproval').on('click', function() {
-                const status = '@SD.DispatchTicketStatus.ForApproval';
-                table.columns().search('');
-                table.columns(10).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
-
-            $('#filterDisapproved').on('click', function() {
-                const status = '@SD.DispatchTicketStatus.Disapproved';
-                table.columns().search('');
-                table.columns(10).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
-
-            $('#filterForBilling').on('click', function() {
-                const status = '@SD.DispatchTicketStatus.ForBilling';
-                table.columns().search('');
-                table.columns(10).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
-
-            $('#filterBilled').on('click', function() {
-                const status = '@SD.DispatchTicketStatus.Billed';
-                table.columns().search('');
-                table.columns(10).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
         });
     </script>
 }

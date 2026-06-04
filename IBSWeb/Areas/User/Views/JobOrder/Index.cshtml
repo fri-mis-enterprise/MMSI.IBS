@@ -109,68 +109,31 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Dropdown toggle logic
-            $(document).on('click', '.dropdown-trigger', function(e) {
-                e.stopPropagation();
-                const $trigger = $(this);
-                const $menu = $trigger.siblings('.modern-dropdown-menu');
-                
-                $('.modern-dropdown-menu').not($menu).removeClass('show');
-                $menu.toggleClass('show');
-                
-                if ($menu.hasClass('show')) {
-                    const rect = $trigger[0].getBoundingClientRect();
-                    const menuWidth = $menu.outerWidth();
-                    
-                    $menu.css({
-                        'position': 'fixed',
-                        'top': (rect.bottom + 4) + 'px',
-                        'left': (rect.right - menuWidth) + 'px',
-                        'z-index': '9999'
-                    });
-
-                    const menuHeight = $menu.outerHeight();
-                    if (rect.bottom + menuHeight > window.innerHeight) {
-                        $menu.css('top', (rect.top - menuHeight - 4) + 'px');
-                    }
-                }
-            });
-
-            $(document).on('click', function() {
-                $('.modern-dropdown-menu').removeClass('show');
-            });
-
             // DataTable Initialization
             const urlParams = new URLSearchParams(window.location.search);
             const searchTerm = urlParams.get('q') || '';
 
-            let table = $('#jobOrdersTable').DataTable({
-                responsive: false, // Use our own scroll container
+            let table = $('#jobOrdersTable').DataTable(ModernTable.config({
+                responsive: false,
                 order: [[0, 'desc']],
-                pageLength: 25,
+                search: { search: searchTerm },
                 language: {
-                    search: "",
-                    searchPlaceholder: "Search orders...",
-                    lengthMenu: "_MENU_ per page",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    searchPlaceholder: "Search orders..."
                 },
-                search: {
-                    search: searchTerm
-                },
+                serverSide: false, // JobOrder Index currently uses client-side for simplicity as per existing code
                 dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
-                initComplete: function() {
-                    // Custom styles are now handled by modern-ui.css
-                }
-            });
+                columnDefs: [
+                    { targets: [6, 8], className: 'text-center' },
+                    { targets: [8], orderable: false }
+                ]
+            }));
 
+            // Sync search with URL
             table.on('search.dt', function () {
                 const query = table.search();
                 const url = new URL(window.location);
-                if (query) {
-                    url.searchParams.set('q', query);
-                } else {
-                    url.searchParams.delete('q');
-                }
+                if (query) url.searchParams.set('q', query);
+                else url.searchParams.delete('q');
                 window.history.replaceState({}, '', url);
             });
         });

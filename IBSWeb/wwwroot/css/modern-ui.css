@@ -34,7 +34,6 @@
 .modern-layout {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--surface);
-    color: var(--on-background);
 }
 
 .modern-container {

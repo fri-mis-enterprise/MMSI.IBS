@@ -74,112 +74,65 @@
         $(document).ready(function () {
             const previewUrl = '@Url.Action("Preview", "Billing")';
             const editUrl = '@Url.Action("Edit", "Billing")';
+            const postUrl = '@Url.Action("Post", "Billing")';
 
             // Get status from URL on load
             const urlParams = new URLSearchParams(window.location.search);
             const statusFilter = urlParams.get('status') || '';
 
-            let table = $('#paginatedTable').DataTable({
-                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
-                "order": [[1, 'asc']],
-                "columnDefs": [
-                    { "orderable": false, "targets": [7] }
-                ],
-                "processing": true,
-                "serverSide": true,
-                "pageLength": 25,
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search records...",
-                    "lengthMenu": "_MENU_ per page",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                },
-                "ajax": {
-                    "url": "@Url.Action("GetBillingList", "Billing", new { area = "User" })",
-                    "type": "POST",
-                    "data": function (d) {
-                        return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        });
-                    }
-                },
-                "columns": [
-                    { "data": "date" },
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[1, 'asc']],
+                columnDefs: [{ orderable: false, targets: [7] }],
+                ajax: ModernTable.ajax("@Url.Action("GetBillingList", "Billing", new { area = "User" })"),
+                columns: [
+                    { data: "date", defaultContent: "" },
                     {
-                        "data": "msapBillingNumber",
-                        "render": function(data, type, row) {
-                            return `<span class="font-bold">${data}</span>`;
-                        }
+                        data: "msapBillingNumber",
+                        render: (data) => `<span class="font-bold">${data}</span>`
                     },
                     {
-                        "data": "amount",
-                        "className": "text-right",
-                        "render": function(data, type, row) {
-                            return `<span class="font-bold">₱${formatNumber(data)}</span>`;
-                        }
+                        data: "amount",
+                        className: "text-right font-bold",
+                        render: (data) => ModernTable.render.currency(data)
                     },
-                    { "data": "customer.customerName" },
+                    { data: "customer.customerName", defaultContent: "" },
                     {
-                        "data": null,
-                        "orderable": false,
-                        "render": function (data, type, row) {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
                             const portName = row.terminal?.port?.portName ?? "";
                             const terminalName = row.terminal?.terminalName ?? "";
                             return portName || terminalName ? `${portName} - ${terminalName}` : "";
                         }
                     },
-                    { "data": "vessel.vesselName" },
+                    { data: "vessel.vesselName", defaultContent: "" },
                     {
-                        "data": "status",
-                        "className": "text-center",
-                        "render": function(data, type, row) {
+                        data: "status",
+                        className: "text-center",
+                        render: (data) => {
                             let statusClass = "status-open";
                             if (data === "@SD.BillingStatus.ForPosting") statusClass = "status-tariff";
-                            if (data === "@SD.BillingStatus.ForCollection") statusClass = "status-approval";
-                            if (data === "@SD.BillingStatus.Collected") statusClass = "status-closed";
-                            return `<span class="modern-badge ${statusClass}">${data}</span>`;
+                            else if (data === "@SD.BillingStatus.ForCollection") statusClass = "status-approval";
+                            else if (data === "@SD.BillingStatus.Collected") statusClass = "status-closed";
+                            return ModernTable.render.badge(data, statusClass);
                         }
                     },
                     {
-                        "data": null,
-                        "orderable": false,
-                        "className": "text-center",
-                        "render": function(data, type, row) {
-                            const postUrl = '@Url.Action("Post", "Billing")';
-
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => {
                             if (row.status === "@SD.BillingStatus.ForPosting") {
-                                return `
-                                    <div class="relative inline-block text-left dropdown-container">
-                                        <button type="button" class="modern-btn-dropdown dropdown-trigger">
-                                            POST <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
-                                        </button>
-                                        <div class="modern-dropdown-menu dropdown-menu">
-                                            <a class="modern-dropdown-item" href="${postUrl}?id=${row.msapBillingId}">
-                                                <span class="material-symbols-outlined">send</span> Post to Books
-                                            </a>
-                                            <a class="modern-dropdown-item" href="${editUrl}?id=${row.msapBillingId}">
-                                                <span class="material-symbols-outlined">edit</span> Edit
-                                            </a>
-                                            <a class="modern-dropdown-item text-error" href="javascript:void(0)" onclick="confirmDelete(${row.msapBillingId})">
-                                                <span class="material-symbols-outlined">delete</span> Delete
-                                            </a>
-                                        </div>
-                                    </div>`;
+                                return ModernTable.render.dropdown([
+                                    { label: 'Post to Books', icon: 'send', url: `${postUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})` }
+                                ]);
                             } else if (row.status === "@SD.BillingStatus.ForCollection") {
-                                return `
-                                    <div class="relative inline-block text-left dropdown-container">
-                                        <button type="button" class="modern-btn-dropdown dropdown-trigger">
-                                            ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
-                                        </button>
-                                        <div class="modern-dropdown-menu dropdown-menu">
-                                            <a class="modern-dropdown-item" href="${previewUrl}?id=${row.msapBillingId}">
-                                                <span class="material-symbols-outlined">visibility</span> View Details
-                                            </a>
-                                            <a class="modern-dropdown-item" href="${editUrl}?id=${row.msapBillingId}">
-                                                <span class="material-symbols-outlined">edit</span> Edit Billing
-                                            </a>
-                                        </div>
-                                    </div>`;
+                                return ModernTable.render.dropdown([
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Edit Billing', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}` }
+                                ]);
                             } else {
                                 return `<a class="modern-btn-secondary" style="padding: 4px 12px; font-size: 11px;" href="${previewUrl}?id=${row.msapBillingId}">
                                             <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> VIEW
@@ -188,52 +141,31 @@
                         }
                     }
                 ],
-                "initComplete": function(settings, json) {
+                initComplete: function() {
                     if (statusFilter) {
                         this.api().column(6).search(statusFilter).draw();
                         updateFilterButtons(statusFilter);
                     }
                 }
-            });
+            }));
 
-            // Dropdown toggle logic
-            $(document).on('click', '.dropdown-trigger', function(e) {
-                e.stopPropagation();
-                const $trigger = $(this);
-                const $menu = $trigger.siblings('.modern-dropdown-menu');
+            // Filter button handlers
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let status = '';
+                if (id === 'filterForPosting') status = "@SD.BillingStatus.ForPosting";
+                else if (id === 'filterForCollection') status = "@SD.BillingStatus.ForCollection";
+                else if (id === 'filterCollected') status = "@SD.BillingStatus.Collected";
 
-                $('.modern-dropdown-menu').not($menu).removeClass('show');
-                $menu.toggleClass('show');
-
-                if ($menu.hasClass('show')) {
-                    const rect = $trigger[0].getBoundingClientRect();
-                    const menuWidth = $menu.outerWidth();
-
-                    $menu.css({
-                        'position': 'fixed',
-                        'top': (rect.bottom + 4) + 'px',
-                        'left': (rect.right - menuWidth) + 'px',
-                        'z-index': '9999'
-                    });
-
-                    const menuHeight = $menu.outerHeight();
-                    if (rect.bottom + menuHeight > window.innerHeight) {
-                        $menu.css('top', (rect.top - menuHeight - 4) + 'px');
-                    }
-                }
-            });
-
-            $(document).on('click', function() {
-                $('.modern-dropdown-menu').removeClass('show');
+                table.column(6).search(status).draw();
+                updateUrl(status);
+                updateFilterButtons(status);
             });
 
             function updateUrl(status) {
                 const url = new URL(window.location);
-                if (status) {
-                    url.searchParams.set('status', status);
-                } else {
-                    url.searchParams.delete('status');
-                }
+                if (status) url.searchParams.set('status', status);
+                else url.searchParams.delete('status');
                 window.history.replaceState({}, '', url);
             }
 
@@ -244,33 +176,6 @@
                 else if (status === "@SD.BillingStatus.ForCollection") $('#filterForCollection').addClass('active');
                 else if (status === "@SD.BillingStatus.Collected") $('#filterCollected').addClass('active');
             }
-
-            $('#filterAll').on('click', function() {
-                table.columns(6).search('').draw();
-                updateUrl('');
-                updateFilterButtons('');
-            });
-
-            $('#filterForPosting').on('click', function() {
-                const status = "@SD.BillingStatus.ForPosting";
-                table.columns(6).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
-
-            $('#filterForCollection').on('click', function() {
-                const status = "@SD.BillingStatus.ForCollection";
-                table.columns(6).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
-
-            $('#filterCollected').on('click', function() {
-                const status = "@SD.BillingStatus.Collected";
-                table.columns(6).search(status).draw();
-                updateUrl(status);
-                updateFilterButtons(status);
-            });
         });
 
         function confirmDelete(id) {

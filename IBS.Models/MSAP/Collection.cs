@@ -24,8 +24,6 @@ namespace IBS.Models.MSAP
         [StringLength(50)]
         public string? ReferenceNo { get; set; }
 
-        public string? Status { get; set; }
-
         [Required]
         [Column("CRDATE")]
         [Display(Name = "Transaction Date")]

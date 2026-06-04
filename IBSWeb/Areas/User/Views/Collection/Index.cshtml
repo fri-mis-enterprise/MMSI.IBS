@@ -1,224 +1,109 @@
 @{
-    ViewData["Title"] = "Collection";
+    ViewData["Title"] = "Collections";
+    ViewData["IsFullWidth"] = true;
 }
 
-<style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-    .actions-dropdown .dropdown-item:hover {
-        background-color: #f3f4f6;
-    }
-</style>
-
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-area="User" asp-controller="Collection" asp-action="Create" class="btn btn-light">
-            <i class="bi bi-plus-circle"></i> Create Collection
-        </a>
-    </div>
-
-    <div class="card shadow border-0 mt-3">
-        <div class="card-body p-3">
-            <div class="table-responsive" style="max-height: 70vh">
-                <div class="btn-group mb-3" role="group" aria-label="Filter Options">
-                    <button id="filterAll" class="btn btn-outline-primary active"> All</button>
-                    <button id="filterPending" class="btn btn-outline-primary"> Pending</button>
-                    <button id="filterPosted" class="btn btn-outline-primary"> Posted</button>
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Collections</span>
                 </div>
-                <table class="table table-hover mb-0" id="paginatedTable">
-                    <thead class="bg-light">
-                    <tr>
-                        <th class="text-start">DATE</th>
-                        <th class="text-start">COLLECTION #</th>
-                        <th class="text-start">CHECK DATE</th>
-                        <th class="text-start">DATE DEPOSITED</th>
-                        <th class="text-start">AMOUNT</th>
-                        <th class="text-start">CUSTOMER</th>
-                        <th class="text-start">STATUS</th>
-                        <th class="text-center" style="width: 100px;">ACTIONS</th>
-                    </tr>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-area="User" asp-controller="Collection" asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE COLLECTION
+                </a>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">payments</span>
+                    <h2 class="modern-headline-md">Collection Records</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="paginatedTable">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>COLLECTION #</th>
+                            <th>CHECK DATE</th>
+                            <th>DATE DEPOSITED</th>
+                            <th class="text-right">AMOUNT</th>
+                            <th>CUSTOMER</th>
+                            <th class="text-center">ACTIONS</th>
+                        </tr>
                     </thead>
                 </table>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 @section Scripts {
     <script>
-        // Event listeners
         $(document).ready(function () {
             const previewUrl = '@Url.Action("Preview", "Collection")';
             const editUrl = '@Url.Action("Edit", "Collection")';
 
-            // Get status from URL on load
-            const urlParams = new URLSearchParams(window.location.search);
-            const statusFilter = urlParams.get('status') || '';
-
-            let table = $('#paginatedTable').DataTable({
-                "order": [[1, 'asc']],
-                "columnDefs": [
-                    { "orderable": false, "targets": [7] }
-                ],
-                "processing": true,
-                "serverSide": true,
-                "stateDuration": 86400,
-                "language": {
-                    "processing": `<div class="d-flex justify-content-center">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                 </div>`
-                },
-                "ajax": {
-                    "url": "@Url.Action("GetCollectionList", "Collection", new { area = "User" })",
-                    "type": "POST",
-                    "data": function (d) {
-                        return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        });
-                    },
-                    "error": function (xhr, error) {
-                        console.error('DataTables error:', error);
-                        alert('An error occurred while loading the data');
-                    }
-                },
-                "preDrawCallback": function () {
-                    $('#paginatedTable').addClass('table-loading');
-                },
-                "drawCallback": function () {
-                    $('#paginatedTable').removeClass('table-loading');
-
-                    // Initialize all tooltips
-                    $('[data-bs-toggle="tooltip"]').tooltip();
-                },
-                "columns": [
-                    {"data": "date"},
-                    {"data": "msapCollectionNumber"},
-                    {"data": "checkDate"},
-                    {"data": "depositDate"},
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[1, 'desc']],
+                columnDefs: [{ orderable: false, targets: [6] }],
+                ajax: ModernTable.ajax("@Url.Action("GetCollectionList", "Collection", new { area = "User" })"),
+                columns: [
                     {
-                        "data": "amount",
-                        "render": function (data) {
-                            return parseFloat(data).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        }
-                    },
-                    {"data": "customer.customerName"},
-                    {
-                        "data": "status",
-                        "orderable": true,
-                        "className": "text-center",
-                        "render": function(data, type, row) {
-                            let statusColor = ``;
-                            if (row.status === "@SD.CollectionStatus.Pending") statusColor = `bg-warning`;
-                            if (row.status === "@SD.CollectionStatus.Posted") statusColor = `bg-success`;
-                            if (row.status === "@SD.CollectionStatus.Cancelled") statusColor = `bg-secondary`;
-
-                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
-                                                ${row.status}
-                                            </span>`;
-                        }
+                        data: "date",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
                     },
                     {
-                        "data": "null",
-                        "orderable": false,
-                        "render": function(data, type, row) {
-                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
-                                actions += `<div class="dropdown align-content-center">
-                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
-                                            <li><a class="dropdown-item" href="${previewUrl}?id=${row.msapCollectionId}"><i class="bi bi-eye-fill"></i> View</a></li>
-                                            <li><a class="dropdown-item" href="${editUrl}?id=${row.msapCollectionId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
-                                        </ul>
-                                    </div>`
-                            actions += `</div></div>`;
-                            return actions;
-                        }
+                        data: "msapCollectionNumber",
+                        defaultContent: "",
+                        render: (data, type, row) => `<a href="${previewUrl}?id=${row.msapCollectionId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    {
+                        data: "checkDate",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "depositDate",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "amount",
+                        className: "text-right font-bold",
+                        defaultContent: "₱0.00",
+                        render: (data) => ModernTable.render.currency(data)
+                    },
+                    {
+                        data: "customer.customerName",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.ellipsis(data)
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapCollectionId}` },
+                            { label: 'Edit Record', icon: 'edit', url: `${editUrl}?id=${row.msapCollectionId}` }
+                        ])
                     }
-                ],
-                "initComplete": function(settings, json) {
-                    if (statusFilter) {
-                        this.api().column(6).search(statusFilter).draw();
-
-                        // Set active button
-                        $('.btn-group button').removeClass('active');
-                        if (statusFilter === "@SD.CollectionStatus.Pending") $('#filterPending').addClass('active');
-                        else if (statusFilter === "@SD.CollectionStatus.Posted") $('#filterPosted').addClass('active');
-                        else $('#filterAll').addClass('active');
-                    }
-                }
-            });
-
-            function updateUrl(status) {
-                const url = new URL(window.location);
-                if (status) {
-                    url.searchParams.set('status', status);
-                } else {
-                    url.searchParams.delete('status');
-                }
-                window.history.replaceState({}, '', url);
-            }
-
-            $('#filterAll').on('click', function() {
-                table.columns().search('').draw();
-                updateUrl('');
-            });
-
-            $('#filterPending').on('click', function() {
-                const status = '@SD.CollectionStatus.Pending';
-                table.columns().search('');
-                table.columns(6).search(status).draw();
-                updateUrl(status);
-            });
-
-            $('#filterPosted').on('click', function() {
-                const status = '@SD.CollectionStatus.Posted';
-                table.columns().search('');
-                table.columns(6).search(status).draw();
-                updateUrl(status);
-            });
-
-            $('.btn-group button').on('click', function() {
-                $('.btn-group button').removeClass('active');
-                $(this).addClass('active');
-            });
+                ]
+            }));
         });
     </script>
 }
+

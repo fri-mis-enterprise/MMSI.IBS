@@ -1176,7 +1176,6 @@ namespace IBSWeb.Areas.User.Controllers
                     MsapCollectionNumber = crNum,
                     CustomerId = customerId,
                     CheckNumber = GetString(record, "checkno"),
-                    Status = "Create",
                     Company = "MMSI",
                     CashAmount = 0,
                     WVAT = 0,

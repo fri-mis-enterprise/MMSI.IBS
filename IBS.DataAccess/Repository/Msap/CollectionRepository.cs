@@ -528,24 +528,8 @@ namespace IBS.DataAccess.Repository.Msap
                 var s = parameters.Search.Value.ToLower();
                 query = query.Where(c =>
                     c.MsapCollectionNumber.ToLower().Contains(s) ||
-                    c.Customer.CustomerName.ToLower().Contains(s) ||
-                    (c.Status != null && c.Status.ToLower().Contains(s))
+                    c.Customer.CustomerName.ToLower().Contains(s)
                 );
-            }
-
-            // Column-specific search
-            if (parameters.Columns != null)
-            {
-                foreach (var column in parameters.Columns)
-                {
-                    if (column.Search?.Value is { Length: > 0 } searchValue)
-                    {
-                        if (column.Data == "status")
-                        {
-                            query = query.Where(c => c.Status != null && c.Status.ToLower() == searchValue);
-                        }
-                    }
-                }
             }
 
             var totalRecords = await dbSet.CountAsync(cancellationToken);

@@ -370,7 +370,7 @@
                             $customerResults.append(
                                 $('<a href="#" class="modern-dropdown-item">')
                                     .data('customer', item)
-                                    .html(`<div><p class="font-bold">${item.name}</p>${item.hasPrincipal ? '<span class="modern-badge-sm" style="background: var(--surface-container-high)">HAS PRINCIPAL</span>' : ''}</div>`)
+                                    .html(`<span class="material-symbols-outlined">person</span> ${item.name}`)
                             );
                         });
                     } else {
