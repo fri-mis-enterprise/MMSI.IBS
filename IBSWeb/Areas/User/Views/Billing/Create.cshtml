@@ -222,16 +222,26 @@
 
                             <!-- Job Order Selection -->
                             <div class="mb-4">
-                                <label class="modern-label">Target Job Order</label>
-                                <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="modern-label mb-0">Target Job Order</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="legacyToggle" class="form-check-input" style="width: 16px; height: 16px; cursor: pointer;">
+                                        <label for="legacyToggle" class="text-xs font-bold opacity-70 cursor-pointer">LEGACY (NO JO)</label>
+                                    </div>
+                                </div>
+                                <div class="relative" id="jobOrderSearchContainer">
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">tag</span>
                                         <input type="text" id="JobOrderSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search job order number..." autocomplete="off" disabled>
                                     </div>
                                     <input type="hidden" asp-for="JobOrderId" id="JobOrderId" />
                                     <div id="JobOrderSearchResults" class="modern-dropdown-menu w-full" style="max-height: 250px; overflow-y: auto;"></div>
+                                    <p class="text-xs opacity-60 mt-1">Available tickets will be filtered based on the selected Job Order above.</p>
                                 </div>
-                                <p class="text-xs opacity-60 mt-1">Available tickets will be filtered based on the selected Job Order above.</p>
+                                <div id="legacyNotice" class="p-3 bg-surface-container-low rounded-md border border-outline-variant flex items-center gap-2" style="display: none;">
+                                    <span class="material-symbols-outlined text-warning">info</span>
+                                    <p class="text-xs mb-0">Legacy mode enabled. Displaying all unbilled tickets without an associated Job Order for this customer.</p>
+                                </div>
                             </div>
 
                             <!-- Tickets Table -->
@@ -303,8 +313,45 @@
                 });
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PortSelect").on("change", handlePortChange);
+                $("#legacyToggle").on("change", handleLegacyToggleChange);
                 $("#submitButton").on("click", areYouSureToBill);
                 $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show'));
+            }
+
+            async function handleLegacyToggleChange() {
+                const isChecked = $(this).is(":checked");
+                if (isChecked) {
+                    $("#jobOrderSearchContainer").hide();
+                    $("#legacyNotice").show();
+                    $("#JobOrderId").val("");
+                    $("#JobOrderSearch").val("");
+                    
+                    if (currentCustomerId) {
+                        await fetchTicketsByCustomer();
+                    }
+                } else {
+                    $("#jobOrderSearchContainer").show();
+                    $("#legacyNotice").hide();
+                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
+                    $dispatchSelect.empty();
+                    updateTotals();
+                }
+            }
+
+            async function fetchTicketsByCustomer() {
+                if (!currentCustomerId) return;
+                $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Loading tickets...</td></tr>');
+                try {
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
+                    const response = await res.json();
+                    if (response.success) {
+                        renderTicketsTable(response.tickets);
+                    } else {
+                        $ticketsTableBody.html(`<tr><td colspan="6" class="text-center py-5 text-error">${response.message}</td></tr>`);
+                    }
+                } catch {
+                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 text-error">Error loading tickets</td></tr>');
+                }
             }
 
             function positionDropdown($input, $results) {
@@ -444,9 +491,14 @@
                 $("#JobOrderSearch").val('').prop('disabled', false);
                 $("#JobOrderId").val('');
                 $("#JobOrderSearchResults").empty().removeClass('show');
-                $("#ticketsTable tbody").html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
-                $("#DispatchTicketSelect").empty();
-                updateTotals();
+
+                if ($("#legacyToggle").is(":checked")) {
+                    fetchTicketsByCustomer();
+                } else {
+                    $("#ticketsTable tbody").html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
+                    $("#DispatchTicketSelect").empty();
+                    updateTotals();
+                }
             }
 
             // ── Job Order search ─────────────────────────────────────────────

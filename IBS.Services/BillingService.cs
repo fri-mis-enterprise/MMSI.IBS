@@ -598,6 +598,34 @@ namespace IBS.Services
             });
         }
 
+        public async Task<ServiceResult<JobOrderBillingDto>> GetDispatchTicketsByCustomerAsync(int customerId, CancellationToken cancellationToken)
+        {
+            var tickets = await unitOfWork.DispatchTicket.GetAllAsync(t =>
+                t.CustomerId == customerId &&
+                t.Status == SD.DispatchTicketStatus.ForBilling &&
+                t.BillingId == null &&
+                t.JobOrderId == null,
+                cancellationToken);
+
+            var ticketDtos = tickets.Select(t => new JobOrderTicketDto
+            {
+                DispatchTicketId = t.DispatchTicketId,
+                DispatchNo = t.DispatchNumber,
+                Tugboat = t.Tugboat?.TugboatName ?? "N/A",
+                Service = t.Service?.ServiceName ?? "N/A",
+                Duration = t.TotalHours,
+                DispatchAmount = t.DispatchBillingAmount,
+                BAFAmount = t.BAFBillingAmount,
+                TotalAmount = t.TotalBilling
+            }).ToList();
+
+            return ServiceResult<JobOrderBillingDto>.Success(new JobOrderBillingDto
+            {
+                Header = new JobOrderHeaderDto(),
+                Tickets = ticketDtos
+            });
+        }
+
         public async Task<List<SelectListItem>?> GetPrincipalsSelectListAsync(int customerId, CancellationToken cancellationToken)
         {
             var principals = await unitOfWork.Principal.GetAllAsync(t => t.CustomerId == customerId, cancellationToken);

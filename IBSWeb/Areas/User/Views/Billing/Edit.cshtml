@@ -189,14 +189,25 @@
 
                             <!-- Job Order Selection -->
                             <div class="mb-4">
-                                <label class="modern-label">Add More Tickets (Search Job Order)</label>
-                                <div class="relative">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="modern-label mb-0">Add More Tickets (Search Job Order)</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="legacyToggle" class="form-check-input" style="width: 16px; height: 16px; cursor: pointer;">
+                                        <label for="legacyToggle" class="text-xs font-bold opacity-70 cursor-pointer">LEGACY (NO JO)</label>
+                                    </div>
+                                </div>
+                                <div class="relative" id="jobOrderSearchContainer">
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">tag</span>
                                         <input type="text" id="JobOrderSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search job order number..." autocomplete="off">
                                     </div>
                                     <input type="hidden" asp-for="JobOrderId" id="JobOrderId" />
                                     <div id="JobOrderSearchResults" class="modern-dropdown-menu w-full" style="max-height: 250px; overflow-y: auto;"></div>
+                                </div>
+                                <div id="legacyNotice" class="p-3 bg-surface-container-low rounded-md border border-outline-variant flex items-center gap-2" style="display: none;">
+                                    <span class="material-symbols-outlined text-warning">info</span>
+                                    <p class="text-xs mb-0">Legacy mode enabled. Click the button below to load all unbilled tickets without a Job Order.</p>
+                                    <button type="button" class="modern-btn-secondary py-1 px-3 ml-auto" style="height: 28px; font-size: 10px;" id="loadLegacyTicketsBtn">LOAD TICKETS</button>
                                 </div>
                             </div>
 
@@ -273,8 +284,66 @@
             function setupEventListeners() {
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PortSelect").on("change", handlePortChange);
+                $("#legacyToggle").on("change", handleLegacyToggleChange);
+                $("#loadLegacyTicketsBtn").on("click", fetchTicketsByCustomer);
                 $("#submitButton").on("click", areYouSureToBill);
                 $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show'));
+            }
+
+            function handleLegacyToggleChange() {
+                const isChecked = $(this).is(":checked");
+                if (isChecked) {
+                    $("#jobOrderSearchContainer").hide();
+                    $("#legacyNotice").show();
+                } else {
+                    $("#jobOrderSearchContainer").show();
+                    $("#legacyNotice").hide();
+                }
+            }
+
+            async function fetchTicketsByCustomer() {
+                if (!currentCustomerId) return;
+                const $btn = $("#loadLegacyTicketsBtn");
+                $btn.prop("disabled", true).text("LOADING...");
+                
+                try {
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
+                    const response = await res.json();
+                    if (response.success) {
+                        // Merge with existing tickets
+                        let existingIds = [];
+                        $ticketsTableBody.find('tr[data-ticket-id]').each(function() {
+                            existingIds.push($(this).data('ticket-id').toString());
+                        });
+
+                        let added = 0;
+                        response.tickets.forEach(ticket => {
+                            if (!existingIds.includes(ticket.dispatchTicketId.toString())) {
+                                $ticketsTableBody.append(`
+                                    <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
+                                        <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked style="width: 18px; height: 18px; cursor: pointer;"></td>
+                                        <td class="font-bold">${ticket.dispatchNo}</td>
+                                        <td>${ticket.tugboat}</td>
+                                        <td>${ticket.service}</td>
+                                        <td class="text-center">${ticket.duration.toFixed(2)}</td>
+                                        <td class="text-right font-bold">₱${formatNumber(ticket.totalAmount)}</td>
+                                    </tr>
+                                `);
+                                if (!$dispatchSelect.find(`option[value="${ticket.dispatchTicketId}"]`).length) {
+                                    $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
+                                }
+                                added++;
+                            }
+                        });
+                        updateTotals();
+                        if (added > 0) toastr.success(`Added ${added} tickets.`);
+                        else toastr.info("No new tickets found.");
+                    }
+                } catch {
+                    Swal.fire('Error', 'Failed to load tickets', 'error');
+                } finally {
+                    $btn.prop("disabled", false).text("LOAD TICKETS");
+                }
             }
 
             function positionDropdown($input, $results) {

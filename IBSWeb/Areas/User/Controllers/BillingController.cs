@@ -371,22 +371,25 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
-        /// Retrieves unbilled tickets for a customer as a JSON list.
+        /// Retrieves unbilled tickets for a customer that have no job order.
         /// </summary>
         [HttpGet]
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetDispatchTicketsByCustomer(string customerId, CancellationToken cancellationToken)
         {
-            var dispatchTickets = await unitOfWork.DispatchTicket
-                .GetAllAsync(t => t.CustomerId == int.Parse(customerId) && t.Status == SD.DispatchTicketStatus.ForBilling, cancellationToken);
+            var result = await billingService.GetDispatchTicketsByCustomerAsync(int.Parse(customerId), cancellationToken);
 
-            var ticketsList = dispatchTickets.Select(t => new SelectListItem
+            if (result is { IsSuccess: true, Data: not null })
             {
-                Value = t.DispatchTicketId.ToString(),
-                Text = t.DispatchNumber
-            }).ToList();
+                return Json(new
+                {
+                    success = true,
+                    header = result.Data.Header,
+                    tickets = result.Data.Tickets
+                });
+            }
 
-            return Json(ticketsList);
+            return Json(new { success = false, message = result.Message });
         }
 
         /// <summary>
