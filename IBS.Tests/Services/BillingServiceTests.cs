@@ -233,6 +233,115 @@ namespace IBS.Tests.Services
             result.IsSuccess.Should().BeTrue();
             _mockJobOrderService.Verify(s => s.CloseJobOrderAsync(100, "user", false, It.IsAny<CancellationToken>()), Times.Once);
         }
+        [Fact]
+        public async Task CreateBillingAsync_CalculatesCorrectAmount_VatInclusive_Jan2026Data()
+        {
+            // Arrange: Using Billing #B000436 from Jan 2026 (Amount: 840,622.50)
+            var billing = new Billing
+            {
+                JobOrderId = 1,
+                Company = "MMSI",
+                Date = new DateOnly(2026, 1, 3),
+                CustomerId = 10,
+                IsVatInclusive = true,
+                MsapBillingNumber = "B000436",
+                ToBillDispatchTickets = new List<string> { "500" }
+            };
+
+            var jobOrder = new JobOrder { JobOrderId = 1, CustomerId = 10 };
+            var customer = new Customer { CustomerId = 10, VatType = SD.VatType_Vatable };
+            
+            // Assume the tickets total 840,622.50
+            var ticket = new DispatchTicket { DispatchTicketId = 500, TotalNetRevenue = 840622.50m, JobOrderId = 1 };
+
+            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
+            _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(ticket);
+            _mockBillingRepo.Setup(u => u.ComputeDueDateAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync(new DateOnly(2026, 2, 3));
+
+            // Act
+            await _service.CreateBillingAsync(billing, "user", "MMSI", CancellationToken.None);
+
+            // Assert: Total should remain 840,622.50 because it's inclusive
+            billing.Amount.Should().Be(840622.50m);
+        }
+
+        [Fact]
+        public async Task CreateBillingAsync_CalculatesCorrectAmount_VatExclusive_LegacyData()
+        {
+            // Arrange: Using CR #352 (Jan 2025) data. 
+            // Gross: 239,600.00, Net: 213,928.57
+            var billing = new Billing
+            {
+                JobOrderId = 1,
+                Company = "MMSI",
+                Date = new DateOnly(2025, 1, 7),
+                CustomerId = 10,
+                IsVatInclusive = false, // TEST EXCLUSIVE
+                MsapBillingNumber = "BL-Legacy-Exc",
+                ToBillDispatchTickets = new List<string> { "500" }
+            };
+
+            var jobOrder = new JobOrder { JobOrderId = 1, CustomerId = 10 };
+            var customer = new Customer { CustomerId = 10, VatType = SD.VatType_Vatable };
+            
+            // Ticket has the Net amount
+            var ticket = new DispatchTicket { DispatchTicketId = 500, TotalNetRevenue = 213928.57m, JobOrderId = 1 };
+
+            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
+            _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(ticket);
+            _mockBillingRepo.Setup(u => u.ComputeDueDateAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>())).ReturnsAsync(new DateOnly(2025, 2, 7));
+
+            // Act
+            await _service.CreateBillingAsync(billing, "user", "MMSI", CancellationToken.None);
+
+            // Assert: Total should be Net * 1.12
+            // 213,928.57 * 1.12 = 239,599.9984 -> rounded to 239,600.00
+            Math.Round(billing.Amount, 2).Should().Be(239600.00m);
+        }
+
+        [Fact]
+        public async Task PostBillingAsync_PopulatesSalesBook_WithWht_LegacyData()
+        {
+            // Arrange: Using CR #352 data (Net: 213,928.57, WHT 2%: 4,278.57)
+            var billing = new Billing
+            {
+                MsapBillingId = 1,
+                MsapBillingNumber = "BL-Legacy",
+                Status = SD.BillingStatus.ForPosting,
+                CustomerId = 10,
+                Amount = 239600.00m,
+                IsVatable = true,
+                IsVatInclusive = true,
+                PrintWht = true
+            };
+
+            var customer = new Customer { CustomerId = 10, CustomerName = "Legacy Customer" };
+
+            _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(billing);
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
+            _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>())).ReturnsAsync(new List<AccountTitleDto>
+            {
+                new() { AccountNumber = SD.MsapAccounts.ArTrade, AccountId = 1 },
+                new() { AccountNumber = SD.MsapAccounts.MaritimeServiceRevenue, AccountId = 2 },
+                new() { AccountNumber = SD.MsapAccounts.OutputVat, AccountId = 3 }
+            });
+
+            _mockBillingRepo.Setup(u => u.ComputeNetOfVat(239600.00m)).Returns(213928.57m);
+            _mockBillingRepo.Setup(u => u.ComputeVatAmount(213928.57m)).Returns(25671.43m);
+            _mockBillingRepo.Setup(u => u.IsJournalEntriesBalanced(It.IsAny<List<GeneralLedgerBook>>())).Returns(true);
+
+            // Act
+            var result = await _service.PostBillingAsync(1, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s => 
+                s.VatableSales == 213928.57m && 
+                s.VatAmount == 25671.43m && 
+                s.Amount == 239600.00m), It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }
 

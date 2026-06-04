@@ -1,9 +1,34 @@
 @model CreateCollectionViewModel
 
 @{
-    ViewData["Title"] = "Edit Collection";
+    ViewData["Title"] = "Collection - Edit";
     ViewData["IsFullWidth"] = true;
 }
+
+<style>
+    #undocBadge {
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+    }
+    #undocBadge.is-undoc {
+        background-color: var(--secondary-container);
+        color: var(--on-secondary-container);
+        border: 1px solid var(--secondary);
+    }
+    #undocBadge:not(.is-undoc) {
+        background-color: var(--surface-container-high);
+        color: var(--on-surface-variant);
+        border: 1px solid var(--outline-variant);
+    }
+    #undocBadge:hover {
+        filter: brightness(0.95);
+        transform: translateY(-1px);
+    }
+    #undocBadge:active {
+        transform: translateY(0);
+    }
+</style>
 
 <div class="modern-layout">
     <form id="myForm" method="post">
@@ -21,6 +46,8 @@
                         <a class="modern-label" style="text-decoration:none;" asp-action="Index">Collections</a>
                         <span class="material-symbols-outlined text-xs">chevron_right</span>
                         <span class="modern-label" style="color: var(--on-surface)">@Model.MsapCollectionNumber</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit</span>
                     </div>
                     <h1 class="modern-headline-lg">Edit Collection Details</h1>
                 </div>
@@ -36,68 +63,66 @@
 
             <div class="modern-grid">
                 <!-- Left Column: Logistics & Billings (col-8) -->
-                <div class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                <div class="modern-col-8 flex flex-column" style="gap: 1.25rem;">
                     <!-- Collection Info -->
                     <div class="modern-card">
                         <div class="modern-card-header-info">
                             <span class="material-symbols-outlined">info</span>
                             <h2 class="modern-headline-md">1. Collection Information</h2>
                         </div>
-                        <div class="modern-card-body">
+                        <div class="modern-card-body" style="gap: 0.5rem;">
                             <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
                             
-                            <div class="modern-grid">
+                            <div class="modern-grid-compact" style="gap: 0.5rem;">
                                 <div class="modern-col-8">
                                     <label class="modern-label">Customer</label>
                                     <input type="text" class="modern-input" style="background-color: var(--surface-container-low); font-weight: bold;" value="@Model.Customers?.FirstOrDefault(x => x.Value == Model.CustomerId.ToString())?.Text" readonly>
                                 </div>
                                 <div class="modern-col-4">
                                     <label class="modern-label">Collection Date</label>
-                                    <input asp-for="Date" type="date" class="modern-input">
+                                    <input asp-for="Date" type="date" class="modern-input" value="@Model.Date.ToString("yyyy-MM-dd")">
                                     <span asp-validation-for="Date" class="text-error text-xs"></span>
                                 </div>
                             </div>
 
                             <!-- Customer Metadata -->
-                            <div id="CustomerDetailsSection" class="border-t border-outline-variant pt-3 mt-3" style="display: none; gap: 1rem; flex-direction: column;">
-                                <div class="modern-grid-compact">
+                            <div id="CustomerDetailsSection" class="border-t border-outline-variant pt-2 mt-1" style="display: none; gap: 0.5rem; flex-direction: column;">
+                                <div>
+                                    <p class="modern-label">Address</p>
+                                    <p id="CustomerAddress" class="modern-value-md">-</p>
+                                </div>
+                                <div class="modern-grid-compact" style="gap: 0.5rem;">
                                     <div class="modern-col-6">
-                                        <p class="modern-label">Address</p>
-                                        <p id="CustomerAddress" class="modern-value-md">-</p>
-                                    </div>
-                                    <div class="modern-col-3">
                                         <p class="modern-label">TIN</p>
                                         <p id="CustomerTIN" class="modern-value-md font-bold">-</p>
                                     </div>
-                                    <div class="modern-col-3">
+                                    <div class="modern-col-6">
                                         <p class="modern-label">Terms</p>
                                         <p id="CustomerTerms" class="modern-value-md font-bold">-</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="modern-grid mt-4 pt-4 border-t border-outline-variant">
+                            <div class="modern-grid-compact mt-2 pt-2 border-t border-outline-variant" style="gap: 0.5rem;">
                                 <div class="modern-col-6">
-                                    <label class="modern-label" id="statusLabel">Collection Receipt # <span class="text-error">*</span></label>
-                                    <div class="flex items-center gap-2">
-                                        <input asp-for="MsapCollectionNumber" type="text" class="modern-input" id="msapCollectionNumber">
-                                        <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3" style="height: 38px; min-width: 140px;">
-                                            <input type="hidden" asp-for="IsUndocumented" id="IsUndocumented" />
-                                            <input class="form-check-input" type="checkbox" id="isUndocumentedCheckbox" @(Model.IsUndocumented ? "checked" : "") disabled>
-                                            <span class="text-xs font-bold opacity-70">UNDOCUMENTED</span>
-                                        </div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="modern-label mb-0">Collection # <span class="text-error" id="receiptNumberRequired">*</span></label>
+                                        <span id="undocBadge" class="modern-badge-sm">@(Model.IsUndocumented ? "UNDOCUMENTED" : "DOCUMENTED")</span>
                                     </div>
+                                    <input asp-for="MsapCollectionNumber" type="text" class="modern-input" id="msapCollectionNumber">
+                                    <input type="hidden" asp-for="IsUndocumented" id="IsUndocumented" />
+                                    <input type="checkbox" id="isUndocumentedCheckbox" style="display: none;" @(Model.IsUndocumented ? "checked" : "")>
                                     <span asp-validation-for="MsapCollectionNumber" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-6">
-                                    <label class="modern-label">Reference Number</label>
+                                    <label class="modern-label" style="margin-bottom: 5px; display: block;">Reference Number</label>
                                     <input asp-for="ReferenceNo" type="text" class="modern-input" placeholder="e.g. OR#, Check #">
                                 </div>
                             </div>
 
-                            <div class="mt-3">
+                            <div class="mt-1">
                                 <label class="modern-label">Remarks</label>
-                                <textarea asp-for="Remarks" class="modern-input" style="min-height: 80px;" placeholder="Optional remarks..."></textarea>
+                                <textarea asp-for="Remarks" class="modern-input" style="min-height: 60px;" placeholder="Optional remarks..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -226,13 +251,13 @@
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Check Date <span class="text-error">*</span></label>
-                                        <input asp-for="CheckDate" id="CheckDate" type="date" class="modern-input" required>
+                                        <input asp-for="CheckDate" id="CheckDate" type="date" value="@(Model.CheckDate.HasValue ? Model.CheckDate.Value.ToString("yyyy-MM-dd") : "")" class="modern-input" required>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="modern-label">Date Deposited <span class="text-error">*</span></label>
-                                    <input asp-for="DepositDate" id="DepositDate" type="date" class="modern-input" required>
+                                    <input asp-for="DepositDate" id="DepositDate" type="date" value="@(Model.DepositDate.HasValue ? Model.DepositDate.Value.ToString("yyyy-MM-dd") : "")" class="modern-input" required>
                                 </div>
 
                                 <div class="modern-grid-compact border-t border-outline-variant pt-3">
@@ -266,7 +291,7 @@
             setupEventListeners();
 
             // Initial state triggers
-            handleCheckboxChanged();
+            handleCheckboxChange();
             if (customerId) {
                 fetchCustomerDetails(customerId);
                 loadBillings(customerId, collectionId);
@@ -327,12 +352,18 @@
                         }
                     ],
                     drawCallback: function() {
-                        updateTotals();
+                        updateSelectedBillings();
                     }
                 });
             }
 
             function setupEventListeners() {
+                $("#undocBadge").on("click", function() {
+                    const isChecked = !$("#isUndocumentedCheckbox").is(":checked");
+                    $("#isUndocumentedCheckbox").prop("checked", isChecked).trigger('change');
+                });
+
+                $("#isUndocumentedCheckbox").on("change", handleCheckboxChange);
                 $('#BankId').on('change', handleBankChange);
 
                 // Row click selects checkbox
@@ -344,7 +375,7 @@
                 });
 
                 $('#billingsTable tbody').on('change', '.bill-checkbox', function() {
-                    updateTotals();
+                    updateSelectedBillings();
                 });
 
                 $('#selectAll').on('change', function() {
@@ -393,17 +424,24 @@
                 }
             }
 
-            function handleCheckboxChanged() {
-                const $checkbox = $('#isUndocumentedCheckbox');
-                const $inputField = $('#msapCollectionNumber');
-                const $statusLabel = $('#statusLabel');
+            function handleCheckboxChange() {
+                const $checkbox = $("#isUndocumentedCheckbox");
+                const $inputField = $("#msapCollectionNumber");
+                const $required = $("#receiptNumberRequired");
+                const $hiddenInput = $("#IsUndocumented");
+                const $badge = $("#undocBadge");
 
-                if ($checkbox.is(':checked')) {
-                    $statusLabel.text('Collection Receipt #');
-                    $inputField.prop({ required: false, readonly: true }).css('background-color', 'var(--surface-container-low)');
+                const isChecked = $checkbox.is(":checked");
+                $hiddenInput.val(isChecked ? "true" : "false");
+
+                if (isChecked) {
+                    $required.hide();
+                    $inputField.prop("required", false).prop("readonly", true).css('background-color', 'var(--surface-container-low)');
+                    $badge.text("UNDOCUMENTED").addClass("is-undoc");
                 } else {
-                    $statusLabel.html('Collection Receipt # <span class="text-error">*</span>');
-                    $inputField.prop({ required: true, readonly: false }).css('background-color', 'transparent');
+                    $required.show();
+                    $inputField.prop("required", true).prop("readonly", false).css('background-color', 'transparent');
+                    $badge.text("DOCUMENTED").removeClass("is-undoc");
                 }
             }
 
@@ -421,7 +459,7 @@
                 });
             }
 
-            function updateTotals() {
+            function updateSelectedBillings() {
                 let grossTotal = 0, ewtTotal = 0, netTotal = 0;
                 const $hiddenSelect = $('#hiddenBillingsSelect');
                 $hiddenSelect.empty();
@@ -446,6 +484,26 @@
                 $('#ewt').val(ewtTotal.toFixed(2));
                 
                 calculateManualTotal();
+            }
+
+            function calculateManualTotal() {
+                const cash = parseFloat($('#cashAmount').val()) || 0;
+                const check = parseFloat($('#checkAmount').val()) || 0;
+                const wvat = parseFloat($('#wvat').val()) || 0;
+                
+                const total = cash + check + wvat;
+                
+                $('#amount').val(total.toFixed(2));
+                $('#manualTotalDisplay').text(`₱${formatNumber(total)}`);
+                
+                const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱', '').replace(/,/g, '')) || 0;
+                if (Math.abs(total - netToMatch) > 0.01 && netToMatch > 0) {
+                    $('#manualTotalDisplay').css('color', 'var(--error)');
+                } else if (netToMatch > 0) {
+                    $('#manualTotalDisplay').css('color', 'var(--secondary)');
+                } else {
+                    $('#manualTotalDisplay').css('color', 'var(--primary)');
+                }
             }
 
             function areYouSureToUpdate(event) {

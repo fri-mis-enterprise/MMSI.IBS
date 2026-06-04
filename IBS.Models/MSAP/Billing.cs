@@ -94,6 +94,10 @@ namespace IBS.Models.MSAP
         [Column("VAT")]
         public bool IsVatable { get; set; }
 
+        public bool IsVatInclusive { get; set; } = true;
+
+        public bool PrintWht { get; set; }
+
         public bool IsPrinted { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

@@ -139,7 +139,7 @@ namespace IBS.Services
                     dt.BillingNumber = model.MsapBillingNumber;
                 }
 
-                model.Amount = model.Balance = total;
+                model.Amount = model.Balance = model.IsVatable && !model.IsVatInclusive ? total * 1.12m : total;
                 model.DispatchAmount = dispatch;
                 model.BAFAmount = baf;
                 model.IsPaid = false;
@@ -358,6 +358,8 @@ namespace IBS.Services
                 currentModel.VesselId = model.VesselId;
                 currentModel.BilledTo = model.BilledTo;
                 currentModel.JobOrderId = model.JobOrderId;
+                currentModel.IsVatInclusive = model.IsVatInclusive;
+                currentModel.PrintWht = model.PrintWht;
 
                 decimal total = 0, dispatch = 0, baf = 0;
                 if (model.ToBillDispatchTickets != null)
@@ -380,7 +382,7 @@ namespace IBS.Services
                     }
                 }
 
-                currentModel.Amount = currentModel.Balance = total;
+                currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * 1.12m : total;
                 currentModel.DispatchAmount = dispatch;
                 currentModel.BAFAmount = baf;
 
@@ -499,8 +501,61 @@ namespace IBS.Services
                     worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
                     worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     row++;
-                    row++;
                 }
+            }
+
+            row++;
+
+            var subTotal = billing.Amount;
+            var vatAmount = 0m;
+            var vatableSales = 0m;
+
+            if (billing.IsVatable)
+            {
+                if (billing.IsVatInclusive)
+                {
+                    vatableSales = subTotal / 1.12m;
+                    vatAmount = subTotal - vatableSales;
+                }
+                else
+                {
+                    vatableSales = subTotal / 1.12m; // Amount already multiplied by 1.12 in Create
+                    vatAmount = subTotal - vatableSales;
+                }
+            }
+
+            worksheet.Cells[row, 4].Value = "SUBTOTAL";
+            worksheet.Cells[row, 5].Value = subTotal;
+            worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0.00";
+            row++;
+
+            if (billing.IsVatable)
+            {
+                worksheet.Cells[row, 4].Value = "12% VAT";
+                worksheet.Cells[row, 5].Value = vatAmount;
+                worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0.00";
+                row++;
+            }
+
+            if (billing.PrintWht)
+            {
+                var whtAmount = vatableSales * 0.02m;
+                worksheet.Cells[row, 4].Value = "LESS 2% WHT";
+                worksheet.Cells[row, 5].Value = whtAmount;
+                worksheet.Cells[row, 5].Style.Numberformat.Format = "(#,##0.00)";
+                row++;
+
+                worksheet.Cells[row, 4].Value = "NET AMOUNT DUE";
+                worksheet.Cells[row, 5].Value = subTotal - whtAmount;
+                worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells[row, 5].Style.Font.Bold = true;
+            }
+            else
+            {
+                worksheet.Cells[row, 4].Value = "TOTAL AMOUNT DUE";
+                worksheet.Cells[row, 5].Value = subTotal;
+                worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells[row, 5].Style.Font.Bold = true;
             }
 
             worksheet.Cells[1, 1, row, 7].Style.Font.Name = "Calibri";

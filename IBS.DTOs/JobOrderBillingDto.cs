@@ -9,10 +9,20 @@ namespace IBS.DTOs
     public class JobOrderHeaderDto
     {
         public int VesselId { get; set; }
+
         public int PortId { get; set; }
+
         public int TerminalId { get; set; }
+
         public string? VoyageNumber { get; set; }
+
         public string? COSNumber { get; set; }
+
+        public bool IsVatable { get; set; }
+
+        public bool IsVatInclusive { get; set; }
+
+        public bool PrintWht { get; set; }
     }
 
     public class JobOrderTicketDto

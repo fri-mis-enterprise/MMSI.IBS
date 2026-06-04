@@ -325,7 +325,7 @@
                     $("#legacyNotice").show();
                     $("#JobOrderId").val("");
                     $("#JobOrderSearch").val("");
-                    
+
                     if (currentCustomerId) {
                         await fetchTicketsByCustomer();
                     }
@@ -624,10 +624,21 @@
                     dispatch += parseFloat($row.data('dispatch-amount')) || 0;
                     baf += parseFloat($row.data('baf-amount')) || 0;
                 });
+
+                const isVatable = $("#isVatableToggle").is(":checked");
+                const isInclusive = $("#isVatInclusiveToggle").is(":checked");
+
+                let subTotal = dispatch + baf;
+                let grandTotal = subTotal;
+
+                if (isVatable && !isInclusive) {
+                    grandTotal = subTotal * 1.12;
+                }
+
                 const count = $ticketsTableBody.find('.ticket-checkbox:checked').length;
                 $('#DispatchAmountTotal').text(formatNumber(dispatch));
                 $('#BAFAmountTotal').text(formatNumber(baf));
-                $('#OverallTotal').text(formatNumber(dispatch + baf));
+                $('#OverallTotal').text(formatNumber(grandTotal));
                 $('#selectedTicketCount').text(`${count} selected`);
             }
 
@@ -741,3 +752,4 @@
         });
     </script>
 }
+

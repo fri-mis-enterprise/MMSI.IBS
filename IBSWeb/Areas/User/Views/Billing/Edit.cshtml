@@ -129,14 +129,31 @@
                             </div>
 
                             <div class="modern-grid-compact">
-                                <div class="modern-col-6">
-                                    <label class="modern-label">Tax Status</label>
+                                <div class="modern-col-4">
+                                    <label class="modern-label">VAT Status</label>
                                     <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3" style="height: 38px;">
                                         <input asp-for="IsVatable" type="checkbox" class="form-check-input" id="isVatableToggle">
-                                        <span class="text-xs font-bold opacity-70">VATABLE</span>
+                                        <span class="text-xs font-bold opacity-70">VAT</span>
                                     </div>
                                 </div>
-                                <div class="modern-col-6">
+                                <div class="modern-col-4">
+                                    <label class="modern-label">Inclusive</label>
+                                    <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3" style="height: 38px;">
+                                        <input asp-for="IsVatInclusive" type="checkbox" class="form-check-input" id="isVatInclusiveToggle">
+                                        <span class="text-xs font-bold opacity-70">INC</span>
+                                    </div>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label class="modern-label">Print WHT</label>
+                                    <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3" style="height: 38px;">
+                                        <input asp-for="PrintWht" type="checkbox" class="form-check-input" id="printWhtToggle">
+                                        <span class="text-xs font-bold opacity-70">WHT</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                                <div class="modern-col-12">
                                     <label class="modern-label">Date</label>
                                     <input asp-for="Date" type="date" class="modern-input" value="@Model.Date.ToString("yyyy-MM-dd")">
                                 </div>
@@ -278,6 +295,9 @@
         $(document).ready(function () {
             const currentCustomerId = $("#CustomerId").val();
             const billingId = $("#billingId").val();
+            const $ticketsTableBody = $("#ticketsTable tbody");
+            const $dispatchSelect = $("#DispatchTicketSelect");
+
             setupEventListeners();
             fillDataOnStartup();
 
@@ -285,6 +305,7 @@
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PortSelect").on("change", handlePortChange);
                 $("#legacyToggle").on("change", handleLegacyToggleChange);
+                $("#isVatableToggle, #isVatInclusiveToggle").on("change", updateTotals);
                 $("#loadLegacyTicketsBtn").on("click", fetchTicketsByCustomer);
                 $("#submitButton").on("click", areYouSureToBill);
                 $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show'));
@@ -374,22 +395,30 @@
                 // Load already billed tickets into the table
                 if (currentCustomerId && billingId) {
                     try {
-                        const res = await fetch('@Url.Action("GetDispatchTickets", "Billing", new { area = "User" })', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: `dispatchTicketIds=${$("#DispatchTicketSelect").val().join('&dispatchTicketIds=')}`
-                        });
-                        const data = await res.json();
-                        renderTicketsTable(data.data.map(t => ({
-                            dispatchTicketId: t.dispatchTicketId,
-                            dispatchNo: t.dispatchNumber,
-                            tugboat: t.tugboat?.tugboatName || 'N/A',
-                            service: t.service?.serviceName || 'N/A',
-                            duration: t.totalHours,
-                            dispatchAmount: t.dispatchNetRevenue,
-                            bafAmount: t.bafNetRevenue,
-                            totalAmount: t.totalBilling
-                        })));
+                        const ticketIds = $("#DispatchTicketSelect").val();
+                        if (ticketIds && ticketIds.length > 0) {
+                            const params = new URLSearchParams();
+                            ticketIds.forEach(id => params.append('dispatchTicketIds', id));
+
+                            const res = await fetch('@Url.Action("GetDispatchTickets", "Billing", new { area = "User" })', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: params.toString()
+                            });
+                            const data = await res.json();
+                            renderTicketsTable(data.data.map(t => ({
+                                dispatchTicketId: t.dispatchTicketId,
+                                dispatchNo: t.dispatchNumber,
+                                tugboat: t.tugboat?.tugboatName || 'N/A',
+                                service: t.service?.serviceName || 'N/A',
+                                duration: t.totalHours,
+                                dispatchAmount: t.dispatchNetRevenue,
+                                bafAmount: t.bafNetRevenue,
+                                totalAmount: t.totalBilling
+                            })));
+                        } else {
+                            renderTicketsTable([]);
+                        }
                     } catch (e) { console.error('Error loading initial tickets', e); }
                 }
             }
@@ -473,8 +502,6 @@
             const $jobOrderSearch = $("#JobOrderSearch");
             const $jobOrderResults = $("#JobOrderSearchResults");
             const $jobOrderId = $("#JobOrderId");
-            const $ticketsTableBody = $("#ticketsTable tbody");
-            const $dispatchSelect = $("#DispatchTicketSelect");
 
             async function performJobOrderSearch(searchTerm) {
                 if (!currentCustomerId) return;
@@ -514,7 +541,7 @@
                 e.preventDefault();
                 const jobOrder = $(this).data('jobOrder');
                 $jobOrderSearch.val(jobOrder.name);
-                $jobOrderId.val(jobOrderId.value);
+                $jobOrderId.val(jobOrder.value);
                 $jobOrderResults.empty().removeClass('show');
                 try {
                     const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrder.value)}`);
@@ -596,11 +623,20 @@
                     dispatch += parseFloat($row.data('dispatch-amount')) || 0;
                     baf += parseFloat($row.data('baf-amount')) || 0;
                 });
-                const count = $ticketsTableBody.find('.ticket-checkbox:checked').length;
+                
+                const isVatable = $("#isVatableToggle").is(":checked");
+                const isInclusive = $("#isVatInclusiveToggle").is(":checked");
+                
+                let subTotal = dispatch + baf;
+                let grandTotal = subTotal;
+                
+                if (isVatable && !isInclusive) {
+                    grandTotal = subTotal * 1.12;
+                }
+
                 $('#DispatchAmountTotal').text(formatNumber(dispatch));
                 $('#BAFAmountTotal').text(formatNumber(baf));
-                $('#OverallTotal').text(formatNumber(dispatch + baf));
-                $('#selectedTicketCount').text(`${count} selected`);
+                $('#OverallTotal').text(formatNumber(grandTotal));
             }
 
             // ── Global click ────────────────────────────────────────────────
