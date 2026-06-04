@@ -65,23 +65,29 @@
                             <div class="modern-grid mt-2">
                                 <div class="modern-col-4">
                                     <label asp-for="VesselId" class="modern-label">Vessel</label>
-                                    <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" id="VesselSelect" data-placeholder="-- Select Vessel --">
-                                        <option value="">-- Select Vessel --</option>
-                                    </select>
+                                    <div id="VesselContainer">
+                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" id="VesselSelect" data-placeholder="-- Select Vessel --">
+                                            <option value="">-- Select Vessel --</option>
+                                        </select>
+                                    </div>
                                     <span asp-validation-for="VesselId" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-4">
                                     <label asp-for="PortId" class="modern-label">Port</label>
-                                    <select asp-for="PortId" asp-items="@Model.Ports" class="js-modern-select" id="PortId" data-placeholder="-- Select Port --">
-                                        <option value="">-- Select Port --</option>
-                                    </select>
+                                    <div id="PortContainer">
+                                        <select asp-for="PortId" asp-items="@Model.Ports" class="js-modern-select" id="PortId" data-placeholder="-- Select Port --">
+                                            <option value="">-- Select Port --</option>
+                                        </select>
+                                    </div>
                                     <span asp-validation-for="PortId" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-4">
                                     <label asp-for="TerminalId" class="modern-label">Terminal</label>
-                                    <select asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" id="TerminalId" data-placeholder="-- Select Terminal --">
-                                        <option value="">-- Select Terminal --</option>
-                                    </select>
+                                    <div id="TerminalContainer">
+                                        <select asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" id="TerminalId" data-placeholder="-- Select Terminal --">
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
                                     <span asp-validation-for="TerminalId" class="text-error text-xs"></span>
                                 </div>
                             </div>

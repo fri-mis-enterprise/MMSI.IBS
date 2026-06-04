@@ -55,15 +55,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateCollection, "Access denied. You don't have permission to create Collections.")]
         public async Task<IActionResult> Create(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "There was an error creating the collection.";
-                viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(0,
-                    string.Empty,
-                    cancellationToken);
-                return View(viewModel);
-            }
-
             var result = await collectionService.CreateCollectionAsync(viewModel, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
@@ -108,17 +99,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateCollection, "Access denied. You don't have permission to edit Collections.")]
         public async Task<IActionResult> Edit(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "There was an error updating the collection.";
-                var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
-                viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(
-                    viewModel.MsapCollectionId ?? 0,
-                    customer?.Type ?? string.Empty,
-                    cancellationToken);
-                return View(viewModel);
-            }
-
             var result = await collectionService.UpdateCollectionAsync(viewModel, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)

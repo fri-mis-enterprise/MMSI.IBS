@@ -71,7 +71,7 @@
                             <div class="modern-grid-compact" style="gap: 0.5rem;">
                                 <div class="modern-col-8">
                                     <label class="modern-label">Customer <span class="text-error">*</span></label>
-                                    <div class="relative">
+                                    <div class="relative" id="CustomerContainer">
                                         <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">search</span>
                                         <input type="text" id="CustomerSearch" class="modern-input" style="padding-left: 40px;" placeholder="Type to search..." autocomplete="off">
                                     </div>
@@ -233,9 +233,11 @@
                             <div class="flex flex-column" style="gap: 1rem;">
                                 <div>
                                     <label class="modern-label">Deposit To Bank</label>
-                                    <select asp-for="BankId" id="BankId" asp-items="@Model.BankAccounts" class="js-modern-select" data-placeholder="Select Bank Account...">
-                                        <option value="">-- Select Bank --</option>
-                                    </select>
+                                    <div id="BankContainer">
+                                        <select asp-for="BankId" id="BankId" asp-items="@Model.BankAccounts" class="js-modern-select" data-placeholder="Select Bank Account...">
+                                            <option value="">-- Select Bank --</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div id="bankInfoPanel" class="bg-surface-container-low p-3 rounded-md border border-outline-variant" style="display: none;">

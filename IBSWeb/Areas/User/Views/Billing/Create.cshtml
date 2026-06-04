@@ -67,7 +67,7 @@
                         </div>
                         <div class="modern-card-body" style="gap: 1.25rem;">
                             <!-- Customer Search -->
-                            <div class="relative">
+                            <div class="relative" id="CustomerContainer">
                                 <label class="modern-label">Customer Search</label>
                                 <div class="relative">
                                     <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">search</span>
@@ -185,21 +185,27 @@
                             <div class="border-t border-outline-variant pt-3 flex flex-column" style="gap: 1rem;">
                                 <div>
                                     <label class="modern-label">Port</label>
-                                    <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="js-modern-select" data-placeholder="Select Port..." data-searchable="true">
-                                        <option value="">-- Select Port --</option>
-                                    </select>
+                                    <div id="PortContainer">
+                                        <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="js-modern-select" data-placeholder="Select Port..." data-searchable="true">
+                                            <option value="">-- Select Port --</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="modern-label">Terminal</label>
-                                    <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="js-modern-select" data-placeholder="Select Terminal..." data-searchable="true">
-                                        <option value="">-- Select Terminal --</option>
-                                    </select>
+                                    <div id="TerminalContainer">
+                                        <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="js-modern-select" data-placeholder="Select Terminal..." data-searchable="true">
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="modern-label">Vessel</label>
-                                    <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="Select Vessel..." data-searchable="true">
-                                        <option value="">-- Select Vessel --</option>
-                                    </select>
+                                    <div id="VesselContainer">
+                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="Select Vessel..." data-searchable="true">
+                                            <option value="">-- Select Vessel --</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="modern-label">AP Other Tug</label>

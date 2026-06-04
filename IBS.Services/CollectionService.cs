@@ -112,7 +112,8 @@ namespace IBS.Services
                     {
                         billing.Status = SD.BillingStatus.ForCollection;
                         billing.CollectionId = 0;
-                        await _unitOfWork.Collection.RemoveBillingPayment(billing.MsapBillingId, billing.Amount, 0, cancellationToken);
+                        billing.CollectionNumber = null;
+                        await _unitOfWork.Collection.RemoveBillingPayment(billing.MsapBillingId, billing.AmountPaid, 0, cancellationToken);
                     }
 
                     // Apply new allocations
@@ -132,30 +133,41 @@ namespace IBS.Services
                     }
 
                     // Track changes for audit
-                    var changes = new List<string>();
-                    if (currentModel.CheckNumber != viewModel.CheckNumber)
-                    {
-                        changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {viewModel.CheckNumber}");
-                    }
-
-                    if (currentModel.Amount != viewModel.Amount)
-                    {
-                        changes.Add($"Amount: {currentModel.Amount} -> {viewModel.Amount}");
-                    }
-
-                    var audit = new AuditTrail(username, $"Edit collection #{currentModel.MsapCollectionNumber} {string.Join(", ", changes)}", "Collection");
+                    var audit = new AuditTrail(username, $"Edit collection #{currentModel.MsapCollectionNumber}", "Collection");
                     await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
 
                     // Update entity
                     currentModel.Date = viewModel.Date;
                     currentModel.CustomerId = viewModel.CustomerId;
+                    currentModel.IsUndocumented = viewModel.IsUndocumented;
+                    if (!currentModel.IsUndocumented)
+                    {
+                        currentModel.MsapCollectionNumber = viewModel.MsapCollectionNumber ?? currentModel.MsapCollectionNumber;
+                    }
+                    currentModel.ReferenceNo = viewModel.ReferenceNo;
+                    currentModel.Remarks = viewModel.Remarks;
+                    currentModel.CashAmount = viewModel.CashAmount;
+                    currentModel.CheckAmount = viewModel.CheckAmount;
                     currentModel.CheckNumber = viewModel.CheckNumber;
                     currentModel.CheckDate = viewModel.CheckDate;
+                    currentModel.CheckBank = viewModel.CheckBank;
+                    currentModel.CheckBranch = viewModel.CheckBranch;
+                    currentModel.BankId = viewModel.BankId;
                     currentModel.DepositDate = viewModel.DepositDate;
                     currentModel.Amount = viewModel.Amount;
                     currentModel.EWT = viewModel.EWT;
                     currentModel.WVAT = viewModel.WVAT;
-                    currentModel.Total = viewModel.Amount + viewModel.EWT + viewModel.WVAT;
+                    currentModel.Total = viewModel.Amount + viewModel.EWT; // Total should be Gross (Net + EWT), WVAT is already in Net (Amount)
+
+                    if (viewModel.BankId.HasValue)
+                    {
+                        var bank = await _unitOfWork.BankAccount.GetAsync(b => b.BankAccountId == viewModel.BankId.Value, cancellationToken);
+                        if (bank != null)
+                        {
+                            currentModel.BankAccountNumber = bank.AccountNo;
+                            currentModel.BankAccountName = bank.AccountName;
+                        }
+                    }
 
                     await _unitOfWork.SaveAsync(cancellationToken);
                 }, cancellationToken);
@@ -296,7 +308,7 @@ namespace IBS.Services
                 Amount = viewModel.Amount,
                 EWT = viewModel.EWT,
                 WVAT = viewModel.WVAT,
-                Total = viewModel.Amount + viewModel.EWT + viewModel.WVAT,
+                Total = viewModel.Amount + viewModel.EWT, // Total should be Gross (Net + EWT), WVAT is already in Net (Amount)
                 CashAmount = viewModel.CashAmount,
                 CheckAmount = viewModel.CheckAmount,
                 CheckNumber = viewModel.CheckNumber,
@@ -307,7 +319,8 @@ namespace IBS.Services
                 ReferenceNo = viewModel.ReferenceNo,
                 Remarks = viewModel.Remarks,
                 DepositDate = viewModel.DepositDate,
-                Customer = (await _unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken))!
+                Customer = (await _unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken))!,
+                Company = SD.Company_MMSI
             };
 
             if (viewModel.BankId.HasValue)

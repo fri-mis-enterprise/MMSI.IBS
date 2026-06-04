@@ -106,52 +106,52 @@
                                     }
                                     else
                                     {
-                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="-- Select Vessel --" required>
-                                            <option value="">-- Select Vessel --</option>
-                                        </select>
+                                        <div id="VesselContainer">
+                                            <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="-- Select Vessel --" required>
+                                                <option value="">-- Select Vessel --</option>
+                                            </select>
+                                        </div>
                                     }
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Activity/Service Type <span class="text-error">*</span></label>
-                                    <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" data-placeholder="-- Select Service --" required>
-                                        <option value="">-- Select Service --</option>
-                                    </select>
+                                    <div id="ServiceContainer">
+                                        <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" data-placeholder="-- Select Service --" required>
+                                            <option value="">-- Select Service --</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Port <span class="text-error">*</span></label>
-                                    <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --" required>
-                                        <option value="">-- Select Port --</option>
-                                    </select>
+                                    <div id="PortContainer">
+                                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --" required>
+                                            <option value="">-- Select Port --</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Terminal <span class="text-error">*</span> <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
-                                    <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="js-modern-select" data-placeholder="-- Select Terminal --" required>
-                                        <option value="">-- Select Terminal --</option>
-                                    </select>
+                                    <div id="TerminalContainer">
+                                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="js-modern-select" data-placeholder="-- Select Terminal --" required>
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- III. Provider Details -->
-                    <div class="modern-card">
-                        <div class="modern-card-header-info">
-                            <span class="material-symbols-outlined">badge</span>
-                            <h2 class="modern-headline-md">Provider Details</h2>
-                        </div>
-                        <div class="modern-card-body">
-                            <div class="modern-grid-compact">
                                 <div class="modern-col-6">
                                     <label class="modern-label">Tugboat/Service provider <span class="text-error">*</span></label>
-                                    <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="js-modern-select" data-placeholder="-- Select Tugboat --" required>
-                                        <option value="">-- Select Tugboat --</option>
-                                    </select>
+                                    <div id="TugboatContainer">
+                                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="js-modern-select" data-placeholder="-- Select Tugboat --" required>
+                                            <option value="">-- Select Tugboat --</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Master on Duty <span class="text-error">*</span></label>
-                                    <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="js-modern-select" data-placeholder="-- Select Tug Master --" required>
-                                        <option value="">-- Select Tug Master --</option>
-                                    </select>
+                                    <div id="TugMasterContainer">
+                                        <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="js-modern-select" data-placeholder="-- Select Tug Master --" required>
+                                            <option value="">-- Select Tug Master --</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
