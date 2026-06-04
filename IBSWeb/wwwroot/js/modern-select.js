@@ -73,6 +73,7 @@ const ModernSelect = {
 
         // Event Listeners
         $trigger.on('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             const isOpen = $dropdown.hasClass('show');
             
@@ -94,6 +95,7 @@ const ModernSelect = {
         });
         
         $dropdown.on('click', '.modern-select-option', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             const val = $(this).data('value');
             const text = $(this).text();

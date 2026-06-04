@@ -57,6 +57,7 @@ namespace IBS.Services
                     // Allocate payment
                     if (viewModel.BillingPayments != null)
                     {
+                        model.PaidBills = new List<Billing>();
                         foreach (var payment in viewModel.BillingPayments)
                         {
                             var billing = await _unitOfWork.Billing.GetAsync(b => b.MsapBillingId == payment.BillingId, cancellationToken);
@@ -64,7 +65,9 @@ namespace IBS.Services
                             {
                                 billing.Status = SD.BillingStatus.Collected;
                                 billing.CollectionId = model.MsapCollectionId;
+                                billing.CollectionNumber = model.MsapCollectionNumber;
                                 await _unitOfWork.Collection.UpdateBillingPayment(payment.BillingId, payment.AmountToPay, cancellationToken);
+                                model.PaidBills.Add(billing);
                             }
                         }
                     }
@@ -122,6 +125,7 @@ namespace IBS.Services
                             {
                                 billing.Status = SD.BillingStatus.Collected;
                                 billing.CollectionId = currentModel.MsapCollectionId;
+                                billing.CollectionNumber = currentModel.MsapCollectionNumber;
                                 await _unitOfWork.Collection.UpdateBillingPayment(payment.BillingId, payment.AmountToPay, cancellationToken);
                             }
                         }

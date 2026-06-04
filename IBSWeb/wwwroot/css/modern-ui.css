@@ -826,7 +826,15 @@ table.dataTable tbody tr:hover {
 
 /* DataTables Controls Refinement - Supporting v2.0+ classes */
 .dt-container .flex-stack {
-    margin: 0 !important; /* Eliminate vertical margin bleed */
+    margin: 0; /* Removed !important to allow mb-2/mt-2 classes to work */
+}
+
+.dt-container .flex-stack:first-of-type {
+    margin-bottom: 1rem !important;
+}
+
+.dt-container .flex-stack:last-of-type {
+    margin-top: 1rem !important;
 }
 
 .dataTables_filter input,

@@ -89,7 +89,8 @@ const ModernTable = {
 $(document).ready(function() {
     // Action dropdown positioning logic (Delegated)
     $(document).on('click', '.dropdown-trigger', function(e) {
-        e.stopPropagation();
+        e.preventDefault();
+        e.stopImmediatePropagation();
         const $trigger = $(this);
         const $menu = $trigger.siblings('.modern-dropdown-menu');
         

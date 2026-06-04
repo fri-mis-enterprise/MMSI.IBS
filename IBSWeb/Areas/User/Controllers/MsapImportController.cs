@@ -94,6 +94,7 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? dispatchTicketFile,
             IFormFile? billingFile,
             IFormFile? collectionFile,
+            IFormFile? collectBillFile,
             IFormFile? coaFile,
             List<IFormFile>? bulkFiles)
         {
@@ -120,6 +121,7 @@ namespace IBSWeb.Areas.User.Controllers
                 dispatchTicketFile = ResolveFile(dispatchTicketFile, bulkFiles, "dispatch", "dispatch.csv");
                 billingFile       = ResolveFile(billingFile, bulkFiles, "billing", "billing.csv");
                 collectionFile    = ResolveFile(collectionFile, bulkFiles, "collection", "collection.csv");
+                collectBillFile   = ResolveFile(collectBillFile, bulkFiles, "collect_bill", "collect_bill.csv");
                 coaFile           = ResolveFile(coaFile, bulkFiles, "chart_of_accounts", "filpride_chart_of_accounts.csv");
 
                 // Preload maps from existing DB records
@@ -189,6 +191,11 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportCollectionsAsync(collectionFile, maps));
                 }
 
+                if (collectBillFile != null)
+                {
+                    sb.AppendLine(await ImportCollectBillAsync(collectBillFile, maps));
+                }
+
                 // Level 4 â€” Transactional
                 if (billingFile != null)
                 {
@@ -248,29 +255,30 @@ namespace IBSWeb.Areas.User.Controllers
 
         private sealed class ImportMaps
         {
-            public Dictionary<string, int> Customer { get; } = new();
-            public Dictionary<string, int> CustomerLegacyMap { get; } = new();
-            public Dictionary<string, int> Port { get; } = new();
-            public Dictionary<string, int> PortLegacyMap { get; } = new();
-            public Dictionary<string, int> Service { get; } = new();
-            public Dictionary<string, int> ServiceLegacyMap { get; } = new();
-            public Dictionary<string, int> Owner { get; } = new();
-            public Dictionary<string, int> OwnerLegacyMap { get; } = new();
-            public Dictionary<string, int> Tugboat { get; } = new();
-            public Dictionary<string, int> TugboatLegacyMap { get; } = new();
-            public Dictionary<string, int> TugMaster { get; } = new();
-            public Dictionary<string, int> TugMasterLegacyMap { get; } = new();
-            public Dictionary<string, int> Vessel { get; } = new();
-            public Dictionary<string, int> VesselLegacyMap { get; } = new();
-            public Dictionary<string, int> Terminal { get; } = new();
-            public Dictionary<string, (int PortId, int TerminalId)> TerminalLegacyMap { get; } = new();
-            public Dictionary<string, int> Principal { get; } = new();
-            public Dictionary<string, int> PrincipalLegacyMap { get; } = new();
-            public Dictionary<string, int> Collection { get; } = new();
-            public Dictionary<string, BillingMapInfo> Billing { get; } = new();
-            public Dictionary<string, BillingMapInfo> BillingByRecId { get; } = new();
-            public HashSet<string> TariffRate { get; } = new();
-            public HashSet<string> DispatchTicket { get; } = new();
+            public Dictionary<string, int> Customer { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> CustomerLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Port { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> PortLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Service { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> ServiceLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Owner { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> OwnerLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Tugboat { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> TugboatLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> TugMaster { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> TugMasterLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Vessel { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> VesselLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Terminal { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, (int PortId, int TerminalId)> TerminalLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Principal { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> PrincipalLegacyMap { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> Collection { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, List<string>> CollectBill { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, BillingMapInfo> Billing { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, BillingMapInfo> BillingByRecId { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public HashSet<string> TariffRate { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public HashSet<string> DispatchTicket { get; } = new(StringComparer.OrdinalIgnoreCase);
             public Dictionary<int, int> PortToFirstTerminal { get; } = new();
             public Dictionary<int, int> ChartOfAccount { get; } = new();
         }
@@ -278,6 +286,34 @@ namespace IBSWeb.Areas.User.Controllers
         private async Task LoadExistingMapsAsync(ImportMaps maps, CancellationToken ct)
         {
             maps.ChartOfAccount.Clear();
+            maps.CollectBill.Clear();
+
+            // Try to load collect_bill.csv from Imports folder if it exists
+            var collectBillPath = Path.Combine(Directory.GetCurrentDirectory(), "Imports", "collect_bill.csv");
+            if (System.IO.File.Exists(collectBillPath))
+            {
+                try
+                {
+                    using var reader = new StreamReader(collectBillPath);
+                    using var csv = new CsvReader(reader, _csvConfig);
+                    var records = csv.GetRecords<dynamic>().ToList();
+                    foreach (var record in records)
+                    {
+                        string billNum = GetString(record, "billnum");
+                        string crNum = GetString(record, "crnum");
+                        bool active = ParseBool(record, "active");
+
+                        if (!active || billNum == "-" || crNum == "-") continue;
+
+                        if (!maps.CollectBill.ContainsKey(billNum))
+                        {
+                            maps.CollectBill[billNum] = new List<string>();
+                        }
+                        maps.CollectBill[billNum].Add(crNum);
+                    }
+                }
+                catch { /* Ignore if fails */ }
+            }
 
             maps.Port.Clear();
             maps.PortLegacyMap.Clear();
@@ -1222,6 +1258,32 @@ namespace IBSWeb.Areas.User.Controllers
             return $"Collections: {count} imported, {skipped} already existed.";
         }
 
+        private async Task<string> ImportCollectBillAsync(IFormFile file, ImportMaps maps)
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            using var csv = new CsvReader(reader, _csvConfig);
+            var records = csv.GetRecords<dynamic>().ToList();
+            int count = 0;
+
+            foreach (var record in records)
+            {
+                string billNum = GetString(record, "billnum");
+                string crNum = GetString(record, "crnum");
+                bool active = ParseBool(record, "active");
+
+                if (!active || billNum == "-" || crNum == "-") continue;
+
+                if (!maps.CollectBill.ContainsKey(billNum))
+                {
+                    maps.CollectBill[billNum] = new List<string>();
+                }
+                maps.CollectBill[billNum].Add(crNum);
+                count++;
+            }
+
+            return $"Collect-Bill Links: {count} loaded.";
+        }
+
         private async Task<string> ImportBillingsAsync(IFormFile file, ImportMaps maps)
         {
             // Clear existing data to fix scrambled IDs as requested by user
@@ -1260,6 +1322,13 @@ namespace IBSWeb.Areas.User.Controllers
                 string portNumRaw = PadNumber(GetString(record, "portnum"), 3);
                 string principalNum = PadNumber(GetString(record, "billto"), 4);
                 string crNum = GetString(record, "crnum");
+
+                // If crNum is missing from billing.csv, check collect_bill map
+                if ((crNum == "-" || crNum == "0" || string.IsNullOrWhiteSpace(crNum)) && maps.CollectBill.TryGetValue(billingNumber, out var crNums))
+                {
+                    crNum = crNums.FirstOrDefault() ?? "-";
+                }
+
                 string custNo = GetString(record, "custno");
 
                 if (!maps.Customer.TryGetValue(custNo, out int customerId) && !maps.CustomerLegacyMap.TryGetValue(GetString(record, "custno"), out customerId))
@@ -1312,9 +1381,9 @@ namespace IBSWeb.Areas.User.Controllers
                     Date = billingDate,
                     DueDate = billingDate,
                     Amount = ParseDecimal(record, "amount"),
-                    Balance = ParseDecimal(record, "amount"),
-                    AmountPaid = 0,
-                    IsPaid = false,
+                    Balance = collectionId.HasValue ? 0 : ParseDecimal(record, "amount"),
+                    AmountPaid = collectionId.HasValue ? ParseDecimal(record, "amount") : 0,
+                    IsPaid = collectionId.HasValue,
                     Company = "MMSI",
                     IsUndocumented = ParseBool(record, "undocument"),
                     ApOtherTug = ParseDecimal(record, "apothertug"),
@@ -1685,13 +1754,21 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string GetString(dynamic record, string propertyName)
         {
+            if (record == null) return "-";
             var dict = (IDictionary<string, object>)record;
-            var key  = propertyName.Trim().ToLower();
-            if (dict.TryGetValue(key, out var value))
+            var targetKey = propertyName.Trim().ToLower();
+
+            // Case-insensitive lookup for dynamic ExpandoObject
+            foreach (var key in dict.Keys)
             {
-                var str = value.ToString()?.Trim();
-                return string.IsNullOrWhiteSpace(str) ? "-" : str;
+                if (key.Trim().Equals(targetKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = dict[key];
+                    var str = value?.ToString()?.Trim();
+                    return string.IsNullOrWhiteSpace(str) ? "-" : str;
+                }
             }
+
             return "-";
         }
 

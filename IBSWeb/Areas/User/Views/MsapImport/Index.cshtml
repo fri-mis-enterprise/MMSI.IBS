@@ -211,6 +211,11 @@ ViewData["Title"] = "MSAP Import";
                                 <input type="file" name="collectionFile" accept=".csv" class="form-control form-control-sm import-file-input" />
                             </div>
                             <div class="import-file-row">
+                                <span class="import-file-label">Collect-Bill Link</span>
+                                <span class="file-badge badge-dependency">Linking File</span>
+                                <input type="file" name="collectBillFile" accept=".csv" class="form-control form-control-sm import-file-input" />
+                            </div>
+                            <div class="import-file-row">
                                 <span class="import-file-label">Billing</span>
                                 <span class="file-badge badge-dependency">Needs Everything</span>
                                 <input type="file" name="billingFile" accept=".csv" class="form-control form-control-sm import-file-input" />
@@ -267,7 +272,8 @@ ViewData["Title"] = "MSAP Import";
             'tariffFile': ['tariff'],
             'dispatchTicketFile': ['dispatch'],
             'billingFile': ['billing'],
-            'collectionFile': ['collection']
+            'collectionFile': ['collection'],
+            'collectBillFile': ['collect_bill', 'collect-bill']
         };
 
         function updateFileCount() {
@@ -317,6 +323,7 @@ ViewData["Title"] = "MSAP Import";
                 else if (name === 'dispatch.csv') matchedKey = 'dispatchTicketFile';
                 else if (name === 'billing.csv') matchedKey = 'billingFile';
                 else if (name === 'collection.csv') matchedKey = 'collectionFile';
+                else if (name === 'collect_bill.csv') matchedKey = 'collectBillFile';
                 
                 // Fallback: Keyword search
                 if (!matchedKey) {

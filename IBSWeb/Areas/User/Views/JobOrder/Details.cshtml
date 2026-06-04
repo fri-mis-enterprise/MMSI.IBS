@@ -320,7 +320,8 @@
                 dom: '<"modern-table-container"t>'
             });
             $(document).on('click', '.dropdown-trigger', function(e) {
-                e.stopPropagation();
+                e.preventDefault();
+                e.stopImmediatePropagation();
                 const $trigger = $(this);
                 const $menu = $trigger.siblings('.modern-dropdown-menu');
                 

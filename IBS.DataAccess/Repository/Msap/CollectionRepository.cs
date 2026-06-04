@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository.Msap
         public async Task<List<SelectListItem>> GetMsapCustomersWithCollectiblesSelectList(int collectionId, string type, CancellationToken cancellationToken = default)
         {
             var billingsToBeCollected = await _db.MsapBillings
-                .Where(t => t.Status == "For Collection" || (collectionId != 0 && t.CollectionId == collectionId))
+                .Where(t => t.Balance > 0 || (collectionId != 0 && t.CollectionId == collectionId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -83,7 +83,7 @@ namespace IBS.DataAccess.Repository.Msap
         public async Task<List<SelectListItem>> GetMsapUncollectedBillingsById(CancellationToken cancellationToken = default)
         {
             var billingsList = await _db.MsapBillings
-                .Where(dt => dt.Status == "For Collection")
+                .Where(dt => dt.Balance > 0)
                 .OrderBy(dt => dt.MsapBillingNumber).Select(s => new SelectListItem
                 {
                     Value = s.MsapBillingId.ToString(),
@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository.Msap
         {
             var billings = await _db
                 .MsapBillings
-                .Where(b => b.CustomerId == customerId && b.Status == "For Collection")
+                .Where(b => b.CustomerId == customerId && b.Balance > 0)
                 .Include(b => b.Customer)
                 .OrderBy(b => b.MsapBillingNumber)
                 .ToListAsync(cancellationToken);
@@ -128,7 +128,7 @@ namespace IBS.DataAccess.Repository.Msap
         {
             return await _db
                 .MsapBillings
-                .Where(b => b.CustomerId == customerId && b.Status == "For Collection")
+                .Where(b => b.CustomerId == customerId && b.Balance > 0)
                 .OrderBy(b => b.MsapBillingNumber)
                 .ToListAsync(cancellationToken);
         }
