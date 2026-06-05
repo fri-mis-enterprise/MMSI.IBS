@@ -119,7 +119,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to create dispatch ticket.");
-                return ServiceResult<int>.Failure(ex.Message);
+                return ServiceResult<int>.Failure($"Failed to create dispatch ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -129,7 +129,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(viewModel.DispatchTicketId!.Value, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot edit ticket â€” parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot edit ticket — parent Job Order is cancelled or closed.");
                 }
 
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == viewModel.DispatchTicketId, cancellationToken);
@@ -274,7 +274,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to edit ticket.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to edit ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -284,7 +284,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(model.DispatchTicketId, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot set/edit tariff â€” parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot set/edit tariff — parent Job Order is cancelled or closed.");
                 }
 
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
@@ -355,7 +355,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to save tariff.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to save tariff: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -365,7 +365,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot approve tariff â€” parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot approve tariff — parent Job Order is cancelled or closed.");
                 }
 
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -386,7 +386,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to approve tariff.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to approve tariff: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -396,7 +396,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot disapprove tariff â€” parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot disapprove tariff — parent Job Order is cancelled or closed.");
                 }
 
                 if (string.IsNullOrWhiteSpace(reason) || reason.Length < 10)
@@ -425,7 +425,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to disapprove tariff.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to disapprove tariff: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -453,7 +453,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to delete image.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to delete image: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 

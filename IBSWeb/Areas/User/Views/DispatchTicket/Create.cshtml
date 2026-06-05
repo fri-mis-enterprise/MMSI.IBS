@@ -91,9 +91,11 @@
                                 }
                                 else
                                 {
-                                    <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" data-placeholder="-- Select Customer --" required>
-                                        <option value="">-- Select Customer --</option>
-                                    </select>
+                                    <div id="CustomerContainer">
+                                        <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" data-placeholder="-- Select Customer --" required>
+                                            <option value="">-- Select Customer --</option>
+                                        </select>
+                                    </div>
                                 }
                             </div>
                             <div class="modern-grid-compact mt-2">

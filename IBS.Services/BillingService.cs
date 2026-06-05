@@ -153,7 +153,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to create billing.");
-                return ServiceResult<int>.Failure(ex.Message);
+                return ServiceResult<int>.Failure($"Failed to create billing: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -316,7 +316,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to post billing {BillingId}", id);
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to post billing: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -394,7 +394,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to edit billing.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to edit billing: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -431,7 +431,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to delete billing.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to delete billing: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 

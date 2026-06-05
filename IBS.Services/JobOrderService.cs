@@ -98,7 +98,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error creating Job Order");
-                return ServiceResult<int>.Failure("An unexpected error occurred while creating the Job Order.");
+                return ServiceResult<int>.Failure($"Failed to create Job Order: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -152,7 +152,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error updating Job Order {JobOrderId}", model.JobOrderId);
-                return ServiceResult.Failure("An unexpected error occurred while updating the Job Order.");
+                return ServiceResult.Failure($"Failed to update Job Order: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -231,7 +231,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error cancelling Job Order {JobOrderId}", id);
-                return ServiceResult.Failure("An unexpected error occurred while cancelling the Job Order.");
+                return ServiceResult.Failure($"Failed to cancel Job Order: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -274,7 +274,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error closing Job Order {JobOrderId}", id);
-                return ServiceResult.Failure("An unexpected error occurred while closing the Job Order.");
+                return ServiceResult.Failure($"Failed to close Job Order: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 

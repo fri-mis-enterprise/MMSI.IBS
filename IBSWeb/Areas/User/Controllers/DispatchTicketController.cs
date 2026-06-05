@@ -80,7 +80,13 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
                 TempData["success"] = result.Message;
-                return RedirectToAction("Details", "JobOrder", new { id = viewModel.JobOrderId });
+
+                if (viewModel.JobOrderId.HasValue)
+                {
+                    return RedirectToAction("Details", "JobOrder", new { id = viewModel.JobOrderId });
+                }
+
+                return RedirectToAction(nameof(Index));
             }
 
             TempData["error"] = result.Message;

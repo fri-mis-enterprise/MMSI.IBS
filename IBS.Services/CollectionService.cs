@@ -90,7 +90,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create collection.");
-                return ServiceResult<int>.Failure(ex.Message);
+                return ServiceResult<int>.Failure($"Failed to create collection: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -177,7 +177,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit collection.");
-                return ServiceResult.Failure(ex.Message);
+                return ServiceResult.Failure($"Failed to edit collection: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 
@@ -247,7 +247,7 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get billings for table.");
-                return ServiceResult<object>.Failure(ex.Message);
+                return ServiceResult<object>.Failure($"Failed to get billings: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 

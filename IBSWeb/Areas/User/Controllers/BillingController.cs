@@ -246,7 +246,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to print billing.");
-                TempData["error"] = ex.Message;
+                TempData["error"] = ExceptionHelper.GetErrorMessage(ex);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -434,19 +434,7 @@ namespace IBSWeb.Areas.User.Controllers
             var finalMessage = message ?? "Operation failed.";
             if (ex != null)
             {
-                var errorMsg = ex.InnerException?.Message ?? ex.Message;
-                if (errorMsg.Contains("unique") || errorMsg.Contains("23505"))
-                {
-                    finalMessage = "Billing number already exists.";
-                }
-                else if (errorMsg.Contains("foreign key") || errorMsg.Contains("23503"))
-                {
-                    finalMessage = "Invalid reference selected.";
-                }
-                else
-                {
-                    finalMessage = ex.Message;
-                }
+                finalMessage = ExceptionHelper.GetErrorMessage(ex);
             }
 
             var errors = data?.GetType().GetProperty("errors")?.GetValue(data);

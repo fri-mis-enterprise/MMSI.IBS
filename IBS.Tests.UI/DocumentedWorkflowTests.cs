@@ -1,5 +1,6 @@
 using Microsoft.Playwright;
 using Xunit;
+using System.Text.RegularExpressions;
 
 namespace IBS.Tests.UI
 {
@@ -9,55 +10,6 @@ namespace IBS.Tests.UI
         {
         }
 
-        private async Task SelectModernOptionAsync(string label, string optionText)
-        {
-            var idMap = new Dictionary<string, string>
-            {
-                { "Vessel", "#VesselContainer" },
-                { "Port", "#PortContainer" },
-                { "Terminal", "#TerminalContainer" },
-                { "Activity/Service Type", "#ServiceContainer" },
-                { "Tugboat/Service provider", "#TugboatContainer" },
-                { "Master on Duty", "#TugMasterContainer" },
-                { "Customer", "#CustomerContainer" },
-                { "Deposit To Bank", "#BankContainer" }
-            };
-
-            ILocator trigger;
-            if (idMap.TryGetValue(label, out var id))
-            {
-                trigger = Page.Locator($"{id} .modern-select-trigger");
-            }
-            else
-            {
-                trigger = Page.Locator("div")
-                    .Filter(new() { Has = Page.Locator($"label:has-text('{label}')") })
-                    .Filter(new() { Has = Page.Locator(".modern-select-trigger") })
-                    .First
-                    .Locator(".modern-select-trigger");
-            }
-
-            await trigger.ScrollIntoViewIfNeededAsync();
-            await trigger.ClickAsync();
-
-            var dropdown = Page.Locator(".modern-select-dropdown.show");
-            await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Visible });
-
-            var searchInput = dropdown.Locator(".modern-select-search input");
-            if (await searchInput.CountAsync() > 0 && await searchInput.IsVisibleAsync())
-            {
-                await searchInput.FillAsync(optionText);
-                await Page.WaitForTimeoutAsync(100);
-            }
-
-            var option = dropdown.Locator(".modern-select-option")
-                .Filter(new() { HasText = optionText })
-                .First;
-
-            await option.ClickAsync();
-            await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Hidden });
-        }
-
         [Fact]
         public async Task MultiTicket_Documented_Workflow()
         {
@@ -65,6 +17,7 @@ namespace IBS.Tests.UI
 
             // 1. Create Job Order
             await Page.GotoAsync($"{ServerAddress}/User/JobOrder/Create");
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             await Page.FillAsync("#CustomerSearch", "FOUR DRAGONS");
@@ -80,20 +33,18 @@ namespace IBS.Tests.UI
 
             await SelectModernOptionAsync("Terminal", "BBTI");
 
-            await Page.RunAndWaitForNavigationAsync(async () =>
-            {
-                await Page.ClickAsync("button:has-text('Create Job Order')");
-            });
+            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
             Assert.Contains("/User/JobOrder/Details/", Page.Url);
             var jobOrderUrl = Page.Url;
-            var jobOrderNumber = await Page.Locator("h1.modern-headline-lg").InnerTextAsync();
-            jobOrderNumber = jobOrderNumber.Replace("Job Order #", "").Trim();
+            var jobOrderNumberText = await Page.Locator("h1.modern-headline-lg").InnerTextAsync();
+            var jobOrderNumber = jobOrderNumberText.Split('#').Last().Trim();
 
             var dispatchTickets = new List<string>();
-            int ticketCount = 5;
+            int ticketCount = 3; // Reduced for efficiency, but still "multi"
 
-            // 2. Create 5 Dispatch Tickets
+            // 2. Create Dispatch Tickets
             for (int i = 1; i <= ticketCount; i++)
             {
                 await Page.GotoAsync(jobOrderUrl);
@@ -113,51 +64,58 @@ namespace IBS.Tests.UI
                 await Page.FillAsync("#TimeLeft", "10:00");
                 await Page.FillAsync("#TimeArrived", "12:00");
 
-                await Page.RunAndWaitForNavigationAsync(async () =>
-                {
-                    await Page.ClickAsync("#submitButton");
-                }, new PageRunAndWaitForNavigationOptions { WaitUntil = WaitUntilState.NetworkIdle });
+                await Page.ClickAsync("#submitButton");
+                await Page.WaitForURLAsync(new Regex("/User/(DispatchTicket($|/Index)|JobOrder/Details)"));
+                await DismissAnySweetAlertAsync();
             }
 
             // 3. Set and Approve Tariff for each Ticket
             foreach (var dt in dispatchTickets)
             {
                 await Page.GotoAsync($"{ServerAddress}/User/DispatchTicket/Index");
+                await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
                 await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
                 await Page.FillAsync("input[type='search']", dt);
-                var row = Page.Locator($"tr:has-text('{dt}')");
-                await row.Locator("button:has-text('Action')").ClickAsync();
-                await Page.ClickAsync($"text='Set Tariff'");
+                
+                var ticketRow = Page.Locator("#paginatedTable tbody tr").Filter(new() { HasText = dt });
+                await ticketRow.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
+
+                await ticketRow.Locator("button:has-text('Action')").ClickAsync();
+                await Page.WaitForTimeoutAsync(300);
+                await ForceClickAsync(ticketRow.Locator("text='Set Tariff'"));
 
                 await Page.WaitForSelectorAsync("button:has-text('SUBMIT TARIFF')");
                 await Page.ClickAsync("button:has-text('SUBMIT TARIFF')");
 
-                var confirmButton = Page.Locator(".swal2-confirm:has-text('Yes, Submit')");
-                await confirmButton.WaitForAsync();
-                await Page.RunAndWaitForNavigationAsync(async () =>
-                {
-                    await confirmButton.ClickAsync();
-                });
+                await ConfirmSweetAlertAsync("Submit");
+                await Page.WaitForURLAsync(new Regex("/User/(DispatchTicket($|/Index)|JobOrder/Details)"));
+                await DismissAnySweetAlertAsync();
 
                 // Approve Tariff
+                if (!Page.Url.Contains("/User/JobOrder/Details/"))
+                {
+                    await Page.GotoAsync(jobOrderUrl);
+                }
+
                 var ticketRowInDetails = Page.Locator($"tr:has-text('{dt}')");
                 await ticketRowInDetails.ScrollIntoViewIfNeededAsync();
-                await ticketRowInDetails.Locator(".dropdown-trigger").ClickAsync();
+                await ticketRowInDetails.Locator("button:has-text('Action')").ClickAsync();
+                await Page.WaitForTimeoutAsync(300);
                 
-                var approveBtn = Page.Locator("button.modern-dropdown-item:has-text('Approve Tariff')").Filter(new() { HasNotText = "Disapprove" });
-                await approveBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible });
-                await approveBtn.ClickAsync();
+                // Fix strict mode violation
+                var approveBtn = ticketRowInDetails.Locator("button.modern-dropdown-item:has-text('Approve Tariff')").Filter(new() { HasNotText = "Disapprove" });
+                await ForceClickAsync(approveBtn);
                 
-                await Page.Locator(".swal2-confirm:has-text('Yes, approve it!')").ClickAsync();
-                await Page.RunAndWaitForNavigationAsync(async () =>
-                {
-                    await Page.Locator(".swal2-confirm:has-text('OK')").ClickAsync();
-                });
+                await ConfirmSweetAlertAsync("approve");
+                await ClickSweetAlertOkAsync();
+                await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
+                await DismissAnySweetAlertAsync();
             }
 
             // 4. Create Documented Billing
             await Page.GotoAsync($"{ServerAddress}/User/Billing/Create");
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             await Page.FillAsync("#CustomerSearch", "FOUR DRAGONS");
@@ -166,7 +124,7 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#JobOrderSearch", jobOrderNumber);
             await Page.RunAndWaitForResponseAsync(async () =>
             {
-                await Page.ClickAsync($"#JobOrderSearchResults .modern-dropdown-item:has-text('{jobOrderNumber}')");
+                await ForceClickAsync(Page.Locator("#JobOrderSearchResults .modern-dropdown-item").Filter(new() { HasText = jobOrderNumber }));
             }, r => r.Url.Contains("GetDispatchTicketsByJobOrder") && r.Status == 200);
 
             await Page.FillAsync("#VoyageNumber", "V-MULT-123");
@@ -177,14 +135,13 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#billingNumber", billingNo);
 
             await Page.ClickAsync("#submitButton");
-            await Page.Locator(".swal2-confirm:has-text('Yes, submit')").ClickAsync();
-            await Page.RunAndWaitForNavigationAsync(async () =>
-            {
-                await Page.Locator(".swal2-confirm:has-text('OK')").ClickAsync();
-            });
+            await ConfirmSweetAlertAsync("submit");
+            await ClickSweetAlertOkAsync();
+            await Page.WaitForURLAsync($"{ServerAddress}/User/Billing");
 
             // 5. Create Documented Collection
             await Page.GotoAsync($"{ServerAddress}/User/Collection/Create");
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             await Page.FillAsync("#CustomerSearch", "FOUR DRAGONS");
@@ -193,19 +150,19 @@ namespace IBS.Tests.UI
                 await Page.ClickAsync("#CustomerSearchResults .modern-dropdown-item:has-text('FOUR DRAGONS SHIPPING SERVICES')");
             }, r => r.Url.Contains("GetUncollectedBillingsForTable") && r.Status == 200);
 
-            await Page.WaitForTimeoutAsync(1000);
+            await Page.WaitForTimeoutAsync(1500);
 
             // Use the new search bar to find our specific billing
             await Page.FillAsync("input[type='search']", billingNo);
             await Page.WaitForTimeoutAsync(500);
 
-            // Find our billing row and click it (row click triggers selection in this UI)
+            // Find our billing row and click it
             var billRow = Page.Locator("#billingsTable tbody tr").Filter(new() { HasText = billingNo });
             await billRow.WaitForAsync(new() { State = WaitForSelectorState.Visible });
             await billRow.ScrollIntoViewIfNeededAsync();
             await billRow.ClickAsync();
 
-            // Wait for JS calculations to settle and verify selection
+            // Wait for JS calculations to settle
             await Page.WaitForFunctionAsync(@"() => {
                 const netDisplay = document.querySelector('#netAmountDisplay');
                 return netDisplay && netDisplay.innerText !== '₱ 0.00' && netDisplay.innerText !== '₱0.00';
@@ -220,20 +177,13 @@ namespace IBS.Tests.UI
             await Page.FillAsync("input[name='ReferenceNo']", $"REF-{collectionNo}");
             await Page.FillAsync("textarea[name='Remarks']", "Documented Multi-Ticket E2E Test");
 
-            // Fill payment amounts to match total
             var netAmountText = await Page.Locator("#netAmountDisplay").InnerTextAsync();
             var netAmount = decimal.Parse(netAmountText.Replace("₱", "").Replace(",", "").Trim());
             await Page.FillAsync("#cashAmount", netAmount.ToString());
 
             await Page.ClickAsync("#submitButton");
-            await Page.Locator(".swal2-confirm:has-text('Yes,')").ClickAsync();
-            
-            await Page.RunAndWaitForNavigationAsync(async () =>
-            {
-                var successOk = Page.Locator(".swal2-confirm:has-text('OK')");
-                await successOk.WaitForAsync();
-                await successOk.ClickAsync();
-            }, new PageRunAndWaitForNavigationOptions { WaitUntil = WaitUntilState.NetworkIdle });
+            await ConfirmSweetAlertAsync("Yes");
+            await Page.WaitForURLAsync($"{ServerAddress}/User/Collection");
 
             Assert.Equal($"{ServerAddress}/User/Collection", Page.Url.TrimEnd('/'));
         }

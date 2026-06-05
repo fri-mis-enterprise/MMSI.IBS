@@ -167,7 +167,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get collections");
-                TempData["error"] = ex.Message;
+                TempData["error"] = ExceptionHelper.GetErrorMessage(ex);
                 return RedirectToAction(nameof(Index));
             }
         }
