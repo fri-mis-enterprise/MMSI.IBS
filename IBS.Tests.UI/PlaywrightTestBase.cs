@@ -66,7 +66,7 @@ namespace IBS.Tests.UI
             Browser = await Playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = false, // Set to false to see the browser
-                SlowMo = 200,      // Slows down actions by 200ms to make them visible
+                SlowMo = 100,      // Slows down actions by 200ms to make them visible
                 Args = new[] { "--start-maximized" }
             });
 
