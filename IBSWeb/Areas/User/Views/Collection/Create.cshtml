@@ -636,21 +636,19 @@
                 const totalInput = parseFloat($('#amount').val()) || 0;
                 
                 if (netToMatch > 0 && Math.abs(totalInput - netToMatch) > 0.01) {
-                    Swal.fire({ 
+                    ModernAlert.confirm({ 
                         title: "Amount Mismatch", 
                         text: "The total payment input doesn't match the selected billings net amount. Do you want to proceed?", 
                         icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, proceed"
-                    }).then(result => { if (result.isConfirmed) form.submit(); });
+                        confirmText: "Yes, proceed"
+                    }).then(result => { if (result.isConfirmed) { ModernAlert.showLoading("Saving collection..."); form.submit(); } });
                 } else {
-                    Swal.fire({ 
+                    ModernAlert.confirm({ 
                         title: "Save Collection?", 
                         text: "Review all details before proceeding.", 
                         icon: "question", 
-                        showCancelButton: true, 
-                        confirmButtonText: "Yes, save" 
-                    }).then(result => { if (result.isConfirmed) form.submit(); });
+                        confirmText: "Yes, save" 
+                    }).then(result => { if (result.isConfirmed) { ModernAlert.showLoading("Saving collection..."); form.submit(); } });
                 }
             }
         });

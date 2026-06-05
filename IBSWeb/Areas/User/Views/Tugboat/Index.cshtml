@@ -78,13 +78,12 @@
                 event.preventDefault(); // Prevent default navigation
 
                 const href = this.getAttribute('href'); // Get the href value
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Delete?',
                     text: "Delete this Tugboat entry?",
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No'
+                    confirmText: 'Yes',
+                    cancelText: 'No'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.location.href = href; // Redirect to the href URL

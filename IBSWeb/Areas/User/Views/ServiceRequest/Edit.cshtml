@@ -362,12 +362,12 @@
 
             // Deletion Logic
             $("#deleteImage").click(function () {
-                Swal.fire({ title: "Delete image?", showCancelButton: true }).then((r) => {
+                ModernAlert.confirm({ title: "Delete image?", icon: 'warning' }).then((r) => {
                     if (r.isConfirmed) window.location.href = '@Url.Action("DeleteImage", "ServiceRequest", new { id = Model.DispatchTicketId })';
                 });
             });
             $("#deleteVideo").click(function () {
-                Swal.fire({ title: "Delete video?", showCancelButton: true }).then((r) => {
+                ModernAlert.confirm({ title: "Delete video?", icon: 'warning' }).then((r) => {
                     if (r.isConfirmed) window.location.href = '@Url.Action("DeleteVideo", "ServiceRequest", new { id = Model.DispatchTicketId })';
                 });
             });
@@ -380,7 +380,11 @@
 
                 if (hasExisting && hasNew) {
                     e.preventDefault();
-                    Swal.fire({ title: "Replace files?", text: "Current file(s) will be replaced.", showCancelButton: true }).then((r) => {
+                    ModernAlert.confirm({ 
+                        title: "Replace files?", 
+                        text: "Current file(s) will be replaced.", 
+                        icon: "question" 
+                    }).then((r) => {
                         if (r.isConfirmed) {
                             if (form.checkValidity()) form.submit();
                             else form.reportValidity();

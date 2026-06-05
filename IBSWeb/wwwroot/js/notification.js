@@ -26,15 +26,12 @@ function OnConnected() {
 }
 
 connection.on("ReceivedNotification", function (message) {
-    Swal.fire({
+    ModernAlert.confirm({
         title: 'New Notification',
         text: message,
         icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'View Notifications',
-        cancelButtonText: 'Dismiss',
-        timer: 8000,
-        timerProgressBar: true
+        confirmText: 'View Notifications',
+        cancelText: 'Dismiss'
     }).then(result => {
         if (result.isConfirmed) {
             window.location.href = '/User/Notification/Index';

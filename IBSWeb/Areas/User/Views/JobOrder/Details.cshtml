@@ -306,7 +306,8 @@
             hasTickets: @(Model.DispatchTickets.Any() ? "true" : "false"),
             messages: {
                 error:   @Json.Serialize(TempData.Peek("error")),
-                success: @Json.Serialize(TempData.Peek("success"))
+                success: @Json.Serialize(TempData.Peek("success")),
+                warning: @Json.Serialize(TempData.Peek("warning"))
             }
         };
 
@@ -357,33 +358,22 @@
 
             // Show TempData messages
             if (PageConfig.messages.error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    html: PageConfig.messages.error,
-                    confirmButtonColor: '#ba1a1a'
-                });
+                ModernAlert.error(PageConfig.messages.error);
             }
             if (PageConfig.messages.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: PageConfig.messages.success,
-                    timer: 3000,
-                    showConfirmButton: false
-                });
+                ModernAlert.success(PageConfig.messages.success);
+            }
+            if (PageConfig.messages.warning) {
+                ModernAlert.warning(PageConfig.messages.warning);
             }
         });
 
         function confirmClose() {
-            Swal.fire({
+            ModernAlert.confirm({
                 title: 'Close Job Order?',
                 text: "Closing this Job Order will prevent adding new tickets to it.",
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#051616',
-                cancelButtonColor: '#727878',
-                confirmButtonText: 'Yes, close it!'
+                confirmText: 'Yes, close it!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $('#closeForm').submit();
@@ -393,27 +383,21 @@
 
         function confirmCancel() {
             const htmlContent = `
-                <div style="text-align:left">
-                    <p style="margin-bottom:0.5rem"><strong>This will:</strong></p>
-                    <ul style="margin-bottom:0.5rem; padding-left:1.5rem">
-                        <li>Mark Job Order as "Cancelled"</li>
-                        <li>Prevent adding new dispatch tickets</li>
-                    </ul>
-                    <p style="color:var(--error); font-size:12px; margin-bottom:0">
-                        Admin-only action. Tickets in billing process will block cancellation.
-                    </p>
-                </div>
+                <p style="margin-bottom:0.5rem"><strong>This will:</strong></p>
+                <ul style="margin-bottom:0.5rem; padding-left:1.5rem; text-align:left">
+                    <li>Mark Job Order as "Cancelled"</li>
+                    <li>Prevent adding new dispatch tickets</li>
+                </ul>
+                <p style="color:var(--error); font-size:12px; margin-bottom:0">
+                    Admin-only action. Tickets in billing process will block cancellation.
+                </p>
             `;
 
-            Swal.fire({
-                icon: 'warning',
+            ModernAlert.confirm({
                 title: 'Cancel Job Order?',
-                html: htmlContent,
-                showCancelButton: true,
-                confirmButtonColor: '#ba1a1a',
-                cancelButtonColor: '#727878',
-                confirmButtonText: 'Yes, cancel it!',
-                cancelButtonText: 'Review'
+                text: htmlContent,
+                icon: 'warning',
+                confirmText: 'Yes, cancel it!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $('#cancelForm').submit();
@@ -423,98 +407,84 @@
 
         function confirmApprove(btn) {
             const id = btn.getAttribute('data-id');
-            Swal.fire({
+            ModernAlert.confirm({
                 title: 'Approve Tariff?',
                 text: "This ticket will be marked for billing.",
                 icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#406915',
-                confirmButtonText: 'Yes, approve it!',
-                showLoaderOnConfirm: true,
-                preConfirm: () => {
+                confirmText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Approving tariff...");
                     const formData = new FormData();
                     formData.append('id', id);
                     formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
 
-                    return fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
+                    fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
                         body: new URLSearchParams(formData)
                     })
                     .then(response => response.json())
                     .then(data => {
-                        if (!data.success) throw new Error(data.message);
-                        return data;
+                        if (data.success) {
+                            ModernAlert.success('The tariff has been approved.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
                     })
-                    .catch(error => {
-                        Swal.showValidationMessage(`Request failed: ${error}`);
-                    });
-                },
-                allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire('Approved!', 'The tariff has been approved.', 'success')
-                        .then(() => location.reload());
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
                 }
             });
         }
 
         function confirmDisapprove(id) {
             Swal.fire({
+                ...ModernAlert._baseConfig,
                 title: 'Disapprove Tariff',
-                text: "Please provide a reason (min 10 characters):",
+                html: `
+                    ${ModernAlert._getHeroIcon('error')}
+                    <p class="modern-value-md text-center max-w-[240px] mx-auto leading-relaxed mb-4" style="color: var(--on-surface-variant)">Please provide a reason (min 10 characters):</p>
+                `,
                 input: 'text',
                 inputAttributes: {
-                    autocapitalize: 'off',
-                    required: 'required',
-                    minlength: '10'
+                    class: 'form-control mx-auto w-full mb-4',
+                    style: 'max-width: 300px; border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);'
                 },
                 showCancelButton: true,
                 confirmButtonText: 'Submit',
-                confirmButtonColor: '#ba1a1a',
-                showLoaderOnConfirm: true,
-                preConfirm: (reason) => {
-                    if (!reason || reason.length < 10) {
-                        Swal.showValidationMessage('Reason must be at least 10 characters');
-                        return false;
-                    }
+                inputValidator: (value) => {
+                    if (!value || value.length < 10) return 'Reason must be at least 10 characters';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Submitting...");
                     const formData = new FormData();
                     formData.append('id', id);
-                    formData.append('reason', reason);
+                    formData.append('reason', result.value);
                     formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
 
-                    return fetch('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
+                    fetch('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
                         body: new URLSearchParams(formData)
                     })
-                    .then(response => {
-                        if (!response.ok) throw new Error(response.statusText);
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        if (!data.success) throw new Error(data.message);
-                        return data;
+                        if (data.success) {
+                            ModernAlert.success('The tariff has been disapproved.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
                     })
-                    .catch(error => {
-                        Swal.showValidationMessage(`Request failed: ${error}`);
-                    });
-                },
-                allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire('Disapproved!', 'The tariff has been disapproved.', 'success')
-                        .then(() => location.reload());
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
                 }
             });
         }
 
         function confirmCancelTicket(id) {
-            Swal.fire({
+            ModernAlert.confirm({
                 title: 'Cancel Dispatch Ticket?',
                 text: "This action will mark the ticket as Cancelled.",
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ba1a1a',
-                confirmButtonText: 'Yes, cancel it!'
+                confirmText: 'Yes, cancel it!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     window.location.href = '@Url.Action("Cancel", "DispatchTicket", new { area = "User" })' + '/' + id;

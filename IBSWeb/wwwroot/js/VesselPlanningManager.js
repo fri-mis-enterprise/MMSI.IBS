@@ -142,7 +142,7 @@ class VesselPlanningManager {
             this.initTimeline(date, data);
         } catch (error) {
             console.error('Failed to load planning data:', error);
-            toastr?.error("Failed to load data.");
+            ModernAlert.error("Failed to load data.");
         }
     }
 
@@ -380,14 +380,14 @@ class VesselPlanningManager {
             const result = await response.json();
             if (result.success) {
                 this.sidebar.hide();
-                toastr?.success("Schedule updated successfully.");
+                ModernAlert.success("Schedule updated successfully.");
                 // SignalR will trigger reload
             } else {
-                toastr?.error(result.message || "Update failed.");
+                ModernAlert.error(result.message || "Update failed.");
             }
         } catch (error) {
             console.error('Update error:', error);
-            toastr?.error("An error occurred while saving.");
+            ModernAlert.error("An error occurred while saving.");
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-save me-1"></i> Save Changes';

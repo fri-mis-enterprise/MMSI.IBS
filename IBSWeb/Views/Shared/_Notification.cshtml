@@ -1,33 +1,33 @@
 @if (TempData["success"] != null)
 {
     <script>
-        Swal.fire('Success', @Html.Raw(Json.Serialize(TempData["success"])), 'success');
+        ModernAlert.success(@Html.Raw(Json.Serialize(TempData["success"])));
     </script>
 }
 
 @if (TempData["error"] != null)
 {
     <script>
-        Swal.fire('Error', @Html.Raw(Json.Serialize(TempData["error"])), 'error');
+        ModernAlert.error(@Html.Raw(Json.Serialize(TempData["error"])));
     </script>
 }
 
 @if (TempData["Denied"] != null)
 {
     <script>
-        Swal.fire('Sorry...', @Html.Raw(Json.Serialize(TempData["Denied"])), 'error');
+        ModernAlert.error(@Html.Raw(Json.Serialize(TempData["Denied"])), 'Sorry...');
     </script>
 }
 @if (TempData["warning"] != null)
 {
     <script>
-        Swal.fire('Warning', @Html.Raw(Json.Serialize(TempData["warning"])), 'warning');
+        ModernAlert.warning(@Html.Raw(Json.Serialize(TempData["warning"])));
     </script>
 }
 
 @if (TempData["info"] != null)
 {
     <script>
-        Swal.fire('Info', @Html.Raw(Json.Serialize(TempData["info"])), 'info');
+        ModernAlert.info(@Html.Raw(Json.Serialize(TempData["info"])));
     </script>
 }

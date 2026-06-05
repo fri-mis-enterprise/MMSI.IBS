@@ -375,14 +375,7 @@
                             dispatchDiscountInput.val(result.dispatchDiscount);
                             bafDiscountInput.val(result.bafDiscount);
                             
-                            Swal.fire({
-                                position: 'top-end',
-                                icon: 'success',
-                                title: 'Default Rates Applied',
-                                showConfirmButton: false,
-                                timer: 1500,
-                                toast: true
-                            });
+                            ModernAlert.success('Default Rates Applied');
                             ValueChange();
                         }
                     }
@@ -398,18 +391,20 @@
                 const bafRate = parseNumber(bafRateInput.val());
 
                 if (dispatchRate === 0 && bafRate === 0) {
-                    Swal.fire({ icon: "error", title: "Validation Error", text: "Dispatch or BAF rate must be set." });
+                    ModernAlert.error("Dispatch or BAF rate must be set.");
                     return;
                 }
 
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Submit Tariff?',
                     text: 'Confirm the calculated rates before submitting.',
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Submit'
+                    confirmText: 'Yes, Submit'
                 }).then((result) => {
-                    if (result.isConfirmed) $('#myForm').submit();
+                    if (result.isConfirmed) {
+                        ModernAlert.showLoading("Submitting tariff...");
+                        $('#myForm').submit();
+                    }
                 });
             });
 

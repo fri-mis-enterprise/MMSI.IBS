@@ -179,13 +179,11 @@
         });
 
         function confirmDelete(id) {
-            Swal.fire({
+            ModernAlert.confirm({
                 title: 'Are you sure?',
                 text: "This will delete the draft billing and return all dispatch tickets to the queue.",
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ba1a1a',
-                confirmButtonText: 'Yes, delete it!'
+                confirmText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     window.location.href = '@Url.Action("Delete", "Billing")?id=' + id;

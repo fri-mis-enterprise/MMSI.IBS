@@ -82,13 +82,12 @@
                 event.preventDefault();
 
                 const href = this.getAttribute('href');
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Delete?',
                     text: "Delete this Vessel entry?",
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No'
+                    confirmText: 'Yes',
+                    cancelText: 'No'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.location.href = href;

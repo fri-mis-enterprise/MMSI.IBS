@@ -748,15 +748,19 @@
                 const form = document.getElementById("myForm");
                 if (!form.checkValidity()) { form.reportValidity(); return; }
                 if (!$("#DispatchTicketSelect").val()?.length) {
-                    Swal.fire({ title: "No Tickets Selected", text: "Please select at least one dispatch ticket to bill.", icon: "warning" });
+                    ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
                     return;
                 }
-                Swal.fire({ title: "Submit Billing?", text: "Review all details before proceeding.", icon: "question", showCancelButton: true, confirmButtonText: "Yes, submit" })
-                    .then(result => { if (result.isConfirmed) submitCreateForm(); });
+                ModernAlert.confirm({ 
+                    title: "Submit Billing?", 
+                    text: "Review all details before proceeding.", 
+                    confirmText: "Yes, submit" 
+                }).then(result => { if (result.isConfirmed) submitCreateForm(); });
             }
 
             async function submitCreateForm() {
                 try {
+                    ModernAlert.showLoading("Creating billing...");
                     const res = await fetch('@Url.Action("Create", "Billing", new { area = "User" })', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -764,13 +768,12 @@
                     });
                     const response = await res.json();
                     if (response.success) {
-                        Swal.fire({ title: "Success!", text: response.message, icon: "success" })
-                            .then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
+                        ModernAlert.success(response.message).then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
                     } else {
-                        Swal.fire({ title: "Error", text: response.message || "Failed to create billing.", icon: "error" });
+                        ModernAlert.error(response.message || "Failed to create billing.");
                     }
                 } catch {
-                    Swal.fire({ title: "Error", text: "An error occurred while creating the billing.", icon: "error" });
+                    ModernAlert.error("An error occurred while creating the billing.");
                 }
             }
         });
