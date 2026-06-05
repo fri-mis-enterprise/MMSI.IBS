@@ -158,14 +158,31 @@
                             </div>
 
                             <div class="modern-grid-compact">
-                                <div class="modern-col-6">
-                                    <label class="modern-label">Tax Status</label>
-                                    <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3" style="height: 38px;">
+                                <div class="modern-col-4">
+                                    <label class="modern-label" for="isVatableToggle">VAT Status</label>
+                                    <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;" onclick="document.getElementById('isVatableToggle').click()">
                                         <input asp-for="IsVatable" type="checkbox" class="form-check-input" id="isVatableToggle">
-                                        <span class="text-xs font-bold opacity-70">VATABLE</span>
+                                        <span class="text-xs font-bold opacity-70">VAT</span>
                                     </div>
                                 </div>
-                                <div class="modern-col-6">
+                                <div class="modern-col-4">
+                                    <label class="modern-label" for="isVatInclusiveToggle">Inclusive</label>
+                                    <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;" onclick="document.getElementById('isVatInclusiveToggle').click()">
+                                        <input asp-for="IsVatInclusive" type="checkbox" class="form-check-input" id="isVatInclusiveToggle">
+                                        <span class="text-xs font-bold opacity-70">INC</span>
+                                    </div>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label class="modern-label" for="printWhtToggle">Print WHT</label>
+                                    <div class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;" onclick="document.getElementById('printWhtToggle').click()">
+                                        <input asp-for="PrintWht" type="checkbox" class="form-check-input" id="printWhtToggle">
+                                        <span class="text-xs font-bold opacity-70">WHT</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                                <div class="modern-col-12">
                                     <label class="modern-label">Date</label>
                                     <input asp-for="Date" type="date" class="modern-input" value="@(Model.Date != default ? Model.Date.ToString("yyyy-MM-dd") : DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd"))">
                                 </div>
@@ -320,6 +337,7 @@
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PortSelect").on("change", handlePortChange);
                 $("#legacyToggle").on("change", handleLegacyToggleChange);
+                $("#isVatableToggle, #isVatInclusiveToggle, #printWhtToggle").on("change", updateTotals);
                 $("#submitButton").on("click", areYouSureToBill);
                 $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show'));
             }
