@@ -15,7 +15,7 @@ const ModernAlert = {
             question: { icon: 'help', color: 'icon-question', bg: 'icon-bg-question', pulse: 'pulse-question' }
         };
         const config = iconConfigs[type] || iconConfigs.info;
-        
+
         return `
             <div class="success-icon-container ${config.bg} mx-auto">
                 <div class="absolute inset-0 rounded-full ${config.pulse} animate-ping opacity-75"></div>
@@ -38,7 +38,7 @@ const ModernAlert = {
         showCloseButton: false,
         allowOutsideClick: true,
         width: '384px',
-        padding: '0', 
+        padding: '0',
         showClass: {
             popup: 'animate__animated animate__fadeInUp animate__faster'
         },

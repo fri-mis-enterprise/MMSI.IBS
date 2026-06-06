@@ -30,7 +30,7 @@
                     </button>
                     <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm" class="hidden"></form>
                 }
-                
+
                 <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary">
                     <span class="material-symbols-outlined">edit</span> Edit Details
                 </a>
@@ -153,7 +153,7 @@
                             </a>
                         }
                     </div>
-                    
+
                     <div class="modern-table-container">
                         <table class="modern-table">
                             <thead>
@@ -258,7 +258,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <div class="text-center" style="padding: 1rem; border-top: 1px solid rgba(194, 200, 199, 0.3)">
                         <div class="flex items-center justify-center gap-2" style="opacity: 0.4">
                             <span class="material-symbols-outlined" style="font-size:18px">anchor</span>
@@ -325,17 +325,17 @@
                 e.stopImmediatePropagation();
                 const $trigger = $(this);
                 const $menu = $trigger.siblings('.modern-dropdown-menu');
-                
+
                 // Close other menus
                 $('.modern-dropdown-menu').not($menu).removeClass('show');
-                
+
                 // Toggle current menu
                 $menu.toggleClass('show');
-                
+
                 if ($menu.hasClass('show')) {
                     const rect = $trigger[0].getBoundingClientRect();
                     const menuWidth = $menu.outerWidth();
-                    
+
                     // Position fixed to bypass parent overflow:hidden
                     $menu.css({
                         'position': 'fixed',
