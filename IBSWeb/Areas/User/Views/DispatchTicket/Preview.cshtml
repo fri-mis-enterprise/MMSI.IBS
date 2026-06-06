@@ -269,50 +269,31 @@
         $(document).ready(function () {
             // Image Preview
             $('#viewUpload').on('click', function () {
-                Swal.fire({
-                    imageUrl: $(this).attr('src'),
-                    imageAlt: "Dispatch Ticket",
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    padding: 0,
-                    width: 'auto',
-                    heightAuto: true,
-                    didOpen: () => {
-                        $('.swal2-image').css({'max-height': '80vh', 'height': 'auto'});
-                    }
-                });
+                ModernAlert.image($(this).attr('src'), "Dispatch Ticket");
             });
 
             // Video Player
             $(document).on("click", ".view-video", function () {
                 const videoLink = $(this).data("videolink");
-                if (!videoLink) return;
-                Swal.fire({
-                    html: `<video width="100%" height="auto" controls autoplay class="rounded shadow"><source src="${videoLink}" type="video/mp4"></video>`,
-                    showConfirmButton: false,
-                    padding: 0,
-                    width: '80%',
-                    background: "transparent",
-                });
+                if (videoLink) ModernAlert.video(videoLink, "Dispatch Ticket Video");
             });
 
             // Approve Action
             $('#approveTariff').on('click', function () {
                 let id = $(this).data('id');
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Approve Tariff?',
                     text: "This ticket will be marked for billing.",
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#406915',
-                    confirmButtonText: 'Yes, Approve'
+                    confirmText: 'Yes, Approve'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        ModernAlert.showLoading("Approving...");
                         $.post('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', { id: id }, function(data) {
                             if (data.success) {
-                                Swal.fire('Approved!', data.message, 'success').then(() => location.reload());
+                                ModernAlert.success(data.message).then(() => location.reload());
                             } else {
-                                Swal.fire('Error!', data.message, 'error');
+                                ModernAlert.error(data.message);
                             }
                         });
                     }
@@ -322,15 +303,14 @@
             // Revoke Approval
             $('#revokeApproval').on('click', function () {
                 let id = $(this).data('id');
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Revoke Approval?',
                     text: "The tariff status will be reverted to For Approval.",
                     icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef6c00',
-                    confirmButtonText: 'Yes, Revoke'
+                    confirmText: 'Yes, Revoke'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        ModernAlert.showLoading("Revoking...");
                         $.post('@Url.Action("ChangeStatus", "DispatchTicket", new { area = "User" })', {
                             id: id,
                             status: '@SD.DispatchTicketStatus.ForApproval',
@@ -339,9 +319,9 @@
                             successMessage: 'Approval revoked successfully.'
                         }, function(data) {
                             if (data.success) {
-                                Swal.fire('Revoked!', data.message, 'success').then(() => location.reload());
+                                ModernAlert.success(data.message).then(() => location.reload());
                             } else {
-                                Swal.fire('Error!', data.message, 'error');
+                                ModernAlert.error(data.message);
                             }
                         });
                     }
@@ -351,25 +331,26 @@
             // Disapprove
             $('#disapproveTariff').on('click', function () {
                 let id = $(this).data('id');
-                Swal.fire({
+                ModernAlert.prompt({
                     title: 'Disapprove Tariff',
-                    text: "Please provide a reason (min 10 characters):",
-                    input: 'text',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ba1a1a',
-                    inputValidator: (value) => {
+                    text: 'Please provide a reason (min 10 characters):',
+                    placeholder: 'Reason for disapproval...',
+                    icon: 'error',
+                    confirmText: 'Submit',
+                    validator: (value) => {
                         if (!value || value.length < 10) return 'Reason must be at least 10 characters';
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        ModernAlert.showLoading("Submitting...");
                         $.post('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
                             id: id,
                             reason: result.value
                         }, function(data) {
                             if (data.success) {
-                                Swal.fire('Disapproved!', data.message, 'success').then(() => location.reload());
+                                ModernAlert.success(data.message).then(() => location.reload());
                             } else {
-                                Swal.fire('Error!', data.message, 'error');
+                                ModernAlert.error(data.message);
                             }
                         });
                     }

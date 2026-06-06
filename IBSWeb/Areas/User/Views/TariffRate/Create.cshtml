@@ -174,14 +174,11 @@
                     success: function (response) {
                         // if same data exists
                         if (response){
-                            Swal.fire({
-                                title: "An entry with similar data already exists",
-                                text: "replace the previous data?",
+                            ModernAlert.confirm({
+                                title: "Entry Already Exists",
+                                text: "An entry with similar data already exists. Do you want to replace the previous data?",
                                 icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonColor: "#3085d6",
-                                cancelButtonColor: "#d33",
-                                confirmButtonText: "Yes, replace it"
+                                confirmText: "Yes, Replace It"
                             }).then((result) => {
                                 if (result.isConfirmed) {
                                     $("#myForm").submit();

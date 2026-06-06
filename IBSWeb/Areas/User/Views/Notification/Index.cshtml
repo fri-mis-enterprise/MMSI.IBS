@@ -276,14 +276,11 @@ else
         };
 
         document.getElementById('markAllAsReadBtn').addEventListener('click', function () {
-            Swal.fire({
+            ModernAlert.confirm({
                 title: 'Mark all as read?',
                 text: 'This will mark all unread notifications as read.',
                 icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#1c3833',
-                cancelButtonColor: '#aaa',
-                confirmButtonText: 'Yes, mark all'
+                confirmText: 'Yes, Mark All'
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('markAllAsReadForm').submit();
@@ -292,14 +289,11 @@ else
         });
 
         document.getElementById('archiveAllBtn').addEventListener('click', function () {
-            Swal.fire({
+            ModernAlert.confirm({
                 title: 'Archive all notifications?',
                 text: 'This will archive all read notifications.',
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#aaa',
-                confirmButtonText: 'Yes, archive all'
+                confirmText: 'Yes, Archive All'
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('archiveAllForm').submit();

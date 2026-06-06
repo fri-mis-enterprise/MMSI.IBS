@@ -357,11 +357,11 @@
                             }
                         });
                         updateTotals();
-                        if (added > 0) toastr.success(`Added ${added} tickets.`);
-                        else toastr.info("No new tickets found.");
+                        if (added > 0) ModernAlert.success(`Added ${added} tickets.`);
+                        else ModernAlert.info("No new tickets found.");
                     }
                 } catch {
-                    Swal.fire('Error', 'Failed to load tickets', 'error');
+                    ModernAlert.error('Failed to load tickets');
                 } finally {
                     $btn.prop("disabled", false).text("LOAD TICKETS");
                 }
@@ -574,7 +574,7 @@
                         updateTotals();
                     }
                 } catch {
-                    Swal.fire('Error', 'Failed to load tickets', 'error');
+                    ModernAlert.error('Failed to load tickets');
                 }
             });
 
@@ -666,15 +666,20 @@
                 const form = document.getElementById("myForm");
                 if (!form.checkValidity()) { form.reportValidity(); return; }
                 if (!$("#DispatchTicketSelect").val()?.length) {
-                    Swal.fire({ title: "No Tickets Selected", text: "Please select at least one dispatch ticket to bill.", icon: "warning" });
+                    ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
                     return;
                 }
-                Swal.fire({ title: "Save changes?", text: "Proceed with updating this billing?", icon: "question", showCancelButton: true, confirmButtonText: "Yes, save" })
-                    .then(result => { if (result.isConfirmed) submitEditForm(); });
+                ModernAlert.confirm({ 
+                    title: "Save changes?", 
+                    text: "Proceed with updating this billing?", 
+                    icon: "question", 
+                    confirmText: "Yes, save" 
+                }).then(result => { if (result.isConfirmed) submitEditForm(); });
             }
 
             async function submitEditForm() {
                 try {
+                    ModernAlert.showLoading("Saving changes...");
                     const res = await fetch('@Url.Action("Edit", "Billing", new { area = "User" })', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -682,13 +687,12 @@
                     });
                     const response = await res.json();
                     if (response.success) {
-                        Swal.fire({ title: "Success!", text: response.message, icon: "success" })
-                            .then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
+                        ModernAlert.success(response.message).then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
                     } else {
-                        Swal.fire({ title: "Error", text: response.message || "Failed to update billing.", icon: "error" });
+                        ModernAlert.error(response.message || "Failed to update billing.");
                     }
                 } catch {
-                    Swal.fire({ title: "Error", text: "An error occurred while updating the billing.", icon: "error" });
+                    ModernAlert.error("An error occurred while updating the billing.");
                 }
             }
         });

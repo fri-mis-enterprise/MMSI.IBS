@@ -277,31 +277,13 @@
         $(document).ready(function () {
             // Image Preview
             document.getElementById('viewImage')?.addEventListener('click', function () {
-                let maxHeight = window.innerHeight * 0.8;
-                Swal.fire({
-                    imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
-                    imageAlt: "Service Request Image",
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    padding: 0,
-                    width: 'auto',
-                    heightAuto: true,
-                    didOpen: () => {
-                        $('.swal2-image').css({'max-height': maxHeight + 'px', 'height': 'auto'});
-                    }
-                });
+                ModernAlert.image('@Html.Raw(Model.ImageSignedUrl)', "Service Request Image");
             });
 
             // Video Preview
             $(document).on("click", ".view-video", function () {
                 const videoLink = this.getAttribute("data-videolink");
-                if (!videoLink) return;
-                Swal.fire({
-                    html: `<video width="100%" height="auto" controls autofocus><source src="${videoLink}" type="video/mp4">Your browser does not support the video tag.</video>`,
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    width: '80%',
-                });
+                if (videoLink) ModernAlert.video(videoLink, "Service Request Video");
             });
 
             // Port/Terminal Logic
@@ -362,12 +344,12 @@
 
             // Deletion Logic
             $("#deleteImage").click(function () {
-                Swal.fire({ title: "Delete image?", showCancelButton: true }).then((r) => {
+                ModernAlert.confirm({ title: "Delete image?", icon: 'warning' }).then((r) => {
                     if (r.isConfirmed) window.location.href = '@Url.Action("DeleteImage", "ServiceRequest", new { id = Model.DispatchTicketId })';
                 });
             });
             $("#deleteVideo").click(function () {
-                Swal.fire({ title: "Delete video?", showCancelButton: true }).then((r) => {
+                ModernAlert.confirm({ title: "Delete video?", icon: 'warning' }).then((r) => {
                     if (r.isConfirmed) window.location.href = '@Url.Action("DeleteVideo", "ServiceRequest", new { id = Model.DispatchTicketId })';
                 });
             });
@@ -380,7 +362,11 @@
 
                 if (hasExisting && hasNew) {
                     e.preventDefault();
-                    Swal.fire({ title: "Replace files?", text: "Current file(s) will be replaced.", showCancelButton: true }).then((r) => {
+                    ModernAlert.confirm({ 
+                        title: "Replace files?", 
+                        text: "Current file(s) will be replaced.", 
+                        icon: "question" 
+                    }).then((r) => {
                         if (r.isConfirmed) {
                             if (form.checkValidity()) form.submit();
                             else form.reportValidity();

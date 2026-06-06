@@ -21,7 +21,7 @@
                     <h1 class="modern-headline-lg">Create Job Order</h1>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="modern-btn-primary">
+                    <button type="button" class="modern-btn-primary" onclick="confirmCreate()">
                         <span class="material-symbols-outlined">save</span> Create Job Order
                     </button>
                     <a asp-action="Index" class="modern-btn-secondary">
@@ -287,6 +287,31 @@
                 });
             });
         });
+
+        function confirmCreate() {
+            const form = document.getElementById("jobOrderForm");
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            if (!$("#CustomerId").val()) {
+                $("#customerError").show();
+                return;
+            }
+
+            ModernAlert.confirm({
+                title: 'Create Job Order?',
+                text: "Please ensure all details are correct before proceeding.",
+                icon: 'question',
+                confirmText: 'Yes, create it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Creating job order...");
+                    form.submit();
+                }
+            });
+        }
     </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");

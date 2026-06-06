@@ -26,7 +26,7 @@
                     <h1 class="modern-headline-lg">Edit Job Order</h1>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="modern-btn-primary">
+                    <button type="button" class="modern-btn-primary" onclick="confirmEdit()">
                         <span class="material-symbols-outlined">save</span> Save Changes
                     </button>
                     <a asp-action="Details" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary">
@@ -301,6 +301,26 @@
                 });
             });
         });
+
+        function confirmEdit() {
+            const form = document.getElementById("jobOrderForm");
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            ModernAlert.confirm({
+                title: 'Save Changes?',
+                text: "Are you sure you want to update this job order?",
+                icon: 'question',
+                confirmText: 'Yes, save'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Saving changes...");
+                    form.submit();
+                }
+            });
+        }
     </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");

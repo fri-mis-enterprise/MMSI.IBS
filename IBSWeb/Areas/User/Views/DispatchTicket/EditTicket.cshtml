@@ -251,24 +251,13 @@
         $(document).ready(function () {
             // Image Preview
             $('#viewImage').on('click', function () {
-                Swal.fire({
-                    imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
-                    imageAlt: "Dispatch Ticket",
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    width: 'auto'
-                });
+                ModernAlert.image('@Html.Raw(Model.ImageSignedUrl)', "Dispatch Ticket");
             });
 
             // Video Player
             $('.view-video').on('click', function () {
                 const link = $(this).data('videolink');
-                Swal.fire({
-                    html: `<video width="100%" height="auto" controls autoplay class="rounded shadow"><source src="${link}" type="video/mp4"></video>`,
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    width: '70%'
-                });
+                if (link) ModernAlert.video(link, "Dispatch Ticket Video");
             });
 
             // Port/Terminal Cascading Dropdown
@@ -316,12 +305,12 @@
 
             // Deletion Actions
             $('#deleteImageConfirm').on('click', function() {
-                Swal.fire({ title: 'Delete image?', icon: 'warning', showCancelButton: true }).then(r => {
+                ModernAlert.confirm({ title: 'Delete image?', icon: 'warning' }).then(r => {
                     if (r.isConfirmed) window.location.href = '@Url.Action("DeleteImage", new { id = Model.DispatchTicketId, filterType = filterType })';
                 });
             });
             $('#deleteVideoConfirm').on('click', function() {
-                Swal.fire({ title: 'Delete video?', icon: 'warning', showCancelButton: true }).then(r => {
+                ModernAlert.confirm({ title: 'Delete video?', icon: 'warning' }).then(r => {
                     if (r.isConfirmed) window.location.href = '@Url.Action("DeleteVideo", new { id = Model.DispatchTicketId, filterType = filterType })';
                 });
             });
@@ -332,12 +321,11 @@
                 const hasNew = $('#imageUpload')[0].files.length || $('#videoUpload')[0].files.length;
                 if (hasExisting && hasNew) {
                     e.preventDefault();
-                    Swal.fire({
+                    ModernAlert.confirm({
                         title: 'Replace existing files?',
                         text: 'This will overwrite your current attachments.',
-                        icon: 'question',
-                        showCancelButton: true
-                    }).then(r => { if (r.isConfirmed) this.submit(); });
+                        icon: 'question'
+                    }).then(r => { if (r.isConfirmed) { ModernAlert.showLoading("Saving changes..."); this.submit(); } });
                 }
             });
         });

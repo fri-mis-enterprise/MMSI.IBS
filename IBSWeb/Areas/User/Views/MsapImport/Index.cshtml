@@ -360,9 +360,9 @@ ViewData["Title"] = "MSAP Import";
             }
 
             if (matchedNames.length > 0) {
-                toastr.success(`Automatically matched ${matchedNames.length} files.`);
+                ModernAlert.success(`Automatically matched ${matchedNames.length} files.`);
             } else {
-                toastr.warning('No matching CSV files found in the selected folder.');
+                ModernAlert.warning('No matching CSV files found in the selected folder.');
             }
             updateFileCount();
         });

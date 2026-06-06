@@ -369,41 +369,27 @@
                 const bafRate = parseNumber(bafRateInput.val());
 
                 if (dispatchRate === 0 && bafRate === 0) {
-                    Swal.fire({ icon: "error", title: "Validation Error", text: "Dispatch or BAF rate must be set." });
+                    ModernAlert.error("Dispatch or BAF rate must be set.", "Validation Error");
                     return;
                 }
 
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Update Tariff?',
                     text: 'Confirm your changes before updating.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Update'
+                    confirmText: 'Yes, Update'
                 }).then((result) => {
                     if (result.isConfirmed) $('#myForm').submit();
                 });
             });
 
             $('#viewSidebarImage').on('click', function () {
-                Swal.fire({
-                    imageUrl: $(this).attr('src'),
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    width: 'auto'
-                });
+                ModernAlert.image($(this).attr('src'), "Dispatch Ticket");
             });
 
             // Video Player
             $(document).on("click", ".view-video", function () {
                 const videoLink = $(this).data("videolink");
-                if (!videoLink) return;
-                Swal.fire({
-                    html: `<video width="100%" height="auto" controls autoplay class="rounded shadow"><source src="${videoLink}" type="video/mp4"></video>`,
-                    showConfirmButton: false,
-                    padding: 0,
-                    width: '80%',
-                    background: "transparent",
-                });
+                if (videoLink) ModernAlert.video(videoLink, "Dispatch Ticket Video");
             });
         });
     </script>

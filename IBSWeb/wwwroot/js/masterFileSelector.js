@@ -157,11 +157,7 @@ class MasterFileSelector {
         $('#confirmMasterFileType').on('click', () => {
             const selectedType = $('#masterFileTypeSelect').val();
             if (!selectedType) {
-                Swal.fire({
-                    title: 'Required',
-                    text: 'Please select a master file type',
-                    icon: 'warning'
-                });
+                ModernAlert.warning('Please select a master file type', 'Required');
                 return;
             }
 
@@ -273,11 +269,7 @@ class MasterFileSelector {
 
         } catch (error) {
             console.error(`Error loading ${type.title} data:`, error);
-            Swal.fire({
-                title: 'Error',
-                text: `Failed to load ${type.title.toLowerCase()} data. Please try again.`,
-                icon: 'error'
-            });
+            ModernAlert.error(`Failed to load ${type.title.toLowerCase()} data. Please try again.`);
 
             row.find('.chart-of-accounts').val('').trigger('change');
         }
@@ -285,11 +277,7 @@ class MasterFileSelector {
 
     handleSelection(type, row, selectedId, selectedText) {
         if (!selectedId) {
-            Swal.fire({
-                title: 'Required',
-                text: `Please select a ${type.title.toLowerCase()}`,
-                icon: 'warning'
-            });
+            ModernAlert.warning(`Please select a ${type.title.toLowerCase()}`, 'Required');
             return;
         }
 

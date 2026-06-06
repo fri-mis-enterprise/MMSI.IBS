@@ -84,17 +84,16 @@
             button.addEventListener('click', function (event) {
                 event.preventDefault(); // Prevent default navigation
 
-                const href = this.getAttribute('href'); // Get the href value
-                Swal.fire({
-                    title: 'Delete?',
-                    text: "Delete this Terminal entry?",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No'
+                const href = this.getAttribute('href');
+                ModernAlert.confirm({
+                    title: 'Delete Terminal?',
+                    text: "Are you sure you want to delete this terminal entry?",
+                    icon: 'warning',
+                    confirmText: 'Yes, Delete',
+                    cancelText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = href; // Redirect to the href URL
+                        window.location.href = href;
                     }
                 });
             });

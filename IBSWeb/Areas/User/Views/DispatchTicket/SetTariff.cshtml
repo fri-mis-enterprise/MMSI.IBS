@@ -375,14 +375,7 @@
                             dispatchDiscountInput.val(result.dispatchDiscount);
                             bafDiscountInput.val(result.bafDiscount);
                             
-                            Swal.fire({
-                                position: 'top-end',
-                                icon: 'success',
-                                title: 'Default Rates Applied',
-                                showConfirmButton: false,
-                                timer: 1500,
-                                toast: true
-                            });
+                            ModernAlert.success('Default Rates Applied');
                             ValueChange();
                         }
                     }
@@ -398,41 +391,31 @@
                 const bafRate = parseNumber(bafRateInput.val());
 
                 if (dispatchRate === 0 && bafRate === 0) {
-                    Swal.fire({ icon: "error", title: "Validation Error", text: "Dispatch or BAF rate must be set." });
+                    ModernAlert.error("Dispatch or BAF rate must be set.");
                     return;
                 }
 
-                Swal.fire({
+                ModernAlert.confirm({
                     title: 'Submit Tariff?',
                     text: 'Confirm the calculated rates before submitting.',
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Submit'
+                    confirmText: 'Yes, Submit'
                 }).then((result) => {
-                    if (result.isConfirmed) $('#myForm').submit();
+                    if (result.isConfirmed) {
+                        ModernAlert.showLoading("Submitting tariff...");
+                        $('#myForm').submit();
+                    }
                 });
             });
 
             $('#viewSidebarImage').on('click', function () {
-                Swal.fire({
-                    imageUrl: $(this).attr('src'),
-                    showConfirmButton: false,
-                    background: 'transparent',
-                    width: 'auto'
-                });
+                ModernAlert.image($(this).attr('src'), "Dispatch Ticket");
             });
 
             // Video Player
             $(document).on("click", ".view-video", function () {
                 const videoLink = $(this).data("videolink");
-                if (!videoLink) return;
-                Swal.fire({
-                    html: `<video width="100%" height="auto" controls autoplay class="rounded shadow"><source src="${videoLink}" type="video/mp4"></video>`,
-                    showConfirmButton: false,
-                    padding: 0,
-                    width: '80%',
-                    background: "transparent",
-                });
+                if (videoLink) ModernAlert.video(videoLink, "Dispatch Ticket Video");
             });
         });
     </script>

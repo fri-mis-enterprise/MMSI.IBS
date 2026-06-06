@@ -221,23 +221,32 @@
             });
 
             $("#postSelected").click(() => {
-                Swal.fire({ title: "Post selected?", text: "Proceed to post these requests?", showCancelButton: true }).then((r) => {
+                ModernAlert.confirm({
+                    title: "Post selected?",
+                    text: "Proceed to post these requests?",
+                    confirmText: "Yes, post"
+                }).then((r) => {
                     if (r.isConfirmed) window.location.href = `@Url.Action("PostSelected", "ServiceRequest")?records=${encodeURIComponent(JSON.stringify(Array.from(selectedRecords)))}`;
                 });
             });
 
             $("#cancelSelected").click(() => {
-                Swal.fire({ title: "Cancel selected?", text: "This action cannot be undone.", icon: 'warning', showCancelButton: true }).then((r) => {
+                ModernAlert.confirm({
+                    title: "Cancel selected?",
+                    text: "This action cannot be undone.",
+                    icon: 'warning',
+                    confirmText: "Yes, cancel"
+                }).then((r) => {
                     if (r.isConfirmed) window.location.href = `@Url.Action("CancelSelected", "ServiceRequest")?records=${encodeURIComponent(JSON.stringify(Array.from(selectedRecords)))}`;
                 });
             });
 
             $(document).on("click", ".view-upload", function () {
-                Swal.fire({ imageUrl: $(this).data("uploadname"), imageAlt: "Upload", showConfirmButton: false, background: "transparent" });
+                ModernAlert.image($(this).data("uploadname"), "Upload Preview");
             });
 
             $(document).on("click", ".view-video", function () {
-                Swal.fire({ html: `<video width="100%" controls autofocus><source src="${$(this).data("videolink")}" type="video/mp4"></video>`, showConfirmButton: false, background: "transparent", width: "80%" });
+                ModernAlert.video($(this).data("videolink"), "Video Preview");
             });
 
             // Filter logic
