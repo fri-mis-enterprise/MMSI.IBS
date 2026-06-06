@@ -112,7 +112,7 @@ namespace IBS.Services
                     return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
                 }
 
-                if (jobOrder.Status == SD.JobOrderStatus.Closed || jobOrder.Status == SD.JobOrderStatus.Cancelled)
+                if (jobOrder.Status == SD.JobOrderStatus.Closed)
                 {
                     return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is {jobOrder.Status.ToLower()} and cannot be edited.");
                 }
@@ -161,8 +161,7 @@ namespace IBS.Services
             // 1. Update unbilled dispatch tickets
             var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
                 dt => dt.JobOrderId == jobOrder.JobOrderId && 
-                      dt.Status != SD.DispatchTicketStatus.Billed && 
-                      dt.Status != SD.DispatchTicketStatus.Cancelled, 
+                      dt.Status != SD.DispatchTicketStatus.Billed, 
                 cancellationToken);
 
             foreach (var ticket in tickets)
@@ -194,47 +193,6 @@ namespace IBS.Services
             }
         }
 
-        public async Task<ServiceResult> CancelJobOrderAsync(int id, string username, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
-                if (jobOrder == null)
-                {
-                    return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
-                }
-
-                if (jobOrder.Status == SD.JobOrderStatus.Cancelled)
-                {
-                    return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is already cancelled.");
-                }
-
-                if (jobOrder.Status == SD.JobOrderStatus.Closed)
-                {
-                    return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is closed and cannot be cancelled.");
-                }
-
-                var activeTicketsCount = jobOrder.DispatchTickets
-                    .Count(dt => dt.Status != SD.DispatchTicketStatus.Cancelled);
-
-                if (activeTicketsCount > 0)
-                {
-                    return ServiceResult.Failure($"Cannot cancel Job Order. There are {activeTicketsCount} active dispatch ticket(s). Please cancel them first.");
-                }
-
-                jobOrder.Status = SD.JobOrderStatus.Cancelled;
-                await RecordAuditAsync($"Cancelled Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
-                await unitOfWork.SaveAsync(cancellationToken);
-
-                return ServiceResult.Success($"Job Order #{jobOrder.JobOrderNumber} has been cancelled.");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error cancelling Job Order {JobOrderId}", id);
-                return ServiceResult.Failure($"Failed to cancel Job Order: {ExceptionHelper.GetErrorMessage(ex)}");
-            }
-        }
-
         public async Task<ServiceResult> CloseJobOrderAsync(int id, string username, bool forceClose, CancellationToken cancellationToken)
         {
             try
@@ -254,14 +212,13 @@ namespace IBS.Services
                 {
                     var nonTerminalTickets = jobOrder.DispatchTickets
                         .Where(dt => dt.Status != SD.DispatchTicketStatus.Billed && 
-                                     dt.Status != SD.DispatchTicketStatus.Cancelled && 
                                      dt.Status != SD.DispatchTicketStatus.Disapproved)
                         .ToList();
 
                     if (nonTerminalTickets.Any())
                     {
                         var statuses = string.Join(", ", nonTerminalTickets.Select(t => t.Status).Distinct());
-                        return ServiceResult.Failure($"Cannot close Job Order. {nonTerminalTickets.Count} ticket(s) are in non-terminal states ({statuses}). All tickets must be Billed, Cancelled, or Disapproved.");
+                        return ServiceResult.Failure($"Cannot close Job Order. {nonTerminalTickets.Count} ticket(s) are in non-terminal states ({statuses}). All tickets must be Billed or Disapproved.");
                     }
                 }
 

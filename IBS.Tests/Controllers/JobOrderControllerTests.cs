@@ -102,26 +102,6 @@ namespace IBS.Tests.Controllers
 
         #endregion
 
-        #region Cancel Tests
-
-        [Fact]
-        public async Task Cancel_Post_RedirectsToDetails_WithSuccessMessage()
-        {
-            // Arrange
-            _mockJobOrderService.Setup(s => s.CancelJobOrderAsync(1, "testuser", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(ServiceResult.Success("Cancelled"));
-
-            // Act
-            var result = await _controller.CancelConfirmed(1, CancellationToken.None);
-
-            // Assert
-            var redirectResult = result.Should().BeOfType<RedirectToActionResult>().Subject;
-            redirectResult.ActionName.Should().Be("Details");
-            _mockTempData.VerifySet(t => t["success"] = "Cancelled");
-        }
-
-        #endregion
-
         #region Close Tests
 
         [Fact]

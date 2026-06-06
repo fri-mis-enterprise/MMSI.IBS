@@ -35,14 +35,6 @@
                     <span class="material-symbols-outlined">edit</span> Edit Details
                 </a>
 
-                @if (Model.Status == SD.JobOrderStatus.Open && User.IsInRole("Admin"))
-                {
-                    <button type="button" class="modern-btn-error" onclick="confirmCancel()">
-                        <span class="material-symbols-outlined">cancel</span> Cancel Order
-                    </button>
-                    <form asp-action="Cancel" asp-route-id="@Model.JobOrderId" method="post" id="cancelForm" class="hidden"></form>
-                }
-
                 <a asp-action="Index" class="modern-btn-secondary">
                     <span class="material-symbols-outlined">arrow_back</span> Back
                 </a>

@@ -77,7 +77,6 @@ namespace IBS.DataAccess.Repository.Msap
                 .Where(j => j.CustomerId == customerId &&
                             j.DispatchTickets.Any(dt => dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) &&
                             j.DispatchTickets.All(dt => (dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) || 
-                                                        dt.Status == Utility.Constants.SD.DispatchTicketStatus.Cancelled || 
                                                         dt.Status == Utility.Constants.SD.DispatchTicketStatus.Billed));
 
             if (!string.IsNullOrWhiteSpace(term))

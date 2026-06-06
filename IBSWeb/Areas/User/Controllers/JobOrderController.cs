@@ -150,10 +150,10 @@ namespace IBSWeb.Areas.User.Controllers
 
             ViewData["JobOrderNumber"] = jobOrder.JobOrderNumber;
 
-            // Prevent editing if the Job Order is already Closed or Cancelled.
-            if (jobOrder.Status == SD.JobOrderStatus.Closed || jobOrder.Status == SD.JobOrderStatus.Cancelled)
+            // Prevent editing if the Job Order is already Closed.
+            if (jobOrder.Status == SD.JobOrderStatus.Closed)
             {
-                TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is {jobOrder.Status.ToLower()} and cannot be edited.";
+                TempData["error"] = $"Job Order #{jobOrder.JobOrderNumber} is closed and cannot be edited.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -230,37 +230,6 @@ namespace IBSWeb.Areas.User.Controllers
             ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
             await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
             return View(viewModel);
-        }
-
-        #endregion
-
-        #region Cancel
-
-        /// <summary>
-        /// Cancels an Open Job Order. Only available to Admin users.
-        /// </summary>
-        [Authorize(Roles = "Admin")]
-        [HttpPost, ActionName("Cancel")]
-        [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.DeleteJobOrder, "You don't have permission to cancel Job Orders.")]
-        public async Task<IActionResult> CancelConfirmed(int id, CancellationToken cancellationToken = default)
-        {
-            var result = await jobOrderService.CancelJobOrderAsync(id, User.Identity?.Name ?? "Unknown", cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-                TempData["success"] = result.Message;
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (result.Status == ServiceResultStatus.NotFound)
-            {
-                return NotFound();
-            }
-
-            TempData["error"] = result.Message;
-            return RedirectToAction(nameof(Details), new { id });
         }
 
         #endregion

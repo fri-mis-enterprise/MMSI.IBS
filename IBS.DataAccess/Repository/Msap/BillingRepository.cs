@@ -242,11 +242,10 @@ namespace IBS.DataAccess.Repository.Msap
 
         public async Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
         {
-            var query = dbSet
+            IQueryable<Billing> query = dbSet
                 .Include(b => b.Customer)
                 .Include(b => b.Terminal).ThenInclude(b => b.Port)
-                .Include(b => b.Vessel)
-                .Where(b => b.Status != Utility.Constants.SD.BillingStatus.Cancelled);
+                .Include(b => b.Vessel);
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {

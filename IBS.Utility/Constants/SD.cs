@@ -96,7 +96,6 @@ namespace IBS.Utility.Constants
         {
             public const string Open = "Open";
             public const string Closed = "Closed";
-            public const string Cancelled = "Cancelled";
         }
 
         public static class DispatchTicketStatus
@@ -107,9 +106,6 @@ namespace IBS.Utility.Constants
             public const string Disapproved = "Disapproved";
             public const string ForBilling = "For Billing";
             public const string Billed = "Billed";
-            public const string Cancelled = "Cancelled";
-            public const string ForPosting = "For Posting";
-            public const string Incomplete = "Incomplete";
         }
 
         public static class BillingStatus
@@ -118,19 +114,10 @@ namespace IBS.Utility.Constants
             public const string ForCollection = "For Collection";
             public const string Collected = "Collected";
             public const string Paid = "Paid";
-            public const string Cancelled = "Cancelled";
         }
 
         public const string BilledTo_Local = "LOCAL";
         public const string BilledTo_Foreign = "FOREIGN";
-
-        public static class CollectionStatus
-        {
-            public const string Create = "Create";
-            public const string Pending = "Pending";
-            public const string Posted = "Posted";
-            public const string Cancelled = "Cancelled";
-        }
 
         #region MSAP Accounting Accounts
 

@@ -149,45 +149,6 @@ namespace IBS.Tests.Services
 
         #endregion
 
-        #region Cancel Tests
-
-        [Fact]
-        public async Task CancelJobOrderAsync_Success_Flow()
-        {
-            // Arrange
-            var jobOrder = new JobOrder { JobOrderId = 1, Status = SD.JobOrderStatus.Open, DispatchTickets = new List<DispatchTicket>() };
-            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
-
-            // Act
-            var result = await _service.CancelJobOrderAsync(1, "user", CancellationToken.None);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            jobOrder.Status.Should().Be(SD.JobOrderStatus.Cancelled);
-        }
-
-        [Fact]
-        public async Task CancelJobOrderAsync_Fails_IfHasActiveTickets()
-        {
-            // Arrange
-            var jobOrder = new JobOrder 
-            { 
-                JobOrderId = 1, 
-                Status = SD.JobOrderStatus.Open, 
-                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = SD.DispatchTicketStatus.ForBilling } } 
-            };
-            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
-
-            // Act
-            var result = await _service.CancelJobOrderAsync(1, "user", CancellationToken.None);
-
-            // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Message.Should().Contain("active dispatch ticket(s)");
-        }
-
-        #endregion
-
         #region Close Tests
 
         [Fact]

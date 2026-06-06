@@ -41,8 +41,7 @@ namespace IBS.Tests.Services
             _mockCollectionRepo.Setup(u => u.PostAsync(It.IsAny<Collection>(), It.IsAny<List<Offsettings>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
-                .Callback<Func<Task>, CancellationToken>(async (action, ct) => await action())
-                .Returns(Task.CompletedTask);
+                .Returns((Func<Task> action, CancellationToken ct) => action());
 
             _service = new CollectionService(_mockUnitOfWork.Object, _mockLogger.Object);
         }
@@ -57,6 +56,7 @@ namespace IBS.Tests.Services
                 { 
                     new BillingPaymentViewModel { BillingId = 100, AmountToPay = 500m } 
                 },
+                Amount = 500m,
                 MsapCollectionNumber = "COL-001",
                 Date = new DateOnly(2026, 5, 22),
                 CustomerId = 1

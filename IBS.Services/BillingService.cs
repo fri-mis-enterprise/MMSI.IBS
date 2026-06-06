@@ -418,7 +418,7 @@ namespace IBS.Services
                     dt.BillingNumber = null;
                 }
 
-                if (model.Status != SD.BillingStatus.ForPosting && model.Status != SD.BillingStatus.Cancelled)
+                if (model.Status != SD.BillingStatus.ForPosting)
                 {
                     await unitOfWork.Billing.RemoveSalesBookEntryAsync(id, model.MsapBillingNumber, cancellationToken);
                 }
