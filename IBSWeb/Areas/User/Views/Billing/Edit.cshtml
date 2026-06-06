@@ -415,9 +415,9 @@
                                 dispatchAmount: t.dispatchNetRevenue,
                                 bafAmount: t.bafNetRevenue,
                                 totalAmount: t.totalBilling
-                            })));
+                            })), !!initialJobOrderId);
                         } else {
-                            renderTicketsTable([]);
+                            renderTicketsTable([], !!initialJobOrderId);
                         }
                     } catch (e) { console.error('Error loading initial tickets', e); }
                 }
@@ -548,38 +548,18 @@
                     const response = await res.json();
 
                     if (response.success) {
-                         // Merge with existing tickets in the table
-                        let existingIds = [];
-                        $ticketsTableBody.find('tr[data-ticket-id]').each(function() {
-                            existingIds.push($(this).data('ticket-id').toString());
-                        });
-
-                        response.tickets.forEach(ticket => {
-                            if (!existingIds.includes(ticket.dispatchTicketId.toString())) {
-                                $ticketsTableBody.append(`
-                                    <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
-                                        <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked style="width: 18px; height: 18px; cursor: pointer;"></td>
-                                        <td class="font-bold">${ticket.dispatchNo}</td>
-                                        <td>${ticket.tugboat}</td>
-                                        <td>${ticket.service}</td>
-                                        <td class="text-center">${ticket.duration.toFixed(2)}</td>
-                                        <td class="text-right font-bold">₱${formatNumber(ticket.totalAmount)}</td>
-                                    </tr>
-                                `);
-                                if (!$dispatchSelect.find(`option[value="${ticket.dispatchTicketId}"]`).length) {
-                                    $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
-                                }
-                            }
-                        });
-                        updateTotals();
+                        renderTicketsTable(response.tickets, true);
                     }
                 } catch {
                     ModernAlert.error('Failed to load tickets');
                 }
             });
 
-            function renderTicketsTable(tickets) {
+            function renderTicketsTable(tickets, isReadOnly) {
                 $ticketsTableBody.empty();
+                $dispatchSelect.empty();
+                $("#selectAllTickets").prop("disabled", isReadOnly);
+
                 if (!tickets?.length) {
                     $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">No tickets available</td></tr>');
                     updateTotals();
@@ -588,7 +568,11 @@
                 tickets.forEach(ticket => {
                     $ticketsTableBody.append(`
                         <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
-                            <td class="text-center"><input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked style="width: 18px; height: 18px; cursor: pointer;"></td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked 
+                                    ${isReadOnly ? 'disabled' : ''} 
+                                    style="width: 18px; height: 18px; cursor: pointer;">
+                            </td>
                             <td class="font-bold">${ticket.dispatchNo}</td>
                             <td>${ticket.tugboat}</td>
                             <td>${ticket.service}</td>
@@ -596,8 +580,10 @@
                             <td class="text-right font-bold">₱${formatNumber(ticket.totalAmount)}</td>
                         </tr>
                     `);
+                    $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
                 });
                 updateTotals();
+                $('#selectAllTickets').prop('checked', true);
             }
 
             $ticketsTableBody.on('change', '.ticket-checkbox', function () {

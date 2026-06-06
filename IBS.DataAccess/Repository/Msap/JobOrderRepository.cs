@@ -76,7 +76,9 @@ namespace IBS.DataAccess.Repository.Msap
             var query = dbSet.AsNoTracking()
                 .Where(j => j.CustomerId == customerId &&
                             j.DispatchTickets.Any(dt => dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) &&
-                            !j.DispatchTickets.Any(dt => dt.Status == Utility.Constants.SD.DispatchTicketStatus.Pending || dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForTariff || dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForApproval));
+                            j.DispatchTickets.All(dt => (dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) || 
+                                                        dt.Status == Utility.Constants.SD.DispatchTicketStatus.Cancelled || 
+                                                        dt.Status == Utility.Constants.SD.DispatchTicketStatus.Billed));
 
             if (!string.IsNullOrWhiteSpace(term))
             {

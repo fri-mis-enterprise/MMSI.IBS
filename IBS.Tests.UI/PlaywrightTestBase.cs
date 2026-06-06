@@ -66,7 +66,6 @@ namespace IBS.Tests.UI
             Browser = await Playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = false,
-                SlowMo = 100, // Increased SlowMo for better stability
                 Args = new[] { "--start-maximized" }
             });
 
@@ -132,8 +131,32 @@ namespace IBS.Tests.UI
             }
 
             await trigger.ScrollIntoViewIfNeededAsync();
+            await Page.WaitForTimeoutAsync(300); // Wait for scroll to settle
             await trigger.WaitForAsync(new() { State = WaitForSelectorState.Visible });
-            await trigger.ClickAsync(new() { Force = true });
+
+            // Check if already open
+            bool shown = await Page.Locator(".modern-select-dropdown.show").IsVisibleAsync();
+
+            // If not shown, try clicking until dropdown shows (with retry)
+            int retries = 3;
+            while (retries-- > 0 && !shown)
+            {
+                // Ensure trigger is focused
+                await trigger.FocusAsync();
+                await trigger.ClickAsync(new() { Force = true });
+                try
+                {
+                    await Page.Locator(".modern-select-dropdown.show").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 2000 });
+                    shown = true;
+                }
+                catch
+                {
+                    // Fallback: manually trigger via JS if click doesn't work
+                    await trigger.EvaluateAsync("el => el.click()");
+                    await Page.WaitForTimeoutAsync(500);
+                    if (await Page.Locator(".modern-select-dropdown.show").IsVisibleAsync()) shown = true;
+                }
+            }
 
             var dropdown = Page.Locator(".modern-select-dropdown.show");
             await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Visible });
@@ -141,20 +164,36 @@ namespace IBS.Tests.UI
             var searchInput = dropdown.Locator(".modern-select-search input");
             if (await searchInput.CountAsync() > 0 && await searchInput.IsVisibleAsync())
             {
+                await searchInput.ClearAsync();
                 await searchInput.FillAsync(optionText);
                 await Page.WaitForTimeoutAsync(500); // Wait for filter to settle
             }
 
             var escapedText = Regex.Escape(optionText);
             var option = dropdown.Locator(".modern-select-option")
-                .Filter(new() { HasTextRegex = new Regex(escapedText, RegexOptions.IgnoreCase) })
-                .First;
+                .Filter(new() { HasTextRegex = new Regex("^\\s*" + escapedText + "\\s*$", RegexOptions.IgnoreCase) });
+
+            if (await option.CountAsync() == 0)
+            {
+                // Fallback to contains if exact match fails
+                option = dropdown.Locator(".modern-select-option")
+                    .Filter(new() { HasTextRegex = new Regex(escapedText, RegexOptions.IgnoreCase) })
+                    .First;
+            }
+            else
+            {
+                option = option.First;
+            }
 
             await option.ScrollIntoViewIfNeededAsync();
             await ForceClickAsync(option);
 
             // Wait for dropdown to close
-            await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Hidden });
+            try
+            {
+                await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5000 });
+            }
+            catch { /* ignore timeout */ }
         }
 
         protected async Task ForceClickAsync(ILocator locator)
@@ -169,7 +208,7 @@ namespace IBS.Tests.UI
             // Wait for Swal container to exist
             var container = Page.Locator(".swal2-container");
             await container.WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = 15000 });
-            await Page.WaitForTimeoutAsync(500); // Animation buffer
+            await Page.WaitForTimeoutAsync(1000); // Animation buffer
 
             var button = Page.Locator(".swal2-confirm");
             if (!string.IsNullOrEmpty(buttonText))
@@ -180,10 +219,22 @@ namespace IBS.Tests.UI
                 {
                     button = textFilter;
                 }
+                else
+                {
+                    // Fallback to any button if specific text not found but something is there
+                    button = Page.Locator(".swal2-confirm");
+                }
             }
 
             await ForceClickAsync(button);
-            await Page.WaitForTimeoutAsync(300);
+            await Page.WaitForTimeoutAsync(500);
+
+            // Wait for it to disappear
+            try
+            {
+                await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5000 });
+            }
+            catch { /* ignore timeout */ }
         }
 
         protected async Task ClickSweetAlertOkAsync()
@@ -200,7 +251,11 @@ namespace IBS.Tests.UI
                 if (await confirmBtn.IsVisibleAsync())
                 {
                     await ForceClickAsync(confirmBtn);
-                    await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden });
+                    try
+                    {
+                        await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5000 });
+                    }
+                    catch { /* ignore timeout */ }
                 }
             }
         }

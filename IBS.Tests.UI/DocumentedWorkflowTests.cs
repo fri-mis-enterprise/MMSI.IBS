@@ -23,6 +23,8 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#CustomerSearch", "FOUR DRAGONS");
             await Page.ClickAsync(".modern-dropdown-item:has-text('FOUR DRAGONS SHIPPING SERVICES')");
 
+            await Page.FillAsync("input[name='Date']", "2026-06-06");
+
             await SelectModernOptionAsync("Vessel", "BRP GREGORIO VELASQUEZ (LOCAL)");
             await SelectModernOptionAsync("Port", "BATANGAS");
 
@@ -33,7 +35,11 @@ namespace IBS.Tests.UI
 
             await SelectModernOptionAsync("Terminal", "BBTI");
 
+            await Page.FillAsync("#PlannedStartTime", "2026-06-06T08:00");
+            await Page.FillAsync("#PlannedEndTime", "2026-06-06T20:00");
+
             await Page.ClickAsync("button:has-text('Create Job Order')");
+            await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
             Assert.Contains("/User/JobOrder/Details/", Page.Url);
@@ -108,7 +114,6 @@ namespace IBS.Tests.UI
                 await ForceClickAsync(approveBtn);
                 
                 await ConfirmSweetAlertAsync("approve");
-                await ClickSweetAlertOkAsync();
                 await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
                 await DismissAnySweetAlertAsync();
             }
@@ -136,8 +141,8 @@ namespace IBS.Tests.UI
 
             await Page.ClickAsync("#submitButton");
             await ConfirmSweetAlertAsync("submit");
-            await ClickSweetAlertOkAsync();
             await Page.WaitForURLAsync($"{ServerAddress}/User/Billing");
+            await DismissAnySweetAlertAsync();
 
             // 5. Create Documented Collection
             await Page.GotoAsync($"{ServerAddress}/User/Collection/Create");

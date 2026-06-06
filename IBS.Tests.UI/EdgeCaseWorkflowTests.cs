@@ -26,10 +26,13 @@ namespace IBS.Tests.UI
             await SelectModernOptionAsync("Terminal", "COASTAL");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
 
+            await Page.FillAsync("input[name='Date']", "2026-06-11");
+
             await Page.FillAsync("#PlannedStartTime", "2026-06-11T08:00");
             await Page.FillAsync("#PlannedEndTime", "2026-06-11T12:00");
 
-            await Page.ClickAsync("#jobOrderForm button[type='submit']");
+            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
             // 2. Add a ticket but don't set tariff (Status: For Tariff)
@@ -82,11 +85,14 @@ namespace IBS.Tests.UI
             await SelectModernOptionAsync("Terminal", "COASTAL");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
 
+            await Page.FillAsync("input[name='Date']", "2026-06-11");
+
             await Page.FillAsync("#VoyageNumber", "V-EDGE-101");
             await Page.FillAsync("#PlannedStartTime", "2026-06-11T14:00");
             await Page.FillAsync("#PlannedEndTime", "2026-06-11T16:00");
 
-            await Page.ClickAsync("#jobOrderForm button[type='submit']");
+            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
             var joNumberText = await Page.Locator("h1.modern-headline-lg").InnerTextAsync();
@@ -135,7 +141,7 @@ namespace IBS.Tests.UI
             var approveBtn = Page.Locator("button.modern-dropdown-item:has-text('Approve Tariff')").Filter(new() { HasNotText = "Disapprove" });
             await ForceClickAsync(approveBtn);
             await ConfirmSweetAlertAsync("approve");
-            await ClickSweetAlertOkAsync();
+            await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
             await DismissAnySweetAlertAsync();
 
             // 3. Go to Billing Create and select this JO

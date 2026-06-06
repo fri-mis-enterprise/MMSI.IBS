@@ -50,6 +50,13 @@ namespace IBS.Services
                         model.MsapCollectionNumber = viewModel.MsapCollectionNumber ?? string.Empty;
                     }
 
+                    // Validate matching amounts
+                    decimal totalAllocated = viewModel.BillingPayments?.Sum(p => p.AmountToPay) ?? 0;
+                    if (totalAllocated != viewModel.Amount && !model.IsUndocumented)
+                    {
+                        throw new InvalidOperationException($"Collection amount (₱{viewModel.Amount:N2}) does not match the total allocated billing payments (₱{totalAllocated:N2}).");
+                    }
+
                     await _unitOfWork.Collection.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     collectionId = model.MsapCollectionId;
@@ -117,6 +124,12 @@ namespace IBS.Services
                     }
 
                     // Apply new allocations
+                    decimal totalAllocated = viewModel.BillingPayments?.Sum(p => p.AmountToPay) ?? 0;
+                    if (totalAllocated != viewModel.Amount && !currentModel.IsUndocumented)
+                    {
+                        throw new InvalidOperationException($"Collection amount (₱{viewModel.Amount:N2}) does not match the total allocated billing payments (₱{totalAllocated:N2}).");
+                    }
+
                     if (viewModel.BillingPayments != null)
                     {
                         foreach (var payment in viewModel.BillingPayments)

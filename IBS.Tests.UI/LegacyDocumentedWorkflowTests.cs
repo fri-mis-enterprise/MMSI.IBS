@@ -27,10 +27,13 @@ namespace IBS.Tests.UI
             await SelectModernOptionAsync("Terminal", "COASTAL");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
 
+            await Page.FillAsync("input[name='Date']", "2026-06-10");
+
             await Page.FillAsync("#PlannedStartTime", "2026-06-10T08:00");
             await Page.FillAsync("#PlannedEndTime", "2026-06-10T12:00");
 
-            await Page.ClickAsync("#jobOrderForm button[type='submit']");
+            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
             var joNumberText = await Page.Locator("h1.modern-headline-lg").InnerTextAsync();
@@ -104,7 +107,7 @@ namespace IBS.Tests.UI
             var approveBtn = ticketRowInDetails.Locator("button.modern-dropdown-item:has-text('Approve Tariff')").Filter(new() { HasNotText = "Disapprove" });
             await ForceClickAsync(approveBtn);
             await ConfirmSweetAlertAsync("approve");
-            await ClickSweetAlertOkAsync();
+            await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
             await DismissAnySweetAlertAsync();
 
             // 3. Create Billing for this JO
@@ -135,8 +138,8 @@ namespace IBS.Tests.UI
 
             await Page.ClickAsync("#submitButton");
             await ConfirmSweetAlertAsync("submit");
-            await ClickSweetAlertOkAsync();
             await Page.WaitForURLAsync($"{ServerAddress}/User/Billing");
+            await DismissAnySweetAlertAsync();
 
             // 4. Collection
             await Page.GotoAsync($"{ServerAddress}/User/Collection/Create");
@@ -299,8 +302,8 @@ namespace IBS.Tests.UI
             // Submit
             await Page.ClickAsync("#submitButton");
             await ConfirmSweetAlertAsync("submit");
-            await ClickSweetAlertOkAsync();
             await Page.WaitForURLAsync($"{ServerAddress}/User/Billing");
+            await DismissAnySweetAlertAsync();
 
             // 2. Collection
             await Page.GotoAsync($"{ServerAddress}/User/Collection/Create");
