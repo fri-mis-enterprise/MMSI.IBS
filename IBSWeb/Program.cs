@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Serilog;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -72,7 +73,14 @@ builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
 builder.Services.AddScoped<IMonthlyClosureService, MonthlyClosureService>();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
-builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<ICloudStorageService, LocalFileStorageService>();
+}
+else
+{
+    builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
+}
 builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
 builder.Services.AddScoped<ITugboatMonitoringService, TugboatMonitoringService>();
 builder.Services.AddScoped<IVesselPlanningService, VesselPlanningService>();
@@ -142,6 +150,26 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+if (app.Environment.IsDevelopment())
+{
+    var localStoragePath = app.Configuration["LocalStoragePath"] ?? "App_Data/LocalStorage";
+    var absolutePath = Path.IsPathRooted(localStoragePath)
+        ? localStoragePath
+        : Path.Combine(app.Environment.ContentRootPath, localStoragePath);
+
+    if (!Directory.Exists(absolutePath))
+    {
+        Directory.CreateDirectory(absolutePath);
+    }
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(absolutePath),
+        RequestPath = "/local-storage"
+    });
+}
+
 app.UseMiddleware<MaintenanceMiddleware>();
 
 app.UseSession();
