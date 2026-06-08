@@ -35,72 +35,70 @@
             </div>
             <div class="modern-card-body">
                 <table class="modern-table" id="jobOrdersTable">
-                        <thead>
+                    <thead>
+                        <tr>
+                            <th>Job Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Vessel</th>
+                            <th>COS #</th>
+                            <th>Voyage #</th>
+                            <th class="text-center">Tickets</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
                             <tr>
-                                <th>Job Order #</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Vessel</th>
-                                <th>COS #</th>
-                                <th>Voyage #</th>
-                                <th class="text-center">Tickets</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
+                                <td class="font-bold">
+                                    <a asp-action="Details" asp-route-id="@item.JobOrderId" style="text-decoration:none; color: var(--primary)">
+                                        @item.JobOrderNumber
+                                    </a>
+                                </td>
+                                <td style="color: var(--on-surface-variant)">@item.Date.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="@item.Customer?.CustomerName">
+                                        @item.Customer?.CustomerName
+                                    </div>
+                                </td>
+                                <td class="font-bold uppercase">
+                                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="@item.Vessel?.VesselName">
+                                        @item.Vessel?.VesselName
+                                    </div>
+                                </td>
+                                <td style="color: var(--on-surface-variant)">@(item.COSNumber ?? "-")</td>
+                                <td style="color: var(--on-surface-variant)">@(item.VoyageNumber)</td>
+                                <td class="text-center">
+                                    <span class="modern-badge-sm" style="background-color: var(--surface-container-low); color: var(--on-surface-variant)">
+                                        @item.DispatchTickets.Count
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="modern-badge-sm @(item.Status == SD.JobOrderStatus.Open ? "status-open" : "status-closed")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="relative inline-block text-left dropdown-container">
+                                        <button type="button" class="modern-btn-dropdown dropdown-trigger">
+                                            ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
+                                        </button>
+                                        <div class="modern-dropdown-menu dropdown-menu">
+                                            <a class="modern-dropdown-item" asp-action="Details" asp-route-id="@item.JobOrderId">
+                                                <span class="material-symbols-outlined">visibility</span> View Details
+                                            </a>
+                                            <a class="modern-dropdown-item" asp-action="Edit" asp-route-id="@item.JobOrderId">
+                                                <span class="material-symbols-outlined">edit</span> Edit Order
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td class="font-bold">
-                                        <a asp-action="Details" asp-route-id="@item.JobOrderId" style="text-decoration:none; color: var(--primary)">
-                                            @item.JobOrderNumber
-                                        </a>
-                                    </td>
-                                    <td style="color: var(--on-surface-variant)">@item.Date.ToString("MMM dd, yyyy")</td>
-                                    <td>
-                                        <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="@item.Customer?.CustomerName">
-                                            @item.Customer?.CustomerName
-                                        </div>
-                                    </td>
-                                    <td class="font-bold uppercase">
-                                        <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="@item.Vessel?.VesselName">
-                                            @item.Vessel?.VesselName
-                                        </div>
-                                    </td>
-                                    <td style="color: var(--on-surface-variant)">@(item.COSNumber ?? "-")</td>
-                                    <td style="color: var(--on-surface-variant)">@(item.VoyageNumber)</td>
-                                    <td class="text-center">
-                                        <span class="modern-badge-sm" style="background-color: var(--surface-container-low); color: var(--on-surface-variant)">
-                                            @item.DispatchTickets.Count
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="modern-badge-sm @(item.Status == SD.JobOrderStatus.Open ? "status-open" : "status-closed")">
-                                            @item.Status
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="relative inline-block text-left dropdown-container">
-                                            <button type="button" class="modern-btn-dropdown dropdown-trigger">
-                                                ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
-                                            </button>
-                                            <!-- Dropdown Menu -->
-                                            <div class="modern-dropdown-menu dropdown-menu">
-                                                <a class="modern-dropdown-item" asp-action="Details" asp-route-id="@item.JobOrderId">
-                                                    <span class="material-symbols-outlined">visibility</span> View Details
-                                                </a>
-                                                <a class="modern-dropdown-item" asp-action="Edit" asp-route-id="@item.JobOrderId">
-                                                    <span class="material-symbols-outlined">edit</span> Edit Order
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
