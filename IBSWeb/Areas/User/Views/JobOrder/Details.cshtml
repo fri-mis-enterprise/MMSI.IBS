@@ -165,7 +165,11 @@
                                 @foreach (var ticket in Model.DispatchTickets)
                                 {
                                     <tr>
-                                        <td class="font-bold">@ticket.DispatchNumber</td>
+                                        <td class="font-bold">
+                                            <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" style="text-decoration:none; color: var(--primary)" target="_blank">
+                                                @ticket.DispatchNumber
+                                            </a>
+                                        </td>
                                         <td class="text-xs" style="color: var(--on-surface-variant)">
                                             @if (ticket is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null })
                                             {

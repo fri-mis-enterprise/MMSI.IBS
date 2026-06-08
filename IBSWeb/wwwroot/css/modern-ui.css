@@ -937,7 +937,7 @@ table.dataTable tbody tr:hover {
     background-color: #ffffff !important;
     border: 1px solid rgba(188, 203, 185, 0.2) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04), 0 10px 30px rgba(0, 0, 0, 0.08) !important;
-    width: 384px !important;
+    width: 384px;
     font-family: 'Hanken Grotesk', sans-serif;
 }
 

@@ -150,10 +150,10 @@
                                 <div class="modern-grid-compact">
                                     @if (!string.IsNullOrEmpty(Model.ImageSignedUrl))
                                     {
-                                        <div class="modern-col-6">
+                                        <div class="modern-col-12 mb-2">
                                             <div class="modern-card" style="background-color: var(--surface-container-low); cursor: pointer;" id="viewSidebarImage">
                                                 <div class="modern-card-body items-center p-2" style="gap: 4px;">
-                                                    <img src="@Model.ImageSignedUrl" class="rounded" alt="Ticket" style="height: 50px; width: 100%; object-fit: cover;" />
+                                                    <img src="@Model.ImageSignedUrl" class="rounded" alt="Ticket" style="height: 120px; width: 100%; object-fit: cover;" />
                                                     <span class="text-xs text-primary font-bold">View Image</span>
                                                 </div>
                                             </div>
@@ -161,10 +161,10 @@
                                     }
                                     @if (!string.IsNullOrEmpty(Model.VideoSignedUrl))
                                     {
-                                        <div class="modern-col-6">
+                                        <div class="modern-col-12">
                                             <div class="modern-card view-video" style="background-color: var(--surface-container-low); cursor: pointer;" data-videolink="@Model.VideoSignedUrl">
                                                 <div class="modern-card-body items-center p-2" style="gap: 4px;">
-                                                    <span class="material-symbols-outlined text-primary" style="font-size: 32px">play_circle</span>
+                                                    <span class="material-symbols-outlined text-primary" style="font-size: 48px">play_circle</span>
                                                     <span class="text-xs text-primary font-bold">Play Video</span>
                                                 </div>
                                             </div>
@@ -383,7 +383,8 @@
             });
 
             $('#viewSidebarImage').on('click', function () {
-                ModernAlert.image($(this).attr('src'), "Dispatch Ticket");
+                const src = $(this).find('img').attr('src');
+                if (src) ModernAlert.image(src, "Dispatch Ticket");
             });
 
             // Video Player

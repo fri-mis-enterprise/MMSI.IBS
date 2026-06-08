@@ -175,26 +175,103 @@ const ModernAlert = {
     },
 
     /**
-     * Show an image preview
+     * Show an image preview with zoom and pan controls
      */
     image: function(imageUrl, title = 'Image Preview') {
+        const btnStyle = 'background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 4px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; backdrop-filter: blur(4px);';
+
         return Swal.fire({
             ...this._baseConfig,
             title: title,
-            imageUrl: imageUrl,
-            imageAlt: title,
+            html: `
+                <div class="modern-image-viewer-container" style="position: relative; overflow: hidden; height: 75vh; background: #000; border-radius: var(--radius-xl); margin-top: 10px;">
+                    <div class="modern-image-viewer-toolbar" style="position: absolute; top: 15px; right: 15px; z-index: 100; display: flex; gap: 8px;">
+                        <button class="zoom-in" style="${btnStyle}" title="Zoom In"><span class="material-symbols-outlined">zoom_in</span></button>
+                        <button class="zoom-out" style="${btnStyle}" title="Zoom Out"><span class="material-symbols-outlined">zoom_out</span></button>
+                        <button class="reset" style="${btnStyle}" title="Reset"><span class="material-symbols-outlined">restart_alt</span></button>
+                        <button class="close-viewer" style="${btnStyle}; background: rgba(239, 68, 68, 0.4);" title="Close"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="modern-image-viewer-wrapper" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: grab; user-select: none;">
+                        <img src="${imageUrl}" class="modern-image-viewer-img" style="max-width: 95%; max-height: 95%; transition: transform 0.15s ease-out; pointer-events: none;" />
+                    </div>
+                    <div style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.6); font-size: 11px; pointer-events: none; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Scroll to Zoom • Drag to Pan • Close to Exit
+                    </div>
+                </div>
+            `,
             showConfirmButton: false,
-            background: 'transparent',
-            width: 'auto',
-            padding: '20px',
+            showCloseButton: true,
+            width: '90%',
+            padding: '0',
+            background: 'var(--surface-container-lowest)',
             didOpen: () => {
-                const img = document.querySelector('.swal2-image');
-                if (img) {
-                    img.style.maxHeight = '80vh';
-                    img.style.height = 'auto';
-                    img.style.borderRadius = 'var(--radius-xl)';
-                    img.style.boxShadow = 'var(--shadow-lg)';
-                }
+                const img = document.querySelector('.modern-image-viewer-img');
+                const wrapper = document.querySelector('.modern-image-viewer-wrapper');
+                const container = document.querySelector('.modern-image-viewer-container');
+                let scale = 1;
+                let isDragging = false;
+                let startX, startY, translateX = 0, translateY = 0;
+
+                const updateTransform = () => {
+                    img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                };
+
+                // Zoom controls
+                document.querySelector('.zoom-in').onclick = (e) => { e.stopPropagation(); scale += 0.3; updateTransform(); };
+                document.querySelector('.zoom-out').onclick = (e) => { e.stopPropagation(); if (scale > 0.4) scale -= 0.3; updateTransform(); };
+                document.querySelector('.reset').onclick = (e) => { e.stopPropagation(); scale = 1; translateX = 0; translateY = 0; updateTransform(); };
+                document.querySelector('.close-viewer').onclick = (e) => { e.stopPropagation(); Swal.close(); };
+
+                // Hover effects for custom buttons
+                container.querySelectorAll('button').forEach(btn => {
+                    if (btn.classList.contains('close-viewer')) {
+                        btn.onmouseenter = () => btn.style.background = 'rgba(239, 68, 68, 0.6)';
+                        btn.onmouseleave = () => btn.style.background = 'rgba(239, 68, 68, 0.4)';
+                    } else {
+                        btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,0.4)';
+                        btn.onmouseleave = () => btn.style.background = 'rgba(255,255,255,0.2)';
+                    }
+                });
+
+                // Pan logic
+                wrapper.onmousedown = (e) => {
+                    if (e.button !== 0) return; // Only left click
+                    isDragging = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                    wrapper.style.cursor = 'grabbing';
+                };
+
+                const onMouseMove = (e) => {
+                    if (!isDragging) return;
+                    translateX = e.clientX - startX;
+                    translateY = e.clientY - startY;
+                    updateTransform();
+                };
+
+                const onMouseUp = () => {
+                    isDragging = false;
+                    wrapper.style.cursor = 'grab';
+                };
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+
+                // Wheel zoom
+                wrapper.onwheel = (e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+                    const newScale = Math.min(Math.max(0.3, scale + delta), 8);
+
+                    scale = newScale;
+                    updateTransform();
+                };
+
+                // Clean up event listeners when Swal is closed
+                Swal.getPopup().addEventListener('remove', () => {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                });
             }
         });
     },
@@ -215,9 +292,10 @@ const ModernAlert = {
                 </div>
             `,
             showConfirmButton: false,
-            background: 'transparent',
-            width: '80%',
-            padding: '20px'
+            showCloseButton: true,
+            background: 'var(--surface-container-lowest)',
+            width: '500px',
+            padding: '10px'
         });
     },
 

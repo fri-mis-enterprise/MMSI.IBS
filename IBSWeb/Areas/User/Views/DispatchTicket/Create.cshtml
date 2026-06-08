@@ -208,11 +208,21 @@
                         </div>
                         <div class="modern-card-body">
                             <div class="mb-4">
-                                <label class="modern-label">Dispatch Ticket Image</label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="modern-label">Dispatch Ticket Image</label>
+                                    <button type="button" id="btnPreviewImage" class="modern-btn-text text-xs" style="display:none;">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                    </button>
+                                </div>
                                 <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;">
                             </div>
                             <div>
-                                <label class="modern-label">Operation Video</label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="modern-label">Operation Video</label>
+                                    <button type="button" id="btnPreviewVideo" class="modern-btn-text text-xs" style="display:none;">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                    </button>
+                                </div>
                                 <input class="modern-input" id="videoUpload" name="videoFile" type="file" accept="video/*" style="padding: 0.35rem;">
                             </div>
                         </div>
@@ -268,6 +278,44 @@
             }
             $('.timeline-input').on('change input', calculateDuration);
             calculateDuration();
+
+            // Media Preview Logic
+            let imageBlobUrl = null;
+            let videoBlobUrl = null;
+
+            $('#imageUpload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (imageBlobUrl) URL.revokeObjectURL(imageBlobUrl);
+                    imageBlobUrl = URL.createObjectURL(file);
+                    $('#btnPreviewImage').show();
+                } else {
+                    $('#btnPreviewImage').hide();
+                }
+            });
+
+            $('#videoUpload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+                    videoBlobUrl = URL.createObjectURL(file);
+                    $('#btnPreviewVideo').show();
+                } else {
+                    $('#btnPreviewVideo').hide();
+                }
+            });
+
+            $('#btnPreviewImage').on('click', function() {
+                if (imageBlobUrl) {
+                    ModernAlert.image(imageBlobUrl, "Dispatch Ticket Image Preview");
+                }
+            });
+
+            $('#btnPreviewVideo').on('click', function() {
+                if (videoBlobUrl) {
+                    ModernAlert.video(videoBlobUrl, "Operation Video Preview");
+                }
+            });
         });
     </script>
 }

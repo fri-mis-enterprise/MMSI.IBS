@@ -96,7 +96,10 @@
                 columns: [
                     { data: "date", defaultContent: "" },
                     { data: "cosNumber", defaultContent: "" },
-                    { data: "dispatchNumber", defaultContent: "" },
+                    {
+                        data: "dispatchNumber",
+                        render: (data, type, row) => `<a href="${previewUrl}?id=${row.dispatchTicketId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
                     {
                         data: "dateLeft",
                         render: (data, type, row) => ModernTable.render.dateTime(row.dateLeft, row.timeLeft)

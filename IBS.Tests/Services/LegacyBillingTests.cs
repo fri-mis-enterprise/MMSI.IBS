@@ -67,7 +67,7 @@ namespace IBS.Tests.Services
             // Tickets: 70,000 + 70,000 = 140,000
             // Date: 2025-12-02
             // Expected Amount in Legacy: 140,000.00
-            
+
             var billing = new Billing
             {
                 JobOrderId = null, // Legacy data (no JO)
@@ -79,23 +79,23 @@ namespace IBS.Tests.Services
                 ToBillDispatchTickets = new List<string> { "11889", "11890" }
             };
 
-            var customer = new Customer 
-            { 
-                CustomerId = 7, 
-                CustomerName = "INSULAR OIL CORPORATION", 
-                VatType = SD.VatType_Vatable 
+            var customer = new Customer
+            {
+                CustomerId = 7,
+                CustomerName = "INSULAR OIL CORPORATION",
+                VatType = SD.VatType_Vatable
             };
 
-            var ticket1 = new DispatchTicket 
-            { 
-                DispatchTicketId = 11889, 
+            var ticket1 = new DispatchTicket
+            {
+                DispatchTicketId = 11889,
                 TotalNetRevenue = 70000m,
                 DispatchNumber = "19968"
             };
 
-            var ticket2 = new DispatchTicket 
-            { 
-                DispatchTicketId = 11890, 
+            var ticket2 = new DispatchTicket
+            {
+                DispatchTicketId = 11890,
                 TotalNetRevenue = 70000m,
                 DispatchNumber = "22293"
             };
@@ -120,11 +120,11 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeTrue(result.Message);
-            
+
             // If current implementation matches legacy, it should be 140,000.00
             // But wait, if IsVatable=true and IsVatInclusive=false, our code currently DOES total * 1.12.
             // Let's see what happens.
-            
+
             billing.Amount.Should().Be(140000.00m, "because legacy data for Dec 2025 shows Amount equals ticket sum even for Vatable/Exclusive customers");
         }
 
@@ -152,7 +152,7 @@ namespace IBS.Tests.Services
             _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(billing);
             _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
             _mockVesselRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Vessel, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(vessel);
-            _mockPrincipalRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Principal, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Principal)null);
+            _mockPrincipalRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Principal, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Principal)null!);
 
             _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>())).ReturnsAsync(new List<AccountTitleDto>
             {
@@ -170,9 +170,9 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeTrue(result.Message);
-            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s => 
-                s.VatableSales == 125000.00m && 
-                s.VatAmount == 15000.00m && 
+            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s =>
+                s.VatableSales == 125000.00m &&
+                s.VatAmount == 15000.00m &&
                 s.Amount == 140000.00m), It.IsAny<CancellationToken>()), Times.Once);
 
             // Verify WHT calculation logic (usually 2% of Net)
