@@ -320,7 +320,7 @@
                             className: 'text-center',
                             defaultContent: '',
                             render: function(data, type, row) {
-                                return `<input type="checkbox" class="bill-checkbox form-check-input" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-net="${row.net}" style="width: 18px; height: 18px; cursor: pointer;">`;
+                                return `<input type="checkbox" class="bill-checkbox form-check-input" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-net="${row.net}" data-is-vatable="${row.isVatable}" style="width: 18px; height: 18px; cursor: pointer;">`;
                             }
                         },
                         { 
@@ -465,11 +465,22 @@
                 });
 
                 $('#selectAll').on('change', function() {
-                    $('.bill-checkbox').prop('checked', this.checked).trigger('change');
+                    $('.bill-checkbox').prop('checked', this.checked);
+                    updateSelectedBillings();
                 });
 
-                $('#cashAmount, #checkAmount, #wvat').on('input', function() {
-                    calculateManualTotal();
+                $('#cashAmount').on('input', function() {
+                    $('#checkAmount').data('auto-filled', false);
+                    calculateManualTotal('cash');
+                });
+                
+                $('#checkAmount').on('input', function() {
+                    $('#checkAmount').data('auto-filled', false);
+                    calculateManualTotal('check');
+                });
+                
+                $('#wvat').on('input', function() {
+                    calculateManualTotal('wvat');
                 });
                 
                 $('#submitButton').on('click', areYouSureToSave);
@@ -483,6 +494,9 @@
                 $("#CustomerAddress").text(customer.address || '-');
                 $("#CustomerTIN").text(customer.tinNo || '-');
                 $("#CustomerTerms").text(customer.terms || '-');
+
+                // Store withholding tax flag on the customer input for later use in calculations
+                $("#customerId").data("with-holding-tax", customer.withHoldingTax);
 
                 $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
                 handleCheckboxChange();
@@ -548,51 +562,75 @@
                 });
             }
 
+            let updateTimeout;
             function updateSelectedBillings() {
-                let grossTotal = 0, ewtTotal = 0, netTotal = 0;
-                const $hiddenSelect = $('#hiddenBillingsSelect');
-                $hiddenSelect.empty();
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(() => {
+                    let grossTotal = 0, ewtTotal = 0, netTotal = 0;
+                    const $hiddenSelect = $('#hiddenBillingsSelect');
+                    $hiddenSelect.empty();
 
-                $('.bill-checkbox:checked').each(function() {
-                    const id = $(this).val();
-                    const gross = parseFloat($(this).data('gross'));
-                    const ewt = parseFloat($(this).data('ewt'));
-                    const net = parseFloat($(this).data('net'));
+                    const withHoldingTax = $("#customerId").data("with-holding-tax") === true;
 
-                    grossTotal += gross;
-                    ewtTotal += ewt;
-                    netTotal += net;
+                    $('.bill-checkbox:checked').each(function() {
+                        const id = $(this).val();
+                        const gross = parseFloat($(this).data('gross'));
+                        const isVatable = $(this).data('is-vatable') === true;
+                        
+                        let ewt = 0;
+                        if (withHoldingTax) {
+                            ewt = isVatable ? (gross / 1.12) * 0.02 : gross * 0.02;
+                        }
+                        ewt = Math.round(ewt * 100) / 100;
+                        const net = Math.round((gross - ewt) * 100) / 100;
 
-                    $hiddenSelect.append(`<option value="${id}" selected>${id}</option>`);
-                });
+                        grossTotal += gross;
+                        ewtTotal += ewt;
+                        netTotal += net;
 
-                $('#billingsTotal').text(`₱${formatNumber(grossTotal)}`);
-                $('#ewtTotalDisplay').text(`₱${formatNumber(ewtTotal)}`);
-                $('#netAmountDisplay').text(`₱${formatNumber(netTotal)}`);
-                
-                $('#ewt').val(ewtTotal.toFixed(2));
-                
-                const currentCash = parseFloat($('#cashAmount').val()) || 0;
-                const currentCheck = parseFloat($('#checkAmount').val()) || 0;
-                
-                if (currentCash === 0 && currentCheck === 0) {
-                    $('#checkAmount').val(netTotal.toFixed(2));
-                }
-                
-                calculateManualTotal();
+                        $hiddenSelect.append(`<option value="${id}" selected>${id}</option>`);
+                    });
+
+                    $('#billingsTotal').text(`₱${formatNumber(grossTotal)}`);
+                    $('#ewtTotalDisplay').text(`₱${formatNumber(ewtTotal)}`);
+                    $('#netAmountDisplay').text(`₱${formatNumber(netTotal)}`);
+                    
+                    $('#ewt').val(ewtTotal.toFixed(2));
+                    
+                    const currentCash = parseFloat($('#cashAmount').val()) || 0;
+                    const currentCheck = parseFloat($('#checkAmount').val()) || 0;
+                    const currentWvat = parseFloat($('#wvat').val()) || 0;
+                    
+                    // Auto-fill checkAmount if cash and wvat are 0 and check is either 0 or was previously auto-filled
+                    if (currentCash === 0 && currentWvat === 0 && (currentCheck === 0 || $('#checkAmount').data('auto-filled') === true)) {
+                        $('#checkAmount').val(netTotal > 0 ? netTotal.toFixed(2) : '').data('auto-filled', true);
+                    }
+                    
+                    calculateManualTotal();
+                }, 150);
             }
 
-            function calculateManualTotal() {
+            function calculateManualTotal(triggeredBy) {
                 const cash = parseFloat($('#cashAmount').val()) || 0;
                 const check = parseFloat($('#checkAmount').val()) || 0;
                 const wvat = parseFloat($('#wvat').val()) || 0;
-                
-                const total = cash + check + wvat;
+                const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱', '').replace(/,/g, '').trim()) || 0;
+
+                let total = cash + check + wvat;
+
+                // Auto-balancing: If total exceeds net and we know which field to adjust
+                if (netToMatch > 0 && total > netToMatch) {
+                    const excess = total - netToMatch;
+                    if (triggeredBy === 'cash' && $('#checkAmount').data('auto-filled') === true) {
+                        const newCheck = Math.max(0, check - excess);
+                        $('#checkAmount').val(newCheck > 0 ? newCheck.toFixed(2) : '');
+                        total = cash + newCheck + wvat;
+                    }
+                }
                 
                 $('#amount').val(total.toFixed(2));
                 $('#manualTotalDisplay').text(`₱${formatNumber(total)}`);
                 
-                const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱', '').replace(/,/g, '')) || 0;
                 if (Math.abs(total - netToMatch) > 0.01 && netToMatch > 0) {
                     $('#manualTotalDisplay').css('color', 'var(--error)');
                 } else if (netToMatch > 0) {

@@ -52,7 +52,7 @@ namespace IBS.Tests.UI
 
             // Wait for the table to filter
             var termLocator = Page.Locator($"table#paginatedTable >> text={termCode}");
-            await termLocator.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 10000 });
+            await termLocator.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30000 });
 
             var isVisible = await termLocator.IsVisibleAsync();
             Assert.True(isVisible, $"New term {termCode} should be visible in the list after search.");

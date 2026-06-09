@@ -53,7 +53,7 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#TimeArrived", "10:00");
 
             await Page.ClickAsync("#submitButton");
-            await Page.WaitForURLAsync(new Regex("/User/(DispatchTicket($|/Index)|JobOrder/Details)"));
+            await Page.WaitForURLAsync("**/User/JobOrder/Details/*");
             await DismissAnySweetAlertAsync();
 
             // 3. Attempt to close Job Order
@@ -109,17 +109,21 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#DateArrived", "2026-06-11");
             await Page.FillAsync("#TimeArrived", "16:00");
             await Page.ClickAsync("#submitButton");
-            await Page.WaitForURLAsync(new Regex("/User/(DispatchTicket($|/Index)|JobOrder/Details)"));
+            await Page.WaitForURLAsync("**/User/JobOrder/Details/*");
             await DismissAnySweetAlertAsync();
 
             var ticketRowInDetails = Page.Locator("tr").Filter(new() { HasText = "T-BILL" });
-            await ticketRowInDetails.Locator("button:has-text('Action')").ClickAsync();
+            await ticketRowInDetails.Locator("button").Filter(new() { HasText = "ACTIONS" }).ClickAsync();
             await Page.WaitForTimeoutAsync(300);
-            await ForceClickAsync(ticketRowInDetails.Locator("a:has-text('Set Tariff')"));
+            await ForceClickAsync(ticketRowInDetails.Locator("text='Set Tariff'"));
+
+            await Page.WaitForURLAsync("**/User/DispatchTicket/SetTariff/*");
+            await DismissAnySweetAlertAsync();
+
             await Page.FillAsync("#DispatchRate", "10000");
             await Page.ClickAsync("#submitButton");
             await ConfirmSweetAlertAsync("Submit");
-            await Page.WaitForURLAsync(new Regex("/User/(DispatchTicket($|/Index)|JobOrder/Details)"));
+            await Page.WaitForURLAsync("**/User/JobOrder/Details/*");
             await DismissAnySweetAlertAsync();
 
             if (!Page.Url.Contains("/User/JobOrder/Details/"))
@@ -131,17 +135,17 @@ namespace IBS.Tests.UI
                     return rows.length === 1 && !rows[0].innerText.includes('Loading');
                 }");
                 await Page.ClickAsync("a:has-text('Details')");
-                await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
+                await Page.WaitForURLAsync("**/User/JobOrder/Details/*");
             }
 
             ticketRowInDetails = Page.Locator("tr").Filter(new() { HasText = "T-BILL" });
-            await ticketRowInDetails.Locator("button:has-text('Action')").ClickAsync();
+            await ticketRowInDetails.Locator("button").Filter(new() { HasText = "ACTIONS" }).ClickAsync();
             await Page.WaitForTimeoutAsync(300);
-            // Fix strict mode violation by using more specific selector and scoping
-            var approveBtn = Page.Locator("button.modern-dropdown-item:has-text('Approve Tariff')").Filter(new() { HasNotText = "Disapprove" });
+            
+            var approveBtn = ticketRowInDetails.Locator(".modern-dropdown-item[onclick*='confirmApprove']");
             await ForceClickAsync(approveBtn);
             await ConfirmSweetAlertAsync("approve");
-            await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
+            await Page.WaitForURLAsync("**/User/JobOrder/Details/*");
             await DismissAnySweetAlertAsync();
 
             // 3. Go to Billing Create and select this JO

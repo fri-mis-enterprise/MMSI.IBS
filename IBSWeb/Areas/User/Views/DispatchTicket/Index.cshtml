@@ -165,6 +165,12 @@
                                 icon: 'edit',
                                 url: `${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
                                 condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status)
+                            },
+                            {
+                                label: 'Approve Tariff',
+                                icon: 'check_circle',
+                                onclick: `confirmApprove(${row.dispatchTicketId})`,
+                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval"
                             }
                         ])
                     }
@@ -209,5 +215,35 @@
                 else if (status === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
             }
         });
+
+        function confirmApprove(id) {
+            ModernAlert.confirm({
+                title: 'Approve Tariff?',
+                text: "This ticket will be marked for billing.",
+                icon: 'question',
+                confirmText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Approving tariff...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success('The tariff has been approved.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
     </script>
 }

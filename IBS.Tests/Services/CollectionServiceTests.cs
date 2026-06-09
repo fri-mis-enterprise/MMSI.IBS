@@ -47,6 +47,140 @@ namespace IBS.Tests.Services
         }
 
         [Fact]
+        public async Task GetUncollectedBillingsForTableAsync_CalculatesEwtCorrectly_ForVatableCustomer()
+        {
+            // Arrange
+            int customerId = 1;
+            var customer = new Customer 
+            { 
+                CustomerId = customerId, 
+                WithHoldingTax = true,
+                VatType = SD.VatType_Vatable
+            };
+
+            var billings = new List<Billing>
+            {
+                new Billing 
+                { 
+                    MsapBillingId = 100, 
+                    Amount = 1120m, 
+                    BilledTo = SD.BilledTo_Local,
+                    IsVatable = true
+                }
+            };
+
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(customer);
+
+            _mockCollectionRepo.Setup(u => u.GetMsapUncollectedBillingsByCustomerList(customerId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(billings);
+
+            // Act
+            var result = await _service.GetUncollectedBillingsForTableAsync(customerId, null, CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            var data = (IEnumerable<object>)result.Data!;
+            var billing = data.First();
+            
+            var ewt = (decimal)billing.GetType().GetProperty("ewt")!.GetValue(billing)!;
+            var net = (decimal)billing.GetType().GetProperty("net")!.GetValue(billing)!;
+            
+            // For Vatable: (1120 / 1.12) * 0.02 = 20
+            ewt.Should().Be(20m);
+            net.Should().Be(1100m);
+        }
+
+        [Fact]
+        public async Task GetUncollectedBillingsForTableAsync_CalculatesEwtCorrectly_ForZeroRatedCustomer()
+        {
+            // Arrange
+            int customerId = 1;
+            var customer = new Customer 
+            { 
+                CustomerId = customerId, 
+                WithHoldingTax = true,
+                VatType = "Zero-Rated"
+            };
+
+            var billings = new List<Billing>
+            {
+                new Billing 
+                { 
+                    MsapBillingId = 100, 
+                    Amount = 1000m, 
+                    BilledTo = SD.BilledTo_Local,
+                    IsVatable = false
+                }
+            };
+
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(customer);
+
+            _mockCollectionRepo.Setup(u => u.GetMsapUncollectedBillingsByCustomerList(customerId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(billings);
+
+            // Act
+            var result = await _service.GetUncollectedBillingsForTableAsync(customerId, null, CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            var data = (IEnumerable<object>)result.Data!;
+            var billing = data.First();
+            
+            var ewt = (decimal)billing.GetType().GetProperty("ewt")!.GetValue(billing)!;
+            var net = (decimal)billing.GetType().GetProperty("net")!.GetValue(billing)!;
+            
+            // For Zero-Rated: 1000 * 0.02 = 20
+            ewt.Should().Be(20m);
+            net.Should().Be(980m);
+        }
+
+        [Fact]
+        public async Task GetUncollectedBillingsForTableAsync_DoesNotCalculateEwt_WhenWithHoldingTaxIsFalse()
+        {
+            // Arrange
+            int customerId = 1;
+            var customer = new Customer 
+            { 
+                CustomerId = customerId, 
+                WithHoldingTax = false,
+                VatType = SD.VatType_Vatable
+            };
+
+            var billings = new List<Billing>
+            {
+                new Billing 
+                { 
+                    MsapBillingId = 100, 
+                    Amount = 1120m, 
+                    BilledTo = SD.BilledTo_Local,
+                    IsVatable = true
+                }
+            };
+
+            _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(customer);
+
+            _mockCollectionRepo.Setup(u => u.GetMsapUncollectedBillingsByCustomerList(customerId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(billings);
+
+            // Act
+            var result = await _service.GetUncollectedBillingsForTableAsync(customerId, null, CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            var data = (IEnumerable<object>)result.Data!;
+            var billing = data.First();
+            
+            var ewt = (decimal)billing.GetType().GetProperty("ewt")!.GetValue(billing)!;
+            var net = (decimal)billing.GetType().GetProperty("net")!.GetValue(billing)!;
+            
+            ewt.Should().Be(0m);
+            net.Should().Be(1120m);
+        }
+
+        [Fact]
         public async Task CreateCollectionAsync_UpdatesBillingStatusToCollected_WithPartialPayment()
         {
             // Arrange

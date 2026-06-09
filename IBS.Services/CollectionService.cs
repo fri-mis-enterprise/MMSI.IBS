@@ -234,6 +234,12 @@ namespace IBS.Services
         {
             try
             {
+                var customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == customerId, cancellationToken);
+                if (customer == null)
+                {
+                    return ServiceResult<object>.Failure("Customer not found.");
+                }
+
                 var billings = await _unitOfWork.Collection.GetMsapUncollectedBillingsByCustomerList(customerId, cancellationToken);
                 if (collectionId.HasValue && collectionId.Value != 0)
                 {
@@ -243,16 +249,26 @@ namespace IBS.Services
 
                 var result = billings
                     .DistinctBy(b => b.MsapBillingId)
-                    .Select(b => new
+                    .Select(b =>
                     {
-                        msapBillingId = b.MsapBillingId,
-                        msapBillingNumber = b.MsapBillingNumber,
-                        date = b.Date,
-                        amount = b.Amount,
-                        balance = b.Balance,
-                        ewt = b.BilledTo == SD.BilledTo_Local ? (b.Amount / 1.12m) * 0.02m : 0m,
-                        net = b.BilledTo == SD.BilledTo_Local ? b.Amount - ((b.Amount / 1.12m) * 0.02m) : b.Amount,
-                        isSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
+                        decimal ewt = 0;
+                        if (customer.WithHoldingTax && b.BilledTo == SD.BilledTo_Local)
+                        {
+                            ewt = b.IsVatable ? (b.Amount / 1.12m) * 0.02m : b.Amount * 0.02m;
+                        }
+
+                        return new
+                        {
+                            msapBillingId = b.MsapBillingId,
+                            msapBillingNumber = b.MsapBillingNumber,
+                            date = b.Date,
+                            amount = b.Amount,
+                            balance = b.Balance,
+                            ewt = Math.Round(ewt, 2),
+                            net = Math.Round(b.Amount - ewt, 2),
+                            isVatable = b.IsVatable,
+                            isSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
+                        };
                     });
 
                 return ServiceResult<object>.Success(result);
@@ -306,7 +322,8 @@ namespace IBS.Services
                 address = c.CustomerAddress,
                 tinNo = c.CustomerTin,
                 terms = c.CustomerTerms,
-                businessStyle = c.BusinessStyle ?? "-"
+                businessStyle = c.BusinessStyle ?? "-",
+                withHoldingTax = c.WithHoldingTax
             }).ToList();
         }
 

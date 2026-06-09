@@ -605,7 +605,8 @@
             function renderTicketsTable(tickets, isReadOnly) {
                 $ticketsTableBody.empty();
                 $dispatchSelect.empty();
-                $("#selectAllTickets").prop("disabled", isReadOnly);
+                // Allow selecting/deselecting even in documented mode
+                $("#selectAllTickets").prop("disabled", false);
 
                 if (!tickets?.length) {
                     $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">No tickets available for billing in this job order</td></tr>');
@@ -617,7 +618,6 @@
                         <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
                             <td class="text-center">
                                 <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked 
-                                    ${isReadOnly ? 'disabled' : ''} 
                                     style="width: 18px; height: 18px; cursor: pointer;">
                             </td>
                             <td class="font-bold">${ticket.dispatchNo}</td>
