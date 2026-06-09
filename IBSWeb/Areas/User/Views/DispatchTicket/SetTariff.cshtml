@@ -311,7 +311,7 @@
             const bafRateInput = $('#BAFRate');
             const dispatchDiscountInput = $('#DispatchDiscount');
             const bafDiscountInput = $('#BAFDiscount');
-            const totalHours = @(Model.TotalHours ?? 0);
+            const totalHours = Math.round(@(Model.TotalHours ?? 0) * 100) / 100;
 
             function ValueChange() {
                 const dispatchChargeType = $('input[name="chargeType"]:checked').val();

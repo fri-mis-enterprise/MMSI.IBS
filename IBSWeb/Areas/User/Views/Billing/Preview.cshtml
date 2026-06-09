@@ -214,6 +214,14 @@
                                 var vatableSales = Model.Amount / 1.12m;
                                 var taxAmount = Model.Amount - vatableSales;
                                 <tr>
+                                    <td>SERVICE AMOUNT:</td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N2")</b></td>
+                                </tr>
+                                <tr>
+                                    <td>BUNKER ADJUSTMENT FACTOR:</td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N2")</b></td>
+                                </tr>
+                                <tr>
                                     <td>VATABLE SALES:</td>
                                     <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N2")</b></td>
                                 </tr>
@@ -236,6 +244,14 @@
                             }
                             else
                             {
+                                <tr>
+                                    <td>SERVICE AMOUNT:</td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N2")</b></td>
+                                </tr>
+                                <tr>
+                                    <td>BUNKER ADJUSTMENT FACTOR:</td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N2")</b></td>
+                                </tr>
                                 <tr>
                                     <td>VATABLE SALES:</td>
                                     <td class="text-right border-bottom-dark">0.00</td>

@@ -545,8 +545,18 @@ namespace IBS.Services
                 worksheet.Cells[row, 5].Style.Numberformat.Format = "(#,##0.00)";
                 row++;
 
+                decimal wvatAmount = 0;
+                if (billing.Customer?.WithHoldingVat == true)
+                {
+                    wvatAmount = vatableSales * 0.05m;
+                    worksheet.Cells[row, 4].Value = "LESS 5% WVAT";
+                    worksheet.Cells[row, 5].Value = wvatAmount;
+                    worksheet.Cells[row, 5].Style.Numberformat.Format = "(#,##0.00)";
+                    row++;
+                }
+
                 worksheet.Cells[row, 4].Value = "NET AMOUNT DUE";
-                worksheet.Cells[row, 5].Value = subTotal - whtAmount;
+                worksheet.Cells[row, 5].Value = subTotal - whtAmount - wvatAmount;
                 worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0.00";
                 worksheet.Cells[row, 5].Style.Font.Bold = true;
             }

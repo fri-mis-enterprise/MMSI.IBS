@@ -1030,6 +1030,11 @@ namespace IBSWeb.Areas.User.Controllers
                     {
                         maps.TerminalLegacyMap[item.LegacyId] = (r.PortId, r.TerminalId);
                     }
+
+                    if (!maps.PortToFirstTerminal.ContainsKey(r.PortId))
+                    {
+                        maps.PortToFirstTerminal[r.PortId] = r.TerminalId;
+                    }
                 }
             }
 
@@ -1721,8 +1726,17 @@ namespace IBSWeb.Areas.User.Controllers
                         {
                             tId = firstTid;
                         }
+                        else if (portNumRaw == "012" && maps.Port.TryGetValue("001", out int bId))
+                        {
+                            // Fallback for the duplicate Batangas port that has no terminals
+                            maps.PortToFirstTerminal.TryGetValue(bId, out int bTid);
+                            if (bTid != 0)
+                            {
+                                return (bId, bTid); // Redirect to the original Batangas port/terminal
+                            }
+                        }
                     }
-                    return (pId, tId);
+                    if (tId != null || !useFallback) return (pId, tId);
                 }
 
                 // 3. Try as Port Legacy ID (from port.csv RECID)

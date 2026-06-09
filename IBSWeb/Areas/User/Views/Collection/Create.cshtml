@@ -320,7 +320,7 @@
                             className: 'text-center',
                             defaultContent: '',
                             render: function(data, type, row) {
-                                return `<input type="checkbox" class="bill-checkbox form-check-input" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-net="${row.net}" data-is-vatable="${row.isVatable}" style="width: 18px; height: 18px; cursor: pointer;">`;
+                                return `<input type="checkbox" class="bill-checkbox form-check-input" value="${data}" data-gross="${row.amount}" data-ewt="${row.ewt}" data-wvat="${row.wvat}" data-net="${row.net}" data-is-vatable="${row.isVatable}" style="width: 18px; height: 18px; cursor: pointer;">`;
                             }
                         },
                         { 
@@ -495,8 +495,9 @@
                 $("#CustomerTIN").text(customer.tinNo || '-');
                 $("#CustomerTerms").text(customer.terms || '-');
 
-                // Store withholding tax flag on the customer input for later use in calculations
+                // Store withholding flags on the customer input for later use in calculations
                 $("#customerId").data("with-holding-tax", customer.withHoldingTax);
+                $("#customerId").data("with-holding-vat", customer.withHoldingVat);
 
                 $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
                 handleCheckboxChange();
@@ -566,26 +567,20 @@
             function updateSelectedBillings() {
                 clearTimeout(updateTimeout);
                 updateTimeout = setTimeout(() => {
-                    let grossTotal = 0, ewtTotal = 0, netTotal = 0;
+                    let grossTotal = 0, ewtTotal = 0, wvatTotal = 0, netTotal = 0;
                     const $hiddenSelect = $('#hiddenBillingsSelect');
                     $hiddenSelect.empty();
 
-                    const withHoldingTax = $("#customerId").data("with-holding-tax") === true;
-
                     $('.bill-checkbox:checked').each(function() {
                         const id = $(this).val();
-                        const gross = parseFloat($(this).data('gross'));
-                        const isVatable = $(this).data('is-vatable') === true;
-                        
-                        let ewt = 0;
-                        if (withHoldingTax) {
-                            ewt = isVatable ? (gross / 1.12) * 0.02 : gross * 0.02;
-                        }
-                        ewt = Math.round(ewt * 100) / 100;
-                        const net = Math.round((gross - ewt) * 100) / 100;
+                        const gross = parseFloat($(this).data('gross')) || 0;
+                        const ewt = parseFloat($(this).data('ewt')) || 0;
+                        const wvat = parseFloat($(this).data('wvat')) || 0;
+                        const net = parseFloat($(this).data('net')) || 0;
 
                         grossTotal += gross;
                         ewtTotal += ewt;
+                        wvatTotal += wvat;
                         netTotal += net;
 
                         $hiddenSelect.append(`<option value="${id}" selected>${id}</option>`);
@@ -596,13 +591,13 @@
                     $('#netAmountDisplay').text(`₱${formatNumber(netTotal)}`);
                     
                     $('#ewt').val(ewtTotal.toFixed(2));
+                    $('#wvat').val(wvatTotal > 0 ? wvatTotal.toFixed(2) : '');
                     
                     const currentCash = parseFloat($('#cashAmount').val()) || 0;
                     const currentCheck = parseFloat($('#checkAmount').val()) || 0;
-                    const currentWvat = parseFloat($('#wvat').val()) || 0;
                     
-                    // Auto-fill checkAmount if cash and wvat are 0 and check is either 0 or was previously auto-filled
-                    if (currentCash === 0 && currentWvat === 0 && (currentCheck === 0 || $('#checkAmount').data('auto-filled') === true)) {
+                    // Auto-fill checkAmount if cash is 0 and check is either 0 or was previously auto-filled
+                    if (currentCash === 0 && (currentCheck === 0 || $('#checkAmount').data('auto-filled') === true)) {
                         $('#checkAmount').val(netTotal > 0 ? netTotal.toFixed(2) : '').data('auto-filled', true);
                     }
                     
@@ -616,22 +611,22 @@
                 const wvat = parseFloat($('#wvat').val()) || 0;
                 const netToMatch = parseFloat($('#netAmountDisplay').text().replace('₱', '').replace(/,/g, '').trim()) || 0;
 
-                let total = cash + check + wvat;
+                let totalPayment = cash + check;
 
-                // Auto-balancing: If total exceeds net and we know which field to adjust
-                if (netToMatch > 0 && total > netToMatch) {
-                    const excess = total - netToMatch;
+                // Auto-balancing: If total payment exceeds net and we know which field to adjust
+                if (netToMatch > 0 && totalPayment > netToMatch) {
+                    const excess = totalPayment - netToMatch;
                     if (triggeredBy === 'cash' && $('#checkAmount').data('auto-filled') === true) {
                         const newCheck = Math.max(0, check - excess);
                         $('#checkAmount').val(newCheck > 0 ? newCheck.toFixed(2) : '');
-                        total = cash + newCheck + wvat;
+                        totalPayment = cash + newCheck;
                     }
                 }
                 
-                $('#amount').val(total.toFixed(2));
-                $('#manualTotalDisplay').text(`₱${formatNumber(total)}`);
+                $('#amount').val(totalPayment.toFixed(2));
+                $('#manualTotalDisplay').text(`₱${formatNumber(totalPayment)}`);
                 
-                if (Math.abs(total - netToMatch) > 0.01 && netToMatch > 0) {
+                if (Math.abs(totalPayment - netToMatch) > 0.01 && netToMatch > 0) {
                     $('#manualTotalDisplay').css('color', 'var(--error)');
                 } else if (netToMatch > 0) {
                     $('#manualTotalDisplay').css('color', 'var(--secondary)');

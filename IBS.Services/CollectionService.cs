@@ -170,7 +170,7 @@ namespace IBS.Services
                     currentModel.Amount = viewModel.Amount;
                     currentModel.EWT = viewModel.EWT;
                     currentModel.WVAT = viewModel.WVAT;
-                    currentModel.Total = viewModel.Amount + viewModel.EWT; // Total should be Gross (Net + EWT), WVAT is already in Net (Amount)
+                    currentModel.Total = viewModel.Amount + viewModel.EWT + viewModel.WVAT; // Total should be Gross (Cash + EWT + WVAT)
 
                     if (viewModel.BankId.HasValue)
                     {
@@ -257,6 +257,12 @@ namespace IBS.Services
                             ewt = b.IsVatable ? (b.Amount / 1.12m) * 0.02m : b.Amount * 0.02m;
                         }
 
+                        decimal wvat = 0;
+                        if (customer.WithHoldingVat && b.BilledTo == SD.BilledTo_Local)
+                        {
+                            wvat = b.IsVatable ? (b.Amount / 1.12m) * 0.05m : 0;
+                        }
+
                         return new
                         {
                             msapBillingId = b.MsapBillingId,
@@ -265,7 +271,8 @@ namespace IBS.Services
                             amount = b.Amount,
                             balance = b.Balance,
                             ewt = Math.Round(ewt, 2),
-                            net = Math.Round(b.Amount - ewt, 2),
+                            wvat = Math.Round(wvat, 2),
+                            net = Math.Round(b.Amount - ewt - wvat, 2),
                             isVatable = b.IsVatable,
                             isSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
                         };
@@ -323,7 +330,8 @@ namespace IBS.Services
                 tinNo = c.CustomerTin,
                 terms = c.CustomerTerms,
                 businessStyle = c.BusinessStyle ?? "-",
-                withHoldingTax = c.WithHoldingTax
+                withHoldingTax = c.WithHoldingTax,
+                withHoldingVat = c.WithHoldingVat
             }).ToList();
         }
 
@@ -338,7 +346,7 @@ namespace IBS.Services
                 Amount = viewModel.Amount,
                 EWT = viewModel.EWT,
                 WVAT = viewModel.WVAT,
-                Total = viewModel.Amount + viewModel.EWT, // Total should be Gross (Net + EWT), WVAT is already in Net (Amount)
+                Total = viewModel.Amount + viewModel.EWT + viewModel.WVAT, // Total should be Gross (Cash + EWT + WVAT)
                 CashAmount = viewModel.CashAmount,
                 CheckAmount = viewModel.CheckAmount,
                 CheckNumber = viewModel.CheckNumber,

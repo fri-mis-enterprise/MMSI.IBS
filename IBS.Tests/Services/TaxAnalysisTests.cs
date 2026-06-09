@@ -12,6 +12,7 @@ using FluentAssertions;
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using IBS.DTOs;
+using IBS.Models.MSAP.ViewModels;
 
 namespace IBS.Tests.Services
 {
@@ -173,6 +174,86 @@ namespace IBS.Tests.Services
             
             // For Non-Vatable: Amount * 0.02
             ewt.Should().Be(20m);
+        }
+
+        [Fact]
+        public async Task Collection_WVAT_Calculation_Analysis_Vatable()
+        {
+            // Arrange: Billing Amount = 1120. Customer has both WHT (2%) and WVAT (5%).
+            // Net of VAT = 1000.
+            // EWT = 1000 * 0.02 = 20.
+            // WVAT = 1000 * 0.05 = 50.
+            // Cash expected = 1120 - 20 - 50 = 1050.
+            var customer = new Customer { CustomerId = 1, WithHoldingTax = true, WithHoldingVat = true, VatType = SD.VatType_Vatable };
+            var billing = new Billing
+            {
+                MsapBillingId = 1,
+                Amount = 1120m,
+                IsVatable = true,
+                IsVatInclusive = true,
+                BilledTo = SD.BilledTo_Local
+            };
+
+            _mockCustomerRepo.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
+            _mockUnitOfWork.Setup(u => u.Collection.GetMsapUncollectedBillingsByCustomerList(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Billing> { billing });
+
+            // Act
+            var result = await _collectionService.GetUncollectedBillingsForTableAsync(1, null, CancellationToken.None);
+
+            // Assert
+            var data = (IEnumerable<object>)result.Data!;
+            var row = data.First();
+            var ewt = (decimal)row.GetType().GetProperty("ewt")!.GetValue(row)!;
+            
+            // Checking if WVAT is present in the anonymous object (currently it's not)
+            var wvatProperty = row.GetType().GetProperty("wvat");
+            wvatProperty.Should().NotBeNull("WVAT should be calculated and returned for the table");
+            var wvat = (decimal)wvatProperty!.GetValue(row)!;
+            var net = (decimal)row.GetType().GetProperty("net")!.GetValue(row)!;
+
+            ewt.Should().Be(20m);
+            wvat.Should().Be(50m);
+            net.Should().Be(1050m);
+        }
+
+        [Fact]
+        public async Task Collection_Total_Calculation_Analysis()
+        {
+            // Arrange
+            var viewModel = new CreateCollectionViewModel
+            {
+                Amount = 1050m, // Cash received
+                EWT = 20m,      // WHT withheld
+                WVAT = 50m,     // WVAT withheld
+                CustomerId = 1,
+                MsapCollectionNumber = "COL-TEST",
+                BillingPayments = new List<BillingPaymentViewModel>
+                {
+                    new BillingPaymentViewModel { BillingId = 101, AmountToPay = 1050m }
+                }
+            };
+
+            var customer = new Customer { CustomerId = 1, CustomerName = "Test" };
+            _mockCustomerRepo.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
+            
+            var billing = new Billing { MsapBillingId = 101, Amount = 1120m };
+            _mockUnitOfWork.Setup(u => u.Billing.GetAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(billing);
+
+            // Act
+            Collection? capturedModel = null;
+            _mockUnitOfWork.Setup(u => u.Collection.AddAsync(It.IsAny<Collection>(), It.IsAny<CancellationToken>()))
+                .Callback<Collection, CancellationToken>((m, _) => capturedModel = m)
+                .Returns(Task.CompletedTask);
+
+            var result = await _collectionService.CreateCollectionAsync(viewModel, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue(result.Message);
+            capturedModel.Should().NotBeNull();
+            
+            // Gross should be 1120
+            capturedModel!.Total.Should().Be(1120m, "Total should be the Gross amount (Cash + EWT + WVAT)");
         }
     }
 }

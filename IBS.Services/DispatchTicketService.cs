@@ -103,7 +103,7 @@ namespace IBS.Services
 
                     model.Status = SD.DispatchTicketStatus.ForTariff;
                     var duration = (decimal)(end - start).TotalHours;
-                    model.TotalHours = Math.Max(duration, 0.5m);
+                    model.TotalHours = Math.Round(Math.Max(duration, 0.5m), 2);
                 }
                 else
                 {
@@ -188,7 +188,7 @@ namespace IBS.Services
                         return ServiceResult.Failure("Date/Time Left cannot be later than Date/Time Arrived!");
                     }
 
-                    var newTotalHours = Math.Max((decimal)(arrival - departure).TotalHours, 0.5m);
+                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 0.5m), 2);
                     AddChange("TotalHours", originalTotalHours, newTotalHours);
                     currentModel.TotalHours = newTotalHours;
                 }
@@ -312,13 +312,7 @@ namespace IBS.Services
                     AddChange("BAFRate", currentModel.BAFRate, model.BAFRate);
                     AddChange("DispatchDiscount", currentModel.DispatchDiscount, model.DispatchDiscount);
                     AddChange("BAFDiscount", currentModel.BAFDiscount, model.BAFDiscount);
-                    AddChange("DispatchBillingAmount", currentModel.DispatchBillingAmount, model.DispatchBillingAmount);
-                    AddChange("BAFBillingAmount", currentModel.BAFBillingAmount, model.BAFBillingAmount);
-                    AddChange("DispatchNetRevenue", currentModel.DispatchNetRevenue, model.DispatchNetRevenue);
-                    AddChange("BAFNetRevenue", currentModel.BAFNetRevenue, model.BAFNetRevenue);
                     AddChange("ApOtherTugs", currentModel.ApOtherTugs, model.ApOtherTugs);
-                    AddChange("TotalBilling", currentModel.TotalBilling, model.TotalBilling);
-                    AddChange("TotalNetRevenue", currentModel.TotalNetRevenue, model.TotalNetRevenue);
 
                     currentModel.TariffEditedBy = username;
                     currentModel.TariffEditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -331,21 +325,58 @@ namespace IBS.Services
                     auditMessage = $"Set Tariff #{currentModel.DispatchTicketId}";
                 }
 
+                // Server-side re-calculation to ensure integrity
+                decimal dispatchRate = model.DispatchRate;
+                decimal dispatchDiscountPercent = model.DispatchDiscount;
+                decimal dispatchDiscountAmount = dispatchRate * (dispatchDiscountPercent / 100);
+                decimal bafRate = model.BAFRate;
+                decimal bafDiscountPercent = model.BAFDiscount;
+                decimal bafDiscountAmount = bafRate * (bafDiscountPercent / 100);
+
+                decimal dispatchBilling = 0;
+                decimal dispatchRevenue = 0;
+                decimal bafBilling = 0;
+                decimal bafRevenue = 0;
+
+                var hours = Math.Round(currentModel.TotalHours, 2);
+
+                if (chargeType == "Per hour")
+                {
+                    dispatchBilling = dispatchRate * hours;
+                    dispatchRevenue = (dispatchRate - dispatchDiscountAmount) * hours;
+                }
+                else
+                {
+                    dispatchBilling = dispatchRate;
+                    dispatchRevenue = dispatchRate - dispatchDiscountAmount;
+                }
+
+                if (chargeType2 == "Per hour")
+                {
+                    bafBilling = bafRate * hours;
+                    bafRevenue = (bafRate - bafDiscountAmount) * hours;
+                }
+                else
+                {
+                    bafBilling = bafRate;
+                    bafRevenue = bafRate - bafDiscountAmount;
+                }
+
                 currentModel.Status = SD.DispatchTicketStatus.ForApproval;
                 currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.BAFChargeType = chargeType2;
-                currentModel.DispatchRate = model.DispatchRate;
-                currentModel.BAFRate = model.BAFRate;
-                currentModel.DispatchDiscount = model.DispatchDiscount;
-                currentModel.BAFDiscount = model.BAFDiscount;
-                currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
-                currentModel.BAFBillingAmount = model.BAFBillingAmount;
-                currentModel.DispatchNetRevenue = model.DispatchNetRevenue;
-                currentModel.BAFNetRevenue = model.BAFNetRevenue;
+                currentModel.DispatchRate = dispatchRate;
+                currentModel.BAFRate = bafRate;
+                currentModel.DispatchDiscount = dispatchDiscountPercent;
+                currentModel.BAFDiscount = bafDiscountPercent;
+                currentModel.DispatchBillingAmount = Math.Round(dispatchBilling, 2);
+                currentModel.BAFBillingAmount = Math.Round(bafBilling, 2);
+                currentModel.DispatchNetRevenue = Math.Round(dispatchRevenue, 2);
+                currentModel.BAFNetRevenue = Math.Round(bafRevenue, 2);
                 currentModel.ApOtherTugs = model.ApOtherTugs;
-                currentModel.TotalBilling = model.TotalBilling;
-                currentModel.TotalNetRevenue = model.TotalNetRevenue;
+                currentModel.TotalBilling = Math.Round(dispatchBilling + bafBilling, 2);
+                currentModel.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 2);
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, "Tariff"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
