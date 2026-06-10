@@ -1,4 +1,4 @@
-﻿using IBS.Models.MasterFile;
+using IBS.Models.MasterFile;
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
@@ -1532,6 +1532,7 @@ namespace IBSWeb.Areas.User.Controllers
                 string portNumRaw = PadNumber(GetString(record, "portnum"), 3);
                 string terminalRaw = GetString(record, "terminal");
                 string billNumStr = GetString(record, "billnum");
+                string masterNoRaw = GetString(record, "masterno");
 
                 if (!maps.Customer.TryGetValue(custNo, out int customerId))
                 {
@@ -1629,18 +1630,32 @@ namespace IBSWeb.Areas.User.Controllers
                 }
                 int? billingId = info?.Id == -1 ? null : info?.Id;
 
+                // Resolve optional TugMaster (MASTERNO) — not required, so skip if not found
+                int? tugMasterId = null;
+                if (masterNoRaw != "-" && !string.IsNullOrWhiteSpace(masterNoRaw))
+                {
+                    string masterNumPadded = PadNumber(masterNoRaw, 4);
+                    if (maps.TugMaster.TryGetValue(masterNumPadded, out int tmId)
+                        || maps.TugMasterLegacyMap.TryGetValue(masterNoRaw, out tmId))
+                    {
+                        tugMasterId = tmId;
+                    }
+                }
+
                 var entity = new DispatchTicket
                 {
                     DispatchTicketId = legacyRecId, // Force Legacy ID
                     DispatchNumber = dispatchNo,
                     CustomerId = customerId,
                     TugBoatId = tugboatId,
+                    TugMasterId = tugMasterId,
                     VesselId = vesselId,
                     ServiceId = serviceId,
                     PortId = pId.Value,
                     TerminalId = tId.Value,
                     BillingId = billingId,
                     BillingNumber = billNumStr != "-" ? billNumStr : null,
+                    BaseOrStation = NullIfDash(GetString(record, "base")),
                     ApOtherTugs = ParseDecimal(record, "apothertug"),
                     DispatchChargeType = ParseBool(record, "perhour") ? "Per hour" : "Per move",
                     BAFChargeType = "Per move",
@@ -1651,17 +1666,19 @@ namespace IBSWeb.Areas.User.Controllers
                     TimeLeft = ParseTimeOnly(record, "timeleft"),
                     DateArrived = ParseDateOnly(record, "datearrive"),
                     TimeArrived = ParseTimeOnly(record, "timearrive"),
-                    Date = ParseDateOnly(record, "date"),
-                    CreatedBy = GetString(record, "createdby"),
-                    CreatedDate = ParseDateTime(record, "date") ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    Date = ParseDateOnly(record, "date") ?? DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    CreatedBy = NullIfDash(GetString(record, "entryby")) ?? $"Import: {GetUserFullName()}",
+                    CreatedDate = ParseDateTime(record, "entrydate") ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     Status = ParseBool(record, "approved")
                         ? (billNumStr != "-" ? "Billed" : "For Billing")
                         : "For Tariff",
                     DispatchRate = ParseDecimal(record, "dispatchra"),
                     DispatchBillingAmount = ParseDecimal(record, "dispatchbi"),
+                    DispatchDiscount = ParseDecimal(record, "dispatchr2"),
                     DispatchNetRevenue = ParseDecimal(record, "dispatchne"),
                     BAFRate = ParseDecimal(record, "bafrate"),
                     BAFBillingAmount = ParseDecimal(record, "bafbillamt"),
+                    BAFDiscount = ParseDecimal(record, "bafrateadj"),
                     BAFNetRevenue = ParseDecimal(record, "bafnetamt"),
                 };
 
