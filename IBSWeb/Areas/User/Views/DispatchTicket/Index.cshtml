@@ -115,7 +115,7 @@
                     { data: "service.serviceName", defaultContent: "" },
                     {
                         data: null,
-                        name: "terminal.port.portName",
+                        orderable: false,
                         render: (data, type, row) => {
                             const portName = row.terminal?.port?.portName ?? "";
                             const terminalName = row.terminal?.terminalName ?? "";

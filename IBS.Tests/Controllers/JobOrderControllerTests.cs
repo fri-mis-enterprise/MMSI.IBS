@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
@@ -10,7 +9,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using FluentAssertions;
@@ -19,37 +17,26 @@ namespace IBS.Tests.Controllers
 {
     public class JobOrderControllerTests
     {
-        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IJobOrderService> _mockJobOrderService;
-        private readonly Mock<IDispatchTicketService> _mockDispatchTicketService;
-        private readonly Mock<IHubContext<TugboatHub>> _mockHubContext;
         private readonly JobOrderController _controller;
         private readonly Mock<ITempDataDictionary> _mockTempData;
 
-        public JobOrderControllerTests()
+        public JobOrderControllerTests(JobOrderController controller, Mock<ITempDataDictionary> mockTempData)
         {
-            _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockJobOrderService = new Mock<IJobOrderService>();
-            _mockDispatchTicketService = new Mock<IDispatchTicketService>();
-            _mockHubContext = new Mock<IHubContext<TugboatHub>>();
-            _mockTempData = new Mock<ITempDataDictionary>();
-            var mockLogger = new Mock<ILogger<JobOrderController>>();
+            var mockHubContext = new Mock<IHubContext<TugboatHub>>();
+            _mockTempData = mockTempData;
 
             // Mock SignalR Clients
             var mockClients = new Mock<IHubClients>();
             var mockClientProxy = new Mock<IClientProxy>();
-            _mockHubContext.Setup(h => h.Clients).Returns(mockClients.Object);
+            mockHubContext.Setup(h => h.Clients).Returns(mockClients.Object);
             mockClients.Setup(c => c.All).Returns(mockClientProxy.Object);
 
-            _controller = new JobOrderController(
-                _mockUnitOfWork.Object,
-                _mockJobOrderService.Object,
-                _mockDispatchTicketService.Object,
-                mockLogger.Object,
-                _mockHubContext.Object);
+            _controller = controller;
 
             // Mock User Identity
-            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, "testuser"),
                 new Claim(ClaimTypes.Role, "Admin")
@@ -61,6 +48,13 @@ namespace IBS.Tests.Controllers
             };
 
             _controller.TempData = _mockTempData.Object;
+        }
+
+        public JobOrderControllerTests(Mock<IJobOrderService> mockJobOrderService, JobOrderController controller, Mock<ITempDataDictionary> mockTempData)
+        {
+            _mockJobOrderService = mockJobOrderService;
+            _controller = controller;
+            _mockTempData = mockTempData;
         }
 
         #region Create Tests
@@ -141,7 +135,7 @@ namespace IBS.Tests.Controllers
             var result = await _controller.Close(1, CancellationToken.None);
 
             // Assert
-            var redirectResult = result.Should().BeOfType<RedirectToActionResult>().Subject;
+            _ = result.Should().BeOfType<RedirectToActionResult>().Subject;
             _mockTempData.VerifySet(t => t["JobOrder_PendingCloseId"] = 1);
             _mockTempData.VerifySet(t => t["warning"] = "Warning: Tickets pending approval");
         }
