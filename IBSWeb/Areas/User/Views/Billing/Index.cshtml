@@ -128,6 +128,7 @@
                         render: (data, type, row) => {
                             if (row.status === "@SD.BillingStatus.ForPosting") {
                                 return ModernTable.render.dropdown([
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
                                     { label: 'Post to Books', icon: 'send', url: `${postUrl}?id=${row.msapBillingId}` },
                                     { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}` },
                                     { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})` }

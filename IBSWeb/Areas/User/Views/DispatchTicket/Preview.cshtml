@@ -47,20 +47,20 @@
                         <span class="material-symbols-outlined">info</span>
                         <h2 class="modern-headline-md">Dispatch Details</h2>
                     </div>
-                    <div class="modern-card-body" style="gap: 1.25rem;">
+                    <div class="modern-card-body" style="gap: 0.6rem;">
                         <!-- Customer & Vessel -->
                         <div>
                             <p class="modern-label">Customer</p>
                             <p class="modern-value-lg text-primary" style="font-size: 18px;">@Model.Customer?.CustomerName</p>
 
-                            <div class="mt-3">
+                            <div class="mt-2">
                                 <p class="modern-label">Vessel</p>
                                 <p class="modern-value-md font-bold uppercase">@Model.Vessel?.VesselName <span class="modern-badge-sm" style="background-color: var(--surface-container-high); text-transform: none; font-weight: 500; margin-left: 4px;">@Model.Vessel?.VesselType</span></p>
                             </div>
                         </div>
 
                         <!-- Logistics Row -->
-                        <div class="modern-grid-compact border-t border-outline-variant pt-3">
+                        <div class="modern-grid-compact border-t border-outline-variant pt-2">
                             <div class="modern-col-6">
                                 <p class="modern-label">COS #</p>
                                 <p class="modern-value-md font-bold">@(Model.COSNumber ?? "-")</p>
@@ -72,7 +72,7 @@
                         </div>
 
                         <!-- Location -->
-                        <div class="border-t border-outline-variant pt-3">
+                        <div class="border-t border-outline-variant pt-2">
                             <p class="modern-label">Location</p>
                             <div class="flex items-start gap-2">
                                 <span class="material-symbols-outlined text-primary" style="font-size: 18px; margin-top: 2px;">location_on</span>
@@ -90,9 +90,24 @@
                             </div>
                         </div>
 
+                        <!-- Type of Service -->
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label">Type of Service</p>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 18px;">build</span>
+                                <div>
+                                    <p class="modern-value-md font-bold">@(Model.Service?.ServiceName ?? "-")</p>
+                                    @if (!string.IsNullOrEmpty(Model.Service?.ServiceType))
+                                    {
+                                        <span class="modern-badge-sm" style="background-color: var(--surface-container-high); text-transform: uppercase; font-weight: 500;">@Model.Service.ServiceType</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Timeline -->
-                        <div class="border-t border-outline-variant pt-3">
-                            <p class="modern-label mb-3">Service Timeline</p>
+                        <div class="border-t border-outline-variant pt-2">
+                            <p class="modern-label mb-2">Service Timeline</p>
                             <div class="dispatch-timeline">
                                 <div class="timeline-item">
                                     <div class="timeline-marker start"></div>
@@ -116,14 +131,14 @@
                                     <span class="material-symbols-outlined">schedule</span>
                                     <div>
                                         <p class="modern-label" style="margin-bottom: 0;">Net Duration</p>
-                                        <p class="modern-headline-md text-primary" style="font-size: 20px;">@Model.TotalHours.ToString("N2") <span class="text-xs opacity-60">HRS</span></p>
+                                        <p class="modern-headline-md text-primary" style="font-size: 20px;">@Model.TotalHours.ToString("N2")&nbsp;<span class="text-xs opacity-60">HRS</span></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Provider -->
-                        <div class="border-t border-outline-variant pt-3">
+                        <div class="border-t border-outline-variant pt-2">
                             <p class="modern-label">Provider Details</p>
                             <div class="flex items-start gap-2">
                                 <span class="material-symbols-outlined text-primary" style="font-size: 18px; margin-top: 2px;">directions_boat</span>
@@ -136,14 +151,14 @@
 
                         @if (!string.IsNullOrEmpty(Model.Remarks))
                         {
-                            <div class="border-t border-outline-variant pt-3">
+                            <div class="border-t border-outline-variant pt-2">
                                 <p class="modern-label">Remarks</p>
                                 <p class="modern-value-md italic opacity-70" style="font-size: 13px;">@Model.Remarks</p>
                             </div>
                         }
 
                         <!-- Attachments -->
-                        <div class="border-t border-outline-variant pt-3">
+                        <div class="border-t border-outline-variant pt-2">
                             <p class="modern-label mb-2">Media Attachments</p>
                             <div class="modern-grid-compact">
                                 @if (!string.IsNullOrEmpty(Model.ImageSignedUrl))
