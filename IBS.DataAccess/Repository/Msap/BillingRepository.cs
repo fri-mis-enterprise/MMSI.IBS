@@ -269,6 +269,13 @@ namespace IBS.DataAccess.Repository.Msap
                         {
                             query = query.Where(b => b.Status.ToLower() == searchValue);
                         }
+                        else if (column.Data == "date" || column.Data == "Date")
+                        {
+                            if (DateOnly.TryParse(searchValue, out var parsedDate))
+                            {
+                                query = query.Where(b => b.Date == parsedDate);
+                            }
+                        }
                     }
                 }
             }

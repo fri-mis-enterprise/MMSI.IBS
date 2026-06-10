@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models;
 using IBS.Models.MSAP;
 using Microsoft.EntityFrameworkCore;
 
@@ -76,7 +77,7 @@ namespace IBS.DataAccess.Repository.Msap
             var query = dbSet.AsNoTracking()
                 .Where(j => j.CustomerId == customerId &&
                             j.DispatchTickets.Any(dt => dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) &&
-                            j.DispatchTickets.All(dt => (dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) || 
+                            j.DispatchTickets.All(dt => (dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling && dt.BillingId == null) ||
                                                         dt.Status == Utility.Constants.SD.DispatchTicketStatus.Billed));
 
             if (!string.IsNullOrWhiteSpace(term))
@@ -89,6 +90,71 @@ namespace IBS.DataAccess.Repository.Msap
                 .OrderByDescending(j => j.Date)
                 .Take(limit)
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<(IEnumerable<JobOrder> Data, int RecordsFiltered, int TotalRecords)> GetPagedJobOrdersAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            IQueryable<JobOrder> query = dbSet
+                .Include(j => j.Customer)
+                .Include(j => j.Vessel)
+                .Include(j => j.Port)
+                .Include(j => j.Terminal);
+
+            if (!string.IsNullOrEmpty(parameters.Search.Value))
+            {
+                var s = parameters.Search.Value.ToLower();
+                query = query.Where(dt =>
+                    dt.JobOrderNumber.ToLower().Contains(s) ||
+                    dt.Customer.CustomerName.ToLower().Contains(s) ||
+                    dt.Status.ToLower().Contains(s)
+                );
+            }
+
+            // Column-specific search
+            if (parameters.Columns != null)
+            {
+                foreach (var column in parameters.Columns)
+                {
+                    if (column.Search?.Value is { Length: > 0 } searchValue)
+                    {
+                        if (column.Data == "status")
+                        {
+                            query = query.Where(b => b.Status.ToLower() == searchValue);
+                        }
+                        else if (column.Data == "date" || column.Data == "Date")
+                        {
+                            if (DateOnly.TryParse(searchValue, out var parsedDate))
+                            {
+                                query = query.Where(b => b.Date == parsedDate);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var totalRecords = await dbSet.CountAsync(cancellationToken);
+            var recordsFiltered = await query.CountAsync(cancellationToken);
+
+            if (parameters.Order?.Count > 0 && parameters.Columns != null)
+            {
+                var order = parameters.Order[0];
+                var column = parameters.Columns[order.Column];
+
+                query = order.Dir == "desc"
+                    ? query.OrderByDescending(e => EF.Property<object>(e, char.ToUpper(column.Data[0]) + column.Data.Substring(1)))
+                    : query.OrderBy(e => EF.Property<object>(e, char.ToUpper(column.Data[0]) + column.Data.Substring(1)));
+            }
+            else
+            {
+                query = query.OrderByDescending(j => j.Date);
+            }
+
+            var data = await query
+                .Skip(parameters.Start)
+                .Take(parameters.Length)
+                .ToListAsync(cancellationToken);
+
+            return (data, recordsFiltered, totalRecords);
         }
     }
 }

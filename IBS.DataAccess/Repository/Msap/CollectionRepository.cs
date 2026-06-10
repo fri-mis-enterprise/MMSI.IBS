@@ -532,6 +532,24 @@ namespace IBS.DataAccess.Repository.Msap
                 );
             }
 
+            // Column-specific search
+            if (parameters.Columns != null)
+            {
+                foreach (var column in parameters.Columns)
+                {
+                    if (column.Search?.Value is { Length: > 0 } searchValue)
+                    {
+                        if (column.Data == "date" || column.Data == "Date")
+                        {
+                            if (DateOnly.TryParse(searchValue, out var parsedDate))
+                            {
+                                query = query.Where(c => c.Date == parsedDate);
+                            }
+                        }
+                    }
+                }
+            }
+
             var totalRecords = await dbSet.CountAsync(cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
@@ -540,6 +558,10 @@ namespace IBS.DataAccess.Repository.Msap
                 var col = parameters.Columns[parameters.Order[0].Column].Data;
                 var dir = parameters.Order[0].Dir.ToLower() == "asc" ? "ascending" : "descending";
                 query = query.OrderBy($"{col} {dir}");
+            }
+            else
+            {
+                query = query.OrderByDescending(c => c.Date);
             }
 
             var data = await query

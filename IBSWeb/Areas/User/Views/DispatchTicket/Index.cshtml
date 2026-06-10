@@ -34,10 +34,14 @@
 
         <!-- Table Card -->
         <div class="modern-card">
-            <div class="modern-card-header-action">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">confirmation_number</span>
                     <h2 class="modern-headline-md">Ticket Registry</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
                 </div>
             </div>
             <div class="modern-card-body">
@@ -87,7 +91,7 @@
             const statusFilter = urlParams.get('status') || '';
 
             let table = $('#paginatedTable').DataTable(ModernTable.config({
-                order: [[1, 'asc']],
+                order: [[0, 'desc']],
                 columnDefs: [{ orderable: false, targets: [11] }],
                 ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })", (d) => {
                     d.filterType = filterType;
@@ -182,6 +186,11 @@
                     }
                 }
             }));
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(0).search($(this).val()).draw();
+            });
 
             // Filter button handlers
             $('.modern-btn-secondary[id^="filter"]').on('click', function() {

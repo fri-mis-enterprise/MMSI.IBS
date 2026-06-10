@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using FluentAssertions;
@@ -32,6 +33,7 @@ namespace IBS.Tests.Controllers
             _mockDispatchTicketService = new Mock<IDispatchTicketService>();
             _mockHubContext = new Mock<IHubContext<TugboatHub>>();
             _mockTempData = new Mock<ITempDataDictionary>();
+            var mockLogger = new Mock<ILogger<JobOrderController>>();
 
             // Mock SignalR Clients
             var mockClients = new Mock<IHubClients>();
@@ -43,6 +45,7 @@ namespace IBS.Tests.Controllers
                 _mockUnitOfWork.Object,
                 _mockJobOrderService.Object,
                 _mockDispatchTicketService.Object,
+                mockLogger.Object,
                 _mockHubContext.Object);
 
             // Mock User Identity

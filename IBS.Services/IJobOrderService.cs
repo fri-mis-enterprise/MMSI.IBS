@@ -1,4 +1,5 @@
-﻿using IBS.Models.MSAP;
+using IBS.Models;
+using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Helpers;
 
@@ -13,6 +14,7 @@ namespace IBS.Services
         Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken);
         Task<ServiceResult> CloseJobOrderAsync(int id, string username, bool forceClose, CancellationToken cancellationToken);
         Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
+        Task<(IEnumerable<JobOrder> Data, int RecordsFiltered, int TotalRecords)> GetPagedJobOrdersAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
     }
 }
 

@@ -174,6 +174,13 @@ namespace IBS.DataAccess.Repository.Msap
                         {
                             query = query.Where(dt => dt.Status.ToLower() == searchValue);
                         }
+                        else if (column.Data == "date" || column.Data == "Date")
+                        {
+                            if (DateOnly.TryParse(searchValue, out var parsedDate))
+                            {
+                                query = query.Where(dt => dt.Date == parsedDate);
+                            }
+                        }
                     }
                 }
             }
@@ -186,6 +193,10 @@ namespace IBS.DataAccess.Repository.Msap
                 var col = parameters.Columns[parameters.Order[0].Column].Data;
                 var dir = parameters.Order[0].Dir.ToLower() == "asc" ? "ascending" : "descending";
                 query = query.OrderBy($"{col} {dir}");
+            }
+            else
+            {
+                query = query.OrderByDescending(dt => dt.Date);
             }
 
             var data = await query

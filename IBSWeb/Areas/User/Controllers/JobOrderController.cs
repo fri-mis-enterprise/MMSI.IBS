@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using IBS.Services;
 using IBS.Utility.Constants;
+using Microsoft.Extensions.Logging;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -22,6 +24,7 @@ namespace IBSWeb.Areas.User.Controllers
         IUnitOfWork unitOfWork,
         IJobOrderService jobOrderService,
         IDispatchTicketService dispatchTicketService,
+        ILogger<JobOrderController> logger,
         IHubContext<TugboatHub> hubContext) : Controller
     {
         private const string _closeConfirmKey = "JobOrder_PendingCloseId";
@@ -37,10 +40,42 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.EditJobOrder,
             ProcedureEnum.DeleteJobOrder,
             ProcedureEnum.CloseJobOrder)]
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var jobOrders = await jobOrderService.GetAllJobOrdersAsync(cancellationToken);
-            return View(jobOrders.ToList());
+            return View();
+        }
+
+        /// <summary>
+        /// Returns a paged, filtered, sorted list of Job Orders for DataTables server-side processing.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAnyAccess(
+            "Access denied.",
+            ProcedureEnum.CreateJobOrder,
+            ProcedureEnum.EditJobOrder,
+            ProcedureEnum.DeleteJobOrder,
+            ProcedureEnum.CloseJobOrder)]
+        public async Task<IActionResult> GetJobOrderList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var (data, filtered, total) = await jobOrderService.GetPagedJobOrdersAsync(parameters, cancellationToken);
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = total,
+                    recordsFiltered = filtered,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to get job orders.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         #endregion

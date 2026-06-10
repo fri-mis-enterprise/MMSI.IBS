@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Models;
@@ -6,6 +6,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
+using IBS.DataAccess.Data;
 
 namespace IBS.Services
 {
@@ -247,6 +248,11 @@ namespace IBS.Services
                 tinNo = c.CustomerTin,
                 terms = c.CustomerTerms
             }).ToList();
+        }
+
+        public async Task<(IEnumerable<JobOrder> Data, int RecordsFiltered, int TotalRecords)> GetPagedJobOrdersAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            return await unitOfWork.JobOrder.GetPagedJobOrdersAsync(parameters, cancellationToken);
         }
 
         private async Task RecordAuditAsync(string activity, string username, CancellationToken cancellationToken)

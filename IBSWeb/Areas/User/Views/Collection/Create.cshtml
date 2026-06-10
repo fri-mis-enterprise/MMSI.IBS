@@ -135,27 +135,25 @@
                             <h2 class="modern-headline-md">2. Billing Settlement</h2>
                         </div>
                         <div class="modern-card-body">
-                            <div class="modern-table-container border border-outline-variant">
-                                <table id="billingsTable" class="modern-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-center" style="width: 48px;"><input type="checkbox" id="selectAll" class="form-check-input"></th>
-                                            <th>BILLING #</th>
-                                            <th class="text-center">DATE</th>
-                                            <th class="text-right">GROSS</th>
-                                            <th class="text-right">EWT</th>
-                                            <th class="text-right">NET</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-5 opacity-60 italic">
-                                                Please select a customer first to load unpaid billings.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <table id="billingsTable" class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 48px;"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                                        <th>BILLING #</th>
+                                        <th class="text-center">DATE</th>
+                                        <th class="text-right">GROSS</th>
+                                        <th class="text-right">EWT</th>
+                                        <th class="text-right">NET</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 opacity-60 italic">
+                                            Please select a customer first to load unpaid billings.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                             <!-- Hidden Select for Model Binding -->
                             <select asp-for="ToCollectBillings" id="hiddenBillingsSelect" multiple="multiple" style="display: none;"></select>
                         </div>
@@ -312,7 +310,7 @@
                     paging: true,
                     info: true,
                     order: [[1, 'desc']],
-                    dom: '<"flex-stack mb-2"f><"modern-table-container"t><"flex-stack mt-2"ip>',
+                    dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
                     columns: [
                         {
                             data: 'msapBillingId',

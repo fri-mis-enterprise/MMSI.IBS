@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MSAP;
 
 namespace IBS.DataAccess.Repository.Msap.IRepository
@@ -10,6 +11,7 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
         Task<JobOrder?> GetJobOrderWithDetailsAsync(int id, CancellationToken cancellationToken);
         Task<string> GenerateJobOrderNumber(CancellationToken cancellationToken);
         Task<List<JobOrder>> SearchBillableJobOrdersAsync(string term, int customerId, int limit, CancellationToken cancellationToken);
+        Task<(IEnumerable<JobOrder> Data, int RecordsFiltered, int TotalRecords)> GetPagedJobOrdersAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
     }
 }
 

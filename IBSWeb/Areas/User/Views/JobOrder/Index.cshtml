@@ -1,5 +1,3 @@
-@model IEnumerable<IBS.Models.MSAP.JobOrder>
-
 @{
     ViewData["Title"] = "Job Orders";
     ViewData["IsFullWidth"] = true;
@@ -27,77 +25,31 @@
 
         <!-- Table Card -->
         <div class="modern-card">
-            <div class="modern-card-header-action">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">list_alt</span>
-                    <h2 class="modern-headline-md">Recent Orders</h2>
+                    <h2 class="modern-headline-md">Job Order List</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
                 </div>
             </div>
             <div class="modern-card-body">
                 <table class="modern-table" id="jobOrdersTable">
                     <thead>
                         <tr>
-                            <th>Job Order #</th>
                             <th>Date</th>
+                            <th>Job Order #</th>
                             <th>Customer</th>
                             <th>Vessel</th>
                             <th>COS #</th>
                             <th>Voyage #</th>
                             <th class="text-center">Tickets</th>
-                            <th>Status</th>
+                            <th class="text-center">Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="font-bold">
-                                    <a asp-action="Details" asp-route-id="@item.JobOrderId" style="text-decoration:none; color: var(--primary)">
-                                        @item.JobOrderNumber
-                                    </a>
-                                </td>
-                                <td style="color: var(--on-surface-variant)">@item.Date.ToString("MMM dd, yyyy")</td>
-                                <td>
-                                    <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="@item.Customer?.CustomerName">
-                                        @item.Customer?.CustomerName
-                                    </div>
-                                </td>
-                                <td class="font-bold uppercase">
-                                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="@item.Vessel?.VesselName">
-                                        @item.Vessel?.VesselName
-                                    </div>
-                                </td>
-                                <td style="color: var(--on-surface-variant)">@(item.COSNumber ?? "-")</td>
-                                <td style="color: var(--on-surface-variant)">@(item.VoyageNumber)</td>
-                                <td class="text-center">
-                                    <span class="modern-badge-sm" style="background-color: var(--surface-container-low); color: var(--on-surface-variant)">
-                                        @item.DispatchTickets.Count
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="modern-badge-sm @(item.Status == SD.JobOrderStatus.Open ? "status-open" : "status-closed")">
-                                        @item.Status
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="relative inline-block text-left dropdown-container">
-                                        <button type="button" class="modern-btn-dropdown dropdown-trigger">
-                                            ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
-                                        </button>
-                                        <div class="modern-dropdown-menu dropdown-menu">
-                                            <a class="modern-dropdown-item" asp-action="Details" asp-route-id="@item.JobOrderId">
-                                                <span class="material-symbols-outlined">visibility</span> View Details
-                                            </a>
-                                            <a class="modern-dropdown-item" asp-action="Edit" asp-route-id="@item.JobOrderId">
-                                                <span class="material-symbols-outlined">edit</span> Edit Order
-                                            </a>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
                 </table>
             </div>
         </div>
@@ -107,24 +59,69 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // DataTable Initialization
+            const detailsUrl = '@Url.Action("Details", "JobOrder", new { area = "User" })';
+            const editUrl = '@Url.Action("Edit", "JobOrder", new { area = "User" })';
+
             const urlParams = new URLSearchParams(window.location.search);
             const searchTerm = urlParams.get('q') || '';
 
             let table = $('#jobOrdersTable').DataTable(ModernTable.config({
-                responsive: false,
                 order: [[0, 'desc']],
                 search: { search: searchTerm },
-                language: {
-                    searchPlaceholder: "Search orders..."
-                },
-                serverSide: false, // JobOrder Index currently uses client-side for simplicity as per existing code
-                dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
                 columnDefs: [
-                    { targets: [6, 8], className: 'text-center' },
+                    { targets: [6, 7, 8], className: 'text-center' },
                     { targets: [8], orderable: false }
+                ],
+                ajax: ModernTable.ajax("@Url.Action("GetJobOrderList", "JobOrder", new { area = "User" })"),
+                columns: [
+                    {
+                        data: "date",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.date(data)
+                    },
+                    {
+                        data: "jobOrderNumber",
+                        render: (data, type, row) => `<a href="${detailsUrl}?id=${row.jobOrderId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
+                    },
+                    {
+                        data: "customer.customerName",
+                        defaultContent: "",
+                        render: (data) => ModernTable.render.ellipsis(data, 250)
+                    },
+                    {
+                        data: "vessel.vesselName",
+                        defaultContent: "",
+                        render: (data) => `<span class="font-bold uppercase">${ModernTable.render.ellipsis(data, 200)}</span>`
+                    },
+                    { data: "cosNumber", defaultContent: "-" },
+                    { data: "voyageNumber", defaultContent: "" },
+                    {
+                        data: "dispatchTickets",
+                        render: (data) => `<span class="modern-badge-sm" style="background-color: var(--surface-container-low); color: var(--on-surface-variant)">${data ? data.length : 0}</span>`
+                    },
+                    {
+                        data: "status",
+                        render: (data) => {
+                            const cls = data === "Open" ? "status-open" : "status-closed";
+                            return ModernTable.render.badge(data, cls);
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'View Details', icon: 'visibility', url: `${detailsUrl}?id=${row.jobOrderId}` },
+                            { label: 'Edit Order', icon: 'edit', url: `${editUrl}?id=${row.jobOrderId}` }
+                        ])
+                    }
                 ]
             }));
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(0).search($(this).val()).draw();
+            });
 
             // Sync search with URL
             table.on('search.dt', function () {

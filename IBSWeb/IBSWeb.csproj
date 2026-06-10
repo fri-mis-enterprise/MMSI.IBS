@@ -49,4 +49,8 @@
     <ProjectReference Include="..\IBS.Utility\IBS.Utility.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="App_Data\LocalStorage\" />
+  </ItemGroup>
+
 </Project>
