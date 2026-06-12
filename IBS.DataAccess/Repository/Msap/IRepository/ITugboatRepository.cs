@@ -11,6 +11,8 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
         Task<List<SelectListItem>> GetMsapTugboatsById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMsapCompanyOwnerSelectListById(CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<Tugboat>> GetTugboatsWithOwnersAsync(CancellationToken cancellationToken = default);
     }
 }
 

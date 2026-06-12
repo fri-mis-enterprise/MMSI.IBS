@@ -2967,11 +2967,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("service_number");
 
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("service_type");
-
                     b.HasKey("ServiceId")
                         .HasName("pk_msap_services");
 

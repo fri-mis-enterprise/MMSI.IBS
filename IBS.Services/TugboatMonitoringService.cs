@@ -21,7 +21,7 @@ namespace IBS.Services
                 {
                     TugboatId = tugboat.TugboatId,
                     TugboatName = tugboat.TugboatName,
-                    Blocks = new List<TimelineBlockDto>()
+                    Blocks = new List<VesselBlockDto>()
                 };
 
                 // Add Planned blocks from JobOrders
@@ -30,10 +30,11 @@ namespace IBS.Services
                 {
                     if (job is { PlannedStartTime: not null, PlannedEndTime: not null })
                     {
-                        tugboatDto.Blocks.Add(new TimelineBlockDto
+                        tugboatDto.Blocks.Add(new VesselBlockDto
                         {
                             Id = $"JO-{job.JobOrderId}",
                             Title = job.Vessel?.VesselName ?? "Unknown Vessel",
+                            VesselName = job.Vessel?.VesselName ?? "Unknown Vessel",
                             Start = job.PlannedStartTime.Value,
                             End = job.PlannedEndTime.Value,
                             Status = "Planned",
@@ -66,10 +67,11 @@ namespace IBS.Services
                         var status = endTime.HasValue ? "Completed" : "In-Progress";
                         var actualEnd = endTime ?? DateTime.Now; // Use current time if still in progress
 
-                        tugboatDto.Blocks.Add(new TimelineBlockDto
+                        tugboatDto.Blocks.Add(new VesselBlockDto
                         {
                             Id = $"DT-{ticket.DispatchTicketId}",
                             Title = $"{ticket.Vessel?.VesselName} / {ticket.Service?.ServiceName}",
+                            VesselName = ticket.Vessel?.VesselName ?? "Unknown",
                             Start = startTime.Value,
                             End = actualEnd,
                             Status = status,
@@ -90,7 +92,7 @@ namespace IBS.Services
             return result;
         }
 
-        private void DetectConflicts(List<TimelineBlockDto> blocks)
+        private void DetectConflicts(List<VesselBlockDto> blocks)
         {
             var sortedBlocks = blocks.OrderBy(b => b.Start).ToList();
             for (int i = 0; i < sortedBlocks.Count; i++)

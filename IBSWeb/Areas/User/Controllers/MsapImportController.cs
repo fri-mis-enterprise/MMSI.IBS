@@ -773,7 +773,6 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     ServiceNumber = msapNumber,
                     ServiceName = GetString(record, "desc"),
-                    ServiceType = GetString(record, "type"),
                     MsapRecId = recid != "-" ? recid : null
                 };
 

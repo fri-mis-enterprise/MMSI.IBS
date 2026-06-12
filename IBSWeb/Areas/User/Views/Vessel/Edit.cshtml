@@ -1,71 +1,76 @@
-﻿@model IBS.Models.MSAP.MasterFile.Vessel
+@model IBS.Models.MSAP.MasterFile.Vessel
 
 @{
-    ViewData["Title"] = "Vessel - Edit";
+    ViewData["Title"] = "Edit Vessel";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="card shadow mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2>
-                @ViewData["Title"]
-            </h2>
-        </div>
-    </div>
-    
-    <div class="card-body">
-        
-        <form method="post" class="row">
-            
-            <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="VesselId" value="@Model.VesselId" style="display: none"/>
-                
-                <div class="row">
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="VesselName" value="@Model.VesselName" type="text" class="form-control border-0 shadow" id="VesselName" placeholder="Name" required>
-                        <label asp-for="VesselName" for="VesselName" class="ms-2">Vessel name<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="VesselName" class="text-danger"></span>
+<div class="modern-layout">
+    <form asp-action="Edit" method="post" id="mainForm">
+        <input type="hidden" asp-for="VesselId" />
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Vessels</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit Vessel</span>
                     </div>
-                    
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="VesselNumber" value="@Model.VesselNumber" type="text" class="form-control border-0 shadow" id="ActivityServiceNumber" placeholder="Number" required>
-                        <label asp-for="VesselNumber" for="ActivityServiceNumber" class="ms-2">Vessel number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="VesselNumber" class="text-danger"></span>
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
                 </div>
-                
-                <div class="row">
-                    <div class="form-group col-6">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select asp-for="VesselType" id="customerId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="LOCAL">LOCAL</option>
-                            <option value="FOREIGN">FOREIGN</option>
-                        </select>
-                        <span asp-validation-for="VesselType" class="text-danger"></span>
-                    </div>
-                </div>
-                
-            </div>
-            
-            <div class="row justify-content-end mt-3">
-                
-                <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
-                </div>
-
-                <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12" asp-controller="Vessel" asp-action="Index">
-                        Go Back
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
                     </a>
                 </div>
-                
             </div>
-            
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">edit</span>
+                            <h2 class="modern-headline-md">Vessel Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="VesselName" class="modern-label">Vessel Name <span class="text-error">*</span></label>
+                                    <input asp-for="VesselName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter vessel name" />
+                                    <span asp-validation-for="VesselName" class="text-error text-xs"></span>
+                                </div>
+
+                                <div class="modern-grid">
+                                    <div class="modern-col-6">
+                                        <label asp-for="VesselNumber" class="modern-label">Vessel # <span class="text-error">*</span></label>
+                                        <input asp-for="VesselNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Vessel number" />
+                                        <span asp-validation-for="VesselNumber" class="text-error text-xs"></span>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label asp-for="VesselType" class="modern-label">Vessel Type <span class="text-error">*</span></label>
+                                        <input asp-for="VesselType" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="e.g. Bulk Carrier, Tanker" />
+                                        <span asp-validation-for="VesselType" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
 
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

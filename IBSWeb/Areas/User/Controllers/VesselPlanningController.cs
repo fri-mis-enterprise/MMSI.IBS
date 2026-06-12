@@ -20,17 +20,9 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetData(int? portId, string? date, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetData(int? portId, CancellationToken cancellationToken)
         {
-            if (!DateTime.TryParse(date, out var targetDate))
-            {
-                targetDate = DateTime.Today;
-            }
-
-            var startOfMonth = new DateTime(targetDate.Year, targetDate.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1).AddHours(23).AddMinutes(59).AddSeconds(59);
-
-            var data = await planningService.GetVesselPlanningDataAsync(portId, startOfMonth, endOfMonth, cancellationToken);
+            var data = await planningService.GetVesselPlanningDashboardAsync(portId, cancellationToken);
             return Json(data);
         }
 
@@ -49,7 +41,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     if (jobOrder.PortId > 0)
                     {
-                        await hubContext.Clients.Group(jobOrder.PortId.ToString()).SendAsync("OnPlanUpdated", jobOrder.PortId, cancellationToken: cancellationToken);
+                        await hubContext.Clients.All.SendAsync("OnPlanUpdated", jobOrder.PortId, cancellationToken: cancellationToken);
                     }
 
                     return Json(new { success = true });

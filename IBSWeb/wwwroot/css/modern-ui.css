@@ -314,20 +314,26 @@ table.dataTable thead th {
     position: relative !important;
 }
 
+/* Force left alignment for all columns, overriding DataTables defaults and utility classes */
+.modern-table th,
+table.dataTable thead th,
+.modern-table td,
+table.dataTable tbody td,
 .modern-table th.text-right,
-table.dataTable thead th.text-right {
-    text-align: right !important;
-}
-
+table.dataTable thead th.text-right,
 .modern-table th.text-center,
-table.dataTable thead th.text-center {
-    text-align: center !important;
-}
-
-/* Force right-aligned columns to stay right-aligned */
-.modern-table th.text-right,
-table.dataTable thead th.text-right {
-    text-align: right !important;
+table.dataTable thead th.text-center,
+.modern-table td.text-right,
+table.dataTable tbody td.text-right,
+.modern-table td.text-center,
+table.dataTable tbody td.text-center,
+table.dataTable th.dt-type-numeric,
+table.dataTable td.dt-type-numeric,
+table.dataTable th.dt-center,
+table.dataTable td.dt-center,
+table.dataTable th.dt-right,
+table.dataTable td.dt-right {
+    text-align: left !important;
 }
 
 /* Reset DataTables sort icon padding */

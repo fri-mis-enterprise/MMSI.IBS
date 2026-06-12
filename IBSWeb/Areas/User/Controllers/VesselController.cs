@@ -1,7 +1,6 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,17 +8,21 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class VesselController(
-        ApplicationDbContext dbContext,
-        ILogger<VesselController> logger,
-        IUnitOfWork unitOfWork,
+        IVesselService vesselService,
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var vessels = await unitOfWork.Vessel.GetAllAsync(null,
-                cancellationToken);
-            return View(vessels);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetVesselList(CancellationToken cancellationToken)
+        {
+            var list = await vesselService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
@@ -29,128 +32,73 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Vessel model, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await vesselService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                await unitOfWork.Vessel.AddAsync(model,
-                    cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Vessel #{model.VesselNumber}",
-                    "Vessel");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Creation Succeed!";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to create vessel.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
-            }
-        }
 
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await unitOfWork.Vessel.GetAsync(i => i.VesselId == id,
-                    cancellationToken);
-
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
-                await unitOfWork.Vessel.RemoveAsync(model,
-                    cancellationToken);
-                TempData["success"] = "Entry deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to delete vessel.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            TempData["error"] = result.Message;
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Vessel.GetAsync(a => a.VesselId == id,
-                cancellationToken);
-            return View(model);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Edit(Vessel model, CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Invalid entry, please try again.";
-                return View(model);
-            }
-
-            var currentModel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId,
-                cancellationToken);
-
-            if (currentModel == null)
+            var model = await vesselService.GetByIdAsync(id, cancellationToken);
+            if (model == null)
             {
                 return NotFound();
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            return View(model);
+        }
 
-            try
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Vessel model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
             {
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Vessel #{currentModel.VesselNumber} => {model.VesselNumber}",
-                    "Vessel");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                currentModel.VesselNumber = model.VesselNumber;
-                currentModel.VesselName = model.VesselName;
-                currentModel.VesselType = model.VesselType;
-                await unitOfWork.Vessel.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Edited successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to edit vessel.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
                 return View(model);
             }
+
+            var result = await vesselService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["error"] = result.Message;
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await vesselService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+            }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

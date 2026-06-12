@@ -37,6 +37,13 @@ namespace IBS.DataAccess.Repository.Msap
 
             return companyOwnerList;
         }
+
+        public async Task<IEnumerable<Tugboat>> GetTugboatsWithOwnersAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.MsapTugboats
+                .Include(t => t.TugboatOwner)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
 

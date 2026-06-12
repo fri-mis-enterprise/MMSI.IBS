@@ -97,13 +97,9 @@
                                 <span class="material-symbols-outlined text-primary" style="font-size: 18px;">build</span>
                                 <div>
                                     <p class="modern-value-md font-bold">@(Model.Service?.ServiceName ?? "-")</p>
-                                    @if (!string.IsNullOrEmpty(Model.Service?.ServiceType))
-                                    {
-                                        <span class="modern-badge-sm" style="background-color: var(--surface-container-high); text-transform: uppercase; font-weight: 500;">@Model.Service.ServiceType</span>
-                                    }
                                 </div>
-                            </div>
-                        </div>
+                                </div>
+                                </div>
 
                         <!-- Timeline -->
                         <div class="border-t border-outline-variant pt-2">

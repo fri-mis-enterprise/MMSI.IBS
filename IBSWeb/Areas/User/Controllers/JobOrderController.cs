@@ -21,11 +21,12 @@ namespace IBSWeb.Areas.User.Controllers
     /// </summary>
     [Area("User")]
     public class JobOrderController(
-        IUnitOfWork unitOfWork,
         IJobOrderService jobOrderService,
         IDispatchTicketService dispatchTicketService,
+        ITerminalService terminalService,
         ILogger<JobOrderController> logger,
-        IHubContext<TugboatHub> hubContext) : Controller
+        IHubContext<TugboatHub> hubContext,
+        IHubContext<PlanningHub> planningHubContext) : Controller
     {
         private const string _closeConfirmKey = "JobOrder_PendingCloseId";
 
@@ -324,16 +325,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
-            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
-
-            var list = terminals
-                .OrderBy(t => t.TerminalName)
-                .Select(t => new SelectListItem
-                {
-                    Value = t.TerminalId.ToString(),
-                    Text = t.TerminalName
-                });
-
+            var list = await terminalService.GetTerminalsByPortAsync(portId, cancellationToken);
             return Json(list);
         }
 
@@ -343,41 +335,13 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTicketDetails(int id, CancellationToken cancellationToken)
         {
-            // Use GetDispatchTicketWithDetailsAsync to ensure navigation properties
-            // (Service, Tugboat, TugMaster, Terminal, Port) are loaded.
-            var ticket = await unitOfWork.DispatchTicket.GetDispatchTicketWithDetailsAsync(id, cancellationToken);
-            if (ticket == null)
+            var details = await dispatchTicketService.GetTicketDetailsAsync(id, cancellationToken);
+            if (details == null)
             {
                 return NotFound();
             }
 
-            return Json(new
-            {
-                id = ticket.DispatchTicketId,
-                dispatchNumber = ticket.DispatchNumber,
-                date = ticket.Date.ToString("MMM dd, yyyy"),
-                serviceName = ticket.Service.ServiceName,
-                tugboatName = ticket.Tugboat.TugboatName,
-                tugMasterName = ticket.TugMaster?.TugMasterName,
-                location = $"{ticket.Terminal.Port.PortName} - {ticket.Terminal.TerminalName}",
-                timeStart = ticket is { DateLeft: not null, TimeLeft: not null }
-                    ? $"{ticket.DateLeft.Value:MMM dd, yyyy} {ticket.TimeLeft.Value:HH:mm}"
-                    : "-",
-                timeEnd = ticket is { DateArrived: not null, TimeArrived: not null }
-                    ? $"{ticket.DateArrived.Value:MMM dd, yyyy} {ticket.TimeArrived.Value:HH:mm}"
-                    : "-",
-                remarks = ticket.Remarks ?? "No remarks",
-                status = ticket.Status,
-                totalHours = ticket.TotalHours.ToString("N2"),
-                dispatchRate = ticket.DispatchRate.ToString("N2"),
-                dispatchDiscount = ticket.DispatchDiscount.ToString("N2"),
-                dispatchBilling = ticket.DispatchBillingAmount.ToString("N2"),
-                bafRate = ticket.BAFRate.ToString("N2"),
-                bafDiscount = ticket.BAFDiscount.ToString("N2"),
-                bafBilling = ticket.BAFBillingAmount.ToString("N2"),
-                totalBilling = ticket.TotalBilling.ToString("N2"),
-                totalNetRevenue = ticket.TotalNetRevenue.ToString("N2")
-            });
+            return Json(details);
         }
 
         /// <summary>
@@ -388,6 +352,53 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var result = await jobOrderService.SearchCustomersAsync(term, cancellationToken);
             return Json(result);
+        }
+
+        /// <summary>
+        /// Assigns a preferred tugboat to a Job Order.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> AssignTugboat(int jobOrderId, int tugboatId, CancellationToken cancellationToken)
+        {
+            var result = await jobOrderService.AssignTugboatAsync(jobOrderId, tugboatId, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                // Notify planning subscribers
+                var jobOrder = await jobOrderService.GetJobOrderByIdAsync(jobOrderId, cancellationToken);
+                if (jobOrder is { PortId: > 0 })
+                {
+                    await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
+                    await planningHubContext.Clients.All.SendAsync("OnPlanUpdated", jobOrder.PortId, cancellationToken);
+                }
+
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = result.Message });
+        }
+
+        /// <summary>
+        /// Unassigns a tugboat from a Job Order.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UnassignTugboat(int jobOrderId, int tugboatId, CancellationToken cancellationToken)
+        {
+            var result = await jobOrderService.UnassignTugboatAsync(jobOrderId, tugboatId, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                var jobOrder = await jobOrderService.GetJobOrderByIdAsync(jobOrderId, cancellationToken);
+                if (jobOrder is { PortId: > 0 })
+                {
+                    await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
+                    await planningHubContext.Clients.All.SendAsync("OnPlanUpdated", jobOrder.PortId, cancellationToken);
+                }
+
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = result.Message });
         }
 
         #endregion

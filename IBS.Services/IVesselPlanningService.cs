@@ -4,6 +4,6 @@ namespace IBS.Services
 {
     public interface IVesselPlanningService
     {
-        Task<VesselPlanningDataDto> GetVesselPlanningDataAsync(int? portId, DateTime start, DateTime end, CancellationToken cancellationToken = default);
+        Task<VesselPlanningDashboardDto> GetVesselPlanningDashboardAsync(int? portId, CancellationToken cancellationToken = default);
     }
 }

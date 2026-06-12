@@ -1,115 +1,109 @@
-﻿@model IEnumerable<IBS.Models.MSAP.MasterFile.Tugboat>
-
 @{
-    ViewData["Title"] = "Tug Boat";
+    ViewData["Title"] = "Tugboats";
+    ViewData["IsFullWidth"] = true;
 }
 
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-
-<div class="card shadow mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2>@ViewData["Title"]</h2>
-        </div>
-    </div>
-
-    <div class="card-body">
-
-        <div class="row justify-content-end mb-2">
-            <div class="text-center" style="width: 150px;">
-                <a class="btn btn-primary col-12 align-content-center" asp-controller="Tugboat" asp-action="Create">
-                    <i class="bi bi-plus-circle"></i> Create
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Tugboats</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
                 </a>
             </div>
         </div>
 
-        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
-            <thead>
-            <tr>
-                <th class="text-center">
-                    @Html.DisplayNameFor(m => m.TugboatNumber)
-                </th>
-                <th class="text-center">
-                    @Html.DisplayNameFor(m => m.TugboatName)
-                </th>
-                <th class="text-center">
-                    Actions
-                </th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td class="text-center align-content-center">
-                        @Html.DisplayFor(model => item.TugboatNumber)
-                    </td>
-                    <td class="text-center align-content-center">
-                        @Html.DisplayFor(model => item.TugboatName)
-                    </td>
-
-                    <td class="text-center">
-                        <div class="dropdown">
-                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Tugboat", new { id = item.TugboatId })">Edit</a></li>
-                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Tugboat", new { id = item.TugboatId })">Delete</a></li>
-                            </ul>
-                        </div>
-                    </td>
-
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">directions_boat</span>
+                    <h2 class="modern-headline-md">Tugboat List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="tugboatsTable">
+                    <thead>
+                        <tr>
+                            <th>Tugboat #</th>
+                            <th>Tugboat Name</th>
+                            <th>Port</th>
+                            <th>Owner / Company</th>
+                            <th class="text-center">Owned?</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
 
-@section Scripts{
+@section Scripts {
     <script>
-        let dataTableVar = $('#dataTable');
-        
-        document.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', function (event) {
-                event.preventDefault(); // Prevent default navigation
-
-                const href = this.getAttribute('href'); // Get the href value
-                ModernAlert.confirm({
-                    title: 'Delete?',
-                    text: "Delete this Tugboat entry?",
-                    icon: 'question',
-                    confirmText: 'Yes',
-                    cancelText: 'No'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = href; // Redirect to the href URL
-                    }
-                });
-            });
-        });
-
         $(document).ready(function () {
-            if ($.fn.DataTable.isDataTable('#dataTable')) {
-                dataTableVar.DataTable().destroy();
-            }
+            const editUrl = '@Url.Action("Edit", "Tugboat", new { area = "User" })';
+            const deleteUrl = '@Url.Action("Delete", "Tugboat", new { area = "User" })';
 
-            dataTableVar.DataTable({
-                "autoWidth": false,
-                "columnDefs": [
+            let table = $('#tugboatsTable').DataTable(ModernTable.config({
+                serverSide: false,
+                ajax: ModernTable.ajax("@Url.Action("GetTugboatList", "Tugboat", new { area = "User" })"),
+                columns: [
+                    { data: "tugboatNumber" },
+                    { 
+                        data: "tugboatName",
+                        render: (data) => `<span class="font-bold uppercase">${data}</span>`
+                    },
+                    { data: "port.portName" },
+                    { 
+                        data: "tugboatOwner.tugboatOwnerName", 
+                        defaultContent: '<span class="text-muted italic">None</span>' 
+                    },
+                    { 
+                        data: "isCompanyOwned",
+                        className: "text-center",
+                        render: (data) => data ? ModernTable.render.badge('YES', 'bg-success text-white') : ModernTable.render.badge('NO', 'bg-secondary text-white')
+                    },
                     {
-                        "targets": 2,
-                        "width": "150px",
-                        "className": "text-center",
-                        "orderable": false
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit Tugboat', icon: 'edit', url: `${editUrl}?id=${row.tugboatId}` },
+                            { 
+                                label: 'Delete Tugboat', 
+                                icon: 'delete', 
+                                isError: true,
+                                onclick: `confirmDelete('${deleteUrl}?id=${row.tugboatId}')`
+                            }
+                        ])
                     }
                 ]
-            });
+            }));
         });
-    
+
+        function confirmDelete(url) {
+            ModernAlert.confirm({
+                title: 'Delete Tugboat?',
+                text: "Are you sure you want to delete this tugboat entry?",
+                icon: 'warning',
+                confirmText: 'Yes, Delete',
+                cancelText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
     </script>
 }
-

@@ -1,25 +1,28 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-        public class TugMasterController(
-        ApplicationDbContext dbContext,
-        ILogger<TugMasterController> logger,
-        IUnitOfWork unitOfWork,
+    public class TugMasterController(
+        ITugMasterService tugMasterService,
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var tugMaster = await unitOfWork.TugMaster.GetAllAsync(null,
-                cancellationToken);
-            return View(tugMaster);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetTugMasterList(CancellationToken cancellationToken)
+        {
+            var list = await tugMasterService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
@@ -33,73 +36,29 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await tugMasterService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                await unitOfWork.TugMaster.AddAsync(model,
-                    cancellationToken);
-                await unitOfWork.TugMaster.SaveAsync(cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Tug Master #{model.TugMasterNumber}",
-                    "Tug Master");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Creation Succeed!";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to create tug master.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
-            }
-        }
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await unitOfWork.TugMaster.GetAsync(i => i.TugMasterId == id,
-                    cancellationToken);
 
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
-                await unitOfWork.TugMaster.RemoveAsync(model,
-                    cancellationToken);
-                await unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Entry deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to delete tug master.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            TempData["error"] = result.Message;
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.TugMaster.GetAsync(a => a.TugMasterId == id,
-                cancellationToken);
+            var model = await tugMasterService.GetByIdAsync(id, cancellationToken);
+            if (model == null)
+            {
+                return NotFound();
+            }
             return View(model);
         }
 
@@ -108,51 +67,35 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.TugMaster.GetAsync(t => t.TugMasterId == model.TugMasterId,
-                cancellationToken);
+            var result = await tugMasterService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (currentModel == null)
+            if (result.IsSuccess)
             {
-                TempData["info"] = "Entry not found, please try again.";
-                return View(model);
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Tug Master #{currentModel.TugMasterNumber} => {model.TugMasterNumber}",
-                    "Tug Master");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                currentModel.TugMasterNumber = model.TugMasterNumber;
-                currentModel.TugMasterName = model.TugMasterName;
-                currentModel.IsActive = model.IsActive;
-                await unitOfWork.TugMaster.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Edited successfully";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            TempData["error"] = result.Message;
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await tugMasterService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
             {
-                logger.LogError(ex,
-                    "Failed to edit tug master.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
+                TempData["success"] = result.Message;
             }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

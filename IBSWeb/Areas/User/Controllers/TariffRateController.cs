@@ -1,222 +1,122 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP;
-using IBS.Utility.Helpers;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class TariffRateController(
-        ApplicationDbContext dbContext,
-        IUnitOfWork unitOfWork,
-        UserManager<ApplicationUser> userManager,
-        ILogger<TariffRateController> logger)
+        ITariffRateService tariffRateService,
+        UserManager<ApplicationUser> userManager)
         : Controller
     {
-        private async Task<string?> GetCompanyClaimAsync()
+        public IActionResult Index()
         {
-            var user = await userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+            return View();
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetTariffRateList(CancellationToken cancellationToken)
         {
-            var tariffRates = await unitOfWork.TariffTable.GetAllAsync(null,
-                cancellationToken);
-            return View(tariffRates);
+            var list = await tariffRateService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var model = new TariffRate();
-            model = await GetSelectLists(model,
-                cancellationToken);
+            var model = await tariffRateService.PopulateSelectListsAsync(null, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(TariffRate model, CancellationToken cancellationToken = default)
         {
-            model = await GetSelectLists(model,
-                cancellationToken);
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
+                await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
             if (model is { Dispatch: <= 0, BAF: <= 0 })
             {
-                TempData["warning"] = "Dispatch and BAF value cannot be both zero.";
+                ModelState.AddModelError(string.Empty, "Dispatch and BAF value cannot be both zero.");
+                await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await tariffRateService.UpsertAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                var user = await userManager.GetUserAsync(User);
-                var existingModel = await unitOfWork.TariffTable
-                    .GetAsync(t => t.AsOfDate == model.AsOfDate &&
-                                   t.CustomerId == model.CustomerId &&
-                                   t.TerminalId == model.TerminalId &&
-                                   t.ServiceId == model.ServiceId,
-                        cancellationToken);
-
-                if (existingModel != null)
-                {
-                    existingModel.Dispatch = model.Dispatch;
-                    existingModel.BAF = model.BAF;
-                    existingModel.DispatchDiscount = model.DispatchDiscount;
-                    existingModel.BAFDiscount = model.BAFDiscount;
-                    existingModel.UpdateBy = user?.UserName;
-                    existingModel.UpdateDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model = existingModel;
-                    await unitOfWork.TariffTable.SaveAsync(cancellationToken);
-                    TempData["success"] = "Tariff rate updated successfully.";
-                }
-                else
-                {
-                    model.CreatedBy = user?.UserName;
-                    model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    await unitOfWork.TariffTable.AddAsync(model,
-                        cancellationToken);
-                    TempData["success"] = "Tariff rate created successfully.";
-                }
-
-                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex,
-                    "Failed to create tariff rate.");
-                TempData["error"] = ex.Message;
-                model = await GetSelectLists(model,
-                    cancellationToken);
-                model.Terminal = (await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
-                    cancellationToken))!;
-                return View(model);
-            }
+
+            TempData["error"] = result.Message;
+            await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == id,
-                cancellationToken);
-
+            var model = await tariffRateService.GetByIdAsync(id, cancellationToken);
             if (model == null)
             {
                 return NotFound();
             }
 
-            model = await GetSelectLists(model,
-                cancellationToken);
+            await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(TariffRate model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(TariffRate model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
+                await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == model.TariffRateId,
-                cancellationToken);
+            var result = await tariffRateService.UpsertAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (currentModel == null)
+            if (result.IsSuccess)
             {
-                return NotFound();
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                currentModel.AsOfDate = model.AsOfDate;
-                currentModel.CustomerId = model.CustomerId;
-                currentModel.ServiceId = model.ServiceId;
-                currentModel.TerminalId = model.TerminalId;
-                currentModel.Dispatch = model.Dispatch;
-                currentModel.BAF = model.BAF;
-                await unitOfWork.TariffTable.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Entry edited successfully.";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex,
-                    "Failed to update tariff rate.");
-                TempData["error"] = ex.Message;
-                return View(model);
-            }
+
+            TempData["error"] = result.Message;
+            await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
         }
 
         [HttpGet]
-        public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
-            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId,
-                cancellationToken);
-
-            var terminalsList = terminals.Select(t => new SelectListItem
-            {
-                Value = t.TerminalId.ToString(),
-                Text = t.TerminalName
-            }).ToList();
-
-            return Json(terminalsList);
+            var list = await tariffRateService.GetTerminalsByPortAsync(portId, cancellationToken);
+            return Json(list);
         }
 
-        public async Task<TariffRate> GetSelectLists(TariffRate model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            await GetCompanyClaimAsync();
-            model.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-            model.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
-            model.Services = await unitOfWork.Service.GetMsapActivitiesServicesById(cancellationToken);
-            if (model.TerminalId == 0)
+            var result = await tariffRateService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
             {
-                return model;
+                TempData["success"] = result.Message;
+            }
+            else
+            {
+                TempData["error"] = result.Message;
             }
 
-            model.Terminal = (await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
-                cancellationToken))!;
-            model.Terminals = await unitOfWork.Terminal.GetMsapTerminalsSelectList(model.Terminal.PortId,
-                cancellationToken);
-            return model;
-        }
-
-        [HttpPost]
-        public async Task<bool> CheckIfExisting(DateOnly date, int customerId, int terminalId, int activityServiceId, decimal dispatch, decimal baf, CancellationToken cancellationToken = default)
-        {
-            var model = await unitOfWork.TariffTable
-                .GetAsync(t =>
-                        t.AsOfDate == date &&
-                        t.CustomerId == customerId &&
-                        t.TerminalId == terminalId &&
-                        t.ServiceId == activityServiceId,
-                    cancellationToken);
-            return (model != null);
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

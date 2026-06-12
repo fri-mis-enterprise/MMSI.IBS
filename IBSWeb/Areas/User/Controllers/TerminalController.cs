@@ -1,35 +1,34 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-        public class TerminalController(
-        ApplicationDbContext dbContext,
-        IUnitOfWork unitOfWork,
-        ILogger<TerminalController> logger,
+    public class TerminalController(
+        ITerminalService terminalService,
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+        public IActionResult Index()
         {
-            var terminals = await unitOfWork.Terminal.GetAllAsync(null,
-                cancellationToken);
-            return View(terminals);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetTerminalList(CancellationToken cancellationToken)
+        {
+            var list = await terminalService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            Terminal model = new()
-            {
-                Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken)
-            };
-
+            var model = await terminalService.PopulateSelectListsAsync(null, cancellationToken);
             return View(model);
         }
 
@@ -38,79 +37,33 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
+                await terminalService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await terminalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                await unitOfWork.Terminal.AddAsync(model,
-                    cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Create new Terminal #{model.TerminalNumber}",
-                    "Terminal");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Creation Succeed!";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex,
-                    "Failed to create terminal.");
-                return View(model);
-            }
-        }
 
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await unitOfWork.Terminal.GetAsync(i => i.TerminalId == id,
-                    cancellationToken);
-
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
-                await unitOfWork.Terminal.RemoveAsync(model,
-                    cancellationToken);
-                TempData["success"] = "Entry deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to delete terminal.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            TempData["error"] = result.Message;
+            await terminalService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Terminal.GetAsync(a => a.TerminalId == id,
-                cancellationToken);
-
+            var model = await terminalService.GetByIdAsync(id, cancellationToken);
             if (model == null)
             {
                 return NotFound();
             }
 
-            model.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
+            await terminalService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -119,53 +72,37 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
+                await terminalService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId,
-                cancellationToken);
+            var result = await terminalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (currentModel == null)
+            if (result.IsSuccess)
             {
-                TempData["error"] = "Entry not found, please try again.";
-                return View(model);
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Terminal #{currentModel.TerminalNumber} => {model.TerminalNumber}",
-                    "Terminal");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                currentModel.TerminalNumber = model.TerminalNumber;
-                currentModel.TerminalName = model.TerminalName;
-                currentModel.PortId = model.PortId;
-                await unitOfWork.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Edited successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex,
-                    "Failed to delete terminal.");
-                TempData["error"] = ex.Message;
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
 
+            TempData["error"] = result.Message;
+            await terminalService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await terminalService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+            }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

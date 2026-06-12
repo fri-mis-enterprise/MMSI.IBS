@@ -1,46 +1,68 @@
-@model Service
+@model IBS.Models.MSAP.MasterFile.Service
 
 @{
-    ViewData["Title"] = "Service - Create";
+    ViewData["Title"] = "Create Activity / Service";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="card shadow mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2>@ViewData["Title"]</h2>
-        </div>
-    </div>
-
-    <div class="card-body">
-        <form method="post" class="row">
-            <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="row">
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="ServiceName" type="text" class="form-control border-0 shadow" id="ServiceName" placeholder="Name" required>
-                        <label asp-for="ServiceName" for="ServiceName" class="ms-2">Activity/Service<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="ServiceName" class="text-danger"></span>
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Activities / Services</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Activity / Service</span>
                     </div>
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="ServiceNumber" type="text" class="form-control border-0 shadow" id="ServiceNumber" placeholder="Number" required>
-                        <label asp-for="ServiceNumber" for="ServiceNumber" class="ms-2">Activity/Service number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="ServiceNumber" class="text-danger"></span>
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
                 </div>
-            </div>
-            <div class="row justify-content-end mt-3">
-                <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
-                </div>
-                <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12" asp-controller="MaritimeService" asp-action="Index">
-                        Go Back
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
                     </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">info</span>
+                            <h2 class="modern-headline-md">Service Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="ServiceNumber" class="modern-label">Service Number <span class="text-error">*</span></label>
+                                    <input asp-for="ServiceNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter 3-digit code" maxlength="3" />
+                                    <span asp-validation-for="ServiceNumber" class="text-error text-xs"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="ServiceName" class="modern-label">Service Name <span class="text-error">*</span></label>
+                                    <input asp-for="ServiceName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter service name" />
+                                    <span asp-validation-for="ServiceName" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

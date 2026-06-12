@@ -1,118 +1,101 @@
-﻿@model IEnumerable<IBS.Models.MSAP.MasterFile.Port>
-
 @{
-    ViewData["Title"] = "Port";
+    ViewData["Title"] = "Ports";
+    ViewData["IsFullWidth"] = true;
 }
 
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-
-<div class="card shadow mt-4">
-    
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2>
-                @ViewData["Title"]
-            </h2>
-        </div>
-    </div>
-    
-    <div class="card-body">
-        
-        <div class="row justify-content-end mb-2">
-            <div class="text-center" style="width: 150px;">
-                <a class="btn btn-primary col-12 align-content-center" asp-controller="Port" asp-action="Create">
-                    <i class="bi bi-plus-circle"></i> Create
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Ports</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
                 </a>
             </div>
         </div>
 
-        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
-            <thead>
-            <tr>
-                <th class="text-center">
-                    @Html.DisplayNameFor(m => m.PortNumber)
-                </th>
-                <th class="text-center">
-                    @Html.DisplayNameFor(m => m.PortName)
-                </th>
-                <th class="actions-column text-center">
-                    Actions
-                </th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td class="text-center align-content-center">
-                        @item.PortNumber
-                    </td>
-                    <td class="text-center align-content-center">
-                        @item.PortName
-                    </td>
-                    <td class="text-center">
-                        <div class="dropdown">
-                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Port", new { id = item.PortId })">Edit</a></li>
-                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Port", new { id = item.PortId })">Delete</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">anchor</span>
+                    <h2 class="modern-headline-md">Port List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="portsTable">
+                    <thead>
+                        <tr>
+                            <th>Port #</th>
+                            <th>Port Name</th>
+                            <th>SBMA?</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
 
-@section Scripts
-{
+@section Scripts {
     <script>
-        document.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', function (event) {
-                event.preventDefault(); // Prevent default navigation
-
-                const href = this.getAttribute('href');
-                ModernAlert.confirm({
-                    title: 'Delete Port?',
-                    text: "Are you sure you want to delete this port entry?",
-                    icon: 'warning',
-                    confirmText: 'Yes, Delete',
-                    cancelText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = href;
-                    }
-                });
-            });
-        });
-        
         $(document).ready(function () {
-            let dataTableVar = $('#dataTable');
-            
-            // Check if the table is already initialized and destroy it
-            if ($.fn.DataTable.isDataTable('#dataTable')) {
-                dataTableVar.DataTable().destroy();
-            }
+            const editUrl = '@Url.Action("Edit", "Port", new { area = "User" })';
+            const deleteUrl = '@Url.Action("Delete", "Port", new { area = "User" })';
 
-            // Initialize the DataTable with your settings
-            dataTableVar.DataTable({
-                "autoWidth": false,
-                "columnDefs": [
+            let table = $('#portsTable').DataTable(ModernTable.config({
+                serverSide: false,
+                ajax: ModernTable.ajax("@Url.Action("GetPortList", "Port", new { area = "User" })"),
+                columns: [
+                    { data: "portNumber" },
+                    { 
+                        data: "portName",
+                        render: (data) => `<span class="font-bold uppercase">${data}</span>`
+                    },
+                    { 
+                        data: "hasSBMA",
+                        render: (data) => data ? ModernTable.render.badge('YES', 'bg-success text-white') : ModernTable.render.badge('NO', 'bg-secondary text-white')
+                    },
                     {
-                        "targets": 2,
-                        "width": "150px",
-                        "className": "text-center",
-                        "orderable": false // Optional: disable sorting on Actions column
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit Port', icon: 'edit', url: `${editUrl}?id=${row.portId}` },
+                            { 
+                                label: 'Delete Port', 
+                                icon: 'delete', 
+                                isError: true,
+                                onclick: `confirmDelete('${deleteUrl}?id=${row.portId}')`
+                            }
+                        ])
                     }
                 ]
-            });
+            }));
         });
-    
+
+        function confirmDelete(url) {
+            ModernAlert.confirm({
+                title: 'Delete Port?',
+                text: "Are you sure you want to delete this port entry?",
+                icon: 'warning',
+                confirmText: 'Yes, Delete',
+                cancelText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
     </script>
 }
-

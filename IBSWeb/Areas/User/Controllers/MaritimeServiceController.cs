@@ -1,7 +1,6 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,16 +8,21 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class MaritimeServiceController(
-        ApplicationDbContext dbContext,
-        ILogger<ServiceController> logger,
-        IUnitOfWork unitOfWork,
+        IMaritimeServiceService maritimeService,
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var activitiesServices = dbContext.MsapServices.ToList();
-            return View(activitiesServices);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetMaritimeServiceList(CancellationToken cancellationToken)
+        {
+            var list = await maritimeService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
@@ -32,67 +36,29 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await maritimeService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                await unitOfWork.Service.AddAsync(model, cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Service #{model.ServiceNumber}", "Service");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Creation Succeed!";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to create service.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
-            }
-        }
-
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await unitOfWork.Service.GetAsync( i => i.ServiceId == id, cancellationToken);
-
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
-                dbContext.MsapServices.Remove(model);
-                await dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Entry deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to delete service.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            TempData["error"] = result.Message;
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Service.GetAsync(a => a.ServiceId == id, cancellationToken);
+            var model = await maritimeService.GetByIdAsync(id, cancellationToken);
+            if (model == null)
+            {
+                return NotFound();
+            }
             return View(model);
         }
 
@@ -101,46 +67,35 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.Service.GetAsync(s => s.ServiceId == model.ServiceId, cancellationToken);
+            var result = await maritimeService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (currentModel == null)
+            if (result.IsSuccess)
             {
-                return NotFound();
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Service #{currentModel.ServiceNumber} => {model.ServiceNumber}", "Service");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                currentModel.ServiceNumber = model.ServiceNumber;
-                currentModel.ServiceName = model.ServiceName;
-                await unitOfWork.Service.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Edited successfully";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception ex)
+            TempData["error"] = result.Message;
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await maritimeService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
             {
-                logger.LogError(ex, "Failed to edit service.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
+                TempData["success"] = result.Message;
             }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

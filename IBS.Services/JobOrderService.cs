@@ -260,6 +260,125 @@ namespace IBS.Services
             var audit = new AuditTrail(username, activity, "Job Order");
             await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
         }
+
+        public async Task<ServiceResult> AssignTugboatAsync(int jobOrderId, int tugboatId, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(jobOrderId, cancellationToken);
+                if (jobOrder == null)
+                {
+                    return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
+                }
+
+                var tugboat = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
+                if (tugboat == null)
+                {
+                    return ServiceResult.Failure("Tugboat not found.", ServiceResultStatus.NotFound);
+                }
+
+                // Check if already assigned
+                bool alreadyAssigned = jobOrder.PreferredTugboatId == tugboatId || jobOrder.DispatchTickets.Any(dt => dt.TugBoatId == tugboatId);
+                if (alreadyAssigned)
+                {
+                    return ServiceResult.Failure("Tugboat is already assigned to this Job Order.");
+                }
+
+                if (jobOrder.PreferredTugboatId == null)
+                {
+                    jobOrder.PreferredTugboatId = tugboatId;
+                }
+                else
+                {
+                    // Assign as an additional tugboat by creating a pending DispatchTicket
+                    var services = await unitOfWork.Service.GetAllAsync(cancellationToken: cancellationToken);
+                    var defaultService = services.FirstOrDefault();
+                    int serviceId = defaultService?.ServiceId ?? 1;
+
+                    var ticket = new DispatchTicket
+                    {
+                        JobOrderId = jobOrder.JobOrderId,
+                        TugBoatId = tugboatId,
+                        CustomerId = jobOrder.CustomerId,
+                        VesselId = jobOrder.VesselId,
+                        PortId = jobOrder.PortId,
+                        TerminalId = jobOrder.TerminalId,
+                        ServiceId = serviceId,
+                        Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                        DispatchNumber = $"PL-{jobOrder.JobOrderId}-{tugboatId}",
+                        Status = SD.DispatchTicketStatus.Pending,
+                        CreatedBy = username,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                    };
+
+                    // Truncate DispatchNumber if it exceeds 20 characters
+                    if (ticket.DispatchNumber.Length > 20)
+                    {
+                        ticket.DispatchNumber = ticket.DispatchNumber.Substring(0, 20);
+                    }
+
+                    await unitOfWork.DispatchTicket.AddAsync(ticket, cancellationToken);
+                }
+
+                await RecordAuditAsync($"Assigned tugboat {tugboat.TugboatName} to Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success("Tugboat assigned successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error assigning tugboat");
+                return ServiceResult.Failure($"Failed to assign tugboat: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
+        public async Task<ServiceResult> UnassignTugboatAsync(int jobOrderId, int tugboatId, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(jobOrderId, cancellationToken);
+                if (jobOrder == null)
+                {
+                    return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
+                }
+
+                string? tugboatName = null;
+
+                if (jobOrder.PreferredTugboatId == tugboatId)
+                {
+                    var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
+                    tugboatName = tug?.TugboatName;
+                    jobOrder.PreferredTugboatId = null;
+                }
+
+                var ticketToRemove = jobOrder.DispatchTickets.FirstOrDefault(dt => dt.TugBoatId == tugboatId);
+                if (ticketToRemove != null)
+                {
+                    if (ticketToRemove.Status != SD.DispatchTicketStatus.Pending && ticketToRemove.Status != SD.DispatchTicketStatus.ForTariff)
+                    {
+                        return ServiceResult.Failure("Cannot unassign a tugboat with an active or processed dispatch ticket.");
+                    }
+                    
+                    if (tugboatName == null)
+                    {
+                        var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
+                        tugboatName = tug?.TugboatName;
+                    }
+
+                    await unitOfWork.DispatchTicket.RemoveAsync(ticketToRemove, cancellationToken);
+                }
+
+                await RecordAuditAsync($"Unassigned tugboat {tugboatName ?? "Unknown"} from Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success("Tugboat unassigned successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error unassigning tugboat");
+                return ServiceResult.Failure($"Failed to unassign tugboat: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
     }
 }
 

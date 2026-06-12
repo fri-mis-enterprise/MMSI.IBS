@@ -88,6 +88,15 @@ builder.Services.AddScoped<IJobOrderService, JobOrderService>();
 builder.Services.AddScoped<IDispatchTicketService, DispatchTicketService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddScoped<IMaritimeServiceService, MaritimeServiceService>();
+builder.Services.AddScoped<IPortService, PortService>();
+builder.Services.AddScoped<IPrincipalService, PrincipalService>();
+builder.Services.AddScoped<ITariffRateService, TariffRateService>();
+builder.Services.AddScoped<ITerminalService, TerminalService>();
+builder.Services.AddScoped<ITugMasterService, TugMasterService>();
+builder.Services.AddScoped<ITugboatOwnerService, TugboatOwnerService>();
+builder.Services.AddScoped<ITugboatService, TugboatService>();
+builder.Services.AddScoped<IVesselService, VesselService>();
 
 // SignalR
 builder.Services.AddSignalR();

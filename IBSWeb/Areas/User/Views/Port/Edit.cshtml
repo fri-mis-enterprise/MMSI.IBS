@@ -1,53 +1,74 @@
-﻿@model IBS.Models.MSAP.MasterFile.Port
+@model IBS.Models.MSAP.MasterFile.Port
 
 @{
-    ViewData["Title"] = "Port - Edit";
+    ViewData["Title"] = "Edit Port";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="card shadow mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2>
-                @ViewData["Title"]
-            </h2>
-        </div>
-    </div>
-    
-    <div class="card-body">
-        <form method="post" class="row">
-            <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="PortId" value="@Model.PortId" style="display: none" />
-                <div class="row">
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="PortName" value="@Model.PortName" type="text" class="form-control border-0 shadow" id="PortName" placeholder="Name" required>
-                        <label asp-for="PortName" for="PortName" class="ms-2">Port name<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="PortName" class="text-danger"></span>
+<div class="modern-layout">
+    <form asp-action="Edit" method="post" id="mainForm">
+        <input type="hidden" asp-for="PortId" />
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Ports</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Edit Port</span>
                     </div>
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="PortNumber" value="@Model.PortNumber" type="text" class="form-control border-0 shadow" id="PortNumber" placeholder="Number" required>
-                        <label asp-for="PortNumber" for="PortNumber" class="ms-2">Port number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="PortNumber" class="text-danger"></span>
-                    </div>
-                    <div>
-                        <label asp-for="HasSBMA" class="ms-2">Has SBMA (15%)?</label> Click check box if yes. <input asp-for="HasSBMA" type="checkbox" >
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
                 </div>
-            </div>
-            <div class="row justify-content-end mt-3">
-                <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"> Submit</button>
-                </div>
-                <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12" asp-controller="Port" asp-action="Index">
-                        Go Back
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
                     </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">edit</span>
+                            <h2 class="modern-headline-md">Port Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="PortNumber" class="modern-label">Port Number <span class="text-error">*</span></label>
+                                    <input asp-for="PortNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter 3-digit code" maxlength="3" />
+                                    <span asp-validation-for="PortNumber" class="text-error text-xs"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="PortName" class="modern-label">Port Name <span class="text-error">*</span></label>
+                                    <input asp-for="PortName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter port name" />
+                                    <span asp-validation-for="PortName" class="text-error text-xs"></span>
+                                </div>
+
+                                <div class="flex items-center gap-2 pt-2">
+                                    <input asp-for="HasSBMA" class="form-check-input" type="checkbox" style="width:1.25rem; height:1.25rem; border: 1px solid var(--outline-variant);">
+                                    <label asp-for="HasSBMA" class="modern-label mb-0" style="text-transform: none; font-size: 14px; font-weight: 500;">Has SBMA (15%)?</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
 
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

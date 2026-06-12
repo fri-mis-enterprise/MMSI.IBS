@@ -1,7 +1,6 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,39 +8,27 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class PrincipalController(
-        ApplicationDbContext dbContext,
-        IUnitOfWork unitOfWork,
-        UserManager<ApplicationUser> userManager,
-        ILogger<PrincipalController> logger)
+        IPrincipalService principalService,
+        UserManager<ApplicationUser> userManager)
         : Controller
     {
-        private async Task<string?> GetCompanyClaimAsync()
+        public IActionResult Index()
         {
-            var user = await userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+            return View();
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetPrincipalList(CancellationToken cancellationToken)
         {
-            var principals = await unitOfWork.Principal.GetAllAsync(null,
-                cancellationToken);
-            return View(principals);
+            var list = await principalService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            await GetCompanyClaimAsync();
-            var model = new Principal
-            {
-                CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
-            };
+            var model = await principalService.PopulateSelectListsAsync(null, cancellationToken);
             return View(model);
         }
 
@@ -50,150 +37,72 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
+                await principalService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await principalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                var customer = await unitOfWork.Customer
-                    .GetAsync(c => c.CustomerId == model.CustomerId,
-                        cancellationToken) ?? throw new NullReferenceException("Customer not found");
-                model.CustomerId = customer.CustomerId;
-                await unitOfWork.Principal.AddAsync(model,
-                    cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Principal #{model.PrincipalNumber}",
-                    "Principal");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Creation Succeed!";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to create principal.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
-            }
-        }
 
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var model = await unitOfWork.Principal
-                    .GetAsync(p => p.PrincipalId == id,
-                        cancellationToken);
-
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
-                await unitOfWork.Principal.RemoveAsync(model,
-                    cancellationToken);
-                await unitOfWork.Principal.SaveAsync(cancellationToken);
-                TempData["success"] = "Entry deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to delete principal.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            TempData["error"] = result.Message;
+            await principalService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            await GetCompanyClaimAsync();
-            var model = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == id,
-                cancellationToken);
+            var model = await principalService.GetByIdAsync(id, cancellationToken);
             if (model == null)
             {
                 return NotFound();
             }
 
-            model.CustomerSelectList = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            await principalService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Principal model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(Principal model, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                TempData["warning"] = "Invalid entry, please try again.";
+                await principalService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId,
-                cancellationToken);
+            var result = await principalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (currentModel == null)
+            if (result.IsSuccess)
             {
-                TempData["error"] = "Principal not found.";
-                return View(model);
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Principal #{currentModel.PrincipalNumber} => {model.PrincipalNumber}",
-                    "Principal");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                currentModel.Address1 = model.Address1;
-                currentModel.PrincipalName = model.PrincipalName;
-                currentModel.PrincipalNumber = model.PrincipalNumber;
-                currentModel.TIN = model.TIN;
-                currentModel.BusinessType = model.BusinessType;
-                currentModel.PrincipalName = model.PrincipalName;
-                currentModel.Terms = model.Terms;
-                currentModel.Mobile1 = model.Mobile1;
-                currentModel.Mobile2 = model.Mobile2;
-                currentModel.Landline1 = model.Landline1;
-                currentModel.Landline2 = model.Landline2;
-                currentModel.IsVatable = model.IsVatable;
-                currentModel.IsActive = model.IsActive;
-                currentModel.CustomerId = model.CustomerId;
-                await unitOfWork.Principal.SaveAsync(cancellationToken);
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Edited successfully";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            TempData["error"] = result.Message;
+            await principalService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await principalService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
             {
-                logger.LogError(ex,
-                    "Failed to edit principal.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
+                TempData["success"] = result.Message;
             }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

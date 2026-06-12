@@ -1,37 +1,35 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-        public class TugboatController(
-        ApplicationDbContext dbContext,
-        IUnitOfWork unitOfWork,
-        ILogger<TugboatController> logger,
+    public class TugboatController(
+        ITugboatService tugboatService,
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+        public IActionResult Index()
         {
-            var tugboat = await unitOfWork.Tugboat.GetAllAsync(null,
-                cancellationToken);
-            return View(tugboat);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetTugboatList(CancellationToken cancellationToken)
+        {
+            var list = await tugboatService.GetAllAsync(cancellationToken);
+            return Json(new { data = list });
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var tugboat = new Tugboat
-            {
-                CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken),
-                PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken)
-            };
-
-            return View(tugboat);
+            var model = await tugboatService.PopulateSelectListsAsync(null, cancellationToken);
+            return View(model);
         }
 
         [HttpPost]
@@ -39,86 +37,33 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken);
-                model.PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
-                TempData["warning"] = "Invalid entry, please try again.";
+                await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await tugboatService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                if (model.IsCompanyOwned)
-                {
-                    model.TugboatOwnerId = null;
-                }
-
-                await unitOfWork.Tugboat.AddAsync(model,
-                    cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created new Tugboat #{model.TugboatNumber}",
-                    "Tugboat");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Creation Succeed!";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to create tugboat.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
-            }
-        }
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await unitOfWork.Tugboat.GetAsync(i => i.TugboatId == id,
-                    cancellationToken);
 
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
-                await unitOfWork.Tugboat.RemoveAsync(model,
-                    cancellationToken);
-                TempData["success"] = "Entry deleted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to delete tugboat.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            TempData["error"] = result.Message;
+            await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await unitOfWork.Tugboat.GetAsync(a => a.TugboatId == id,
-                cancellationToken);
-
+            var model = await tugboatService.GetByIdAsync(id, cancellationToken);
             if (model == null)
             {
                 return NotFound();
             }
 
-            model.CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken);
-            model.PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
+            await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -127,55 +72,37 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.CompanyList = await unitOfWork.Tugboat.GetMsapCompanyOwnerSelectListById(cancellationToken);
-                model.PortList = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
-                TempData["error"] = "Invalid entry, please try again.";
+                await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
                 return View(model);
             }
 
-            var currentModel = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == model.TugboatId,
-                cancellationToken);
+            var result = await tugboatService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (currentModel == null)
+            if (result.IsSuccess)
             {
-                TempData["info"] = "Entry not found, please try again.";
-                return View(model);
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited Tugboat #{currentModel.TugboatNumber} => {model.TugboatNumber}",
-                    "Tugboat");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                currentModel.TugboatOwnerId = model.IsCompanyOwned ? null : model.TugboatOwnerId;
-                currentModel.IsCompanyOwned = model.IsCompanyOwned;
-                currentModel.TugboatNumber = model.TugboatNumber;
-                currentModel.TugboatName = model.TugboatName;
-                currentModel.PortId = model.PortId;
-                await unitOfWork.Tugboat.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Edited successfully";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+
+            TempData["error"] = result.Message;
+            await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await tugboatService.DeleteAsync(id, userManager.GetUserName(User)!, cancellationToken);
+
+            if (result.IsSuccess)
             {
-                logger.LogError(ex,
-                    "Failed to edit tugboat.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return View(model);
+                TempData["success"] = result.Message;
             }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

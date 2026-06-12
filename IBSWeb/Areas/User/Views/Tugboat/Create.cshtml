@@ -1,93 +1,113 @@
-﻿@model IBS.Models.MSAP.MasterFile.Tugboat
+@model IBS.Models.MSAP.MasterFile.Tugboat
 
 @{
-    ViewData["Title"] = "Tug Boat - Create";
+    ViewData["Title"] = "Create Tugboat";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="card shadow mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center text-white">
-            <h2>@ViewData["Title"]</h2>
-        </div>
-    </div>
-    
-    <div class="card-body">
-        <form method="post" class="row">
-            <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="row pt-2">
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="TugboatName" type="text" class="form-control border-0 shadow" id="TugboatName" placeholder="Name" required>
-                        <label asp-for="TugboatName" for="TugboatName" class="ms-2">Tugboat name<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="TugboatName" class="text-danger"></span>
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <!-- Header Section -->
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Tugboats</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Tugboat</span>
                     </div>
-                    <div class="form-floating col-6 my-3">
-                        <input asp-for="TugboatNumber" type="text" class="form-control border-0 shadow" id="TugboatNumber" placeholder="Number" required>
-                        <label asp-for="TugboatNumber" for="TugboatNumber" class="ms-2">Tugboat Number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="TugboatNumber" class="text-danger"></span>
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
                 </div>
-                <div class="row pb-3">
-                    <div class="form-group col-6">
-                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                        <select asp-for="PortId" asp-items="@Model.PortList" class="form-select border-0 shadow ms-5 mt-2" style="width:100%" required>
-                            <option value="">Select Port</option>
-                        </select>
-                        <span asp-validation-for="PortId" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row pb-3">
-                    <div class="form-group col-6">
-                        <label class="control-label ps-1 pb-1">Company/Owner<span class="required text-danger">*</span></label>
-                        <select asp-for="TugboatOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" required>
-                            <option value="">Select Company/Owner</option>
-                        </select>
-                        <span asp-validation-for="TugboatOwnerId" class="text-danger"></span>
-                    </div>
-                    <div class="form-check col-3 ps-2 pt-4 text-start d-flex align-items-center justify-content-start">
-                        <input asp-for="IsCompanyOwned" class="form-check-input m-0 ms-2" type="checkbox" id="isCompanyOwnedCheckBox">
-                        <label class="text-decoration-underline form-check-label ps-1 m-0" for="isCompanyOwnedCheckBox">
-                            Company Owned
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="row justify-content-end mt-3">
-                <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
-                </div>
-                <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12" asp-controller="Tugboat" asp-action="Index">
-                        Go Back
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
                     </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">directions_boat</span>
+                            <h2 class="modern-headline-md">Tugboat Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            
+                            <div class="flex flex-column gap-4">
+                                <div class="modern-grid">
+                                    <div class="modern-col-8">
+                                        <label asp-for="TugboatName" class="modern-label">Tugboat Name <span class="text-error">*</span></label>
+                                        <input asp-for="TugboatName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter name" />
+                                        <span asp-validation-for="TugboatName" class="text-error text-xs"></span>
+                                    </div>
+                                    <div class="modern-col-4">
+                                        <label asp-for="TugboatNumber" class="modern-label">Tugboat # <span class="text-error">*</span></label>
+                                        <input asp-for="TugboatNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="3-digit code" maxlength="3" />
+                                        <span asp-validation-for="TugboatNumber" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label asp-for="PortId" class="modern-label">Base Port <span class="text-error">*</span></label>
+                                    <select asp-for="PortId" asp-items="@Model.PortList" class="js-modern-select" data-placeholder="-- Select Port --">
+                                        <option value="">-- Select Port --</option>
+                                    </select>
+                                    <span asp-validation-for="PortId" class="text-error text-xs"></span>
+                                </div>
+
+                                <div class="border-t border-outline-variant pt-4">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <input asp-for="IsCompanyOwned" class="form-check-input" type="checkbox" id="isCompanyOwnedCheckBox" style="width:1.25rem; height:1.25rem; border: 1px solid var(--outline-variant);">
+                                        <label asp-for="IsCompanyOwned" class="modern-label mb-0" style="text-transform: none; font-size: 14px; font-weight: 500;">Company Owned?</label>
+                                    </div>
+
+                                    <div id="ownerSection">
+                                        <label asp-for="TugboatOwnerId" class="modern-label">Owner / Company <span class="text-error">*</span></label>
+                                        <select asp-for="TugboatOwnerId" asp-items="@Model.CompanyList" class="js-modern-select" id="companyNameSelect" data-placeholder="-- Select Owner --">
+                                            <option value="">-- Select Owner --</option>
+                                        </select>
+                                        <span asp-validation-for="TugboatOwnerId" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
+
 @section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script>
-
         $(document).ready(function () {
-            
-            let isCompanyOwnedCheckBoxVar = $('#isCompanyOwnedCheckBox');
-            isCompanyOwnedCheckBoxVar.on('click', checkboxChanged);
+            const $checkbox = $('#isCompanyOwnedCheckBox');
+            const $ownerSelect = $('#companyNameSelect');
+            const $ownerSection = $('#ownerSection');
 
-            function checkboxChanged() {
-                let $checkbox = isCompanyOwnedCheckBoxVar;
-                let $inputField = $('#companyNameSelect');
-
+            function toggleOwnerField() {
                 if ($checkbox.prop("checked")) {
-                    $inputField.prop("required", false).prop("disabled", true).val("0").trigger("change");
+                    $ownerSelect.val("").trigger("change");
+                    $ownerSection.fadeOut(200);
+                    $ownerSelect.prop("required", false);
                 } else {
-                    $inputField.prop("required", true).prop("disabled", false);
+                    $ownerSection.fadeIn(200);
+                    $ownerSelect.prop("required", true);
                 }
             }
+
+            $checkbox.on('change', toggleOwnerField);
+            toggleOwnerField();
         });
-        
     </script>
 }
-
