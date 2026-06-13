@@ -298,30 +298,11 @@ namespace IBS.DataAccess.Repository.Msap
             return (data, recordsFiltered, totalRecords);
         }
 
-        public async Task RemoveSalesBookEntryAsync(int documentId, string serialNo, CancellationToken cancellationToken)
-        {
-            var salesBook = await _db.SalesBooks.FirstOrDefaultAsync(s => s.DocumentId == documentId && s.SerialNo == serialNo, cancellationToken);
-            if (salesBook != null)
-            {
-                _db.SalesBooks.Remove(salesBook);
-            }
-        }
-
         public async Task<List<Billing>> GetBillingsByCollectionIdAsync(int collectionId, CancellationToken cancellationToken)
         {
             return await _db.MsapBillings
                 .Where(b => b.CollectionId == collectionId)
                 .ToListAsync(cancellationToken);
-        }
-
-        public async Task AddSalesBookAsync(Models.Books.SalesBook salesBook, CancellationToken cancellationToken)
-        {
-            await _db.SalesBooks.AddAsync(salesBook, cancellationToken);
-        }
-
-        public async Task AddGeneralLedgerEntriesAsync(List<Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken)
-        {
-            await _db.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
         }
     }
 }

@@ -55,7 +55,6 @@ namespace IBSWeb.Areas.User.Controllers
                         cancellationToken),
                     "supplier" => await GenerateSupplierExcel(extractedBy,cancellationToken),
                     "bankaccount" => await GenerateBankAccountExcel(extractedBy,  cancellationToken),
-                    "service" => await GenerateServiceExcel(extractedBy,  cancellationToken),
                     "employee" => await GenerateEmployeeExcel(extractedBy,  cancellationToken),
                     _ => throw new ArgumentException($"Invalid master file type: {masterFileType}")
                 };
@@ -107,14 +106,6 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return (null, string.Empty);
             }
-
-            // Fetch all customer IDs for this company
-            var customerIds = customers.Select(c => c.CustomerId).ToList();
-
-            // Fetch branches separately
-            var branches = await unitOfWork.CustomerBranch.GetAllAsync(
-                filter: b => customerIds.Contains(b.CustomerId),
-                cancellationToken: cancellationToken);
 
             // Create Excel package
             using var package = new ExcelPackage();
@@ -169,36 +160,6 @@ namespace IBSWeb.Areas.User.Controllers
                 customerWidths,
                 2
             );
-
-            // ===== WORKSHEET 2: Customer Branches =====
-            if (branches.Any())
-            {
-                var branchColumns = new List<ColumnDefinition>
-                {
-                    new() { Header = "CUSTOMER NAME", ValueSelector = b => ((CustomerBranch)b).Customer?.CustomerName},
-                    new() { Header = "BRANCH NAME", ValueSelector = b => ((CustomerBranch)b).BranchName },
-                    new() { Header = "BRANCH ADDRESS", ValueSelector = b => ((CustomerBranch)b).BranchAddress  },
-                };
-
-                var branchWidths = new Dictionary<string, double>
-                {
-                    { "CUSTOMER NAME", 30 },
-                    { "BRANCH NAME", 30 },
-                    { "BRANCH ADDRESS", 100 }
-                };
-
-                BuildWorksheet(
-                    package,
-                    branches.Cast<object>().ToList(),
-                    "Branches",
-                    "CUSTOMER BRANCHES",
-                    extractedBy,
-
-                    branchColumns,
-                    branchWidths,
-                    2
-                );
-            }
 
             // Save and return
             var fileName = $"Customer_MasterFile_{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}.xlsx";
@@ -309,48 +270,6 @@ namespace IBSWeb.Areas.User.Controllers
 
         #endregion
 
-        #region -- ServiceMaster Master File --
-        private async Task<(MemoryStream? stream, string fileName)> GenerateServiceExcel(
-            string extractedBy,
-
-            CancellationToken cancellationToken)
-        {
-            var services = await unitOfWork.ServiceMaster.GetAllAsync(
-                cancellationToken: cancellationToken);
-            var servicesList = services.ToList();
-
-            if (!services.Any())
-            {
-                return (null, string.Empty);
-            }
-
-            var columns = new List<ColumnDefinition>
-            {
-                new() { Header = "SERVICE NO", ValueSelector = s => ((ServiceMaster)s).ServiceNo },
-                new() { Header = "SERVICE NAME", ValueSelector = s => ((ServiceMaster)s).Name },
-                new() { Header = "PERCENT", ValueSelector = s => ((ServiceMaster)s).Percent},
-            };
-
-            var customWidths = new Dictionary<string, double>
-            {
-                { "SERVICE NAME", 30 },
-            };
-
-            return await BuildExcelFile(
-                servicesList,
-                "Services",
-                "Service_MasterFile",
-                extractedBy,
-
-                columns,
-                customWidths,
-                2,
-                cancellationToken
-            );
-        }
-
-        #endregion
-
         #region -- Employee Master File --
         private async Task<(MemoryStream? stream, string fileName)> GenerateEmployeeExcel(
             string extractedBy,
@@ -391,9 +310,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             var customWidths = new Dictionary<string, double>
             {
-                { "SERVICE NAME", 30 },
-                { "ADDRESS", 100},
-                { "PHILHEALTH NO", 40 },
+               { "ADDRESS", 100},
+               { "PHILHEALTH NO", 40 },
             };
 
             return await BuildExcelFile(

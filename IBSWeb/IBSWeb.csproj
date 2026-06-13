@@ -53,4 +53,9 @@
     <Folder Include="App_Data\LocalStorage\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Areas\User\Views\MaritimeReport\SalesReport.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\User\Views\PostedPeriod\Index.cshtml" />
+  </ItemGroup>
+
 </Project>

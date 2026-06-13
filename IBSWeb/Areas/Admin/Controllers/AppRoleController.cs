@@ -1,5 +1,5 @@
-using System.Linq.Dynamic.Core;
 using IBS.Models;
+using IBS.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,12 +8,12 @@ namespace IBSWeb.Areas.Admin.Controllers
 {
     [Area(nameof(Admin))]
     [Authorize(Roles = "Admin")]
-    public class AppRoleController(RoleManager<IdentityRole> roleManager, ILogger<AppRoleController> logger)
+    public class AppRoleController(IRoleService roleService, ILogger<AppRoleController> logger)
         : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var roles = roleManager.Roles;
+            var roles = await roleService.GetAllRolesAsync(cancellationToken);
             return View(roles);
         }
 
@@ -24,68 +24,35 @@ namespace IBSWeb.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(IdentityRole model)
+        public async Task<IActionResult> Create(IdentityRole model, CancellationToken cancellationToken)
         {
-            if (!await roleManager.RoleExistsAsync(model.Name!))
+            var result = await roleService.CreateRoleAsync(model.Name!, cancellationToken);
+            if (!result.IsSuccess)
             {
-                await roleManager.CreateAsync(new IdentityRole(model.Name!));
+                TempData["error"] = result.Message;
             }
-
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public IActionResult GetRolesList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRolesList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                var queried = roleManager.Roles;
-
-                // Global search
-                if (!string.IsNullOrEmpty(parameters.Search.Value))
-                {
-                    var searchValue = parameters.Search.Value.ToLower();
-
-                    queried = queried
-                    .Where(r =>
-                        r.Name!.ToLower().Contains(searchValue) == true
-                        );
-                }
-
-                // Sorting
-                if (parameters.Order?.Count > 0)
-                {
-                    var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Name;
-                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-                    queried = queried
-                        .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}");
-                }
-
-                var totalRecords = queried.Count();
-                var pagedData = queried
-                    .Select(r  => new
-                    {
-                        r.Name,
-                    })
-                    .Skip(parameters.Start)
-                    .Take(parameters.Length)
-                    .ToList();
+                var (data, totalRecords) = await roleService.GetPagedRolesAsync(parameters, cancellationToken);
 
                 return Json(new
                 {
                     draw = parameters.Draw,
                     recordsTotal = totalRecords,
                     recordsFiltered = totalRecords,
-                    data = pagedData
+                    data
                 });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get roles.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { error = "Internal server error" });
             }
         }
     }

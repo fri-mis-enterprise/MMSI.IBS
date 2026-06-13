@@ -1,19 +1,14 @@
-using System.ComponentModel;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.Integrated;
-using IBS.DataAccess.Repository.Integrated.IRepository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.MasterFile;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Msap;
 using IBS.DataAccess.Repository.Msap.IRepository;
-using IBS.Models.Enums;
 using IBS.Models.MasterFile;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Enum = System.Enum;
 
 namespace IBS.DataAccess.Repository
 {
@@ -21,57 +16,9 @@ namespace IBS.DataAccess.Repository
     {
         private readonly ApplicationDbContext _db;
 
-        public IProductRepository Product { get; private set; }
-        public ICompanyRepository Company { get; private set; }
+        public ICompanyRepository Company { get; }
 
-        public INotificationRepository Notifications { get; private set; }
-
-        public async Task<bool> IsPeriodPostedAsync(DateOnly date, CancellationToken cancellationToken = default)
-        {
-            return await _db.PostedPeriods
-                .AnyAsync(m => m.IsPosted
-                               && m.Month == date.Month
-                               && m.Year == date.Year, cancellationToken);
-        }
-
-        public async Task<DateTime> GetMinimumPeriodBasedOnThePostedPeriods(Module module, CancellationToken cancellationToken = default)
-        {
-            if (!Enum.IsDefined(typeof(Module), module))
-            {
-                throw new InvalidEnumArgumentException(nameof(module), (int)module, typeof(Module));
-            }
-
-            var period = await _db.PostedPeriods
-                .OrderByDescending(x => x.Year)
-                .ThenByDescending(x => x.Month)
-                .FirstOrDefaultAsync(x => x.Module == module.ToString()
-                                          && x.IsPosted, cancellationToken);
-
-            if (period == null)
-            {
-                return DateTime.MinValue;
-            }
-
-            return new DateOnly(period.Year, period.Month, 1)
-                .AddMonths(1)
-                .ToDateTime(new TimeOnly(0, 0));
-        }
-
-        public async Task<bool> IsPeriodPostedAsync(Module module, DateOnly date, CancellationToken cancellationToken = default)
-        {
-            if (!Enum.IsDefined(typeof(Module), module))
-            {
-                throw new InvalidEnumArgumentException(nameof(module), (int)module, typeof(Module));
-            }
-
-            return await _db.PostedPeriods
-                .AnyAsync(m =>
-                    m.Module == module.ToString() &&
-                    m.IsPosted &&
-                    m.Year == date.Year &&
-                    m.Month == date.Month,
-                    cancellationToken);
-        }
+        public INotificationRepository Notifications { get; }
 
         public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
         {
@@ -96,12 +43,10 @@ namespace IBS.DataAccess.Repository
         #region--Master Files
 
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
-        public ICustomerOrderSlipRepository CustomerOrderSlip { get; private set; }
         public ISupplierRepository Supplier { get; private set; }
         public ICustomerRepository Customer { get; private set; }
         public IAuditTrailRepository AuditTrail { get; private set; }
         public IEmployeeRepository Employee { get; private set; }
-        public ICustomerBranchRepository CustomerBranch { get; private set; }
         public ITermsRepository Terms { get; }
 
         #endregion
@@ -109,8 +54,6 @@ namespace IBS.DataAccess.Repository
         #region --Master File
 
         public IBankAccountRepository BankAccount { get; private set; }
-        public IServiceMasterRepository ServiceMaster { get; private set; }
-        public IPickUpPointRepository PickUpPoint { get; private set; }
 
         #endregion
 
@@ -140,19 +83,16 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
 
-            Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
             Notifications = new NotificationRepository(_db);
 
             #region--Master Files
 
-            CustomerOrderSlip = new CustomerOrderSlipRepository(_db);
+            ChartOfAccount = new ChartOfAccountRepository(_db);
             Customer = new CustomerRepository(_db);
             Supplier = new SupplierRepository(_db);
-            ChartOfAccount = new ChartOfAccountRepository(_db);
             AuditTrail = new AuditTrailRepository(_db);
             Employee = new EmployeeRepository(_db);
-            CustomerBranch = new CustomerBranchRepository(_db);
             Terms = new TermsRepository(_db);
 
             #endregion
@@ -160,8 +100,6 @@ namespace IBS.DataAccess.Repository
             #region --Master File
 
             BankAccount = new BankAccountRepository(_db);
-            ServiceMaster = new ServiceMasterRepository(_db);
-            PickUpPoint = new PickUpPointRepository(_db);
 
             #endregion
 
@@ -311,32 +249,6 @@ namespace IBS.DataAccess.Repository
         }
 
         #endregion
-
-        public async Task<List<SelectListItem>> GetProductListAsyncByCode(CancellationToken cancellationToken = default)
-        {
-            return await _db.Products
-                .OrderBy(p => p.ProductId)
-                .Where(p => p.IsActive)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductCode,
-                    Text = p.ProductCode + " " + p.ProductName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetProductListAsyncById(CancellationToken cancellationToken = default)
-        {
-            return await _db.Products
-                .OrderBy(p => p.ProductId)
-                .Where(p => p.IsActive)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = p.ProductCode + " " + p.ProductName
-                })
-                .ToListAsync(cancellationToken);
-        }
 
         public async Task<List<SelectListItem>> GetCashierListAsyncByUsernameAsync(CancellationToken cancellationToken = default)
         {

@@ -8,15 +8,11 @@ using IBS.Models.Books;
 using IBS.DTOs;
 using IBS.Services;
 using IBS.Utility.Constants;
-using IBS.Utility.Helpers;
 using Moq;
 using Xunit;
 using FluentAssertions;
 using System.Linq.Expressions;
-using IBS.DataAccess.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace IBS.Tests.Services
 {
@@ -170,10 +166,6 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeTrue(result.Message);
-            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s =>
-                s.VatableSales == 125000.00m &&
-                s.VatAmount == 15000.00m &&
-                s.Amount == 140000.00m), It.IsAny<CancellationToken>()), Times.Once);
 
             // Verify WHT calculation logic (usually 2% of Net)
             var wht = 125000.00m * 0.02m;

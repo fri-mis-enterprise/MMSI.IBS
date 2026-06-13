@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Playwright;
 using System.Text.RegularExpressions;
-using Xunit;
 
 namespace IBS.Tests.UI
 {

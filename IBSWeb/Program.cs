@@ -71,7 +71,6 @@ builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IUserAccessService, UserAccessService>();
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
-builder.Services.AddScoped<IMonthlyClosureService, MonthlyClosureService>();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 if (builder.Environment.IsDevelopment())
 {
@@ -81,7 +80,6 @@ else
 {
     builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 }
-builder.Services.AddScoped<ISubAccountResolver, SubAccountResolver>();
 builder.Services.AddScoped<ITugboatMonitoringService, TugboatMonitoringService>();
 builder.Services.AddScoped<IVesselPlanningService, VesselPlanningService>();
 builder.Services.AddScoped<IJobOrderService, JobOrderService>();
@@ -97,6 +95,8 @@ builder.Services.AddScoped<ITugMasterService, TugMasterService>();
 builder.Services.AddScoped<ITugboatOwnerService, TugboatOwnerService>();
 builder.Services.AddScoped<ITugboatService, TugboatService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -124,29 +124,6 @@ if (builder.Environment.IsProduction())
 }
 
 var app = builder.Build();
-
-app.MapPost("/jobs/start-of-the-month-service", async (
-    IUnitOfWork unitOfWork,
-    ILogger<StartOfTheMonthService> logger,
-    ApplicationDbContext db) =>
-{
-    var service = new StartOfTheMonthService(unitOfWork, logger, db);
-    await service.Execute(null!);
-    return Results.Ok("StartOfTheMonthService job executed.");
-})
-.AllowAnonymous();
-
-app.MapPost("/jobs/daily-service", async (
-    ApplicationDbContext db,
-    ILogger<DailyService> logger,
-    UserManager<ApplicationUser> userManager,
-    IUnitOfWork unitOfWork) =>
-{
-    var service = new DailyService(db, logger, userManager, unitOfWork);
-    await service.Execute(null!);
-    return Results.Ok("DailyService job executed.");
-})
-.AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok("Healthy"));
 

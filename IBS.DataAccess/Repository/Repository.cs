@@ -70,19 +70,6 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<ProductDto?> MapProductToDTO(string productCode, CancellationToken cancellationToken = default)
-        {
-            return await _db.Set<Product>()
-                .Where(p => p.ProductCode == productCode)
-                .Select(p => new ProductDto
-                {
-                    ProductId = p.ProductId,
-                    ProductCode = p.ProductCode,
-                    ProductName = p.ProductName
-                })
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-
         public async Task<SupplierDto?> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)
         {
             return await _db.Set<Supplier>()
@@ -94,61 +81,6 @@ namespace IBS.DataAccess.Repository
                     SupplierName = s.SupplierName
                 })
                 .FirstOrDefaultAsync(cancellationToken);
-        }
-
-        public (string AccountNo, string AccountTitle) GetSalesAccountTitle(string productCode)
-        {
-            return productCode switch
-            {
-                "PET001" => ("401010100", "Sales - Biodiesel"),
-                "PET002" => ("401010200", "Sales - Econogas"),
-                "PET003" => ("401010300", "Sales - Envirogas"),
-                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
-            };
-        }
-
-        public (string AccountNo, string AccountTitle) GetCogsAccountTitle(string productCode)
-        {
-            return productCode switch
-            {
-                "PET001" => ("501010100", "COGS - Biodiesel"),
-                "PET002" => ("501010200", "COGS - Econogas"),
-                "PET003" => ("501010300", "COGS - Envirogas"),
-                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
-            };
-        }
-
-        public (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode)
-        {
-            return productCode switch
-            {
-                "PET001" => ("101040100", "Inventory - Biodiesel"),
-                "PET002" => ("101040200", "Inventory - Econogas"),
-                "PET003" => ("101040300", "Inventory - Envirogas"),
-                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
-            };
-        }
-
-        public (string AccountNo, string AccountTitle) GetFreightAccount(string productCode)
-        {
-            return productCode switch
-            {
-                "PET001" => ("502010100", "COGS - Freight - Biodiesel"),
-                "PET002" => ("502010200", "COGS - Freight - Econogas"),
-                "PET003" => ("502010300", "COGS - Freight - Envirogas"),
-                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
-            };
-        }
-
-        public (string AccountNo, string AccountTitle) GetCommissionAccount(string productCode)
-        {
-            return productCode switch
-            {
-                "PET001" => ("503010100", "COGS  - Commission - Biodiesel"),
-                "PET002" => ("503010200", "COGS - Commission - Econogas"),
-                "PET003" => ("503010300", "COGS - Commission - Envirogas"),
-                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
-            };
         }
 
         public decimal ComputeNetOfVat(decimal grossAmount)
@@ -164,22 +96,6 @@ namespace IBS.DataAccess.Repository
         public decimal ComputeVatAmount(decimal netOfVatAmount)
         {
             return netOfVatAmount * VatRate;
-        }
-
-        public async Task<CustomerDto?> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
-        {
-            return await _db.Set<Customer>()
-                .Where(c => c.CustomerId == customerId || c.CustomerCode == customerCode)
-                .Select(c => new CustomerDto
-                {
-                    CustomerId = c.CustomerId,
-                    CustomerCode = c.CustomerCode,
-                    CustomerName = c.CustomerName,
-                    CustomerAddress = c.CustomerAddress,
-                    CustomerTin = c.CustomerTin,
-                    CustomerTerms = c.CustomerTerms
-                })
-                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)

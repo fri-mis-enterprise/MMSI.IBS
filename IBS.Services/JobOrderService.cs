@@ -6,7 +6,6 @@ using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using IBS.DataAccess.Data;
 
 namespace IBS.Services
 {

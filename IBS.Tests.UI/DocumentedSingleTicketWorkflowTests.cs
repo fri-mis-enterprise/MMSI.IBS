@@ -1,6 +1,4 @@
 using Microsoft.Playwright;
-using Xunit;
-using System.Text.RegularExpressions;
 
 namespace IBS.Tests.UI
 {

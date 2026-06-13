@@ -3,7 +3,6 @@ using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.MasterFile;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -69,7 +68,6 @@ namespace IBS.DataAccess.Repository.MasterFile
             existingCustomer.CustomerType = model.CustomerType;
             existingCustomer.WithHoldingVat = model.WithHoldingVat;
             existingCustomer.WithHoldingTax = model.WithHoldingTax;
-            existingCustomer.ClusterCode = model.ClusterCode;
             existingCustomer.CreditLimit = model.CreditLimit;
             existingCustomer.CreditLimitAsOfToday = model.CreditLimitAsOfToday;
             existingCustomer.ZipCode = model.ZipCode;
@@ -91,19 +89,6 @@ namespace IBS.DataAccess.Repository.MasterFile
             {
                 throw new InvalidOperationException("No data changes!");
             }
-        }
-
-        public async Task<List<SelectListItem>> GetCustomerBranchesSelectListAsync(int customerId, CancellationToken cancellationToken = default)
-        {
-            return await _db.CustomerBranches
-                .OrderBy(c => c.BranchName)
-                .Where(c => c.CustomerId == customerId)
-                .Select(b => new SelectListItem
-                {
-                    Value = b.BranchName,
-                    Text = b.BranchName
-                })
-                .ToListAsync(cancellationToken);
         }
 
         public override async Task<Customer?> GetAsync(Expression<Func<Customer, bool>> filter, CancellationToken cancellationToken = default)

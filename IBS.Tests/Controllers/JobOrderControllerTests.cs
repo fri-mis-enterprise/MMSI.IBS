@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using FluentAssertions;
@@ -18,22 +19,44 @@ namespace IBS.Tests.Controllers
     public class JobOrderControllerTests
     {
         private readonly Mock<IJobOrderService> _mockJobOrderService;
+        private readonly Mock<IDispatchTicketService> _mockDispatchTicketService;
+        private readonly Mock<ITerminalService> _mockTerminalService;
+        private readonly Mock<ILogger<JobOrderController>> _mockLogger;
+        private readonly Mock<IHubContext<TugboatHub>> _mockTugboatHubContext;
+        private readonly Mock<IHubContext<PlanningHub>> _mockPlanningHubContext;
         private readonly JobOrderController _controller;
         private readonly Mock<ITempDataDictionary> _mockTempData;
 
-        public JobOrderControllerTests(JobOrderController controller, Mock<ITempDataDictionary> mockTempData)
+        public JobOrderControllerTests()
         {
             _mockJobOrderService = new Mock<IJobOrderService>();
-            var mockHubContext = new Mock<IHubContext<TugboatHub>>();
-            _mockTempData = mockTempData;
+            _mockDispatchTicketService = new Mock<IDispatchTicketService>();
+            _mockTerminalService = new Mock<ITerminalService>();
+            _mockLogger = new Mock<ILogger<JobOrderController>>();
+            _mockTugboatHubContext = new Mock<IHubContext<TugboatHub>>();
+            _mockPlanningHubContext = new Mock<IHubContext<PlanningHub>>();
+            _mockTempData = new Mock<ITempDataDictionary>();
 
-            // Mock SignalR Clients
-            var mockClients = new Mock<IHubClients>();
-            var mockClientProxy = new Mock<IClientProxy>();
-            mockHubContext.Setup(h => h.Clients).Returns(mockClients.Object);
-            mockClients.Setup(c => c.All).Returns(mockClientProxy.Object);
+            // Mock SignalR Clients for TugboatHub
+            var mockTugboatClients = new Mock<IHubClients>();
+            var mockTugboatClientProxy = new Mock<IClientProxy>();
+            _mockTugboatHubContext.Setup(h => h.Clients).Returns(mockTugboatClients.Object);
+            mockTugboatClients.Setup(c => c.All).Returns(mockTugboatClientProxy.Object);
 
-            _controller = controller;
+            // Mock SignalR Clients for PlanningHub
+            var mockPlanningClients = new Mock<IHubClients>();
+            var mockPlanningClientProxy = new Mock<IClientProxy>();
+            _mockPlanningHubContext.Setup(h => h.Clients).Returns(mockPlanningClients.Object);
+            mockPlanningClients.Setup(c => c.All).Returns(mockPlanningClientProxy.Object);
+
+            _controller = new JobOrderController(
+                _mockJobOrderService.Object,
+                _mockDispatchTicketService.Object,
+                _mockTerminalService.Object,
+                _mockLogger.Object,
+                _mockTugboatHubContext.Object,
+                _mockPlanningHubContext.Object
+            );
 
             // Mock User Identity
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
@@ -48,13 +71,6 @@ namespace IBS.Tests.Controllers
             };
 
             _controller.TempData = _mockTempData.Object;
-        }
-
-        public JobOrderControllerTests(Mock<IJobOrderService> mockJobOrderService, JobOrderController controller, Mock<ITempDataDictionary> mockTempData)
-        {
-            _mockJobOrderService = mockJobOrderService;
-            _controller = controller;
-            _mockTempData = mockTempData;
         }
 
         #region Create Tests
@@ -143,5 +159,3 @@ namespace IBS.Tests.Controllers
         #endregion
     }
 }
-
-

@@ -3,7 +3,6 @@ using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MSAP;
 using IBS.Models.MasterFile;
-using IBS.Models.MSAP.MasterFile;
 using IBS.Services;
 using IBS.Utility.Constants;
 using Moq;
@@ -11,7 +10,6 @@ using Xunit;
 using FluentAssertions;
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
-using IBS.DTOs;
 using IBS.Models.MSAP.ViewModels;
 
 namespace IBS.Tests.Services

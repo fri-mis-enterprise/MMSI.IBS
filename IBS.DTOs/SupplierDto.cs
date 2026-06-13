@@ -8,8 +8,5 @@ namespace IBS.DTOs
 
         public string SupplierName { get; set; } = null!;
 
-        public string SupplierAddress { get; set; } = null!;
-
-        public string SupplierTin { get; set; } = null!;
     }
 }

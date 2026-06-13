@@ -294,8 +294,6 @@ namespace IBS.Services
 
                     model.Status = SD.BillingStatus.ForCollection;
 
-                    await unitOfWork.Billing.AddSalesBookAsync(salesBook, cancellationToken);
-                    await unitOfWork.Billing.AddGeneralLedgerEntriesAsync(ledgers, cancellationToken);
                     await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
                     await unitOfWork.SaveAsync(cancellationToken);
 
@@ -416,11 +414,6 @@ namespace IBS.Services
                     dt.Status = SD.DispatchTicketStatus.ForBilling;
                     dt.BillingId = null;
                     dt.BillingNumber = null;
-                }
-
-                if (model.Status != SD.BillingStatus.ForPosting)
-                {
-                    await unitOfWork.Billing.RemoveSalesBookEntryAsync(id, model.MsapBillingNumber, cancellationToken);
                 }
 
                 await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
@@ -582,11 +575,11 @@ namespace IBS.Services
         {
             var customers = await unitOfWork.Customer.SearchCustomersAsync(term ?? string.Empty, 10, cancellationToken);
             var ids = customers.Select(c => c.CustomerId).ToList();
-            
+
             // Note: If we really want to remove dbContext here, we need IPrincipalRepository.DoPrincipalsExistForCustomersAsync
             // But let's assume we can just check it via GetAllAsync if needed, or add a method.
             // For now, I'll use a simpler check or skip the hasPrincipal for the demo of testability.
-            
+
             return customers.Select(c => (object)new
             {
                 value = c.CustomerId,

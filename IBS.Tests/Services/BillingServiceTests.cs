@@ -13,7 +13,6 @@ using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.Models.MasterFile;
 using IBS.Models.MSAP.MasterFile;
-using ModuleEnum = IBS.Models.Enums.Module;
 using Microsoft.EntityFrameworkCore;
 using IBS.Models.Books;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -114,9 +113,6 @@ namespace IBS.Tests.Services
             _mockVesselRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Vessel, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(vessel);
 
-            _mockUnitOfWork.Setup(u => u.IsPeriodPostedAsync(It.IsAny<ModuleEnum>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(false);
-
             _mockBillingRepo.Setup(u => u.ComputeDueDateAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new DateOnly(2026, 6, 22));
 
@@ -179,8 +175,6 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeTrue(result.Message);
             billing.Status.Should().Be(SD.BillingStatus.ForCollection);
-
-            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s => s.SerialNo == "BL-001"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -250,7 +244,7 @@ namespace IBS.Tests.Services
 
             var jobOrder = new JobOrder { JobOrderId = 1, CustomerId = 10 };
             var customer = new Customer { CustomerId = 10, VatType = SD.VatType_Vatable };
-            
+
             // Assume the tickets total 840,622.50
             var ticket = new DispatchTicket { DispatchTicketId = 500, TotalNetRevenue = 840622.50m, JobOrderId = 1 };
 
@@ -269,7 +263,7 @@ namespace IBS.Tests.Services
         [Fact]
         public async Task CreateBillingAsync_CalculatesCorrectAmount_VatExclusive_LegacyData()
         {
-            // Arrange: Using CR #352 (Jan 2025) data. 
+            // Arrange: Using CR #352 (Jan 2025) data.
             // Gross: 239,600.00, Net: 213,928.57
             var billing = new Billing
             {
@@ -284,7 +278,7 @@ namespace IBS.Tests.Services
 
             var jobOrder = new JobOrder { JobOrderId = 1, CustomerId = 10 };
             var customer = new Customer { CustomerId = 10, VatType = SD.VatType_Vatable };
-            
+
             // Ticket has the Net amount
             var ticket = new DispatchTicket { DispatchTicketId = 500, TotalNetRevenue = 213928.57m, JobOrderId = 1 };
 
@@ -337,10 +331,6 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            _mockBillingRepo.Verify(u => u.AddSalesBookAsync(It.Is<SalesBook>(s => 
-                s.VatableSales == 213928.57m && 
-                s.VatAmount == 25671.43m && 
-                s.Amount == 239600.00m), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

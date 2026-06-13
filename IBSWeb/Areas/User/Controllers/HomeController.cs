@@ -1,6 +1,5 @@
 using IBS.DataAccess.Data;
 using IBS.Models;
-using IBS.Models.Enums;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -43,66 +42,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             var dashboardCounts = new DashboardCountViewModel
             {
-                #region -- Filpride
-
-                SupplierAppointmentCount = await dbContext.CustomerOrderSlips
-                        .Where(cos =>
-                            (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created))
-                            && cos.Company == companyClaims)
-                        .CountAsync(),
-
-                HaulerAppointmentCount = await dbContext.CustomerOrderSlips
-                        .Where(cos =>
-                        (cos.Status == nameof(CosStatus.SupplierAppointed) || cos.Status == nameof(CosStatus.Created))
-                            && cos.Company == companyClaims)
-                        .CountAsync(),
-
-                ATLBookingCount = await dbContext.CustomerOrderSlips
-                        .Where(cos => !cos.IsCosAtlFinalized
-                                      && !string.IsNullOrEmpty(cos.Depot)
-                                      && cos.Status != nameof(CosStatus.Closed)
-                                      && cos.Status != nameof(CosStatus.Disapproved)
-                                      && cos.Status != nameof(CosStatus.Expired)
-                                      && cos.Company == companyClaims)
-                        .CountAsync(),
-
-                OMApprovalCOSCount = await dbContext.CustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM)
-                                      && cos.Company == companyClaims)
-                        .CountAsync(),
-
-                OMApprovalDRCount = await dbContext.DeliveryReceipts
-                        .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM)
-                                     && dr.Company == companyClaims)
-                        .CountAsync(),
-
-                CNCApprovalCount = await dbContext.CustomerOrderSlips
-                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC)
-                                  && cos.Company == companyClaims)
-                    .CountAsync(),
-
-                FMApprovalCount = await dbContext.CustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM)
-                                      && cos.Company == companyClaims)
-                        .CountAsync(),
-
-                DRCount = await dbContext.CustomerOrderSlips
-                        .Where(cos => cos.Status == nameof(CosStatus.ForDR)
-                                      && cos.Company == companyClaims)
-                        .CountAsync(),
-
-                InTransitCount = await dbContext.DeliveryReceipts
-                        .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery)
-                                     && dr.Company == companyClaims)
-                        .CountAsync(),
-
-                ForInvoiceCount = await dbContext.DeliveryReceipts
-                        .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing)
-                                     && dr.Company == companyClaims)
-                        .CountAsync(),
-
-                #endregion -- Filpride
-
                 #region -- MMSI
 
                 MsapServiceRequestForPosting = await dbContext.MsapDispatchTickets

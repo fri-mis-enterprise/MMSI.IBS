@@ -1,7 +1,6 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,30 +8,22 @@ using Microsoft.AspNetCore.Mvc;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-        [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class UserAccessController(
-        ApplicationDbContext dbContext,
-        IUnitOfWork unitOfWork,
-        ILogger<UserAccessController> logger,
+        IUserAccessService userAccessService,
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        // GET
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var model = await unitOfWork.UserAccess.GetAllAsync(null,
-                cancellationToken);
+            var model = await userAccessService.GetAllAsync(cancellationToken);
             return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            UserAccess model = new UserAccess
-            {
-                Users = await unitOfWork.Msap.GetMsapUsersSelectListById(cancellationToken)
-            };
-
+            var model = await userAccessService.PopulateUsersAsync(null, cancellationToken);
             return View(model);
         }
 
@@ -45,53 +36,23 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var tempModel = await unitOfWork.UserAccess.GetAsync(ua => ua.UserId == model.UserId,
-                cancellationToken);
+            var result = await userAccessService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            if (tempModel != null)
+            if (result.IsSuccess)
             {
-                throw new Exception($"Access for {tempModel.UserName} already exists.");
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                var selectedUser = dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
-                model.UserName = selectedUser!.UserName;
-                await unitOfWork.UserAccess.AddAsync(model,
-                    cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Created User Access for {model.UserName}",
-                    "User Access");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "User access created successfully.";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to create user access.");
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                model.Users = await unitOfWork.Msap.GetMsapUsersSelectListById(cancellationToken);
-                return View(model);
-            }
+
+            TempData["error"] = result.Message;
+            await userAccessService.PopulateUsersAsync(model, cancellationToken);
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = await unitOfWork.UserAccess.GetAsync(ua => ua.Id == id,
-                cancellationToken);
+            var model = await userAccessService.GetByIdAsync(id, cancellationToken);
 
             if (model == null)
             {
@@ -111,73 +72,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var result = await userAccessService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
-            try
+            if (result.IsSuccess)
             {
-                var tempModel = await unitOfWork.UserAccess.GetAsync(ua => ua.Id == model.Id,
-                    cancellationToken);
-
-                if (tempModel == null)
-                {
-                    return NotFound();
-                }
-
-                #region -- Audit Trail Recording --
-
-                AuditTrail auditTrailBook = new(userManager.GetUserName(User)!,
-                    $"Edited User Access for {model.UserName}",
-                    "User Access");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
-                tempModel.CanCreateServiceRequest = model.CanCreateServiceRequest;
-                tempModel.CanPostServiceRequest = model.CanPostServiceRequest;
-                tempModel.CanCreateDispatchTicket = model.CanCreateDispatchTicket;
-                tempModel.CanEditDispatchTicket = model.CanEditDispatchTicket;
-                tempModel.CanCancelDispatchTicket = model.CanCancelDispatchTicket;
-                tempModel.CanSetTariff = model.CanSetTariff;
-                tempModel.CanApproveTariff = model.CanApproveTariff;
-                tempModel.CanCreateBilling = model.CanCreateBilling;
-                tempModel.CanEditBilling = model.CanEditBilling;
-                tempModel.CanDeleteBilling = model.CanDeleteBilling;
-                tempModel.CanCreateCollection = model.CanCreateCollection;
-                tempModel.CanCreateJobOrder = model.CanCreateJobOrder;
-                tempModel.CanEditJobOrder = model.CanEditJobOrder;
-                tempModel.CanDeleteJobOrder = model.CanDeleteJobOrder;
-                tempModel.CanCloseJobOrder = model.CanCloseJobOrder;
-
-                // Treasury permissions
-                tempModel.CanAccessTreasury = model.CanAccessTreasury;
-                tempModel.CanCreateDisbursement = model.CanCreateDisbursement;
-
-                // MSAP Import permissions
-                tempModel.CanManageMsapImport = model.CanManageMsapImport;
-
-                // Reports permissions
-                tempModel.CanViewGeneralLedger = model.CanViewGeneralLedger;
-                tempModel.CanViewInventoryReport = model.CanViewInventoryReport;
-                tempModel.CanViewMaritimeReport = model.CanViewMaritimeReport;
-
-                await unitOfWork.SaveAsync(cancellationToken);
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "User access edited successfully.";
+                TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to edit user access.");
-                TempData["error"] = ex.Message;
-                await transaction.RollbackAsync(cancellationToken);
-                model.Users = await unitOfWork.Msap.GetMsapUsersSelectListById(cancellationToken);
-                return View(model);
-            }
+
+            TempData["error"] = result.Message;
+            await userAccessService.PopulateUsersAsync(model, cancellationToken);
+            return View(model);
         }
     }
 }
-
-

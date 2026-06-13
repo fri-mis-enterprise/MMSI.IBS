@@ -15,11 +15,7 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
 
         Task<List<DispatchTicket>?> GetPaidDispatchTicketsAsync(int billingId, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetMsapTerminalsByPortId(int portId, CancellationToken cancellationToken = default);
-
         Task<List<SelectListItem>?> GetMsapCustomersWithBillablesSelectList(int? currentCustomerId, string type, CancellationToken cancellationToken = default);
-
-        Task<List<SelectListItem>> GetMsapUnbilledTicketsById(string type, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>?> GetMsapUnbilledTicketsByCustomer(int? customerId, CancellationToken cancellationToken);
 
@@ -31,15 +27,6 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
 
         Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
 
-        Task RemoveSalesBookEntryAsync(int documentId, string serialNo, CancellationToken cancellationToken);
-
         Task<List<Billing>> GetBillingsByCollectionIdAsync(int collectionId, CancellationToken cancellationToken);
-
-        Task AddSalesBookAsync(Models.Books.SalesBook salesBook, CancellationToken cancellationToken);
-
-        Task AddGeneralLedgerEntriesAsync(List<Models.Books.GeneralLedgerBook> ledgers, CancellationToken cancellationToken);
     }
 }
-
-
-

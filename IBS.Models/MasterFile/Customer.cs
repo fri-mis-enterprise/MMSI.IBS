@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MasterFile
@@ -90,8 +89,6 @@ namespace IBS.Models.MasterFile
         [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
-        public ClusterArea? ClusterCode { get; set; }
-
         #region For Retail
 
         [StringLength(3)]
@@ -107,9 +104,6 @@ namespace IBS.Models.MasterFile
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal CreditLimitAsOfToday { get; set; }
 
-        public bool HasBranch { get; set; }
-
-        public ICollection<CustomerBranch>? Branches { get; set; }
 
         [Required]
         [Display(Name = "Zip Code")]

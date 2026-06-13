@@ -1,23 +1,15 @@
-using IBS.DataAccess.Data;
-using IBS.Models;
+using IBS.DTOs;
+using IBS.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using IBS.Utility.Helpers;
-using System.ComponentModel.DataAnnotations;
 
 namespace IBSWeb.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
     public class UserController(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager,
-        ApplicationDbContext dbContext,
-        ILogger<UserController> logger)
+        IUserService userService)
         : Controller
     {
         public IActionResult Index()
@@ -28,364 +20,72 @@ namespace IBSWeb.Areas.Admin.Controllers
         #region API CALLS
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
-            try
-            {
-                var users = await userManager.Users.ToListAsync();
-                var userList = new List<object>();
-
-                foreach (var user in users)
-                {
-                    var roles = await userManager.GetRolesAsync(user);
-                    userList.Add(new
-                    {
-                        id = user.Id,
-                        username = user.UserName,
-                        name = user.Name,
-                        department = user.Department,
-                        role = string.Join(", ", roles),
-                        isActive = user.IsActive,
-                        createdDate = user.CreatedDate.ToString("MMM dd, yyyy"),
-                        modifiedDate = user.ModifiedDate?.ToString("MMM dd, yyyy") ?? "N/A",
-                        modifiedBy = user.ModifiedBy ?? "N/A"
-                    });
-                }
-
-                return Json(new { data = userList });
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error retrieving users list. Error: {ErrorMessage}", ex.Message);
-                return Json(new { data = new List<object>() });
-            }
+            var userList = await userService.GetAllUsersAsync(cancellationToken);
+            return Json(new { data = userList });
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUser(string id)
+        public async Task<IActionResult> GetUser(string id, CancellationToken cancellationToken)
         {
-            try
+            if (string.IsNullOrWhiteSpace(id))
             {
-                if (string.IsNullOrWhiteSpace(id))
-                {
-                    return Json(new { success = false, message = "Invalid user id" });
-                }
-
-                var user = await userManager.FindByIdAsync(id);
-                if (user == null)
-                {
-                    return Json(new { success = false, message = "User not found" });
-                }
-
-                var roles = await userManager.GetRolesAsync(user);
-                var userData = new
-                {
-                    id = user.Id,
-                    username = user.UserName,
-                    name = user.Name,
-                    department = user.Department,
-                    role = roles.FirstOrDefault(),
-                    isActive = user.IsActive
-                };
-
-                return Json(new { success = true, data = userData });
+                return Json(new { success = false, message = "Invalid user id" });
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error retrieving user. Error: {ErrorMessage}", ex.Message);
-                return Json(new { success = false, message = "Error retrieving user data" });
-            }
+
+            var result = await userService.GetUserByIdAsync(id, cancellationToken);
+            return Json(result.IsSuccess ? new { success = true, data = result.Data } : new { success = false, message = result.Message });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Upsert([FromBody] UserUpsertModel model)
+        public async Task<IActionResult> Upsert([FromBody] UserUpsertDto model, CancellationToken cancellationToken)
         {
             if (model == null)
             {
                 return Json(new { success = false, message = "Invalid request payload" });
             }
 
-            if (string.IsNullOrWhiteSpace(model.Username) ||
-                string.IsNullOrWhiteSpace(model.Name) ||
-                string.IsNullOrWhiteSpace(model.Department) ||
-                string.IsNullOrWhiteSpace(model.Role))
+            if (!ModelState.IsValid)
             {
                 return Json(new { success = false, message = "Missing required fields" });
             }
 
-            if (string.IsNullOrEmpty(model.Id) && string.IsNullOrWhiteSpace(model.Password))
-            {
-                return Json(new { success = false, message = "Password is required for new users" });
-            }
+            var currentUsername = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+            var result = await userService.UpsertUserAsync(model, currentUsername, cancellationToken);
 
-            try
-            {
-                var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
-                var company = User.FindFirstValue("Company") ?? "System";
-
-                if (string.IsNullOrEmpty(model.Id))
-                {
-                    // CREATE NEW USER
-                    var newUser = new ApplicationUser
-                    {
-                        UserName = model.Username,
-                        Name = model.Name.ToUpper(),
-                        Department = model.Department,
-                        IsActive = model.IsActive,
-                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                    };
-
-                    var result = await userManager.CreateAsync(newUser, model.Password!);
-
-                    if (result.Succeeded)
-                    {
-                        var addRoleResult = await userManager.AddToRoleAsync(newUser, model.Role);
-                        if (!addRoleResult.Succeeded)
-                        {
-                            // If role assignment failed, remove the newly created user and return error
-                            await userManager.DeleteAsync(newUser);
-                            var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
-                            return Json(new { success = false, message = errors, errors = addRoleResult.Errors.Select(e => e.Description) });
-                        }
-
-                        // Audit Trail
-                        await LogAuditTrail(
-                            currentUser,
-                            $"Created new user: {model.Username} with role {model.Role}",
-                            "User Management"
-                        );
-
-                        var safeUsername = (model.Username ?? string.Empty)
-                            .Replace("\r", string.Empty)
-                            .Replace("\n", string.Empty);
-
-                        logger.LogInformation("User {Username} created successfully by {CurrentUser}", safeUsername, currentUser);
-                        return Json(new { success = true, message = "User created successfully" });
-                    }
-                    else
-                    {
-                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                        return Json(new { success = false, message = errors });
-                    }
-                }
-                else
-                {
-                    // UPDATE EXISTING USER
-                    var user = await userManager.FindByIdAsync(model.Id);
-                    if (user == null)
-                    {
-                        return Json(new { success = false, message = "User not found" });
-                    }
-
-                    // Track changes for audit
-                    var changes = new List<string>();
-                    if (user.Name != model.Name)
-                    {
-                        changes.Add($"Name: {user.Name} → {model.Name}");
-                    }
-
-                    if (user.Department != model.Department)
-                    {
-                        changes.Add($"Department: {user.Department} → {model.Department}");
-                    }
-
-                    if (user.IsActive != model.IsActive)
-                    {
-                        changes.Add($"Status: {(user.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
-                    }
-
-                    // Update role if changed
-                    var currentRoles = await userManager.GetRolesAsync(user);
-                    if (!currentRoles.Contains(model.Role))
-                    {
-                        // Remove existing roles
-                        var removeResult = await userManager.RemoveFromRolesAsync(user, currentRoles);
-                        if (!removeResult.Succeeded)
-                        {
-                            var errors = string.Join(", ", removeResult.Errors.Select(e => e.Description));
-                            return Json(new { success = false, message = errors, errors = removeResult.Errors.Select(e => e.Description) });
-                        }
-
-                        // Add new role
-                        var addRoleResult = await userManager.AddToRoleAsync(user, model.Role);
-                        if (!addRoleResult.Succeeded)
-                        {
-                            // Try to restore previous roles if possible
-                            if (currentRoles.Any())
-                            {
-                                var restoreResult = await userManager.AddToRolesAsync(user, currentRoles);
-                                if (!restoreResult.Succeeded)
-                                {
-                                    logger.LogError("Failed to restore roles for user {Username} after AddToRole failure: {Errors}", user.UserName, string.Join(", ", restoreResult.Errors.Select(e => e.Description)));
-                                }
-                            }
-
-                            var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
-                            return Json(new { success = false, message = errors, errors = addRoleResult.Errors.Select(e => e.Description) });
-                        }
-
-                        changes.Add($"Role: {currentRoles.FirstOrDefault()} → {model.Role}");
-                    }
-
-                    // Update user properties
-                    user.Name = model.Name.ToUpper();
-                    user.Department = model.Department;
-                    user.IsActive = model.IsActive;
-                    user.ModifiedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    user.ModifiedBy = currentUser;
-
-                    var result = await userManager.UpdateAsync(user);
-
-                    if (result.Succeeded)
-                    {
-                        if (changes.Any())
-                        {
-                            await LogAuditTrail(
-                                currentUser,
-                                $"Updated user {model.Username}: {string.Join("; ", changes)}",
-                                "User Management"
-                            );
-                        }
-                        var safeUsername = (model.Username ?? string.Empty)
-                            .Replace("\r", string.Empty)
-                            .Replace("\n", string.Empty);
-
-                        logger.LogInformation("User {safeUsername} updated successfully by {CurrentUser}", safeUsername, currentUser);
-                        return Json(new { success = true, message = "User updated successfully" });
-                    }
-                    else
-                    {
-                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                        return Json(new { success = false, message = errors });
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error saving user. Error: {ErrorMessage}", ex.Message);
-                return Json(new { success = false, message = "An error occurred while saving the user" });
-            }
+            return Json(new { success = result.IsSuccess, message = result.Message });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleStatus(string id)
+        public async Task<IActionResult> ToggleStatus(string id, CancellationToken cancellationToken)
         {
-            try
+            if (string.IsNullOrWhiteSpace(id))
             {
-                if (string.IsNullOrWhiteSpace(id))
-                {
-                    return Json(new { success = false, message = "Invalid user id" });
-                }
-                var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
-                var company = User.FindFirstValue("Company") ?? "System";
-                var user = await userManager.FindByIdAsync(id);
-
-                if (user == null)
-                {
-                    return Json(new { success = false, message = "User not found" });
-                }
-
-                // Prevent admin from deactivating themselves
-                if (string.Equals(user.UserName, currentUser, StringComparison.OrdinalIgnoreCase))
-                {
-                    return Json(new { success = false, message = "You cannot deactivate your own account" });
-                }
-                user.IsActive = !user.IsActive;
-                user.ModifiedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                user.ModifiedBy = currentUser;
-
-                var result = await userManager.UpdateAsync(user);
-
-                if (result.Succeeded)
-                {
-                    var action = user.IsActive ? "activated" : "deactivated";
-                    await LogAuditTrail(
-                        currentUser,
-                        $"User {user.UserName} {action}",
-                        "User Management"
-                    );
-
-                    var safeUsername = (user.UserName ?? string.Empty)
-                        .Replace("\r", string.Empty)
-                        .Replace("\n", string.Empty);
-
-                    logger.LogInformation("User {safeUsername} {Action} by {CurrentUser}", safeUsername, action, currentUser);
-                    return Json(new { success = true, message = $"User {action} successfully" });
-                }
-
-                return Json(new { success = false, message = "Failed to update user status" });
+                return Json(new { success = false, message = "Invalid user id" });
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error toggling user status. Error: {ErrorMessage}", ex.Message);
-                return Json(new { success = false, message = "An error occurred" });
-            }
+
+            var currentUsername = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+            var result = await userService.ToggleUserStatusAsync(id, currentUsername, cancellationToken);
+
+            return Json(new { success = result.IsSuccess, message = result.Message });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetModel model)
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetDto model, CancellationToken cancellationToken)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                var currentUser = User.FindFirstValue(ClaimTypes.Name) ?? "System";
-                var company = User.FindFirstValue("Company") ?? "System";
-                var user = await userManager.FindByIdAsync(model.UserId);
-
-                if (user == null)
-                {
-                    return Json(new { success = false, message = "User not found" });
-                }
-
-                // Remove old password
-                var token = await userManager.GeneratePasswordResetTokenAsync(user);
-                var result = await userManager.ResetPasswordAsync(user, token, model.NewPassword);
-
-                if (result.Succeeded)
-                {
-                    user.ModifiedDate = DateTime.Now;
-                    user.ModifiedBy = currentUser;
-                    var updateResult = await userManager.UpdateAsync(user);
-                    if (!updateResult.Succeeded)
-                    {
-                        logger.LogWarning("Failed to update audit fields for user {Username} after password reset", user.UserName);
-                    }
-
-                    await LogAuditTrail(
-                        currentUser,
-                        $"Password reset for user {user.UserName}",
-                        "User Management"
-                    );
-
-                    var safeUsername = (user.UserName ?? string.Empty)
-                        .Replace("\r", string.Empty)
-                        .Replace("\n", string.Empty);
-
-                    logger.LogInformation("Password reset for user {Username} by {CurrentUser}", safeUsername, currentUser);
-                    return Json(new { success = true, message = "Password reset successfully" });
-                }
-
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return Json(new { success = false, message = errors });
+                return Json(new { success = false, message = "Invalid request payload" });
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error resetting password. Error: {ErrorMessage}", ex.Message);
-                return Json(new { success = false, message = "An error occurred while resetting password" });
-            }
-        }
 
-        #endregion
+            var currentUsername = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+            var result = await userService.ResetPasswordAsync(model, currentUsername, cancellationToken);
 
-        #region HELPER METHODS
-
-        private async Task LogAuditTrail(string username, string activity, string documentType)
-        {
-            var auditTrail = new AuditTrail(username, activity, documentType);
-            await dbContext.AuditTrails.AddAsync(auditTrail);
-            await dbContext.SaveChangesAsync();
+            return Json(new { success = result.IsSuccess, message = result.Message });
         }
 
         #endregion
@@ -393,47 +93,12 @@ namespace IBSWeb.Areas.Admin.Controllers
         #region VIEW DATA
 
         [HttpGet]
-        public IActionResult GetRoles()
+        public async Task<IActionResult> GetRoles(CancellationToken cancellationToken)
         {
-            var roles = roleManager.Roles
-                // .Where(r => r.Name != "Admin") // Exclude Admin role
-                .Select(r => new SelectListItem
-                {
-                    Text = r.Name,
-                    Value = r.Name
-                })
-                .ToList();
-
+            var roles = await userService.GetRolesAsync(cancellationToken);
             return Json(roles);
         }
 
         #endregion
     }
-
-    #region MODELS
-
-    public class UserUpsertModel
-    {
-        public string? Id { get; set; }
-        [Required]
-        public string Username { get; set; } = null!;
-        [Required]
-        public string Name { get; set; } = null!;
-        [Required]
-        public string Department { get; set; } = null!;
-        [Required]
-        public string Role { get; set; } = null!;
-        public string? Password { get; set; }
-        public bool IsActive { get; set; }
-    }
-
-    public class PasswordResetModel
-    {
-        [Required]
-        public string UserId { get; set; } = null!;
-        [Required]
-        public string NewPassword { get; set; } = null!;
-    }
-
-    #endregion
 }

@@ -74,10 +74,6 @@ namespace IBS.Models.MasterFile
 
         public virtual ICollection<ChartOfAccount> Children { get; set; } = new List<ChartOfAccount>();
 
-        public ICollection<GLPeriodBalance> Balances { get; set; } =  new List<GLPeriodBalance>();
-
-        public ICollection<GLSubAccountBalance> SubAccountBalances { get; set; } = new List<GLSubAccountBalance>();
-
         #endregion
     }
 }

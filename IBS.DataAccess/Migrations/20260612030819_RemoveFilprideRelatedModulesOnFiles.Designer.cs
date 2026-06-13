@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612030819_RemoveFilprideRelatedModulesOnFiles")]
+    partial class RemoveFilprideRelatedModulesOnFiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,6 +202,153 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("audit_trails", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Books.CashReceiptBook", b =>
+                {
+                    b.Property<int>("CashReceiptBookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("cash_receipt_book_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CashReceiptBookId"));
+
+                    b.Property<string>("Bank")
+                        .HasColumnType("text")
+                        .HasColumnName("bank");
+
+                    b.Property<string>("COA")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("coa");
+
+                    b.Property<string>("CheckNo")
+                        .HasColumnType("text")
+                        .HasColumnName("check_no");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_name");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit");
+
+                    b.Property<string>("Particulars")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("particulars");
+
+                    b.Property<string>("RefNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ref_no");
+
+                    b.HasKey("CashReceiptBookId")
+                        .HasName("pk_cash_receipt_books");
+
+                    b.ToTable("cash_receipt_books", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Books.DisbursementBook", b =>
+                {
+                    b.Property<int>("DisbursementBookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("disbursement_book_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DisbursementBookId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Bank")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("bank");
+
+                    b.Property<string>("CVNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("cv_no");
+
+                    b.Property<string>("ChartOfAccount")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chart_of_account");
+
+                    b.Property<string>("CheckDate")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("check_date");
+
+                    b.Property<string>("CheckNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("check_no");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit");
+
+                    b.Property<string>("Particulars")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("particulars");
+
+                    b.Property<string>("Payee")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("payee");
+
+                    b.HasKey("DisbursementBookId")
+                        .HasName("pk_disbursement_books");
+
+                    b.ToTable("disbursement_books", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Books.GeneralLedgerBook", b =>
                 {
                     b.Property<int>("GeneralLedgerBookId")
@@ -280,12 +430,397 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("sub_account_type");
 
                     b.HasKey("GeneralLedgerBookId")
-                        .HasName("pk_general_ledger_book");
+                        .HasName("pk_general_ledger_books");
 
                     b.HasIndex("AccountId")
-                        .HasDatabaseName("ix_general_ledger_book_account_id");
+                        .HasDatabaseName("ix_general_ledger_books_account_id");
 
-                    b.ToTable("general_ledger_book", (string)null);
+                    b.ToTable("general_ledger_books", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Books.JournalBook", b =>
+                {
+                    b.Property<int>("JournalBookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("journal_book_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JournalBookId"));
+
+                    b.Property<string>("AccountTitle")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_title");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reference");
+
+                    b.HasKey("JournalBookId")
+                        .HasName("pk_journal_books");
+
+                    b.ToTable("journal_books", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Books.PurchaseBook", b =>
+                {
+                    b.Property<int>("PurchaseBookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_book_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PurchaseBookId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("discount");
+
+                    b.Property<string>("DocumentNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("document_no");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<decimal>("NetPurchases")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_purchases");
+
+                    b.Property<string>("PONo")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("po_no");
+
+                    b.Property<string>("SupplierAddress")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("supplier_address");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("supplier_name");
+
+                    b.Property<string>("SupplierTin")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("supplier_tin");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<decimal>("WhtAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("wht_amount");
+
+                    b.HasKey("PurchaseBookId")
+                        .HasName("pk_purchase_books");
+
+                    b.ToTable("purchase_books", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Books.SalesBook", b =>
+                {
+                    b.Property<int>("SalesBookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("sales_book_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesBookId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("discount");
+
+                    b.Property<int?>("DocumentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("document_id");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<decimal>("NetSales")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_sales");
+
+                    b.Property<string>("SerialNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("serial_no");
+
+                    b.Property<string>("SoldTo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sold_to");
+
+                    b.Property<string>("TinNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tin_no");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<decimal>("VatExemptSales")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_exempt_sales");
+
+                    b.Property<decimal>("VatableSales")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vatable_sales");
+
+                    b.Property<decimal>("ZeroRated")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("zero_rated");
+
+                    b.HasKey("SalesBookId")
+                        .HasName("pk_sales_books");
+
+                    b.ToTable("sales_books", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.GLPeriodBalance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("AdjustedEndingBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("adjusted_ending_balance");
+
+                    b.Property<decimal>("AdjustmentCreditTotal")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("adjustment_credit_total");
+
+                    b.Property<decimal>("AdjustmentDebitTotal")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("adjustment_debit_total");
+
+                    b.Property<decimal>("BeginningBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("beginning_balance");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("company");
+
+                    b.Property<decimal>("CreditTotal")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit_total");
+
+                    b.Property<decimal>("DebitTotal")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit_total");
+
+                    b.Property<decimal>("EndingBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("ending_balance");
+
+                    b.Property<int>("FiscalPeriod")
+                        .HasColumnType("integer")
+                        .HasColumnName("fiscal_period");
+
+                    b.Property<int>("FiscalYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("fiscal_year");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_closed");
+
+                    b.Property<DateOnly>("PeriodEndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("period_end_date");
+
+                    b.Property<DateOnly>("PeriodStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("period_start_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gl_period_balances");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_gl_period_balances_account_id");
+
+                    b.ToTable("gl_period_balances", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.GLSubAccountBalance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("BeginningBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("beginning_balance");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("company");
+
+                    b.Property<decimal>("CreditTotal")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit_total");
+
+                    b.Property<decimal>("DebitTotal")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit_total");
+
+                    b.Property<decimal>("EndingBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("ending_balance");
+
+                    b.Property<int>("FiscalPeriod")
+                        .HasColumnType("integer")
+                        .HasColumnName("fiscal_period");
+
+                    b.Property<int>("FiscalYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("fiscal_year");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_closed");
+
+                    b.Property<DateOnly>("PeriodEndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("period_end_date");
+
+                    b.Property<DateOnly>("PeriodStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("period_start_date");
+
+                    b.Property<int>("SubAccountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("sub_account_id");
+
+                    b.Property<string>("SubAccountName")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("sub_account_name");
+
+                    b.Property<int>("SubAccountType")
+                        .HasColumnType("integer")
+                        .HasColumnName("sub_account_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gl_sub_account_balances");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_gl_sub_account_balances_account_id");
+
+                    b.ToTable("gl_sub_account_balances", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.HubConnection", b =>
@@ -2102,6 +2637,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("business_style");
 
+                    b.Property<int?>("ClusterCode")
+                        .HasColumnType("integer")
+                        .HasColumnName("cluster_code");
+
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("numeric")
                         .HasColumnName("commission_rate");
@@ -2610,6 +3149,55 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("notifications", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.PostedPeriod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("company");
+
+                    b.Property<bool>("IsPosted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_posted");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("module");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer")
+                        .HasColumnName("month");
+
+                    b.Property<string>("PostedBy")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime>("PostedOn")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("posted_on");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id")
+                        .HasName("pk_posted_periods");
+
+                    b.ToTable("posted_periods", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.UserNotification", b =>
                 {
                     b.Property<Guid>("UserNotificationId")
@@ -2825,7 +3413,31 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_general_ledger_book_chart_of_accounts_account_id");
+                        .HasConstraintName("fk_general_ledger_books_chart_of_accounts_account_id");
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("IBS.Models.GLPeriodBalance", b =>
+                {
+                    b.HasOne("IBS.Models.MasterFile.ChartOfAccount", "Account")
+                        .WithMany("Balances")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_gl_period_balances_chart_of_accounts_account_id");
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("IBS.Models.GLSubAccountBalance", b =>
+                {
+                    b.HasOne("IBS.Models.MasterFile.ChartOfAccount", "Account")
+                        .WithMany("SubAccountBalances")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_gl_sub_account_balances_chart_of_accounts_account_id");
 
                     b.Navigation("Account");
                 });
@@ -3304,7 +3916,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.MasterFile.ChartOfAccount", b =>
                 {
+                    b.Navigation("Balances");
+
                     b.Navigation("Children");
+
+                    b.Navigation("SubAccountBalances");
                 });
 #pragma warning restore 612, 618
         }

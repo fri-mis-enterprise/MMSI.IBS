@@ -1,6 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DTOs;
-using IBS.Models.MSAP;
 
 namespace IBS.Services
 {

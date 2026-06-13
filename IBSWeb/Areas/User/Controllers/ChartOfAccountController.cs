@@ -48,11 +48,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View("ExportIndex");
             }
 
-            var level1 = await unitOfWork.ChartOfAccount
-                .GetAllAsync(cancellationToken : cancellationToken);
-
-            return View(level1.Where(c => c.Level == 1)
-                .ToList());
+            return View();
         }
 
         [HttpGet]

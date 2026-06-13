@@ -307,7 +307,6 @@ namespace IBS.DataAccess.Repository.Msap
                 );
             }
 
-            await _db.GeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
             #region Cash Receipt Book Recording
 
@@ -458,7 +457,6 @@ namespace IBS.DataAccess.Repository.Msap
                 );
             }
 
-            await _db.CashReceiptBooks.AddRangeAsync(crb, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
             #endregion Cash Receipt Book Recording

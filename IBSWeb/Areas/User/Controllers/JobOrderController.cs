@@ -1,4 +1,3 @@
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -6,13 +5,10 @@ using IBS.Models.MSAP.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using IBSWeb.Hubs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using IBS.Services;
 using IBS.Utility.Constants;
-using Microsoft.Extensions.Logging;
 
 namespace IBSWeb.Areas.User.Controllers
 {
