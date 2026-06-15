@@ -1,38 +1,43 @@
-# IBSWeb — Integrated Business System
+# MSAP — MMSI Sales and Accounting Program
 
-IBSWeb is a robust web-based Accounting and Business Management system developed with ASP.NET Core. It is architected to manage complex financial and operational workflows within a single integrated platform, now unified under the **MMSI** entity.
+MSAP is a specialized, standalone Sales and Accounting system dedicated to the maritime service industry. Developed with ASP.NET Core 10.0, it provides a focused and efficient workflow for managing maritime service requests, from initial job ordering to final collection.
 
 ---
 
-## 🏢 Business Operations
+## 🏗️ Core MSAP Workflow
 
-The system provides a comprehensive suite of tools for business management, unified into a single streamlined interface:
+The system is architected around a streamlined, four-stage operational lifecycle:
 
-### 1. Core Accounting & Logistics
-Focusing on full-cycle financial management:
-- **Accounts Receivable**: Customer Order Slips (COS), Delivery Receipts (DR), Sales Invoices, Service Invoices, and Collection Receipts.
-- **Accounts Payable**: Authority to Load (ATL), Purchase Orders (PO), Receiving Reports (RR), and complex Check Voucher (CV) workflows (Trade, Non-Trade, Payroll).
-- **Advanced Accounting**: Hierarchical Chart of Accounts, General Ledger, Journal Vouchers, and automated posting logic.
-- **Treasury & Reports**: Disbursement management and a wide array of financial statements (PNL, Trial Balance, Balance Sheet, SRE).
-- **Inventory**: Real-time tracking and automated valuation.
+### 1. Job Order Management
+The entry point for all service requests.
+- **Job Orders**: Centralized tracking of service requests including customer details, vessel info, and planned schedules.
+- **Vessel Planning**: Real-time synchronization and scheduling of vessel activities.
 
-### 2. Maritime Service Assistance Program (MSAP)
-Tailored operations for the maritime sector:
-- **MSAP Operations**: Management of Service Requests and Dispatch Tickets.
-- **Billing & Collection**: Integrated workflow from service fulfillment to billing and final collection.
-- **Maritime Reporting**: Specific sales and operational reports for maritime services.
-- **Master Files**: Comprehensive management of Ports, Principals, Tugboats, Vessels, and Tug Masters.
+### 2. Dispatch Ticket Operations
+Field operations management and service fulfillment.
+- **Dispatch Tickets**: Recording of actual service delivery, including tugboat assignments, service times, and tug master details.
+- **Tugboat Monitoring**: Live tracking and status updates of the tugboat fleet via SignalR.
+
+### 3. Billing & Invoicing
+Financial processing of fulfilled services.
+- **Billing**: Automated generation of service invoices based on dispatched tickets.
+- **Tariff Rates**: Dynamic rate calculation based on customer-specific or port-specific tariff agreements.
+- **Adjustments**: Flexible handling of bill adjustments and miscellaneous charges.
+
+### 4. Collection & Treasury
+Final settlement and financial tracking.
+- **Collections**: Recording of payments (checks/cash) and linking them to outstanding billings.
+- **Collection Reports**: Automated generation of official receipts and collection summaries.
 
 ---
 
 ## 🔎 Key Features
 
-- **Unified Entity Architecture**: Consolidation of multiple business workflows into a single cohesive structure.
-- **Simplified Modular Design**: Organized into a unified User area for a streamlined user experience and better maintainability.
-- **Comprehensive Audit Trail**: Every critical action is logged with user details, activity descriptions, and timestamps.
-- **Period Posting Control**: Security logic to prevent data modification in closed financial periods.
-- **Advanced Export Features**: Direct data export capabilities to AAS (Advanced Accounting System) formats.
-- **Role-Based Access Control**: Granular permissions across different departments (Accounting, Marketing, Logistics, Finance, etc.).
+- **Specialized 4-Tier Architecture**: Lean design focusing exclusively on maritime operations and their financial counterparts.
+- **Modern UI Design System**: A unified interface using custom `ModernTable`, `ModernSelect`, and `ModernAlert` components for maximum efficiency.
+- **Live Operation Dashboards**: Real-time updates for Job Orders and Tugboat assignments powered by SignalR.
+- **Comprehensive Audit Trail**: Automatic logging of every critical step in the MSAP lifecycle (Create, Edit, Disapprove, Bill, Collect).
+- **Advanced Export Features**: Direct data export capabilities for operational and financial auditing.
 
 ---
 
@@ -41,10 +46,10 @@ Tailored operations for the maritime sector:
 - **Backend**: ASP.NET Core 10.0 (C#)
 - **Data Access**: Entity Framework Core with Npgsql (PostgreSQL)
 - **Architecture**: N-Tier / Layered (DataAccess, Models, DTOs, Services, Web UI)
-- **Frontend**: Razor Pages / MVC, JavaScript, jQuery, DataTables.net
-- **Messaging**: SignalR for real-time notifications
-- **External Integration**: Google Drive API for automated imports and Cloud Storage for attachments
-- **Hosting/Deployment**: Dockerized environment, optimized for Google Cloud Platform
+- **Frontend**: Razor Pages / MVC, JavaScript (ES6+), jQuery, DataTables.net
+- **Messaging**: SignalR for real-time operational hubs
+- **Reports**: QuestPDF for high-fidelity maritime documents and invoices
+- **Hosting/Deployment**: Dockerized environment optimized for Google Cloud Platform (GCP)
 
 ---
 
