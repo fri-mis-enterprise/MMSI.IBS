@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+using IBS.Models;
 using IBS.Models.MSAP;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;

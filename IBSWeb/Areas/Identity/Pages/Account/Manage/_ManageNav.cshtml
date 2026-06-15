@@ -1,4 +1,4 @@
-﻿@using IBS.Models
+@using IBS.Models
 @inject SignInManager<ApplicationUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();

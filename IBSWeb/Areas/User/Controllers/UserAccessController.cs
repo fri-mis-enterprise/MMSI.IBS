@@ -16,8 +16,44 @@ namespace IBSWeb.Areas.User.Controllers
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var model = await userAccessService.GetAllAsync(cancellationToken);
-            return View(model);
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetUserAccessList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var queried = await userAccessService.GetAllAsync(cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+                    queried = queried.Where(ua =>
+                        (ua.UserId != null && ua.UserId.ToLower().Contains(searchValue)) ||
+                        (ua.UserName != null && ua.UserName.ToLower().Contains(searchValue))
+                    ).ToList();
+                }
+
+                var totalRecords = queried.Count();
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception)
+            {
+                return Json(new { error = "Internal server error" });
+            }
         }
 
         [HttpGet]

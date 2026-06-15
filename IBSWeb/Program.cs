@@ -60,7 +60,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Razor
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
-builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new DecimalJsonConverter());
+    })
+    .AddSessionStateTempDataProvider();
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 
@@ -97,6 +103,8 @@ builder.Services.AddScoped<ITugboatService, TugboatService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -184,3 +192,17 @@ using (var scope = app.Services.CreateScope())
 app.Run();
 
 public partial class Program { }
+
+// Custom JSON converter for decimal formatting
+public class DecimalJsonConverter : System.Text.Json.Serialization.JsonConverter<decimal>
+{
+    public override decimal Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        return reader.GetDecimal();
+    }
+
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, decimal value, System.Text.Json.JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(Math.Round(value, 4, MidpointRounding.AwayFromZero));
+    }
+}

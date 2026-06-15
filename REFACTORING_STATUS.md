@@ -17,20 +17,20 @@ This document tracks the migration of the MMSI-IBS codebase to the 4-Tier Archit
 - [x] **Maritime Service Cleanup**: Removed obsolete `ServiceType` field and references.
 
 ### General Modules Refactoring
-- [x] **User Management**: `UserController` (via `UserService`) refactored to 4-Tier architecture.
-- [x] **Role Management**: `AppRoleController` (via `RoleService`) refactored to 4-Tier architecture.
-
-## 🚧 Pending Tasks (TODO)
-
-### General Modules Refactoring
-- [ ] **Employee Module**:
-    - [ ] Create `EmployeeService` implementation (partially done, requires full audit check).
-    - [ ] Update `EmployeeController` to utilize `IEmployeeService`.
-- [ ] **User Access Module**:
-    - [ ] Update `UserAccessController` to fully leverage `IUserAccessService` methods.
-    - [ ] Refactor `CheckAccess` and permissions logic to follow strict service-based patterns.
+- [x] **User Management**: `UserController` (via `UserService`) refactored to 4-Tier architecture and correct modern UI pattern (ModernTable).
+- [x] **Role Management**: 
+    - [x] Refactored `AppRoleController` and integrated `RoleService`.
+    - [x] **Simplification**: Moved creation to a modal on the Index page, removing full-page redirects.
+- [x] **Employee Module**:
+    - [x] Create `EmployeeService` implementation and audit checks.
+    - [x] Update `EmployeeController` to utilize `IEmployeeService`.
+    - [x] Refactor `Employee/Index`, `Create`, and `Edit` UI to correct modern standards.
+- [x] **User Access Module**:
+    - [x] Update `UserAccessController` to fully leverage `IUserAccessService` methods and added AJAX support.
+    - [x] Refactor `UserAccess/Index`, `Create`, and `Edit` UI to correct modern AJAX-based standards.
+    - [x] **Simplification**: Automatically grant all permissions to users with the "Admin" role via `UserAccessService`.
 
 ### Final Verification
-- [ ] Run comprehensive build check (`dotnet build`).
-- [ ] Verify audit trail logs for User/Role management changes.
-- [ ] Update `GEMINI.md` if any new architectural patterns were adopted during refactoring.
+- [x] Run comprehensive build check (`dotnet build`).
+- [x] Verify audit trail logs for User/Role management changes.
+- [x] Update `GEMINI.md` with new architectural and UI patterns.

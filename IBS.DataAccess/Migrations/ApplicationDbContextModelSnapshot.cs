@@ -237,6 +237,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<decimal>("Credit")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit");
 
@@ -245,6 +246,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("date");
 
                     b.Property<decimal>("Debit")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("debit");
 
@@ -353,6 +355,7 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BillAdjustId"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount");
 
@@ -375,6 +378,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("dispatch_ticket_id");
 
                     b.Property<decimal>("Rate")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("rate");
 
@@ -400,10 +404,12 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BillDispatchId"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount");
 
                     b.Property<decimal>("ApOtherTug")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("ap_other_tug");
 
@@ -426,6 +432,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("dispatch_ticket_id");
 
                     b.Property<decimal>("Rate")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("rate");
 
@@ -451,22 +458,27 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MsapBillingId"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("AMOUNT");
 
                     b.Property<decimal>("AmountPaid")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_paid");
 
                     b.Property<decimal>("ApOtherTug")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("ap_other_tug");
 
                     b.Property<decimal>("BAFAmount")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("baf_amount");
 
                     b.Property<decimal>("Balance")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("balance");
 
@@ -522,11 +534,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("DATE");
 
                     b.Property<decimal>("Discount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("discount");
 
                     b.Property<decimal>("DispatchAmount")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("dispatch_amount");
 
                     b.Property<DateOnly>("DueDate")
@@ -668,6 +682,7 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MsapCollectionId"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("AMOUNT");
 
@@ -698,10 +713,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("cancellation_remarks");
 
                     b.Property<decimal>("CashAmount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("cash_amount");
 
                     b.Property<decimal>("CheckAmount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("check_amount");
 
@@ -755,6 +772,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("deposit_date");
 
                     b.Property<decimal>("EWT")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("ewt");
 
@@ -798,6 +816,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("remarks");
 
                     b.Property<decimal>("Total")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("total");
 
@@ -810,6 +829,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("voided_date");
 
                     b.Property<decimal>("WVAT")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("wvat");
 
@@ -893,10 +913,12 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DispatchTicketId"));
 
                     b.Property<decimal>("ApOtherTugs")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("ap_other_tugs");
 
                     b.Property<decimal>("BAFBillingAmount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_billing_amount");
 
@@ -905,14 +927,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("baf_charge_type");
 
                     b.Property<decimal>("BAFDiscount")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("baf_discount");
 
                     b.Property<decimal>("BAFNetRevenue")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_net_revenue");
 
                     b.Property<decimal>("BAFRate")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_rate");
 
@@ -958,6 +983,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("date_left");
 
                     b.Property<decimal>("DispatchBillingAmount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("dispatch_billing_amount");
 
@@ -966,10 +992,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("dispatch_charge_type");
 
                     b.Property<decimal>("DispatchDiscount")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("dispatch_discount");
 
                     b.Property<decimal>("DispatchNetRevenue")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("dispatch_net_revenue");
 
@@ -979,6 +1007,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("NUMBER");
 
                     b.Property<decimal>("DispatchRate")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("dispatch_rate");
 
@@ -1052,14 +1081,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("time_left");
 
                     b.Property<decimal>("TotalBilling")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_billing");
 
                     b.Property<decimal>("TotalHours")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("total_hours");
 
                     b.Property<decimal>("TotalNetRevenue")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_net_revenue");
 
@@ -1424,6 +1456,7 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RateId"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount");
 
@@ -1609,7 +1642,8 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TugboatOwnerId"));
 
                     b.Property<decimal>("FixedRate")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("fixed_rate");
 
                     b.Property<string>("MsapRecId")
@@ -1795,11 +1829,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("as_of_date");
 
                     b.Property<decimal>("BAF")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("baf");
 
                     b.Property<decimal>("BAFDiscount")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("baf_discount");
 
                     b.Property<string>("CreatedBy")
@@ -1815,11 +1851,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("customer_id");
 
                     b.Property<decimal>("Dispatch")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("dispatch");
 
                     b.Property<decimal>("DispatchDiscount")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("dispatch_discount");
 
                     b.Property<int>("PortId")
@@ -2103,7 +2141,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("business_style");
 
                     b.Property<decimal>("CommissionRate")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("commission_rate");
 
                     b.Property<int?>("CommissioneeId")
@@ -2126,10 +2165,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<decimal>("CreditLimit")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit_limit");
 
                     b.Property<decimal>("CreditLimitAsOfToday")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit_limit_as_of_today");
 
@@ -2196,6 +2237,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("requires_price_adjustment");
 
                     b.Property<decimal?>("RetentionRate")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("retention_rate");
 
@@ -2339,6 +2381,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("position");
 
                     b.Property<decimal>("Salary")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("salary");
 
@@ -2521,6 +2564,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("vat_type");
 
                     b.Property<decimal?>("WithholdingTaxPercent")
+                        .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("withholding_tax_percent");
 

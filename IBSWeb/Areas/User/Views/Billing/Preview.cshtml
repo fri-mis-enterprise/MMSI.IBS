@@ -1,4 +1,4 @@
-﻿@model IBS.Models.MSAP.Billing
+@model IBS.Models.MSAP.Billing
 
 @{
     ViewData["Title"] = "Billing - Preview";
@@ -168,9 +168,9 @@
                                     <td>@dt.Service?.ServiceName</td>
                                     <td class="text-center">@dt.DateLeft?.ToString("MM/dd") @dt.TimeLeft</td>
                                     <td class="text-center">@dt.DateArrived?.ToString("MM/dd") @dt.TimeArrived</td>
-                                    <td class="text-center">@dt.TotalHours.ToString("N2")</td>
-                                    <td class="text-right">@dt.DispatchRate.ToString("N2")</td>
-                                    <td class="text-right">@dt.DispatchNetRevenue.ToString("N2")</td>
+                                    <td class="text-center">@dt.TotalHours.ToString("N4")</td>
+                                    <td class="text-right">@dt.DispatchRate.ToString("N4")</td>
+                                    <td class="text-right">@dt.DispatchNetRevenue.ToString("N4")</td>
                                 </tr>
                             }
                         }
@@ -187,9 +187,9 @@
                                     <td>@dt.Service?.ServiceName (BAF)</td>
                                     <td class="text-center">@dt.DateLeft?.ToString("MM/dd") @dt.TimeLeft</td>
                                     <td class="text-center">@dt.DateArrived?.ToString("MM/dd") @dt.TimeArrived</td>
-                                    <td class="text-center">@dt.TotalHours.ToString("N2")</td>
-                                    <td class="text-right">@dt.BAFRate.ToString("N2")</td>
-                                    <td class="text-right">@dt.BAFNetRevenue.ToString("N2")</td>
+                                    <td class="text-center">@dt.TotalHours.ToString("N4")</td>
+                                    <td class="text-right">@dt.BAFRate.ToString("N4")</td>
+                                    <td class="text-right">@dt.BAFNetRevenue.ToString("N4")</td>
                                 </tr>
                             }
                         }
@@ -219,15 +219,15 @@
                                 var taxAmount = Model.Amount - vatableSales;
                                 <tr>
                                     <td>SERVICE AMOUNT:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>BUNKER ADJUSTMENT FACTOR:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>VATABLE SALES:</td>
-                                    <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>VAT - EXEMPT SALES</td>
@@ -239,22 +239,22 @@
                                 </tr>
                                 <tr>
                                     <td>TOTAL SALES</td>
-                                    <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>12% VAT</td>
-                                    <td class="text-right border-bottom-dark"><b>@taxAmount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@taxAmount.ToString("N4")</b></td>
                                 </tr>
                             }
                             else
                             {
                                 <tr>
                                     <td>SERVICE AMOUNT:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>BUNKER ADJUSTMENT FACTOR:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>VATABLE SALES:</td>
@@ -266,11 +266,11 @@
                                 </tr>
                                 <tr>
                                     <td>ZERO RATED SALES</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.Amount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.Amount.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>TOTAL SALES</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.Amount.ToString("N2")</b></td>
+                                    <td class="text-right border-bottom-dark"><b>@Model.Amount.ToString("N4")</b></td>
                                 </tr>
                                 <tr>
                                     <td>12% VAT</td>
@@ -279,7 +279,7 @@
                             }
                             <tr style="font-size: 14px;">
                                 <td><b>TOTAL AMOUNT DUE:</b></td>
-                                <td class="text-right" style="border-bottom: 3px double black;"><b>@Model.Amount.ToString("N2")</b></td>
+                                <td class="text-right" style="border-bottom: 3px double black;"><b>@Model.Amount.ToString("N4")</b></td>
                             </tr>
                         </table>
                     </div>

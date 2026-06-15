@@ -1,117 +1,86 @@
 @{
     ViewData["Title"] = "User Management";
+    ViewData["IsFullWidth"] = true;
 }
 
-<!-- Antiforgery Token -->
-@Html.AntiForgeryToken()
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">GENERAL</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">User</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="modern-btn-primary" onclick="openUpsertModal()">
+                    <span class="material-symbols-outlined">person_add</span>
+                    CREATE NEW USER
+                </button>
+            </div>
+        </div>
 
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
-<style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-    .actions-dropdown .dropdown-item:hover {
-        background-color: #f3f4f6;
-    }
-</style>
-
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <button type="button" class="btn btn-light" onclick="openUpsertModal()">
-            <i class="bi bi-plus-circle"></i> Create New User
-        </button>
-    </div>
-
-    <div class="card shadow border-0 mt-3">
-        <div class="card-body p-3">
-            <div class="table-responsive" style="max-height: 70vh">
-                <table id="userTable" class="table table-hover mb-0">
-                    <thead class="bg-light">
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">group</span>
+                    <h2 class="modern-headline-md">User List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="userTable">
+                    <thead>
                         <tr>
-                            <th class="text-start">Username</th>
-                            <th class="text-start">Full Name</th>
-                            <th class="text-start">Department</th>
-                            <th class="text-start">Role</th>
-                            <th class="text-start">Status</th>
-                            <th class="text-start">Created</th>
-                            <th class="text-start">Modified</th>
-                            <th class="text-start">Actions</th>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Modified</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                 </table>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 <!-- ========== CREATE/EDIT USER MODAL ========== -->
 <div class="modal fade" id="upsertModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalTitle">Create User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content modern-card border-0">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined" id="modalIcon">person_add</span>
+                <h2 class="modern-headline-md" id="modalTitle">Create User</h2>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="userForm">
+            <div class="modern-card-body">
+                <form id="userForm" class="flex flex-col gap-4">
                     <input type="hidden" id="userId" />
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="username" required />
-                            <small class="text-muted">Cannot be changed after creation</small>
+                    <div class="modern-grid">
+                        <div class="modern-col-6">
+                            <label for="username" class="modern-label">Username <span class="text-error">*</span></label>
+                            <input type="text" class="modern-input" id="username" required />
+                            <small class="text-xs italic" style="color: var(--on-surface-variant)">Cannot be changed after creation</small>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" oninput="this.value = this.value.toUpperCase()" required />
+                        <div class="modern-col-6">
+                            <label for="name" class="modern-label">Full Name <span class="text-error">*</span></label>
+                            <input type="text" class="modern-input" id="name" oninput="this.value = this.value.toUpperCase()" required />
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
-                            <select class="form-select js-select2" id="department" required>
+                    <div class="modern-grid">
+                        <div class="modern-col-6">
+                            <label for="department" class="modern-label">Department <span class="text-error">*</span></label>
+                            <select class="modern-input js-modern-select" id="department" data-placeholder="Select department" required>
                                 <option value="">Select department</option>
                                 <option value="Accounting">Accounting</option>
                                 <option value="Credit and Collection">Credit and Collection</option>
@@ -119,8 +88,8 @@
                                 <option value="Finance">Finance</option>
                                 <option value="HR and Admin/Legal">HR and Admin/Legal</option>
                                 <option value="Logistics">Logistics</option>
-                                <option value="Management Accounting">Management Accounting</option>
                                 <option value="Marketing">Marketing</option>
+                                <option value="Management Accounting">Management Accounting</option>
                                 <option value="MIS">MIS</option>
                                 <option value="Operation">Operation</option>
                                 <option value="RCD">RCD</option>
@@ -133,46 +102,44 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
-                            <select class="form-select js-select2" id="role" required>
+                        <div class="modern-col-6">
+                            <label for="role" class="modern-label">Role <span class="text-error">*</span></label>
+                            <select class="modern-input js-modern-select" id="role" data-placeholder="Select role" required>
                                 <option value="">Select role</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="isActive" class="form-label">Status</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="isActive" checked />
-                                <label class="form-check-label" for="isActive">
-                                    <span id="statusLabel">Active</span>
-                                </label>
-                            </div>
-                        </div>
+                    <div class="flex items-center gap-2">
+                        <input class="form-check-input" type="checkbox" id="isActive" checked />
+                        <label class="modern-label mb-0 cursor-pointer" for="isActive">
+                            <span id="statusLabel">Active</span>
+                        </label>
                     </div>
 
-                    <div id="passwordSection">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="password" class="form-label">Password <span class="text-danger" id="passwordRequired">*</span></label>
-                                <input type="password" class="form-control" id="password" />
+                    <div id="passwordSection" class="border-t border-outline-variant pt-4">
+                        <div class="modern-grid">
+                            <div class="modern-col-6">
+                                <label for="password" class="modern-label">Password <span class="text-error" id="passwordRequired">*</span></label>
+                                <input type="password" class="modern-input" id="password" />
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger" id="confirmRequired">*</span></label>
-                                <input type="password" class="form-control" id="confirmPassword" />
+                            <div class="modern-col-6">
+                                <label for="confirmPassword" class="modern-label">Confirm Password <span class="text-error" id="confirmRequired">*</span></label>
+                                <input type="password" class="modern-input" id="confirmPassword" />
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveUserBtn" onclick="saveUser()">
-                    <i class="bi bi-save"></i> Save User
-                </button>
+            <div class="modern-sticky-footer mt-0">
+                <div class="flex gap-2">
+                    <button type="button" class="modern-btn-primary" id="saveUserBtn" onclick="saveUser()">
+                        <span class="material-symbols-outlined">save</span>
+                        SAVE USER
+                    </button>
+                    <button type="button" class="modern-btn-secondary" data-bs-dismiss="modal">CANCEL</button>
+                </div>
             </div>
         </div>
     </div>
@@ -181,105 +148,66 @@
 <!-- ========== RESET PASSWORD MODAL ========== -->
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Reset Password</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content modern-card border-0">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">key</span>
+                <h2 class="modern-headline-md">Reset Password</h2>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="resetPasswordForm">
+            <div class="modern-card-body">
+                <form id="resetPasswordForm" class="flex flex-col gap-4">
                     <input type="hidden" id="resetUserId" />
-                    <p>Reset password for: <strong id="resetUsername"></strong></p>
+                    <p class="text-sm">Reset password for: <strong id="resetUsername" class="text-primary"></strong></p>
 
-                    <div class="mb-3">
-                        <label for="newPassword" class="form-label">New Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="newPassword" required />
+                    <div class="flex flex-col gap-1">
+                        <label for="newPassword" class="modern-label">New Password <span class="text-error">*</span></label>
+                        <input type="password" class="modern-input" id="newPassword" required />
                     </div>
 
-                    <div class="mb-3">
-                        <label for="confirmNewPassword" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="confirmNewPassword" required />
+                    <div class="flex flex-col gap-1">
+                        <label for="confirmNewPassword" class="modern-label">Confirm New Password <span class="text-error">*</span></label>
+                        <input type="password" class="modern-input" id="confirmNewPassword" required />
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="resetPasswordBtn" onclick="resetPassword()">
-                    <i class="bi bi-key"></i> Reset Password
-                </button>
+            <div class="modern-sticky-footer mt-0">
+                <div class="flex gap-2">
+                    <button type="button" class="modern-btn-primary" id="resetPasswordBtn" onclick="resetPassword()">
+                        <span class="material-symbols-outlined">key</span>
+                        RESET PASSWORD
+                    </button>
+                    <button type="button" class="modern-btn-secondary" data-bs-dismiss="modal">CANCEL</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         let userTable;
         let upsertModal;
         let resetPasswordModal;
         let shouldRefreshOnClose = false;
 
-        function getAntiforgeryToken() {
-            return $('input[name="__RequestVerificationToken"]').val();
-        }
-
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (settings.type === 'POST' || settings.type === 'PUT' || settings.type === 'DELETE') {
-                    xhr.setRequestHeader('RequestVerificationToken', getAntiforgeryToken());
-                }
-            }
-        });
-
         $(document).ready(function () {
             upsertModal = new bootstrap.Modal(document.getElementById('upsertModal'));
             resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
 
-            initializeSelect2();
+            initializeModernSelect();
 
-            userTable = $('#userTable').DataTable({
-                "order": [[5, 'desc']],
-                "columnDefs": [
-                    { "orderable": false, "targets": [7] }
-                ],
-                "processing": true,
-                "stateDuration": 86400,
-                "language": {
-                    "processing": `<div class="d-flex justify-content-center">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                 </div>`,
-                    "emptyTable": "No users found"
-                },
-                ajax: {
-                    url: '/Admin/User/GetAll',
-                    dataSrc: 'data',
-                    error: function(xhr, error, code) {
-                        console.error('DataTable error:', error);
-                        ModernAlert.error('Failed to load users. Please refresh the page.');
-                    }
-                },
-                "preDrawCallback": function (settings) {
-                    $('#userTable').addClass('table-loading');
-                },
-                "drawCallback": function (settings) {
-                    $('#userTable').removeClass('table-loading');
-                    $('[data-bs-toggle="tooltip"]').tooltip();
-                },
+            userTable = $('#userTable').DataTable(ModernTable.config({
+                ajax: ModernTable.ajax('/Admin/User/GetAll'),
                 columns: [
                     { data: 'username', render: data => escapeHtml(data) },
-                    { data: 'name', render: data => escapeHtml(data) },
+                    { data: 'name', render: data => `<span class="font-bold">${escapeHtml(data)}</span>` },
                     { data: 'department', render: data => escapeHtml(data) },
                     { data: 'role', render: data => escapeHtml(data) },
                     {
                         data: 'isActive',
-                        render: function (data) {
-                            return data
-                                ? '<span class="badge bg-success">Active</span>'
-                                : '<span class="badge bg-danger">Inactive</span>';
-                        }
+                        render: (data) => data 
+                            ? ModernTable.render.badge('Active', 'status-confirmed')
+                            : ModernTable.render.badge('Inactive', 'status-closed')
                     },
                     { data: 'createdDate' },
                     { 
@@ -293,46 +221,22 @@
                     {
                         data: null,
                         orderable: false,
+                        className: "text-center",
                         render: function (data) {
-                            return `
-                                <button class="btn btn-sm btn-info btn-edit-user" data-user-id="${escapeHtml(data.id)}" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm ${data.isActive ? 'btn-warning' : 'btn-success'} btn-toggle-status" 
-                                        data-user-id="${escapeHtml(data.id)}" 
-                                        data-username="${escapeHtml(data.username)}"
-                                        title="${data.isActive ? 'Deactivate' : 'Activate'}">
-                                    <i class="bi bi-${data.isActive ? 'x-circle' : 'check-circle'}"></i>
-                                </button>
-                                <button class="btn btn-sm btn-secondary btn-reset-password" 
-                                        data-user-id="${escapeHtml(data.id)}" 
-                                        data-username="${escapeHtml(data.username)}"
-                                        title="Reset Password">
-                                    <i class="bi bi-key"></i>
-                                </button>
-                            `;
+                            return ModernTable.render.dropdown([
+                                { label: 'Edit User', icon: 'edit', onclick: `openUpsertModal('${data.id}')` },
+                                { 
+                                    label: data.isActive ? 'Deactivate User' : 'Activate User', 
+                                    icon: data.isActive ? 'block' : 'check_circle',
+                                    onclick: `toggleStatus('${data.id}', '${escapeHtml(data.username)}')`
+                                },
+                                { label: 'Reset Password', icon: 'key', onclick: `openResetPasswordModal('${data.id}', '${escapeHtml(data.username)}')` }
+                            ]);
                         }
                     }
                 ],
-                order: [[5, 'desc']],
-                pageLength: 25,
-                responsive: true,
-                language: {
-                    emptyTable: "No users found"
-                }
-            });
-
-            $('#userTable').on('click', '.btn-edit-user', function() {
-                openUpsertModal($(this).data('user-id'));
-            });
-
-            $('#userTable').on('click', '.btn-toggle-status', function() {
-                toggleStatus($(this).data('user-id'), $(this).data('username'));
-            });
-
-            $('#userTable').on('click', '.btn-reset-password', function() {
-                openResetPasswordModal($(this).data('user-id'), $(this).data('username'));
-            });
+                order: [[5, 'desc']]
+            }));
 
             loadRoles();
 
@@ -341,11 +245,10 @@
             });
 
             $('#upsertModal').on('shown.bs.modal', function () {
-                initializeSelect2();
+                initializeModernSelect();
             });
 
             $('#upsertModal').on('hidden.bs.modal', function () {
-                $('.js-select2').select2('destroy');
                 if (shouldRefreshOnClose) {
                     userTable.ajax.reload(null, false);
                     shouldRefreshOnClose = false;
@@ -372,22 +275,8 @@
             return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
         }
 
-        function initializeSelect2() {
-            $('.js-select2').each(function() {
-                if ($(this).hasClass('select2-hidden-accessible')) {
-                    $(this).select2('destroy');
-                }
-            });
-
-            $('.js-select2').select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                dropdownParent: $('#upsertModal'),
-                placeholder: function() {
-                    return $(this).find('option:first').text();
-                },
-                allowClear: false
-            });
+        function initializeModernSelect() {
+            ModernSelect.init('.js-modern-select');
         }
 
         function loadRoles() {
@@ -398,10 +287,6 @@
                     data.forEach(role => {
                         roleSelect.append(`<option value="${escapeHtml(role.value)}">${escapeHtml(role.text)}</option>`);
                     });
-                    if (roleSelect.hasClass('select2-hidden-accessible')) {
-                        roleSelect.select2('destroy');
-                        initializeSelect2();
-                    }
                 })
                 .fail(function() {
                     ModernAlert.error('Failed to load roles');
@@ -414,13 +299,12 @@
             $('#username').prop('readonly', false);
             $('#passwordSection').show();
             $('#password, #confirmPassword').val('').prop('required', true);
-            $('#passwordRequired, #confirmRequired').show();
             $('#modalTitle').text('Create User');
             $('#isActive').prop('checked', true);
             $('#statusLabel').text('Active');
             $('#department, #role').val('').trigger('change');
 
-            if (userId) {
+            if (userId && typeof userId === 'string') {
                 $.get(`/Admin/User/GetUser?id=${encodeURIComponent(userId)}`)
                     .done(function (response) {
                         if (response.success) {

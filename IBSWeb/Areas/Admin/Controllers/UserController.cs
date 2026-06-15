@@ -20,6 +20,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         #region API CALLS
 
         [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
             var userList = await userService.GetAllUsersAsync(cancellationToken);

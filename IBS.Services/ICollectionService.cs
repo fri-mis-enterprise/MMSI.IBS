@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+using IBS.Models;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Helpers;

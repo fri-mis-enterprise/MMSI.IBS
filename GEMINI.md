@@ -39,6 +39,7 @@ Lists and queries legacy data or export logs stored in CSV format within the `Im
 
 ## 📜 Development Guidelines
 - **Architecture**: Strictly follow the 4-Tier pattern defined in `MSAP_ARCHITECTURAL_GUIDE.md`.
+- **UI Standard**: Adhere to the Modern UI design system using `modern-layout`, `ModernTable`, and `ModernSelect` components.
 - **Validation**: Always verify changes with `check_build_status`.
 - **Audit**: Every state-changing operation must be logged via the Audit Trail system.
 - **Traceability**: Use `trace_workflow` before refactoring to avoid breaking downstream dependencies.

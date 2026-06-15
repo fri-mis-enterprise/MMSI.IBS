@@ -8,7 +8,7 @@ namespace IBSWeb.Areas.Admin.Controllers
 {
     [Area(nameof(Admin))]
     [Authorize(Roles = "Admin")]
-    public class AppRoleController(IRoleService roleService, ILogger<AppRoleController> logger)
+    public class AppRoleController(IRoleService roleService)
         : Controller
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -17,21 +17,16 @@ namespace IBSWeb.Areas.Admin.Controllers
             return View(roles);
         }
 
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
-
         [HttpPost]
-        public async Task<IActionResult> Create(IdentityRole model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Upsert([FromBody] IdentityRole model, CancellationToken cancellationToken)
         {
-            var result = await roleService.CreateRoleAsync(model.Name!, cancellationToken);
-            if (!result.IsSuccess)
+            if (string.IsNullOrWhiteSpace(model.Name))
             {
-                TempData["error"] = result.Message;
+                return Json(new { success = false, message = "Role name is required" });
             }
-            return RedirectToAction(nameof(Index));
+
+            var result = await roleService.CreateRoleAsync(model.Name, cancellationToken);
+            return Json(new { success = result.IsSuccess, message = result.Message });
         }
 
         [HttpPost]
@@ -49,9 +44,8 @@ namespace IBSWeb.Areas.Admin.Controllers
                     data
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                logger.LogError(ex, "Failed to get roles.");
                 return Json(new { error = "Internal server error" });
             }
         }

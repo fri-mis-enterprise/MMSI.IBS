@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+using IBS.Models;
 using IBS.Models.Books;
 using IBS.Models.MasterFile;
 using IBS.Models.MSAP;
@@ -73,6 +73,11 @@ namespace IBS.DataAccess.Data
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
 
         public DbSet<BankAccount> BankAccounts { get; set; }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

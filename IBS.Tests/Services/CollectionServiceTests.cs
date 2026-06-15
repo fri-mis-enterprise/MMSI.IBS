@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MSAP;

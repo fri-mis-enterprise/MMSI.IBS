@@ -1,25 +1,19 @@
 using IBS.Models.MasterFile;
 using System.Security.Claims;
-using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Services;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class ChartOfAccountController(
-        ApplicationDbContext dbContext,
+        IChartOfAccountService chartOfAccountService,
         UserManager<ApplicationUser> userManager,
-        ILogger<ChartOfAccountController> logger,
-        IUnitOfWork unitOfWork,
-        ICacheService cacheService)
+        ILogger<ChartOfAccountController> logger)
         : Controller
     {
         private string GetUserFullName()
@@ -28,20 +22,16 @@ namespace IBSWeb.Areas.User.Controllers
                    ?? User.Identity?.Name!;
         }
 
-        private async Task<string?> GetCompanyClaimAsync()
+        private async Task<string> GetCompanyClaimAsync()
         {
             var user = await userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
+            if (user == null) return string.Empty;
 
             var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view)
         {
             if (view == nameof(DynamicView.ChartOfAccount))
             {
@@ -51,141 +41,33 @@ namespace IBSWeb.Areas.User.Controllers
             return View();
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
         {
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
+            var result = await chartOfAccountService.CreateAsync(parentId, accountName, GetUserFullName(), await GetCompanyClaimAsync(), cancellationToken);
+            
+            if (result.IsSuccess)
             {
-                var parentAccount = await unitOfWork.ChartOfAccount
-                    .GetAsync(c => c.AccountId == parentId,
-                        cancellationToken);
-
-                if (parentAccount == null)
-                {
-                    throw new InvalidOperationException("Parent Account not found");
-                }
-
-                var lastAccount = (await unitOfWork.ChartOfAccount
-                        .GetAllAsync(c => c.ParentAccountId == parentId,
-                            cancellationToken: cancellationToken))
-                    .OrderByDescending(c => c.AccountNumber)
-                    .FirstOrDefault();
-
-                var lastSeries = int.Parse(lastAccount?.AccountNumber ?? parentAccount.AccountNumber!);
-
-                var levelToCreate = parentAccount.Level + 1;
-
-                var newAccount = new ChartOfAccount
-                {
-                    IsMain = false,
-                    AccountType = parentAccount?.AccountType,
-                    NormalBalance = parentAccount?.NormalBalance ?? "",
-                    AccountName = accountName,
-                    ParentAccountId = parentId,
-                    CreatedBy = GetUserFullName(),
-                    Level = levelToCreate,
-                    FinancialStatementType = parentAccount?.FinancialStatementType ?? "",
-                };
-
-                switch (levelToCreate)
-                {
-                    case 4:
-                        newAccount.AccountNumber = (lastSeries + 100).ToString();
-                        break;
-                    case 5:
-                        newAccount.AccountNumber = (lastSeries + 1).ToString();
-                        break;
-                }
-
-                await unitOfWork.ChartOfAccount.AddAsync(newAccount,
-                    cancellationToken);
-                await unitOfWork.SaveAsync(cancellationToken);
-                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}",
-                    cancellationToken);
-
-                #region --Audit Trail Recording
-
-                AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Created new Account #{newAccount.AccountNumber}",
-                    "Chart of Accounts");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = $"Account #{newAccount.AccountNumber} Created Successfully";
-                return Json(new { redirectUrl = Url.Action("Index",
-                    "ChartOfAccount",
-                    new
-                    {
-                        area = "User"
-                    }) });
+                TempData["success"] = result.Message;
+                return Json(new { redirectUrl = Url.Action(nameof(Index)) });
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to create chart of account. Created by: {UserName}",
-                    userManager.GetUserName(User));
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+
+            return BadRequest(new { message = result.Message });
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
-            var existingAccount = await unitOfWork.ChartOfAccount
-                .GetAsync(x => x.AccountId == accountId,
-                    cancellationToken);
-
-            if (existingAccount == null)
+            var result = await chartOfAccountService.UpdateAsync(accountId, accountName, GetUserFullName(), await GetCompanyClaimAsync(), cancellationToken);
+            
+            if (result.IsSuccess)
             {
-                return NotFound();
+                TempData["success"] = result.Message;
+                return Json(new { redirectUrl = Url.Action(nameof(Index)) });
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                existingAccount.AccountName = accountName;
-                existingAccount.EditedBy = GetUserFullName();
-                existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await unitOfWork.SaveAsync(cancellationToken);
-                await cacheService.RemoveAsync($"coa:{await GetCompanyClaimAsync()}",
-                    cancellationToken);
-
-                #region --Audit Trail Recording
-
-                AuditTrail auditTrailBook = new (GetUserFullName(),
-                    $"Edited Account #{existingAccount.AccountNumber}",
-                    "Chart of Accounts");
-                await unitOfWork.AuditTrail.AddAsync(auditTrailBook,
-                    cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Account Edited Successfully";
-                return Json(new { redirectUrl = Url.Action("Index",
-                    "ChartOfAccount",
-                    new
-                    {
-                        area = "User"
-                    }) });
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to edit chart of account. Edited by: {UserName}",
-                    userManager.GetUserName(User));
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            if (result.Status == ServiceResultStatus.NotFound) return NotFound();
+            return BadRequest(new { message = result.Message });
         }
 
         [HttpPost]
@@ -198,230 +80,53 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var chartOfAccounts = await unitOfWork.ChartOfAccount
-                    .GetAllAsync(cancellationToken: cancellationToken);
-
-                // Apply date range filter if provided (using CreatedDate)
-                if (dateFrom.HasValue)
-                {
-                    chartOfAccounts = chartOfAccounts
-                        .Where(s => s.CreatedDate >= dateFrom.Value)
-                        .ToList();
-                }
-
-                if (dateTo.HasValue)
-                {
-                    // Add one day to include the entire end date
-                    var dateToInclusive = dateTo.Value.AddDays(1);
-                    chartOfAccounts = chartOfAccounts
-                        .Where(s => s.CreatedDate < dateToInclusive)
-                        .ToList();
-                }
-
-                // Apply search filter if provided
-                if (!string.IsNullOrEmpty(parameters.Search.Value))
-                {
-                    var searchValue = parameters.Search.Value.ToLower();
-
-                    chartOfAccounts = chartOfAccounts
-                        .Where(s =>
-                            (s.AccountNumber != null && s.AccountNumber.ToLower().Contains(searchValue)) ||
-                            (s.AccountName != null && s.AccountName.ToLower().Contains(searchValue)) ||
-                            (s.AccountType != null && s.AccountType.ToLower().Contains(searchValue)) ||
-                            (s.NormalBalance != null && s.NormalBalance.ToLower().Contains(searchValue)) ||
-                            s.Level.ToString().Contains(searchValue) ||
-                            s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
-                        )
-                        .ToList();
-                }
-
-                // Apply sorting if provided
-                if (parameters.Order?.Count > 0)
-                {
-                    var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
-
-                    // Map frontend column names to actual entity property names
-                    var columnMapping = new Dictionary<string, string>
-                    {
-                        { "accountNumber", "AccountNumber" },
-                        { "accountName", "AccountName" },
-                        { "accountType", "AccountType" },
-                        { "normalBalance", "NormalBalance" },
-                        { "level", "Level" },
-                        { "createdDate", "CreatedDate" }
-                    };
-
-                    // Get the actual property name
-
-                    chartOfAccounts = chartOfAccounts
-                        .AsQueryable()
-                        .ToList();
-                }
-
-                var totalRecords = chartOfAccounts.Count();
-
-                // Apply pagination - HANDLE -1 FOR "ALL"
-                IEnumerable<ChartOfAccount> pagedChartOfAccounts;
-
-                if (parameters.Length == -1)
-                {
-                    // "All" selected - return all records
-                    pagedChartOfAccounts = chartOfAccounts;
-                }
-                else
-                {
-                    // Normal pagination
-                    pagedChartOfAccounts = chartOfAccounts
-                        .Skip(parameters.Start)
-                        .Take(parameters.Length);
-                }
-
-                var pagedData = pagedChartOfAccounts
-                    .Select(x => new
-                    {
-                        x.AccountId,
-                        x.AccountNumber,
-                        x.AccountName,
-                        x.AccountType,
-                        x.NormalBalance,
-                        x.Level,
-                        x.CreatedDate
-                    })
-                    .ToList();
+                var (data, totalRecords) = await chartOfAccountService.GetPagedListAsync(parameters, dateFrom, dateTo, cancellationToken);
 
                 return Json(new
                 {
                     draw = parameters.Draw,
                     recordsTotal = totalRecords,
                     recordsFiltered = totalRecords,
-                    data = pagedData
+                    data
                 });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex,
-                    "Failed to get chart of accounts. Error: {ErrorMessage}, Stack: {StackTrace}.",
-                    ex.Message,
-                    ex.StackTrace);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                logger.LogError(ex, "Failed to get chart of accounts.");
+                return Json(new { error = "Internal server error" });
             }
         }
-
-        //Download as .xlsx file.(Export)
-        #region -- export xlsx record --
 
         [HttpPost]
         public async Task<IActionResult> Export(string selectedRecord, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(selectedRecord))
-            {
-                // Handle the case where no invoices are selected
-                return RedirectToAction(nameof(Index));
-            }
+            if (string.IsNullOrEmpty(selectedRecord)) return RedirectToAction(nameof(Index));
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
-
-                // Retrieve the selected invoices from the database
-                var selectedList = (await unitOfWork.ChartOfAccount
-                    .GetAllAsync(coa => recordIds.Contains(coa.AccountId),
-                        cancellationToken))
-                    .OrderBy(coa => coa.AccountId)
-                    .ToList();
-
-                // Create the Excel package
-                using var package = new ExcelPackage();
-                // Add a new worksheet to the Excel package
-                var worksheet = package.Workbook.Worksheets.Add("ChartOfAccount");
-
-                worksheet.Cells["A1"].Value = "IsMain";
-                worksheet.Cells["B1"].Value = "AccountNumber";
-                worksheet.Cells["C1"].Value = "AccountName";
-                worksheet.Cells["D1"].Value = "AccountType";
-                worksheet.Cells["E1"].Value = "NormalBalance";
-                worksheet.Cells["F1"].Value = "Level";
-                worksheet.Cells["G1"].Value = "CreatedBy";
-                worksheet.Cells["H1"].Value = "CreatedDate";
-                worksheet.Cells["I1"].Value = "EditedBy";
-                worksheet.Cells["J1"].Value = "EditedDate";
-                worksheet.Cells["K1"].Value = "HasChildren";
-                worksheet.Cells["L1"].Value = "ParentAccountId";
-                worksheet.Cells["M1"].Value = "OriginalChartOfAccount";
-
-                var row = 2;
-
-                foreach (var item in selectedList)
-                {
-                    worksheet.Cells[row,
-                        1].Value = item.IsMain;
-                    worksheet.Cells[row,
-                        2].Value = item.AccountNumber;
-                    worksheet.Cells[row,
-                        3].Value = item.AccountName;
-                    worksheet.Cells[row,
-                        4].Value = item.AccountType;
-                    worksheet.Cells[row,
-                        5].Value = item.NormalBalance;
-                    worksheet.Cells[row,
-                        6].Value = item.Level;
-                    worksheet.Cells[row,
-                        7].Value = item.CreatedBy;
-                    worksheet.Cells[row,
-                        8].Value = item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
-                    worksheet.Cells[row,
-                        9].Value = item.EditedBy;
-                    worksheet.Cells[row,
-                        10].Value = item.EditedDate?.ToString("yyyy-MM-dd HH:mm:ss.ffffff");
-                    worksheet.Cells[row,
-                        11].Value = item.HasChildren;
-                    worksheet.Cells[row,
-                        12].Value = item.ParentAccountId;
-                    worksheet.Cells[row,
-                        13].Value = item.AccountId;
-
-                    row++;
-                }
-
-                //Set password in Excel
-                foreach (var excelWorkSheet in package.Workbook.Worksheets)
-                {
-                    excelWorkSheet.Protection.SetPassword("mis123");
-                }
-
-                package.Workbook.Protection.SetPassword("mis123");
-
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
+                var excelBytes = await chartOfAccountService.ExportToExcelAsync(selectedRecord, cancellationToken);
                 return File(excelBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     $"ChartOfAccountList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index),
-                    new
-                    {
-                        view = DynamicView.ChartOfAccount
-                    });
+                return RedirectToAction(nameof(Index), new { view = DynamicView.ChartOfAccount });
             }
-
         }
 
-        #endregion -- export xlsx record --
+        [HttpGet]
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var coas = await chartOfAccountService.GetAllAsync(cancellationToken);
+            return Json(coas);
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetAllChartOfAccountIds(CancellationToken cancellationToken)
         {
-            var coaIds = await dbContext.ChartOfAccounts
-                .Select(coa => coa.AccountId) // Assuming Id is the primary key
-                .ToListAsync(cancellationToken);
+            var coaIds = await chartOfAccountService.GetAllIdsAsync(cancellationToken);
             return Json(coaIds);
         }
     }

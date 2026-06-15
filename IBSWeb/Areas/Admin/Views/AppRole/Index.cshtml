@@ -1,66 +1,39 @@
-﻿@model IEnumerable<IdentityRole>
-
 @{
-    ViewData["Title"] = "Application Role";
+    ViewData["Title"] = "Role Management";
+    ViewData["IsFullWidth"] = true;
 }
 
-<style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
+<div class="modern-layout">
+    <main class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">GENERAL</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Role</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="modern-btn-primary" onclick="openUpsertModal()">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW ROLE
+                </button>
+            </div>
+        </div>
 
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-    .actions-dropdown .dropdown-item:hover {
-        background-color: #f3f4f6;
-    }
-</style>
-
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-area="Admin" asp-controller="AppRole" asp-action="Create" class="btn btn-light">
-            <i class="bi bi-plus-circle"></i> Create New Role
-        </a>
-    </div>
-
-    <div class="card shadow border-0 mt-3">
-        <div class="card-body p-3">
-            <div class="table-responsive" style="max-height: 70vh">
-                <table class="table table-hover mb-0" id="paginatedTable">
-                    <thead class="bg-light">
+        <!-- Table Card -->
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">manage_accounts</span>
+                    <h2 class="modern-headline-md">Role List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="paginatedTable">
+                    <thead>
                     <tr>
                         <th class="text-start">Name</th>
                     </tr>
@@ -68,54 +41,100 @@
                 </table>
             </div>
         </div>
+    </main>
+</div>
+
+<!-- ========== CREATE ROLE MODAL ========== -->
+<div class="modal fade" id="upsertModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content modern-card border-0">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">add_circle</span>
+                <h2 class="modern-headline-md">Create Role</h2>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modern-card-body">
+                <form id="roleForm" class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label for="roleName" class="modern-label">Role Name <span class="text-error">*</span></label>
+                        <input type="text" class="modern-input" id="roleName" placeholder="e.g. Supervisor" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modern-sticky-footer mt-0">
+                <div class="flex gap-2">
+                    <button type="button" class="modern-btn-primary" id="saveRoleBtn" onclick="saveRole()">
+                        <span class="material-symbols-outlined">save</span>
+                        SAVE ROLE
+                    </button>
+                    <button type="button" class="modern-btn-secondary" data-bs-dismiss="modal">CANCEL</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts{
     <script>
-        // Event listeners
-        $(document).ready(function () {
-            var table = $('#paginatedTable').DataTable({
-                "order": [[0, 'asc']],
-                "processing": true,
-                "serverSide": true,
-                "stateDuration": 86400,
-                "language": {
-                    "processing": `<div class="d-flex justify-content-center">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                 </div>`
-                },
-                "ajax": {
-                    "url": "@Url.Action("GetRolesList", "AppRole", new { area = "Admin" })",
-                    "type": "POST",
-                    "data": function (d) {
-                        return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        });
-                    },
-                    "error": function (xhr, error, thrown) {
-                        console.error('DataTables error:', error);
-                        alert('An error occurred while loading the data');
-                    }
-                },
-                "preDrawCallback": function (settings) {
-                    $('#paginatedTable').addClass('table-loading');
-                },
-                "drawCallback": function (settings) {
-                    $('#paginatedTable').removeClass('table-loading');
+        let upsertModal;
+        let roleTable;
 
-                    // Initialize all tooltips
-                    $('[data-bs-toggle="tooltip"]').tooltip();
-                },
-                "columns": [
+        $(document).ready(function () {
+            upsertModal = new bootstrap.Modal(document.getElementById('upsertModal'));
+
+            roleTable = $('#paginatedTable').DataTable(ModernTable.config({
+                serverSide: true,
+                ajax: ModernTable.ajax("@Url.Action("GetRolesList", "AppRole", new { area = "Admin" })"),
+                columns: [
                     { 
-                        "data": "name",
-                        "name" : "Name"
+                        data: "name",
+                        name : "Name",
+                        render: (data) => `<span class="font-bold">${data}</span>`
                     }
-                ]
-            });
+                ],
+                order: [[0, 'asc']]
+            }));
         });
+
+        function openUpsertModal() {
+            $('#roleForm')[0].reset();
+            upsertModal.show();
+        }
+
+        function saveRole() {
+            const roleName = $('#roleName').val().trim();
+
+            if (!roleName) {
+                ModernAlert.warning('Role name is required');
+                return;
+            }
+
+            const saveBtn = $('#saveRoleBtn');
+            saveBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+
+            $.ajax({
+                url: '@Url.Action("Upsert", "AppRole", new { area = "Admin" })',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Name: roleName }),
+                success: function (response) {
+                    saveBtn.prop('disabled', false).html('<i class="bi bi-save"></i> Save Role');
+                    
+                    if (response.success) {
+                        ModernAlert.success(response.message).then(() => {
+                            upsertModal.hide();
+                            roleTable.ajax.reload(null, false);
+                        });
+                    } else {
+                        ModernAlert.error(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    saveBtn.prop('disabled', false).html('<i class="bi bi-save"></i> Save Role');
+                    const message = xhr.responseJSON?.message || 'An error occurred while saving the role';
+                    ModernAlert.error(message);
+                }
+            });
+        }
     </script>
 }

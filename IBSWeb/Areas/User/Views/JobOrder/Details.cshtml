@@ -185,8 +185,8 @@
                                         <td style="color: var(--on-surface-variant)">@ticket.Date.ToString("MMM dd, yyyy")</td>
                                         <td style="font-weight: 500;">@ticket.Service.ServiceName</td>
                                         <td>@ticket.Tugboat.TugboatName</td>
-                                        <td class="text-right">@ticket.TotalHours.ToString("N2")</td>
-                                        <td class="text-right font-bold text-primary">@ticket.TotalBilling.ToString("N2")</td>
+                                        <td class="text-right">@ticket.TotalHours.ToString("N4")</td>
+                                        <td class="text-right font-bold text-primary">@ticket.TotalBilling.ToString("N4")</td>
                                         <td>
                                             <span class="modern-badge-sm @(getStatusBadgeClass(ticket.Status))">@ticket.Status</span>
                                         </td>
@@ -269,7 +269,7 @@
         <footer class="modern-sticky-footer">
             <div class="flex items-center gap-4">
                 <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">description</span> @Model.DispatchTickets.Count() Total Tickets</span>
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">payments</span> Total Billing: ₱ @Model.DispatchTickets.Sum(t => t.TotalBilling).ToString("N2")</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">payments</span> Total Billing: ₱ @Model.DispatchTickets.Sum(t => t.TotalBilling).ToString("N4")</span>
             </div>
             <div class="flex items-center gap-4">
                 <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">schedule</span> Last Updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</span>

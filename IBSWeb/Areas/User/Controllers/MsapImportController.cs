@@ -1814,7 +1814,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var dtl       = dt.DateLeft.Value.ToDateTime(dt.TimeLeft.Value);
             var dta       = dt.DateArrived.Value.ToDateTime(dt.TimeArrived.Value);
-            var totalHours = Math.Round((decimal)(dta - dtl).TotalHours, 2);
+            var totalHours = Math.Round((decimal)(dta - dtl).TotalHours, 4);
 
             // Customer 179 uses quarter-hour rounding rules
             if (customerId == 179)

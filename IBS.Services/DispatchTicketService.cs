@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
@@ -103,7 +103,7 @@ namespace IBS.Services
 
                     model.Status = SD.DispatchTicketStatus.ForTariff;
                     var duration = (decimal)(end - start).TotalHours;
-                    model.TotalHours = Math.Round(Math.Max(duration, 0.5m), 2);
+                    model.TotalHours = Math.Round(Math.Max(duration, 0.5m), 4);
                 }
                 else
                 {
@@ -188,7 +188,7 @@ namespace IBS.Services
                         return ServiceResult.Failure("Date/Time Left cannot be later than Date/Time Arrived!");
                     }
 
-                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 0.5m), 2);
+                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 0.5m), 4);
                     AddChange("TotalHours", originalTotalHours, newTotalHours);
                     currentModel.TotalHours = newTotalHours;
                 }
@@ -338,7 +338,7 @@ namespace IBS.Services
                 decimal bafBilling = 0;
                 decimal bafRevenue = 0;
 
-                var hours = Math.Round(currentModel.TotalHours, 2);
+                var hours = Math.Round(currentModel.TotalHours, 4);
 
                 if (chargeType == "Per hour")
                 {
@@ -370,13 +370,13 @@ namespace IBS.Services
                 currentModel.BAFRate = bafRate;
                 currentModel.DispatchDiscount = dispatchDiscountPercent;
                 currentModel.BAFDiscount = bafDiscountPercent;
-                currentModel.DispatchBillingAmount = Math.Round(dispatchBilling, 2);
-                currentModel.BAFBillingAmount = Math.Round(bafBilling, 2);
-                currentModel.DispatchNetRevenue = Math.Round(dispatchRevenue, 2);
-                currentModel.BAFNetRevenue = Math.Round(bafRevenue, 2);
+                currentModel.DispatchBillingAmount = Math.Round(dispatchBilling, 4);
+                currentModel.BAFBillingAmount = Math.Round(bafBilling, 4);
+                currentModel.DispatchNetRevenue = Math.Round(dispatchRevenue, 4);
+                currentModel.BAFNetRevenue = Math.Round(bafRevenue, 4);
                 currentModel.ApOtherTugs = model.ApOtherTugs;
-                currentModel.TotalBilling = Math.Round(dispatchBilling + bafBilling, 2);
-                currentModel.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 2);
+                currentModel.TotalBilling = Math.Round(dispatchBilling + bafBilling, 4);
+                currentModel.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 4);
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, "Tariff"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
@@ -582,15 +582,15 @@ namespace IBS.Services
                     : "-",
                 remarks = ticket.Remarks ?? "No remarks",
                 status = ticket.Status,
-                totalHours = ticket.TotalHours.ToString("N2"),
-                dispatchRate = ticket.DispatchRate.ToString("N2"),
-                dispatchDiscount = ticket.DispatchDiscount.ToString("N2"),
-                dispatchBilling = ticket.DispatchBillingAmount.ToString("N2"),
-                bafRate = ticket.BAFRate.ToString("N2"),
-                bafDiscount = ticket.BAFDiscount.ToString("N2"),
-                bafBilling = ticket.BAFBillingAmount.ToString("N2"),
-                totalBilling = ticket.TotalBilling.ToString("N2"),
-                totalNetRevenue = ticket.TotalNetRevenue.ToString("N2")
+                totalHours = ticket.TotalHours.ToString("N4"),
+                dispatchRate = ticket.DispatchRate.ToString("N4"),
+                dispatchDiscount = ticket.DispatchDiscount.ToString("N4"),
+                dispatchBilling = ticket.DispatchBillingAmount.ToString("N4"),
+                bafRate = ticket.BAFRate.ToString("N4"),
+                bafDiscount = ticket.BAFDiscount.ToString("N4"),
+                bafBilling = ticket.BAFBillingAmount.ToString("N4"),
+                totalBilling = ticket.TotalBilling.ToString("N4"),
+                totalNetRevenue = ticket.TotalNetRevenue.ToString("N4")
             };
         }
     }

@@ -4,6 +4,7 @@ using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP.MasterFile;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -12,11 +13,18 @@ namespace IBS.Services
     public class UserAccessService(
         ApplicationDbContext dbContext,
         IUnitOfWork unitOfWork,
+        UserManager<ApplicationUser> userManager,
         ILogger<UserAccessService> logger)
         : IUserAccessService
     {
         public async Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default)
         {
+            var user = await userManager.FindByIdAsync(id);
+            if (user != null && await userManager.IsInRoleAsync(user, "Admin"))
+            {
+                return true;
+            }
+
             var userAccess = await unitOfWork.UserAccess
                 .GetAsync(a => a.UserId == id, cancellationToken);
 

@@ -270,9 +270,9 @@ namespace IBS.Services
                             date = b.Date,
                             amount = b.Amount,
                             balance = b.Balance,
-                            ewt = Math.Round(ewt, 2),
-                            wvat = Math.Round(wvat, 2),
-                            net = Math.Round(b.Amount - ewt - wvat, 2),
+                            ewt = Math.Round(ewt, 4),
+                            wvat = Math.Round(wvat, 4),
+                            net = Math.Round(b.Amount - ewt - wvat, 4),
                             isVatable = b.IsVatable,
                             isSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
                         };

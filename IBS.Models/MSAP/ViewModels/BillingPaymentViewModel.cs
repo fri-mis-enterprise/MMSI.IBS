@@ -1,4 +1,4 @@
-﻿namespace IBS.Models.MSAP.ViewModels
+namespace IBS.Models.MSAP.ViewModels
 {
     public class BillingPaymentViewModel
     {

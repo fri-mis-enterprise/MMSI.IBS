@@ -91,7 +91,7 @@
                                                     </a>
                                                 </td>
                                                 <td class="text-center">@billing.CreatedDate.ToString(SD.Date_Format)</td>
-                                                <td class="text-right font-bold">₱@billing.Amount.ToString("N2")</td>
+                                                <td class="text-right font-bold">₱@billing.Amount.ToString("N4")</td>
                                             </tr>
                                         }
                                     }
@@ -120,12 +120,12 @@
                         <div class="financial-summary-card" style="flex-direction: column; gap: 0.75rem;">
                             <div class="financial-item">
                                 <span class="financial-label">Net Collected</span>
-                                <span class="financial-value primary">₱@Model.Amount.ToString("N2")</span>
+                                <span class="financial-value primary">₱@Model.Amount.ToString("N4")</span>
                             </div>
                             <div class="financial-divider" style="width: 100%; height: 1px;"></div>
                             <div class="financial-item">
                                 <span class="financial-label">EWT Amount</span>
-                                <span class="financial-value" style="color: var(--error)">₱@Model.EWT.ToString("N2")</span>
+                                <span class="financial-value" style="color: var(--error)">₱@Model.EWT.ToString("N4")</span>
                             </div>
                         </div>
                     </div>
