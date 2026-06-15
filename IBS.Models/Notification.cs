@@ -10,6 +10,8 @@ namespace IBS.Models
 
         public string Message { get; set; }  = null!;
 
+        public string? TargetUrl { get; set; }
+
         [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
     }

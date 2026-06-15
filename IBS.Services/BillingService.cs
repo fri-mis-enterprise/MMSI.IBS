@@ -1,6 +1,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Books;
+using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
@@ -9,14 +10,14 @@ using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using IBS.DTOs;
-using IBS.Models.Enums;
 
 namespace IBS.Services
 {
     public class BillingService(
         IUnitOfWork unitOfWork,
         IJobOrderService jobOrderService,
-        ILogger<BillingService> logger) : IBillingService
+        ILogger<BillingService> logger,
+        INotificationService notificationService) : IBillingService
     {
         public async Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken)
         {
@@ -147,6 +148,13 @@ namespace IBS.Services
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                // Notify Accounting for Posting
+                await notificationService.NotifyByAccessAsync(
+                    ProcedureEnum.ViewGeneralLedger,
+                    $"New Billing <b>#{model.MsapBillingNumber}</b> for <b>{customer.CustomerName}</b> has been created. Ready for Posting.",
+                    targetUrl: "/User/Billing/Index",
+                    cancellationToken: cancellationToken);
 
                 return ServiceResult<int>.Success(model.MsapBillingId, "Billing created successfully. Status: For Posting");
             }
@@ -296,6 +304,20 @@ namespace IBS.Services
 
                     await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
                     await unitOfWork.SaveAsync(cancellationToken);
+
+                    // Notify Collection
+                    await notificationService.NotifyByAccessAsync(
+                        ProcedureEnum.CreateCollection,
+                        $"Billing <b>#{model.MsapBillingNumber}</b> for <b>{customer.CustomerName}</b> has been posted. Ready for Collection.",
+                        targetUrl: "/User/Collection/Index",
+                        cancellationToken: cancellationToken);
+
+                    // Notify Collection
+                    await notificationService.NotifyByAccessAsync(
+                        ProcedureEnum.CreateCollection,
+                        $"Billing <b>#{model.MsapBillingNumber}</b> for <b>{customer.CustomerName}</b> has been posted. Ready for Collection.",
+                        targetUrl: "/User/Collection/Index",
+                        cancellationToken: cancellationToken);
 
                     // --- Automatic Job Order Closure ---
                     if (model.JobOrderId.HasValue)

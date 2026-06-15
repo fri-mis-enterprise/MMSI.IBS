@@ -25,16 +25,21 @@ function OnConnected() {
     }
 }
 
-connection.on("ReceivedNotification", function (message) {
+connection.on("ReceivedNotification", function (message, targetUrl) {
     ModernAlert.confirm({
         title: 'New Notification',
         text: message,
         icon: 'info',
-        confirmText: 'View Notifications',
-        cancelText: 'Dismiss'
+        confirmText: 'VIEW',
+        cancelText: 'DISMISS',
+        showCancelButton: true
     }).then(result => {
         if (result.isConfirmed) {
-            window.location.href = '/User/Notification/Index';
+            if (targetUrl && targetUrl !== 'null' && targetUrl !== '') {
+                window.location.href = targetUrl;
+            } else {
+                window.location.href = '/User/Notification/Index';
+            }
         }
     });
 });

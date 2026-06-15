@@ -17,6 +17,7 @@ namespace IBS.Tests.Services
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<DispatchTicketService>> _mockLogger;
         private readonly Mock<ICloudStorageService> _mockCloudStorage;
+        private readonly Mock<INotificationService> _mockNotification;
         private readonly DispatchTicketService _service;
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IJobOrderRepository> _mockJobOrderRepo;
@@ -26,17 +27,20 @@ namespace IBS.Tests.Services
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<DispatchTicketService>>();
             _mockCloudStorage = new Mock<ICloudStorageService>();
+            _mockNotification = new Mock<INotificationService>();
             _mockTicketRepo = new Mock<IDispatchTicketRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
 
             _mockUnitOfWork.Setup(u => u.DispatchTicket).Returns(_mockTicketRepo.Object);
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockUnitOfWork.Setup(u => u.Vessel).Returns(new Mock<IVesselRepository>().Object);
 
             _service = new DispatchTicketService(
                 _mockUnitOfWork.Object,
                 _mockCloudStorage.Object,
-                _mockLogger.Object);
+                _mockLogger.Object,
+                _mockNotification.Object);
         }
 
         [Fact]

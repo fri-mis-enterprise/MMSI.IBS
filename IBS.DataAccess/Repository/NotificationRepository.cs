@@ -8,11 +8,12 @@ namespace IBS.DataAccess.Repository
 {
     public class NotificationRepository(ApplicationDbContext db): INotificationRepository
     {
-        public async Task AddNotificationAsync(string userId, string message, bool requiresResponse = false)
+        public async Task AddNotificationAsync(string userId, string message, bool requiresResponse = false, string? targetUrl = null)
         {
             var notification = new Notification
             {
                 Message = message,
+                TargetUrl = targetUrl,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
             };
 
@@ -31,11 +32,12 @@ namespace IBS.DataAccess.Repository
             await db.SaveChangesAsync();
         }
 
-        public async Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false)
+        public async Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false, string? targetUrl = null)
         {
             var notification = new Notification
             {
                 Message = message,
+                TargetUrl = targetUrl,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
             };
 

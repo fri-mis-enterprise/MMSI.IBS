@@ -60,6 +60,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Processes the creation of a new Dispatch Ticket, including file uploads.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
         public async Task<IActionResult> Create(
             ServiceRequestViewModel viewModel,
@@ -136,7 +137,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
-        public async Task<IActionResult> SetTariff(int id, string filterType, CancellationToken cancellationToken)
+        public async Task<IActionResult> SetTariff(int id, string? filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
             var ticket = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
@@ -195,11 +196,20 @@ namespace IBSWeb.Areas.User.Controllers
         /// Processes the saving of the tariff for a Dispatch Ticket.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
         public async Task<IActionResult> SetTariff(
             TariffViewModel viewModel,
-            string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
+            string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                logger.LogWarning("Invalid ModelState for SetTariff: {Errors}", errors);
+                TempData["warning"] = "Please check your inputs. " + errors;
+                return RedirectToAction(nameof(SetTariff), new { id = viewModel.DispatchTicketId, filterType });
+            }
+
             var model = new DispatchTicket
             {
                 DispatchTicketId = viewModel.DispatchTicketId,
@@ -229,7 +239,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            return RedirectToAction(nameof(SetTariff), new { id = model.DispatchTicketId });
+            return RedirectToAction(nameof(SetTariff), new { id = model.DispatchTicketId, filterType });
         }
 
         #endregion
@@ -241,7 +251,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
-        public async Task<IActionResult> EditTariff(int id, string filterType, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditTariff(int id, string? filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
             var ticket = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
@@ -308,10 +318,11 @@ namespace IBSWeb.Areas.User.Controllers
         /// Processes the update of the tariff for a Dispatch Ticket.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
         public async Task<IActionResult> EditTariff(
             TariffViewModel viewModel,
-            string chargeType, string chargeType2, string filterType, CancellationToken cancellationToken)
+            string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
         {
             var model = new DispatchTicket
             {
@@ -342,7 +353,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            return RedirectToAction(nameof(EditTariff), new { id = model.DispatchTicketId });
+            return RedirectToAction(nameof(EditTariff), new { id = model.DispatchTicketId, filterType });
         }
 
         #endregion
@@ -355,7 +366,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.", "DispatchTicket")]
         public async Task<IActionResult> EditTicket(
-            int id, int? jobOrderId, string filterType, CancellationToken cancellationToken = default)
+            int id, int? jobOrderId, string? filterType, CancellationToken cancellationToken = default)
         {
             ViewBag.FilterType = filterType;
 
@@ -404,7 +415,7 @@ namespace IBSWeb.Areas.User.Controllers
             ServiceRequestViewModel viewModel,
             IFormFile? imageFile,
             IFormFile? videoFile,
-            string filterType,
+            string? filterType,
             CancellationToken cancellationToken = default)
         {
             var result = await dispatchTicketService.UpdateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
@@ -436,6 +447,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Approves the tariff for a Dispatch Ticket, moving it to 'For Billing'.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
         public async Task<IActionResult> ApproveTariff(int id, CancellationToken cancellationToken)
         {
@@ -447,6 +459,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Disapproves the tariff for a Dispatch Ticket, requiring a reason.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
         public async Task<IActionResult> DisapproveTariff(int id, string reason, CancellationToken cancellationToken)
         {
@@ -458,6 +471,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Generic endpoint to change the status of a Dispatch Ticket and log the activity.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangeStatus(int id, string status, string activity, string docType, string successMessage, CancellationToken cancellationToken)
         {
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);

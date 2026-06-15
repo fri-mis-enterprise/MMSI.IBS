@@ -1,5 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
@@ -13,11 +14,13 @@ namespace IBS.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CollectionService> _logger;
+        private readonly INotificationService _notificationService;
 
-        public CollectionService(IUnitOfWork unitOfWork, ILogger<CollectionService> logger)
+        public CollectionService(IUnitOfWork unitOfWork, ILogger<CollectionService> logger, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<Collection?> GetCollectionByIdAsync(int id, CancellationToken cancellationToken)
@@ -90,6 +93,13 @@ namespace IBS.Services
                     var audit = new AuditTrail(username, $"Create collection #{model.MsapCollectionNumber} for billings #{string.Join(", #", billIds)}", "Collection");
                     await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
+
+                    // Notify Accounting/Audit
+                    await _notificationService.NotifyByAccessAsync(
+                        ProcedureEnum.ViewGeneralLedger,
+                        $"New Collection <b>#{model.MsapCollectionNumber}</b> for <b>{model.Customer.CustomerName}</b> has been created.",
+                        targetUrl: "/User/Collection/Index",
+                        cancellationToken: cancellationToken);
                 }, cancellationToken);
 
                 return ServiceResult<int>.Success(collectionId, "Collection created successfully.");

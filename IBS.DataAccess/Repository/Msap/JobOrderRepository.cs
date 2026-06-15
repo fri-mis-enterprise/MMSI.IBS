@@ -98,7 +98,8 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Customer)
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
-                .Include(j => j.Terminal);
+                .Include(j => j.Terminal)
+                .Include(j => j.DispatchTickets);
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {

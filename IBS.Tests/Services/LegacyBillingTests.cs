@@ -39,6 +39,7 @@ namespace IBS.Tests.Services
             _mockPrincipalRepo = new Mock<IPrincipalRepository>();
             _mockJobOrderService = new Mock<IJobOrderService>();
             var mockLogger = new Mock<ILogger<BillingService>>();
+            var mockNotification = new Mock<INotificationService>();
 
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.Customer).Returns(_mockCustomerRepo.Object);
@@ -52,7 +53,7 @@ namespace IBS.Tests.Services
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);
 
-            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object);
+            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object, mockNotification.Object);
         }
 
         [Fact]

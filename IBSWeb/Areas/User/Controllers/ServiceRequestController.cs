@@ -29,7 +29,8 @@ namespace IBSWeb.Areas.User.Controllers
         UserManager<ApplicationUser> userManager,
         ICloudStorageService cloudStorageService,
         ILogger<ServiceRequestController> logger,
-        IUserAccessService userAccessService)
+        IUserAccessService userAccessService,
+        INotificationService notificationService)
         : Controller
     {
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
@@ -756,6 +757,15 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                // Notify Port Coordinators/Dispatchers
+                if (postedTickets.Any())
+                {
+                    await notificationService.NotifyByAccessAsync(
+                        ProcedureEnum.CreateDispatchTicket,
+                        $"New Service Request(s) posted: <b>#{string.Join(", #", postedTickets)}</b>. Ready for Dispatch.",
+                        cancellationToken: cancellationToken);
+                }
 
                 #region -- Audit Trail
 

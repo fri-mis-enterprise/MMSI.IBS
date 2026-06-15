@@ -1,303 +1,360 @@
 @model List<UserNotification>
 @{
-    ViewData["Title"] = "Notifications";
+    ViewData["Title"] = "Notification Center";
 }
 
-<h2 class="text-center mt-3">@ViewData["Title"]</h2>
-
-@if (Model.Any())
-{
-    <div class="text-end container mt-4">
-        <button id="markAllAsReadBtn" class="btn btn-outline-success me-2">Mark All as Read</button>
-        <button id="archiveAllBtn" class="btn btn-outline-danger">Archive All</button>
-
-        <form id="markAllAsReadForm" asp-action="MarkAllAsRead" method="post" class="d-none">
-            @Html.AntiForgeryToken()
-        </form>
-        <form id="archiveAllForm" asp-action="ArchiveAll" method="post" class="d-none">
-            @Html.AntiForgeryToken()
-        </form>
-    </div>
-}
-else
-{
-    <div class="text-center text-muted mt-5">
-        <h5>No notifications available.</h5>
-    </div>
-}
-
-<div id="notificationList" class="notification-list container mt-4">
-    @foreach (var item in Model)
-    {
-        <div class="notification-item d-flex align-items-center p-3 @(!item.IsRead ? "unread" : "")"
-             data-message="@item.Notification.Message"
-             data-date="@item.Notification.CreatedDate"
-             data-requires-response="@item.RequiresResponse.ToString().ToLower()"
-             data-notification-id="@item.UserNotificationId">
-        
-            <div class="notification-content">
-                <p class="notification-message mb-1">
-                    @if (!item.IsRead)
-                    {
-                        <span class="unread-indicator" title="Unread"></span>
-                    }
-                    @Html.Raw(item.Notification.Message)
-                </p>
-                <small class="text-muted">@item.Notification.CreatedDate.ToString("g")</small>
+<div class="modern-layout">
+    <div class="modern-container">
+        <!-- Header Section -->
+        <div class="flex-stack mb-2">
+            <div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                <p class="modern-value-md text-muted">Manage your alerts and workflow transitions</p>
             </div>
-
             <div class="button-group">
-                @if (!item.RequiresResponse)
+                @if (Model.Any(n => !n.IsRead))
                 {
-                    @if (!item.IsRead)
-                    {
-                        <form asp-action="MarkAsRead" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId"/>
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
-                        </form>
-                    }
-                    @if (item is { IsArchived: false, IsRead: true })
-                    {
-                        <form asp-action="Archive" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId"/>
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                        </form>
-                    }
+                    <button id="markAllAsReadBtn" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">done_all</span>
+                        Mark All as Read
+                    </button>
                 }
-            </div>
-        </div>
-    }
-</div>
-
-<!-- Notification Modal -->
-<div id="notificationModal" class="modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Notification Details</h5>
-                <button type="button" class="close" aria-label="Close">&times;</button>
-            </div>
-
-            <div class="modal-body">
-                <p id="modalMessage" class="font-weight-bold"></p>
-                <small id="modalDate" class="text-muted"></small>
-            </div>
-
-            <div id="responseButtons" class="modal-footer">
-                <form asp-action="RespondToNotification" method="post">
+                @if (Model.Any(n => !n.IsArchived))
+                {
+                    <button id="archiveAllBtn" class="modern-btn-error">
+                        <span class="material-symbols-outlined">archive</span>
+                        Archive All
+                    </button>
+                }
+                
+                <form id="markAllAsReadForm" asp-action="MarkAllAsRead" method="post" class="d-none">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" id="modalNotificationId" name="userNotificationId"/>
-                    <button type="submit" name="response" value="yes" class="btn btn-success">Yes</button>
-                    <button type="submit" name="response" value="no" class="btn btn-danger">No</button>
+                </form>
+                <form id="archiveAllForm" asp-action="ArchiveAll" method="post" class="d-none">
+                    @Html.AntiForgeryToken()
                 </form>
             </div>
         </div>
+
+        <!-- Notification List -->
+        <div class="modern-card">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">notifications</span>
+                <h2 class="modern-headline-md">Recent Alerts</h2>
+            </div>
+            
+            <div class="modern-card-body p-0">
+                @if (Model.Any())
+                {
+                    <div class="notification-list-wrapper">
+                        @foreach (var item in Model)
+                        {
+                            <div class="notification-row @(!item.IsRead ? "unread" : "")" 
+                                 data-message="@item.Notification.Message"
+                                 data-date="@item.Notification.CreatedDate"
+                                 data-requires-response="@item.RequiresResponse.ToString().ToLower()"
+                                 data-notification-id="@item.UserNotificationId"
+                                 data-target-url="@item.Notification.TargetUrl">
+                                
+                                <div class="notification-icon-container">
+                                    @if (item.RequiresResponse)
+                                    {
+                                        <span class="material-symbols-outlined text-warning">pending_actions</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined text-primary">info</span>
+                                    }
+                                </div>
+
+                                <div class="notification-main">
+                                    <div class="notification-text">
+                                        @Html.Raw(item.Notification.Message)
+                                    </div>
+                                    <div class="notification-meta">
+                                        <span class="material-symbols-outlined" style="font-size: 14px;">calendar_today</span>
+                                        @item.Notification.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")
+                                        
+                                        @if (!item.IsRead)
+                                        {
+                                            <span class="modern-badge-sm status-open ms-2">New</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="notification-actions">
+                                    @if (!item.RequiresResponse)
+                                    {
+                                        @if (!item.IsRead)
+                                        {
+                                            <form asp-action="MarkAsRead" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userNotificationId" value="@item.UserNotificationId"/>
+                                                <button type="submit" class="action-btn" title="Mark as Read">
+                                                    <span class="material-symbols-outlined">check_circle</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        
+                                        <form asp-action="Archive" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId"/>
+                                            <button type="submit" class="action-btn text-error" title="Archive">
+                                                <span class="material-symbols-outlined">delete</span>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="modern-btn-primary py-1 px-3 respond-trigger">
+                                            RESPOND
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="p-5 text-center">
+                        <span class="material-symbols-outlined icon-size-hero text-muted mb-3">notifications_off</span>
+                        <p class="modern-value-lg text-muted">You're all caught up!</p>
+                        <p class="modern-value-md text-muted">New notifications will appear here.</p>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Styles for Improved Layout and Modal -->
+<!-- Response Modal (Redesigned) -->
+<div id="notificationModal" class="modern-modal">
+    <div class="modern-modal-dialog">
+        <div class="modern-card shadow-lg">
+            <div class="modern-card-header-info">
+                <span class="material-symbols-outlined">quick_reference_all</span>
+                <h2 class="modern-headline-md">Action Required</h2>
+                <button type="button" class="ms-auto btn-close-white close-modal-btn" style="background:none; border:none; color:white;">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modern-card-body">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="success-icon-container icon-bg-question" style="margin:0">
+                         <span class="material-symbols-outlined icon-question" style="font-size:32px">help</span>
+                    </div>
+                    <div>
+                        <p id="modalMessage" class="modern-value-lg"></p>
+                        <p id="modalDate" class="modern-value-md text-muted"></p>
+                    </div>
+                </div>
+
+                <div id="responseButtons" class="flex-stack justify-end gap-2 mt-4 pt-3 border-t border-outline-variant">
+                    <form asp-action="RespondToNotification" method="post" class="w-100 flex gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="modalNotificationId" name="userNotificationId"/>
+                        <button type="submit" name="response" value="yes" class="modern-btn-primary flex-grow-1 justify-center">
+                            <span class="material-symbols-outlined">check</span> YES, PROCEED
+                        </button>
+                        <button type="submit" name="response" value="no" class="modern-btn-secondary flex-grow-1 justify-center">
+                            <span class="material-symbols-outlined">close</span> NO, CANCEL
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    .notification-item {
-        padding: 15px;
-        border-bottom: 1px solid #e0e0e0;
-        background-color: #f9f9f9;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
+    .notification-row {
+        display: flex;
+        align-items: flex-start;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--outline-variant);
+        transition: background-color 0.2s;
+        gap: 1.25rem;
     }
 
-        .notification-item:hover {
-            background-color: #f1f1f1;
-        }
-
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1050;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background-color: rgba(0,0,0,0.5);
+    .notification-row:last-child {
+        border-bottom: none;
     }
 
-    .modal-dialog {
-        margin: 15% auto;
-        max-width: 500px;
+    .notification-row:hover {
+        background-color: var(--surface-container-low);
     }
 
-    .modal-content {
-        padding: 20px;
+    .notification-row.unread {
+        background-color: rgba(118, 163, 73, 0.05);
+        border-left: 4px solid var(--status-open);
     }
 
-    .close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        color: #555;
-        cursor: pointer;
+    .notification-icon-container {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-xl);
+        background-color: var(--surface-container);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
 
-        .close:hover {
-            color: #333;
-        }
-
-    /* Notification List Styles */
-    .notification-list {
-        max-height: 80vh;
-        overflow-y: auto;
-        padding: 1rem;
-    }
-
-    .notification-item {
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .notification-content {
+    .notification-main {
         flex: 1;
         min-width: 0;
-        padding-right: 1rem;
     }
 
-    .button-group {
+    .notification-text {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--on-surface);
+        margin-bottom: 0.25rem;
+    }
+
+    .notification-meta {
+        font-size: 12px;
+        color: var(--on-surface-variant);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .notification-actions {
         display: flex;
         gap: 0.5rem;
         align-items: center;
     }
 
-    /* Modal Styles */
-    .modal {
+    .action-btn {
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        border-radius: var(--radius-lg);
+        color: var(--on-primary-container);
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .action-btn:hover {
+        background-color: var(--surface-container-high);
+        color: var(--primary);
+    }
+
+    .action-btn.text-error:hover {
+        background-color: var(--error-container);
+        color: var(--error);
+    }
+
+    /* Modern Modal Styling */
+    .modern-modal {
         display: none;
         position: fixed;
-        top: 0;
+        z-index: 10000;
         left: 0;
+        top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        z-index: 1050;
+        background-color: rgba(5, 22, 22, 0.7);
+        backdrop-filter: blur(4px);
     }
 
-    .modal-dialog {
-        margin: 2rem auto;
-        max-width: 600px;
-        width: 95%;
+    .modern-modal-dialog {
+        margin: 10% auto;
+        max-width: 550px;
+        width: 90%;
     }
 
-    .modal-content {
-        max-height: 80vh;
-        overflow-y: auto;
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .modal-body {
-        padding: 1.5rem;
-    }
-
-    /* Responsive Styles */
-    @@media (max-width: 768px) {
-    .button-group {
-        flex-direction: column;
-    }
-
-    .modal-dialog {
-        margin: 1rem;
-        width: calc(100% - 2rem);
-    }
-    }
-
-    /* Unread notification styling */
-    .notification-item.unread {
-        background-color: #f3f5f4;  /* Light green-gray background */
-        border-left: 4px solid #1c3833;  /* Your theme's dark green */
-    }
-
-    .unread-indicator {
-        width: 8px;
-        height: 8px;
-        background-color: #1c3833;  /* Your theme's dark green */
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 8px;
-    }
-
-    /* Badge for unread count if you're using it */
-    .badge.bg-primary {
-        background-color: #1c3833 !important;  /* Your theme's dark green */
-    }
+    .justify-center { justify-content: center; }
+    .flex-grow-1 { flex-grow: 1; }
+    .w-100 { width: 100%; }
 </style>
 
-<!-- JavaScript for Modal Functionality -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Open modal when clicking notification
-        document.querySelectorAll('.notification-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const message = this.getAttribute('data-message');
-                const date = this.getAttribute('data-date');
-                const requiresResponse = this.getAttribute('data-requires-response') === 'true';
-                const notificationId = this.getAttribute('data-notification-id');
+        const modal = document.getElementById('notificationModal');
+        
+        // Open modal when clicking "RESPOND" or the row if it requires response
+        document.querySelectorAll('.respond-trigger, .notification-row[data-requires-response="true"]').forEach(element => {
+            element.addEventListener('click', function(e) {
+                const row = this.closest('.notification-row') || this;
+                const message = row.getAttribute('data-message');
+                const date = row.getAttribute('data-date');
+                const notificationId = row.getAttribute('data-notification-id');
 
                 document.getElementById('modalMessage').innerHTML = message;
-                document.getElementById('modalDate').textContent = new Date(date).toLocaleString();
+                document.getElementById('modalDate').textContent = new Date(date).toLocaleString('en-US', { 
+                    month: 'short', day: '2-digit', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit', hour12: true 
+                });
                 document.getElementById('modalNotificationId').value = notificationId;
 
-                // Toggle response buttons
-                document.getElementById('responseButtons').style.display =
-                    requiresResponse ? 'block' : 'none';
-
-                document.getElementById('notificationModal').style.display = 'block';
+                modal.style.display = 'block';
+                e.stopPropagation();
             });
         });
 
-        // Close modal functionality
-        const closeModal = () => {
-            document.getElementById('notificationModal').style.display = 'none';
-        };
+        // Handle Notification Row Clicks (Redirection & Modal)
+        document.querySelectorAll('.notification-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // If it's a response-required row or the respondent button, the previous listener handles it
+                if (this.getAttribute('data-requires-response') === 'true') return;
 
-        document.querySelector('.close').onclick = closeModal;
+                const targetUrl = this.getAttribute('data-target-url');
+                const notificationId = this.getAttribute('data-notification-id');
 
-        // Close on outside click
-        window.onclick = function(event) {
-            const modal = document.getElementById('notificationModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        };
+                // Mark as read first via background fetch (best effort)
+                fetch(`/User/Notification/MarkAsRead?userNotificationId=${notificationId}`, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
+                });
 
-        document.getElementById('markAllAsReadBtn').addEventListener('click', function () {
+                if (targetUrl && targetUrl !== 'null' && targetUrl !== '') {
+                    window.location.href = targetUrl;
+                } else {
+                    // Fallback to showing modal if no target URL
+                    const message = this.getAttribute('data-message');
+                    const date = this.getAttribute('data-date');
+                    document.getElementById('modalMessage').innerHTML = message;
+                    document.getElementById('modalDate').textContent = new Date(date).toLocaleString();
+                    document.getElementById('modalNotificationId').value = notificationId;
+                    
+                    // Hide response buttons for non-response notifications
+                    document.getElementById('responseButtons').style.display = 'none';
+                    modal.style.display = 'block';
+                }
+            });
+        });
+
+        // Close modal
+        const closeModal = () => modal.style.display = 'none';
+        document.querySelectorAll('.close-modal-btn').forEach(btn => btn.onclick = closeModal);
+
+        window.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+        // Global Alert Handlers
+        document.getElementById('markAllAsReadBtn')?.addEventListener('click', function () {
             ModernAlert.confirm({
-                title: 'Mark all as read?',
-                text: 'This will mark all unread notifications as read.',
+                title: 'Mark All as Read?',
+                text: 'This will mark all pending alerts as read.',
                 icon: 'question',
-                confirmText: 'Yes, Mark All'
+                confirmText: 'YES, MARK ALL'
             }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('markAllAsReadForm').submit();
-                }
+                if (result.isConfirmed) document.getElementById('markAllAsReadForm').submit();
             });
         });
 
-        document.getElementById('archiveAllBtn').addEventListener('click', function () {
+        document.getElementById('archiveAllBtn')?.addEventListener('click', function () {
             ModernAlert.confirm({
-                title: 'Archive all notifications?',
-                text: 'This will archive all read notifications.',
+                title: 'Archive All Alerts?',
+                text: 'This will move all current notifications to archives.',
                 icon: 'warning',
-                confirmText: 'Yes, Archive All'
+                confirmText: 'YES, ARCHIVE ALL'
             }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('archiveAllForm').submit();
-                }
+                if (result.isConfirmed) document.getElementById('archiveAllForm').submit();
             });
         });
     });

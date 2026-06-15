@@ -4,9 +4,9 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface INotificationRepository
     {
-        Task AddNotificationAsync(string userId, string message, bool requiresResponse = false);
+        Task AddNotificationAsync(string userId, string message, bool requiresResponse = false, string? targetUrl = null);
 
-        Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false);
+        Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false, string? targetUrl = null);
 
         Task<List<UserNotification>> GetUserNotificationsAsync(string userId);
 

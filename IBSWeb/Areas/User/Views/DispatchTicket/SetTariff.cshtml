@@ -206,11 +206,11 @@
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Dispatch Rate</label>
-                                        <input asp-for="DispatchRate" id="DispatchRate" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                        <input asp-for="DispatchRate" id="DispatchRate" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.DispatchRate?.ToString("0.00")">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Discount (%)</label>
-                                        <input asp-for="DispatchDiscount" id="DispatchDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                        <input asp-for="DispatchDiscount" id="DispatchDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.DispatchDiscount?.ToString("0.00")">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Billing Amount</label>
@@ -239,11 +239,11 @@
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">BAF Rate</label>
-                                        <input asp-for="BAFRate" id="BAFRate" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                        <input asp-for="BAFRate" id="BAFRate" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.BAFRate?.ToString("0.00")">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Discount (%)</label>
-                                        <input asp-for="BAFDiscount" id="BAFDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00">
+                                        <input asp-for="BAFDiscount" id="BAFDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.BAFDiscount?.ToString("0.00")">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Billing Amount</label>
@@ -268,7 +268,7 @@
                                         </div>
                                         <div class="modern-col-6">
                                             <label class="modern-label">AP Other Tugs (Expense)</label>
-                                            <input asp-for="ApOtherTugs" id="ApOtherTugs" type="number" step="0.01" class="modern-input" style="border-color: var(--error)" placeholder="0.00">
+                                            <input asp-for="ApOtherTugs" id="ApOtherTugs" type="number" step="0.01" class="modern-input" style="border-color: var(--error)" placeholder="0.00" value="@(Model.ApOtherTugs?.ToString("0.00") ?? "0.00")">
                                         </div>
                                     </div>
                                 </div>
@@ -297,6 +297,14 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
+        const PageConfig = {
+            messages: {
+                error:   @Json.Serialize(TempData.Peek("error")),
+                success: @Json.Serialize(TempData.Peek("success")),
+                warning: @Json.Serialize(TempData.Peek("warning"))
+            }
+        };
+
         function parseNumber(value) {
             if (!value || value === '') return 0;
             return parseFloat(value.toString().replace(/,/g, '')) || 0;
@@ -383,6 +391,7 @@
             }
 
             $('input').on('input change', ValueChange);
+            ValueChange();
             fetchDefaultRates();
 
             $('#submitButton').on('click', function (e) {
@@ -395,6 +404,11 @@
                     return;
                 }
 
+                const form = document.getElementById("myForm");
+                if ($(form).valid && !$(form).valid()) {
+                    return;
+                }
+
                 ModernAlert.confirm({
                     title: 'Submit Tariff?',
                     text: 'Confirm the calculated rates before submitting.',
@@ -403,7 +417,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         ModernAlert.showLoading("Submitting tariff...");
-                        $('#myForm').submit();
+                        form.submit();
                     }
                 });
             });

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
@@ -12,7 +13,8 @@ namespace IBS.Services
     public class DispatchTicketService(
         IUnitOfWork unitOfWork,
         ICloudStorageService cloudStorageService,
-        ILogger<DispatchTicketService> logger) : IDispatchTicketService
+        ILogger<DispatchTicketService> logger,
+        INotificationService notificationService) : IDispatchTicketService
     {
         public async Task<DispatchTicket?> GetDispatchTicketByIdAsync(int id, CancellationToken cancellationToken)
         {
@@ -113,6 +115,20 @@ namespace IBS.Services
                 await unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Create dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                if (model.Status == SD.DispatchTicketStatus.ForTariff)
+                {
+                    var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
+                    var targetUrl = model.JobOrderId.HasValue 
+                        ? $"/User/JobOrder/Details/{model.JobOrderId}" 
+                        : "/User/DispatchTicket/Index?filter=ForTariff";
+
+                    await notificationService.NotifyByAccessAsync(
+                        ProcedureEnum.SetTariff,
+                        $"Dispatch Ticket <b>#{model.DispatchNumber}</b> for <b>{vessel?.VesselName ?? "a vessel"}</b> has been completed and is ready for Tariff application.",
+                        targetUrl: targetUrl,
+                        cancellationToken: cancellationToken);
+                }
 
                 return ServiceResult<int>.Success(model.DispatchTicketId, $"Dispatch Ticket #{model.DispatchNumber} was successfully created.");
             }
@@ -381,11 +397,30 @@ namespace IBS.Services
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, "Tariff"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
+                try
+                {
+                    // Notify Approvers
+                    var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == currentModel.VesselId, cancellationToken);
+                    var targetUrl = currentModel.JobOrderId.HasValue 
+                        ? $"/User/JobOrder/Details/{currentModel.JobOrderId}" 
+                        : "/User/DispatchTicket/Index?filter=ForApproval";
+
+                    await notificationService.NotifyByAccessAsync(
+                        ProcedureEnum.ApproveTariff,
+                        $"Tariff has been set for Dispatch Ticket <b>#{currentModel.DispatchNumber}</b> (<b>{vessel?.VesselName}</b>). Pending your approval.",
+                        targetUrl: targetUrl,
+                        cancellationToken: cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Tariff saved successfully, but notification failed for ticket {DispatchNumber}", currentModel.DispatchNumber);
+                }
+
                 return ServiceResult.Success(isEdit ? "Tariff updated successfully." : "Tariff set successfully.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to save tariff.");
+                logger.LogError(ex, "Failed to save tariff for ticket {DispatchTicketId}", model.DispatchTicketId);
                 return ServiceResult.Failure($"Failed to save tariff: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -411,6 +446,14 @@ namespace IBS.Services
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Approved tariff for dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                // Notify Billing
+                var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
+                await notificationService.NotifyByAccessAsync(
+                    ProcedureEnum.CreateBilling,
+                    $"Tariff for Dispatch Ticket <b>#{model.DispatchNumber}</b> (<b>{vessel?.VesselName}</b>) has been approved. Ready for Billing.",
+                    targetUrl: "/User/Billing/Index",
+                    cancellationToken: cancellationToken);
 
                 return ServiceResult.Success("Tariff approved successfully.");
             }
@@ -450,6 +493,18 @@ namespace IBS.Services
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Disapproved tariff for dispatch ticket #{model.DispatchNumber}. Reason: {reason}", "Dispatch Ticket"), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                // Notify the person who set the tariff (or generally SetTariff access)
+                var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
+                var targetUrl = model.JobOrderId.HasValue 
+                    ? $"/User/JobOrder/Details/{model.JobOrderId}" 
+                    : "/User/DispatchTicket/Index?filter=ForTariff";
+
+                await notificationService.NotifyByAccessAsync(
+                    ProcedureEnum.SetTariff,
+                    $"Tariff for Dispatch Ticket <b>#{model.DispatchNumber}</b> (<b>{vessel?.VesselName}</b>) was <b class='text-danger'>disapproved</b>. Reason: {reason}",
+                    targetUrl: targetUrl,
+                    cancellationToken: cancellationToken);
 
                 return ServiceResult.Success("Tariff disapproved successfully.");
             }

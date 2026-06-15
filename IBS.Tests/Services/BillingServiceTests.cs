@@ -29,12 +29,14 @@ namespace IBS.Tests.Services
         private readonly Mock<ICustomerRepository> _mockCustomerRepo;
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
+        private readonly Mock<INotificationService> _mockNotification;
         private readonly Mock<IJobOrderService> _mockJobOrderService;
 
         public BillingServiceTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger<BillingService>>();
+            _mockNotification = new Mock<INotificationService>();
             _mockBillingRepo = new Mock<IBillingRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockCustomerRepo = new Mock<ICustomerRepository>();
@@ -54,6 +56,7 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.DispatchTicket).Returns(_mockTicketRepo.Object);
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(_mockVesselRepo.Object);
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockUnitOfWork.Setup(u => u.Principal).Returns(new Mock<IPrincipalRepository>().Object);
             _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>()))
                 .Returns((CancellationToken ct) => dbContext.SaveChangesAsync(ct));
 
@@ -61,7 +64,7 @@ namespace IBS.Tests.Services
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);
 
-            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object);
+            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object, _mockNotification.Object);
         }
 
         [Fact]
@@ -291,8 +294,8 @@ namespace IBS.Tests.Services
             await _service.CreateBillingAsync(billing, "user", "MMSI", CancellationToken.None);
 
             // Assert: Total should be Net * 1.12
-            // 213,928.57 * 1.12 = 239,599.9984 -> rounded to 239,600.00
-            Math.Round(billing.Amount, 4).Should().Be(239600.00m);
+            // 213,928.57 * 1.12 = 239,599.9984
+            Math.Round(billing.Amount, 4).Should().Be(239599.9984m);
         }
 
         [Fact]

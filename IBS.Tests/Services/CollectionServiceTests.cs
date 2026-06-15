@@ -22,11 +22,13 @@ namespace IBS.Tests.Services
         private readonly Mock<ICollectionRepository> _mockCollectionRepo;
         private readonly Mock<IBillingRepository> _mockBillingRepo;
         private readonly Mock<ICustomerRepository> _mockCustomerRepo;
+        private readonly Mock<INotificationService> _mockNotification;
 
         public CollectionServiceTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<CollectionService>>();
+            _mockNotification = new Mock<INotificationService>();
             _mockCollectionRepo = new Mock<ICollectionRepository>();
             _mockBillingRepo = new Mock<IBillingRepository>();
             _mockCustomerRepo = new Mock<ICustomerRepository>();
@@ -35,6 +37,7 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.Customer).Returns(_mockCustomerRepo.Object);
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockUnitOfWork.Setup(u => u.BankAccount).Returns(new Mock<IBankAccountRepository>().Object);
             _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             _mockCollectionRepo.Setup(u => u.AddAsync(It.IsAny<Collection>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             _mockCollectionRepo.Setup(u => u.PostAsync(It.IsAny<Collection>(), It.IsAny<List<Offsettings>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -42,7 +45,7 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
                 .Returns((Func<Task> action, CancellationToken ct) => action());
 
-            _service = new CollectionService(_mockUnitOfWork.Object, _mockLogger.Object);
+            _service = new CollectionService(_mockUnitOfWork.Object, _mockLogger.Object, _mockNotification.Object);
         }
 
         [Fact]

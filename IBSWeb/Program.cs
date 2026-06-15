@@ -7,6 +7,7 @@ using IBS.Services;
 using IBS.Services.AccessControl;
 using IBS.Utility;
 using IBSWeb.Hubs;
+using IBSWeb.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -64,6 +65,7 @@ builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new DecimalJsonConverter());
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     })
     .AddSessionStateTempDataProvider();
 
@@ -75,6 +77,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IUserAccessService, UserAccessService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();

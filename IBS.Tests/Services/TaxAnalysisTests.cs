@@ -37,6 +37,7 @@ namespace IBS.Tests.Services
             _mockJobOrderService = new Mock<IJobOrderService>();
             var mockBillingLogger = new Mock<ILogger<BillingService>>();
             var mockCollectionLogger = new Mock<ILogger<CollectionService>>();
+            var mockNotification = new Mock<INotificationService>();
 
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.Customer).Returns(_mockCustomerRepo.Object);
@@ -44,13 +45,14 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(_mockVesselRepo.Object);
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockUnitOfWork.Setup(u => u.BankAccount).Returns(new Mock<IBankAccountRepository>().Object);
 
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);
 
-            _billingService = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockBillingLogger.Object);
-            _collectionService = new CollectionService(_mockUnitOfWork.Object, mockCollectionLogger.Object);
+            _billingService = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockBillingLogger.Object, mockNotification.Object);
+            _collectionService = new CollectionService(_mockUnitOfWork.Object, mockCollectionLogger.Object, mockNotification.Object);
         }
 
         [Theory]
