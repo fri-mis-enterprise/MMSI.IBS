@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models
 {
-    public class AuditTrail(string username, string activity, string documentType)
+    public class AuditTrail(string username, string activity, string documentType, int? recordId = null, string? referenceNumber = null)
     {
         public Guid Id { get; set; }
 
@@ -22,6 +22,9 @@ namespace IBS.Models
         public string DocumentType { get; set; } = documentType;
 
         [Display(Name = "Record Id")]
-        public int? RecordId { get; set; }
+        public int? RecordId { get; set; } = recordId;
+
+        [Display(Name = "Reference Number")]
+        public string? ReferenceNumber { get; set; } = referenceNumber;
     }
 }

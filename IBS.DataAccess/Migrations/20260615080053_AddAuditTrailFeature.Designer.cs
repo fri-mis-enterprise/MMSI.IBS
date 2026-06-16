@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615080053_AddAuditTrailFeature")]
+    partial class AddAuditTrailFeature
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,18 +202,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_audit_trails");
-
-                    b.HasIndex("Date")
-                        .HasDatabaseName("ix_audit_trails_date");
-
-                    b.HasIndex("DocumentType")
-                        .HasDatabaseName("ix_audit_trails_document_type");
-
-                    b.HasIndex("RecordId")
-                        .HasDatabaseName("ix_audit_trails_record_id");
-
-                    b.HasIndex("ReferenceNumber")
-                        .HasDatabaseName("ix_audit_trails_reference_number");
 
                     b.ToTable("audit_trails", (string)null);
                 });

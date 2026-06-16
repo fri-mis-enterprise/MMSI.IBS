@@ -91,7 +91,7 @@ namespace IBS.Services
                 jobOrder.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 await unitOfWork.JobOrder.AddAsync(jobOrder, cancellationToken);
-                await RecordAuditAsync($"Created Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await RecordAuditAsync($"Created Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == jobOrder.VesselId, cancellationToken);
@@ -152,7 +152,7 @@ namespace IBS.Services
                 // Cascade updates to related records
                 await SyncRelatedRecordsAsync(jobOrder, cancellationToken);
 
-                await RecordAuditAsync($"Edited Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await RecordAuditAsync($"Edited Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success($"Job Order #{jobOrder.JobOrderNumber} updated successfully.");
@@ -168,8 +168,8 @@ namespace IBS.Services
         {
             // 1. Update unbilled dispatch tickets
             var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
-                dt => dt.JobOrderId == jobOrder.JobOrderId && 
-                      dt.Status != SD.DispatchTicketStatus.Billed, 
+                dt => dt.JobOrderId == jobOrder.JobOrderId &&
+                      dt.Status != SD.DispatchTicketStatus.Billed,
                 cancellationToken);
 
             foreach (var ticket in tickets)
@@ -185,8 +185,8 @@ namespace IBS.Services
 
             // 2. Update unposted/uncollected billings
             var billings = await unitOfWork.Billing.GetAllAsync(
-                b => b.JobOrderId == jobOrder.JobOrderId && 
-                     (b.Status == SD.BillingStatus.ForPosting || b.Status == SD.BillingStatus.ForCollection), 
+                b => b.JobOrderId == jobOrder.JobOrderId &&
+                     (b.Status == SD.BillingStatus.ForPosting || b.Status == SD.BillingStatus.ForCollection),
                 cancellationToken);
 
             foreach (var billing in billings)
@@ -219,7 +219,7 @@ namespace IBS.Services
                 if (jobOrder.DispatchTickets.Any())
                 {
                     var nonTerminalTickets = jobOrder.DispatchTickets
-                        .Where(dt => dt.Status != SD.DispatchTicketStatus.Billed && 
+                        .Where(dt => dt.Status != SD.DispatchTicketStatus.Billed &&
                                      dt.Status != SD.DispatchTicketStatus.Disapproved)
                         .ToList();
 
@@ -231,7 +231,7 @@ namespace IBS.Services
                 }
 
                 jobOrder.Status = SD.JobOrderStatus.Closed;
-                await RecordAuditAsync($"Closed Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await RecordAuditAsync($"Closed Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success($"Job Order #{jobOrder.JobOrderNumber} has been closed.");
@@ -262,9 +262,9 @@ namespace IBS.Services
             return await unitOfWork.JobOrder.GetPagedJobOrdersAsync(parameters, cancellationToken);
         }
 
-        private async Task RecordAuditAsync(string activity, string username, CancellationToken cancellationToken)
+        private async Task RecordAuditAsync(string activity, string username, CancellationToken cancellationToken, int? recordId = null, string? referenceNumber = null)
         {
-            var audit = new AuditTrail(username, activity, "Job Order");
+            var audit = new AuditTrail(username, activity, "Job Order", recordId, referenceNumber);
             await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
         }
 
@@ -327,7 +327,7 @@ namespace IBS.Services
                     await unitOfWork.DispatchTicket.AddAsync(ticket, cancellationToken);
                 }
 
-                await RecordAuditAsync($"Assigned tugboat {tugboat.TugboatName} to Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await RecordAuditAsync($"Assigned tugboat {tugboat.TugboatName} to Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Tugboat assigned successfully.");
@@ -365,7 +365,7 @@ namespace IBS.Services
                     {
                         return ServiceResult.Failure("Cannot unassign a tugboat with an active or processed dispatch ticket.");
                     }
-                    
+
                     if (tugboatName == null)
                     {
                         var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
@@ -375,7 +375,7 @@ namespace IBS.Services
                     await unitOfWork.DispatchTicket.RemoveAsync(ticketToRemove, cancellationToken);
                 }
 
-                await RecordAuditAsync($"Unassigned tugboat {tugboatName ?? "Unknown"} from Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken);
+                await RecordAuditAsync($"Unassigned tugboat {tugboatName ?? "Unknown"} from Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Tugboat unassigned successfully.");
@@ -386,7 +386,19 @@ namespace IBS.Services
                 return ServiceResult.Failure($"Failed to unassign tugboat: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
+
+        public async Task<List<SelectListItem>> GetJobOrderSelectListAsync(CancellationToken cancellationToken)
+        {
+            var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
+            return jobOrders
+                .OrderByDescending(j => j.JobOrderNumber)
+                .Take(100)
+                .Select(j => new SelectListItem
+                {
+                    Value = j.JobOrderId.ToString(),
+                    Text = $"{j.JobOrderNumber} - {j.Vessel?.VesselName ?? "No Vessel"}"
+                })
+                .ToList();
+        }
     }
 }
-
-

@@ -93,8 +93,9 @@ namespace IBS.Services
                     model.UserName = selectedUser?.UserName;
 
                     await unitOfWork.UserAccess.AddAsync(model, cancellationToken);
+                    await unitOfWork.SaveAsync(cancellationToken);
 
-                    AuditTrail auditTrail = new(username, $"Created User Access for {model.UserName}", "User Access");
+                    AuditTrail auditTrail = new(username, $"Created User Access for {model.UserName}", "User Access", model.Id);
                     await unitOfWork.AuditTrail.AddAsync(auditTrail, cancellationToken);
 
                     await unitOfWork.SaveAsync(cancellationToken);
@@ -146,7 +147,7 @@ namespace IBS.Services
                 {
                     if (changes.Any())
                     {
-                        AuditTrail auditTrail = new(username, $"Edited User Access for {existing.UserName}: {string.Join("; ", changes)}", "User Access");
+                        AuditTrail auditTrail = new(username, $"Edited User Access for {existing.UserName}: {string.Join("; ", changes)}", "User Access", existing.Id);
                         await unitOfWork.AuditTrail.AddAsync(auditTrail, cancellationToken);
                     }
 

@@ -113,7 +113,7 @@ namespace IBS.Services
                 }
 
                 await unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Create dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Create dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 if (model.Status == SD.DispatchTicketStatus.ForTariff)
@@ -282,7 +282,7 @@ namespace IBS.Services
                     ? $"Edit dispatch ticket #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
                     : $"No changes detected for #{currentModel.DispatchNumber}";
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, "Dispatch Ticket"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, "Dispatch Ticket", currentModel.DispatchTicketId, currentModel.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Entry edited successfully!");
@@ -310,6 +310,7 @@ namespace IBS.Services
                 }
 
                 string auditMessage;
+                string documentType = "Tariff";
                 if (isEdit)
                 {
                     var changes = new List<string>();
@@ -338,7 +339,7 @@ namespace IBS.Services
                 {
                     currentModel.TariffBy = username;
                     currentModel.TariffDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    auditMessage = $"Set Tariff #{currentModel.DispatchTicketId}";
+                    auditMessage = $"Set Tariff #{currentModel.DispatchNumber}";
                 }
 
                 // Server-side re-calculation to ensure integrity
@@ -394,7 +395,7 @@ namespace IBS.Services
                 currentModel.TotalBilling = Math.Round(dispatchBilling + bafBilling, 4);
                 currentModel.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 4);
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, "Tariff"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, documentType, currentModel.DispatchTicketId, currentModel.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 try
@@ -444,7 +445,7 @@ namespace IBS.Services
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Approved tariff for dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Approved tariff for dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 // Notify Billing
@@ -491,7 +492,7 @@ namespace IBS.Services
                     ? $"Disapproved: {reason}"
                     : $"{model.Remarks} | Disapproved: {reason}";
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Disapproved tariff for dispatch ticket #{model.DispatchNumber}. Reason: {reason}", "Dispatch Ticket"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Disapproved tariff for dispatch ticket #{model.DispatchNumber}. Reason: {reason}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 // Notify the person who set the tariff (or generally SetTariff access)

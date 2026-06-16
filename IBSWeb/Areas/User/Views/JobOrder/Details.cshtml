@@ -262,6 +262,21 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="modern-card mt-4">
+                    <div class="modern-card-header-info">
+                        <span class="material-symbols-outlined">history</span>
+                        <h2 class="modern-headline-md">Workflow Timeline</h2>
+                    </div>
+                    <div class="modern-card-body" id="timelineContainer">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="modern-label mt-2">Fetching timeline...</p>
+                        </div>
+                    </div>
+                </div>
             </section>
         </div>
 
@@ -362,7 +377,18 @@
             if (PageConfig.messages.warning) {
                 ModernAlert.warning(PageConfig.messages.warning);
             }
+
+            // Load Timeline
+            loadTimeline();
         });
+
+        function loadTimeline() {
+            $.get('@Url.Action("GetTimeline", "AuditTrail", new { area = "User" })', { id: PageConfig.jobOrderId }, function(data) {
+                $('#timelineContainer').html(data);
+            }).fail(function() {
+                $('#timelineContainer').html('<div class="text-center py-4 text-danger"><p>Failed to load timeline.</p></div>');
+            });
+        }
 
         function confirmClose() {
             ModernAlert.confirm({

@@ -90,7 +90,7 @@ namespace IBS.Services
 
                     // Audit trail
                     var billIds = viewModel.BillingPayments?.Select(p => p.BillingId) ?? new List<int>();
-                    var audit = new AuditTrail(username, $"Create collection #{model.MsapCollectionNumber} for billings #{string.Join(", #", billIds)}", "Collection");
+                    var audit = new AuditTrail(username, $"Create collection #{model.MsapCollectionNumber} for billings #{string.Join(", #", billIds)}", "Collection", model.MsapCollectionId, model.MsapCollectionNumber);
                     await _unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
 

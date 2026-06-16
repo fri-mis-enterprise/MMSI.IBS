@@ -146,7 +146,7 @@ namespace IBS.Services
                 model.IsPaid = false;
 
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 // Notify Accounting for Posting
@@ -302,15 +302,8 @@ namespace IBS.Services
 
                     model.Status = SD.BillingStatus.ForCollection;
 
-                    await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing"), cancellationToken);
+                    await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                     await unitOfWork.SaveAsync(cancellationToken);
-
-                    // Notify Collection
-                    await notificationService.NotifyByAccessAsync(
-                        ProcedureEnum.CreateCollection,
-                        $"Billing <b>#{model.MsapBillingNumber}</b> for <b>{customer.CustomerName}</b> has been posted. Ready for Collection.",
-                        targetUrl: "/User/Collection/Index",
-                        cancellationToken: cancellationToken);
 
                     // Notify Collection
                     await notificationService.NotifyByAccessAsync(
@@ -406,7 +399,7 @@ namespace IBS.Services
                 currentModel.DispatchAmount = dispatch;
                 currentModel.BAFAmount = baf;
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MsapBillingNumber}", "Billing"), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MsapBillingNumber}", "Billing", currentModel.MsapBillingId, currentModel.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Entry edited successfully!");

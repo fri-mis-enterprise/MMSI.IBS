@@ -185,6 +185,14 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<AuditTrail>(a =>
+            {
+                a.HasIndex(x => x.DocumentType);
+                a.HasIndex(x => x.RecordId);
+                a.HasIndex(x => x.ReferenceNumber);
+                a.HasIndex(x => x.Date);
+            });
+
             #endregion
         }
     }

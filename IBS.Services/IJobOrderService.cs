@@ -2,6 +2,7 @@ using IBS.Models;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Services
 {
@@ -17,6 +18,7 @@ namespace IBS.Services
         Task<(IEnumerable<JobOrder> Data, int RecordsFiltered, int TotalRecords)> GetPagedJobOrdersAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
         Task<ServiceResult> AssignTugboatAsync(int jobOrderId, int tugboatId, string username, CancellationToken cancellationToken);
         Task<ServiceResult> UnassignTugboatAsync(int jobOrderId, int tugboatId, string username, CancellationToken cancellationToken);
+        Task<List<SelectListItem>> GetJobOrderSelectListAsync(CancellationToken cancellationToken);
     }
 }
 
