@@ -220,15 +220,15 @@ namespace IBS.Tests.Services
             _mockBillingRepo.Setup(u => u.ComputeVatAmount(It.IsAny<decimal>())).Returns(107.14m);
             _mockBillingRepo.Setup(u => u.IsJournalEntriesBalanced(It.IsAny<List<GeneralLedgerBook>>())).Returns(true);
 
-            _mockJobOrderService.Setup(s => s.CloseJobOrderAsync(100, It.IsAny<string>(), false, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(ServiceResult.Success());
+            _mockJobOrderService.Setup(s => s.TryAutoCloseAsync(100, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _service.PostBillingAsync(1, "user", CancellationToken.None);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            _mockJobOrderService.Verify(s => s.CloseJobOrderAsync(100, "user", false, It.IsAny<CancellationToken>()), Times.Once);
+            _mockJobOrderService.Verify(s => s.TryAutoCloseAsync(100, "user", It.IsAny<CancellationToken>()), Times.Once);
         }
         [Fact]
         public async Task CreateBillingAsync_CalculatesCorrectAmount_VatInclusive_Jan2026Data()

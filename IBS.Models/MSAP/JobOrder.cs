@@ -65,9 +65,6 @@ namespace IBS.Models.MSAP
         [Display(Name = "Required Tug Count")]
         public int RequiredTugCount { get; set; } = 1;
 
-        [Display(Name = "Is Confirmed")]
-        public bool IsConfirmed { get; set; }
-
         [Display(Name = "Preferred Tugboat")]
         public int? PreferredTugboatId { get; set; }
 

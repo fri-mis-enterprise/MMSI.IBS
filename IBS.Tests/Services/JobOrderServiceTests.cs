@@ -151,50 +151,6 @@ namespace IBS.Tests.Services
         }
 
         #endregion
-
-        #region Close Tests
-
-        [Fact]
-        public async Task CloseJobOrderAsync_Success_Flow()
-        {
-            // Arrange
-            var jobOrder = new JobOrder 
-            { 
-                JobOrderId = 1, 
-                Status = SD.JobOrderStatus.Open, 
-                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = SD.DispatchTicketStatus.Billed } } 
-            };
-            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
-
-            // Act
-            var result = await _service.CloseJobOrderAsync(1, "user", false, CancellationToken.None);
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            jobOrder.Status.Should().Be(SD.JobOrderStatus.Closed);
-        }
-
-        [Fact]
-        public async Task CloseJobOrderAsync_Fails_IfTicketsInNonTerminalState()
-        {
-            // Arrange
-            var jobOrder = new JobOrder 
-            { 
-                JobOrderId = 1, 
-                Status = SD.JobOrderStatus.Open, 
-                DispatchTickets = new List<DispatchTicket> { new DispatchTicket { Status = SD.DispatchTicketStatus.ForApproval } } 
-            };
-            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(jobOrder);
-
-            // Act
-            var result = await _service.CloseJobOrderAsync(1, "user", false, CancellationToken.None);
-
-            // Assert
-            result.IsSuccess.Should().BeFalse();
-            result.Message.Should().Contain("non-terminal states");
-        }
-
-        #endregion
     }
 }
 

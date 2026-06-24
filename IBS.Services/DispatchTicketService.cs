@@ -56,6 +56,11 @@ namespace IBS.Services
                     return ServiceResult<int>.Failure("Cannot add ticket â€” parent Job Order is cancelled or closed.");
                 }
 
+                if (viewModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == viewModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
+                {
+                    return ServiceResult<int>.Failure("Cannot add ticket — Job Order already has billed tickets.");
+                }
+
                 var model = viewModel.ToEntity();
 
                 if (imageFile is { Length: > 0 })
@@ -152,6 +157,11 @@ namespace IBS.Services
                 if (currentModel == null)
                 {
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
+                }
+
+                if (currentModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == currentModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
+                {
+                    return ServiceResult.Failure("Cannot edit ticket — Job Order already has billed tickets.");
                 }
 
                 var originalTotalHours = currentModel.TotalHours;
@@ -513,6 +523,42 @@ namespace IBS.Services
             {
                 logger.LogError(ex, "Failed to disapprove tariff.");
                 return ServiceResult.Failure($"Failed to disapprove tariff: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
+        public async Task<ServiceResult> CancelTicketAsync(int id, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
+                {
+                    return ServiceResult.Failure("Cannot cancel ticket — parent Job Order is cancelled or closed.");
+                }
+
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                if (model == null)
+                {
+                    return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
+                }
+
+                if (model.Status is "Cancelled")
+                {
+                    return ServiceResult.Failure("Ticket is already cancelled.");
+                }
+
+                model.Status = "Cancelled";
+                model.EditedBy = username;
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Cancelled dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success($"Dispatch Ticket #{model.DispatchNumber} cancelled successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to cancel ticket.");
+                return ServiceResult.Failure($"Failed to cancel ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 

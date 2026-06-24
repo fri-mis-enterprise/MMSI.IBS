@@ -48,9 +48,6 @@ namespace IBS.Models.MSAP.ViewModels
         [Range(1, 10, ErrorMessage = "Tug count must be between 1 and 10")]
         public int RequiredTugCount { get; set; } = 1;
 
-        [Display(Name = "Is Confirmed")]
-        public bool IsConfirmed { get; set; }
-
         public string? Remarks { get; set; }
 
         #region ---Select Lists---

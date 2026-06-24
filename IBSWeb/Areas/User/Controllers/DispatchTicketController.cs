@@ -468,6 +468,18 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
+        /// Cancels a Dispatch Ticket.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CancelDispatchTicket, "Access denied. You don't have permission to cancel Dispatch Tickets.", "DispatchTicket")]
+        public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
+        {
+            var result = await dispatchTicketService.CancelTicketAsync(id, User.Identity?.Name ?? "System", cancellationToken);
+            return Json(new { success = result.IsSuccess, message = result.Message });
+        }
+
+        /// <summary>
         /// Generic endpoint to change the status of a Dispatch Ticket and log the activity.
         /// </summary>
         [HttpPost]

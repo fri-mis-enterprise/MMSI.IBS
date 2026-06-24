@@ -149,6 +149,11 @@ namespace IBS.Services
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
+                if (model.JobOrderId.HasValue)
+                {
+                    await jobOrderService.TryAutoCloseAsync(model.JobOrderId.Value, username, cancellationToken);
+                }
+
                 // Notify Accounting for Posting
                 await notificationService.NotifyByAccessAsync(
                     ProcedureEnum.ViewGeneralLedger,
@@ -312,15 +317,9 @@ namespace IBS.Services
                         targetUrl: "/User/Collection/Index",
                         cancellationToken: cancellationToken);
 
-                    // --- Automatic Job Order Closure ---
                     if (model.JobOrderId.HasValue)
                     {
-                        var closeResult = await jobOrderService.CloseJobOrderAsync(model.JobOrderId.Value, username, false, cancellationToken);
-                        if (!closeResult.IsSuccess)
-                        {
-                            logger.LogWarning("Billing #{BillingNumber} posted, but associated Job Order #{JobOrderId} could not be closed: {ErrorMessage}",
-                                model.MsapBillingNumber, model.JobOrderId, closeResult.Message);
-                        }
+                        await jobOrderService.TryAutoCloseAsync(model.JobOrderId.Value, username, cancellationToken);
                     }
                 }, cancellationToken);
 
@@ -401,6 +400,11 @@ namespace IBS.Services
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MsapBillingNumber}", "Billing", currentModel.MsapBillingId, currentModel.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                if (currentModel.JobOrderId.HasValue)
+                {
+                    await jobOrderService.TryAutoCloseAsync(currentModel.JobOrderId.Value, username, cancellationToken);
+                }
 
                 return ServiceResult.Success("Entry edited successfully!");
             }

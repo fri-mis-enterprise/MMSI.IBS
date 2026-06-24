@@ -24,8 +24,6 @@ namespace IBSWeb.Areas.User.Controllers
         IHubContext<TugboatHub> hubContext,
         IHubContext<PlanningHub> planningHubContext) : Controller
     {
-        private const string _closeConfirmKey = "JobOrder_PendingCloseId";
-
         #region Index
 
         /// <summary>
@@ -118,7 +116,6 @@ namespace IBSWeb.Areas.User.Controllers
                 PlannedEndTime = viewModel.PlannedEndTime,
                 PreferredTugboatId = viewModel.PreferredTugboatId,
                 RequiredTugCount = viewModel.RequiredTugCount,
-                IsConfirmed = viewModel.IsConfirmed,
                 Remarks = viewModel.Remarks
             };
 
@@ -203,7 +200,6 @@ namespace IBSWeb.Areas.User.Controllers
                 PlannedEndTime = jobOrder.PlannedEndTime,
                 PreferredTugboatId = jobOrder.PreferredTugboatId,
                 RequiredTugCount = jobOrder.RequiredTugCount,
-                IsConfirmed = jobOrder.IsConfirmed,
                 Remarks = jobOrder.Remarks
             };
 
@@ -241,7 +237,6 @@ namespace IBSWeb.Areas.User.Controllers
                 PlannedEndTime = viewModel.PlannedEndTime,
                 PreferredTugboatId = viewModel.PreferredTugboatId,
                 RequiredTugCount = viewModel.RequiredTugCount,
-                IsConfirmed = viewModel.IsConfirmed,
                 Remarks = viewModel.Remarks
             };
 
@@ -262,53 +257,6 @@ namespace IBSWeb.Areas.User.Controllers
             ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
             await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
             return View(viewModel);
-        }
-
-        #endregion
-
-        #region Close
-
-        /// <summary>
-        /// Closes a Job Order, marking it as ready for billing.
-        /// Includes validation for dispatch ticket statuses.
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.CloseJobOrder, "Access denied. You don't have permission to close Job Orders.")]
-        public async Task<IActionResult> Close(int id, CancellationToken cancellationToken = default)
-        {
-            bool forceClose = false;
-            var pendingId = TempData[_closeConfirmKey] as int?;
-
-            if (pendingId == id)
-            {
-                forceClose = true;
-                TempData.Remove(_closeConfirmKey);
-            }
-
-            var result = await jobOrderService.CloseJobOrderAsync(id, User.Identity?.Name ?? "Unknown", forceClose, cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                if (result.Status == ServiceResultStatus.ConfirmationRequired)
-                {
-                    TempData[_closeConfirmKey] = id;
-                    TempData["warning"] = result.Message;
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-
-                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-                TempData["success"] = result.Message;
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (result.Status == ServiceResultStatus.NotFound)
-            {
-                return NotFound();
-            }
-
-            TempData["error"] = result.Message;
-            return RedirectToAction(nameof(Details), new { id });
         }
 
         #endregion

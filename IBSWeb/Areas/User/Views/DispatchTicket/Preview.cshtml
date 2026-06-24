@@ -8,6 +8,7 @@
 
 <div class="modern-layout">
     <main class="modern-container">
+            @Html.AntiForgeryToken()
         <!-- Header -->
         <div class="flex-stack">
             <div>
@@ -301,7 +302,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         ModernAlert.showLoading("Approving...");
-                        $.post('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', { id: id }, function(data) {
+                        $.post('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() }, function(data) {
                             if (data.success) {
                                 ModernAlert.success(data.message).then(() => location.reload());
                             } else {
@@ -328,7 +329,8 @@
                             status: '@SD.DispatchTicketStatus.ForApproval',
                             activity: 'Revoked approval',
                             docType: 'Dispatch Ticket',
-                            successMessage: 'Approval revoked successfully.'
+                            successMessage: 'Approval revoked successfully.',
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         }, function(data) {
                             if (data.success) {
                                 ModernAlert.success(data.message).then(() => location.reload());
@@ -357,7 +359,8 @@
                         ModernAlert.showLoading("Submitting...");
                         $.post('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
                             id: id,
-                            reason: result.value
+                            reason: result.value,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         }, function(data) {
                             if (data.success) {
                                 ModernAlert.success(data.message).then(() => location.reload());

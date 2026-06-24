@@ -23,14 +23,6 @@
                 </div>
             </div>
             <div class="flex gap-2" style="flex-wrap: wrap;">
-                @if (Model.Status == SD.JobOrderStatus.Open)
-                {
-                    <button type="button" class="modern-btn-primary" onclick="confirmClose()">
-                        <span class="material-symbols-outlined">lock</span> Close Order
-                    </button>
-                    <form asp-action="Close" asp-route-id="@Model.JobOrderId" method="post" id="closeForm" class="hidden"></form>
-                }
-
                 <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary">
                     <span class="material-symbols-outlined">edit</span> Edit Details
                 </a>
@@ -55,21 +47,6 @@
                             <div class="modern-col-6">
                                 <p class="modern-label">Date</p>
                                 <p class="modern-value-lg">@Model.Date.ToString("MMM dd, yyyy")</p>
-                            </div>
-                            <div class="modern-col-6">
-                                <p class="modern-label">Confirmation</p>
-                                @if (Model.IsConfirmed)
-                                {
-                                    <span class="modern-badge status-confirmed">
-                                        <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">check_circle</span> Confirmed
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="modern-badge" style="color: #856404; background-color: #fff3cd;">
-                                        <span class="material-symbols-outlined text-xs">schedule</span> Tentative
-                                    </span>
-                                }
                             </div>
                         </div>
                         <div style="border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
@@ -137,7 +114,7 @@
                             <span class="material-symbols-outlined text-primary">list_alt</span>
                             <h2 class="modern-headline-md">Dispatch Tickets</h2>
                         </div>
-                        @if (Model.Status == SD.JobOrderStatus.Open)
+                        @if (Model.Status == SD.JobOrderStatus.Open && !Model.DispatchTickets.Any(t => t.Status == SD.DispatchTicketStatus.Billed))
                         {
                             <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm">
                                 <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
@@ -390,19 +367,6 @@
             });
         }
 
-        function confirmClose() {
-            ModernAlert.confirm({
-                title: 'Close Job Order?',
-                text: "Closing this Job Order will prevent adding new tickets to it.",
-                icon: 'warning',
-                confirmText: 'Yes, close it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $('#closeForm').submit();
-                }
-            });
-        }
-
         function confirmCancel() {
             const htmlContent = `
                 <p style="margin-bottom:0.5rem"><strong>This will:</strong></p>
@@ -501,9 +465,26 @@
                 confirmText: 'Yes, cancel it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = '@Url.Action("Cancel", "DispatchTicket", new { area = "User" })' + '/' + id;
+                    ModernAlert.showLoading("Cancelling ticket...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("Cancel", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success(data.message).then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
                 }
-            })
+            });
         }
     </script>
 }

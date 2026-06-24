@@ -114,48 +114,5 @@ namespace IBS.Tests.Controllers
         }
 
         #endregion
-
-        #region Close Tests
-
-        [Fact]
-        public async Task Close_Post_ReturnsSuccess_RedirectsToDetails()
-        {
-            // Arrange
-            _mockJobOrderService.Setup(s => s.CloseJobOrderAsync(1, "testuser", false, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(ServiceResult.Success("Closed"));
-
-            // Act
-            var result = await _controller.Close(1, CancellationToken.None);
-
-            // Assert
-            var redirectResult = result.Should().BeOfType<RedirectToActionResult>().Subject;
-            redirectResult.ActionName.Should().Be("Details");
-            _mockTempData.VerifySet(t => t["success"] = "Closed");
-        }
-
-        [Fact]
-        public async Task Close_Post_RequiresConfirmation_SetsTempDataAndRedirects()
-        {
-            // Arrange
-            var resultWithConfirmation = new ServiceResult
-            {
-                IsSuccess = true,
-                Message = "Warning: Tickets pending approval",
-                Status = ServiceResultStatus.ConfirmationRequired
-            };
-
-            _mockJobOrderService.Setup(s => s.CloseJobOrderAsync(1, "testuser", false, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(resultWithConfirmation);
-
-            // Act
-            var result = await _controller.Close(1, CancellationToken.None);
-
-            // Assert
-            _ = result.Should().BeOfType<RedirectToActionResult>().Subject;
-            _mockTempData.VerifySet(t => t["JobOrder_PendingCloseId"] = 1);
-            _mockTempData.VerifySet(t => t["warning"] = "Warning: Tickets pending approval");
-        }
-
-        #endregion
     }
 }

@@ -144,7 +144,6 @@ namespace IBS.Services
                 jobOrder.PlannedEndTime = model.PlannedEndTime;
                 jobOrder.PreferredTugboatId = model.PreferredTugboatId;
                 jobOrder.RequiredTugCount = model.RequiredTugCount;
-                jobOrder.IsConfirmed = model.IsConfirmed;
                 jobOrder.Remarks = model.Remarks;
                 jobOrder.EditedBy = username;
                 jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -201,45 +200,26 @@ namespace IBS.Services
             }
         }
 
-        public async Task<ServiceResult> CloseJobOrderAsync(int id, string username, bool forceClose, CancellationToken cancellationToken)
+        public async Task TryAutoCloseAsync(int jobOrderId, string username, CancellationToken cancellationToken)
         {
             try
             {
-                var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(id, cancellationToken);
-                if (jobOrder == null)
-                {
-                    return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
-                }
+                var anyUnbilled = await unitOfWork.DispatchTicket.GetAsync(
+                    dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed,
+                    cancellationToken) != null;
 
-                if (jobOrder.Status == SD.JobOrderStatus.Closed)
-                {
-                    return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is already closed.");
-                }
+                if (anyUnbilled) return;
 
-                if (jobOrder.DispatchTickets.Any())
-                {
-                    var nonTerminalTickets = jobOrder.DispatchTickets
-                        .Where(dt => dt.Status != SD.DispatchTicketStatus.Billed &&
-                                     dt.Status != SD.DispatchTicketStatus.Disapproved)
-                        .ToList();
-
-                    if (nonTerminalTickets.Any())
-                    {
-                        var statuses = string.Join(", ", nonTerminalTickets.Select(t => t.Status).Distinct());
-                        return ServiceResult.Failure($"Cannot close Job Order. {nonTerminalTickets.Count} ticket(s) are in non-terminal states ({statuses}). All tickets must be Billed or Disapproved.");
-                    }
-                }
+                var jobOrder = await unitOfWork.JobOrder.GetAsync(jo => jo.JobOrderId == jobOrderId, cancellationToken);
+                if (jobOrder == null || jobOrder.Status == SD.JobOrderStatus.Closed) return;
 
                 jobOrder.Status = SD.JobOrderStatus.Closed;
-                await RecordAuditAsync($"Closed Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
+                await RecordAuditAsync($"Auto-closed Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
-
-                return ServiceResult.Success($"Job Order #{jobOrder.JobOrderNumber} has been closed.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error closing Job Order {JobOrderId}", id);
-                return ServiceResult.Failure($"Failed to close Job Order: {ExceptionHelper.GetErrorMessage(ex)}");
+                logger.LogWarning(ex, "Auto-close failed for Job Order {JobOrderId} — non-fatal", jobOrderId);
             }
         }
 
