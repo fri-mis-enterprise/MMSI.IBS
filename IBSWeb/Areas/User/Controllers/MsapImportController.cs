@@ -1,4 +1,4 @@
-using IBS.Models.MasterFile;
+﻿using IBS.Models.MasterFile;
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var maps = new ImportMaps();
                 await LoadExistingMapsAsync(maps, CancellationToken.None);
 
-                // Level 1 â€” Independent master files
+                // Level 1 Ã¢â‚¬â€ Independent master files
                 if (coaFile != null)
                 {
                     sb.AppendLine(await ImportChartOfAccountsAsync(coaFile, maps));
@@ -171,7 +171,7 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportVesselsAsync(vesselFile, maps));
                 }
 
-                // Level 2 â€” Single dependency
+                // Level 2 Ã¢â‚¬â€ Single dependency
                 if (terminalFile != null)
                 {
                     sb.AppendLine(await ImportTerminalsAsync(terminalFile, maps));
@@ -187,7 +187,7 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportPrincipalsAsync(principalFile, maps));
                 }
 
-                // Level 3 â€” Mixed dependencies
+                // Level 3 Ã¢â‚¬â€ Mixed dependencies
                 if (tariffFile != null)
                 {
                     sb.AppendLine(await ImportTariffRatesAsync(tariffFile, maps));
@@ -203,13 +203,13 @@ namespace IBSWeb.Areas.User.Controllers
                     sb.AppendLine(await ImportCollectBillAsync(collectBillFile, maps));
                 }
 
-                // Level 4 â€” Transactional
+                // Level 4 Ã¢â‚¬â€ Transactional
                 if (billingFile != null)
                 {
                     sb.AppendLine(await ImportBillingsAsync(billingFile, maps));
                 }
 
-                // Level 5 â€” Final
+                // Level 5 Ã¢â‚¬â€ Final
                 if (dispatchTicketFile != null)
                 {
                     sb.AppendLine(await ImportDispatchTicketsAsync(dispatchTicketFile, maps));
@@ -1629,7 +1629,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
                 int? billingId = info?.Id == -1 ? null : info?.Id;
 
-                // Resolve optional TugMaster (MASTERNO) — not required, so skip if not found
+                // Resolve optional TugMaster (MASTERNO) â€” not required, so skip if not found
                 int? tugMasterId = null;
                 if (masterNoRaw != "-" && !string.IsNullOrWhiteSpace(masterNoRaw))
                 {
@@ -1814,7 +1814,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             var dtl       = dt.DateLeft.Value.ToDateTime(dt.TimeLeft.Value);
             var dta       = dt.DateArrived.Value.ToDateTime(dt.TimeArrived.Value);
-            var totalHours = Math.Round((decimal)(dta - dtl).TotalHours, 4);
+            var totalHours = Math.Round((decimal)(dta - dtl).TotalHours, 2);
 
             // Customer 179 uses quarter-hour rounding rules
             if (customerId == 179)
@@ -1914,7 +1914,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var val = GetString(record, propertyName).Trim();
 
-            // Handle legacy compact format: "330" â†’ 03:30, "1915" â†’ 19:15
+            // Handle legacy compact format: "330" Ã¢â€ â€™ 03:30, "1915" Ã¢â€ â€™ 19:15
             if (int.TryParse(val, out int _) && val.Length <= 4)
             {
                 int hours = 0, minutes;
@@ -1988,3 +1988,4 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using Google.Cloud.Storage.V1;
+﻿using Google.Cloud.Storage.V1;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
@@ -207,6 +207,7 @@ public class DecimalJsonConverter : System.Text.Json.Serialization.JsonConverter
 
     public override void Write(System.Text.Json.Utf8JsonWriter writer, decimal value, System.Text.Json.JsonSerializerOptions options)
     {
-        writer.WriteNumberValue(Math.Round(value, 4, MidpointRounding.AwayFromZero));
+        writer.WriteNumberValue(Math.Round(value, 2, MidpointRounding.AwayFromZero));
     }
 }
+

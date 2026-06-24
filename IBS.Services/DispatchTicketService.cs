@@ -1,4 +1,4 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -53,12 +53,12 @@ namespace IBS.Services
             {
                 if (viewModel.JobOrderId.HasValue && !await IsJobOrderEditableAsync(viewModel.JobOrderId, cancellationToken))
                 {
-                    return ServiceResult<int>.Failure("Cannot add ticket â€” parent Job Order is cancelled or closed.");
+                    return ServiceResult<int>.Failure("Cannot add ticket Ã¢â‚¬â€ parent Job Order is cancelled or closed.");
                 }
 
                 if (viewModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == viewModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
                 {
-                    return ServiceResult<int>.Failure("Cannot add ticket — Job Order already has billed tickets.");
+                    return ServiceResult<int>.Failure("Cannot add ticket â€” Job Order already has billed tickets.");
                 }
 
                 var model = viewModel.ToEntity();
@@ -110,7 +110,7 @@ namespace IBS.Services
 
                     model.Status = SD.DispatchTicketStatus.ForTariff;
                     var duration = (decimal)(end - start).TotalHours;
-                    model.TotalHours = Math.Round(Math.Max(duration, 0.5m), 4);
+                    model.TotalHours = Math.Round(Math.Max(duration, 0.5m), 2);
                 }
                 else
                 {
@@ -150,7 +150,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(viewModel.DispatchTicketId!.Value, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot edit ticket — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot edit ticket â€” parent Job Order is cancelled or closed.");
                 }
 
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == viewModel.DispatchTicketId, cancellationToken);
@@ -161,7 +161,7 @@ namespace IBS.Services
 
                 if (currentModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == currentModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
                 {
-                    return ServiceResult.Failure("Cannot edit ticket — Job Order already has billed tickets.");
+                    return ServiceResult.Failure("Cannot edit ticket â€” Job Order already has billed tickets.");
                 }
 
                 var originalTotalHours = currentModel.TotalHours;
@@ -214,7 +214,7 @@ namespace IBS.Services
                         return ServiceResult.Failure("Date/Time Left cannot be later than Date/Time Arrived!");
                     }
 
-                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 0.5m), 4);
+                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 0.5m), 2);
                     AddChange("TotalHours", originalTotalHours, newTotalHours);
                     currentModel.TotalHours = newTotalHours;
                 }
@@ -310,7 +310,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(model.DispatchTicketId, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot set/edit tariff — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot set/edit tariff â€” parent Job Order is cancelled or closed.");
                 }
 
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
@@ -365,7 +365,7 @@ namespace IBS.Services
                 decimal bafBilling = 0;
                 decimal bafRevenue = 0;
 
-                var hours = Math.Round(currentModel.TotalHours, 4);
+                var hours = Math.Round(currentModel.TotalHours, 2);
 
                 if (chargeType == "Per hour")
                 {
@@ -397,13 +397,13 @@ namespace IBS.Services
                 currentModel.BAFRate = bafRate;
                 currentModel.DispatchDiscount = dispatchDiscountPercent;
                 currentModel.BAFDiscount = bafDiscountPercent;
-                currentModel.DispatchBillingAmount = Math.Round(dispatchBilling, 4);
-                currentModel.BAFBillingAmount = Math.Round(bafBilling, 4);
-                currentModel.DispatchNetRevenue = Math.Round(dispatchRevenue, 4);
-                currentModel.BAFNetRevenue = Math.Round(bafRevenue, 4);
+                currentModel.DispatchBillingAmount = Math.Round(dispatchBilling, 2);
+                currentModel.BAFBillingAmount = Math.Round(bafBilling, 2);
+                currentModel.DispatchNetRevenue = Math.Round(dispatchRevenue, 2);
+                currentModel.BAFNetRevenue = Math.Round(bafRevenue, 2);
                 currentModel.ApOtherTugs = model.ApOtherTugs;
-                currentModel.TotalBilling = Math.Round(dispatchBilling + bafBilling, 4);
-                currentModel.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 4);
+                currentModel.TotalBilling = Math.Round(dispatchBilling + bafBilling, 2);
+                currentModel.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 2);
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, auditMessage, documentType, currentModel.DispatchTicketId, currentModel.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
@@ -442,7 +442,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot approve tariff — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot approve tariff â€” parent Job Order is cancelled or closed.");
                 }
 
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -481,7 +481,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot disapprove tariff — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot disapprove tariff â€” parent Job Order is cancelled or closed.");
                 }
 
                 if (string.IsNullOrWhiteSpace(reason) || reason.Length < 10)
@@ -532,7 +532,7 @@ namespace IBS.Services
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot cancel ticket — parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot cancel ticket â€” parent Job Order is cancelled or closed.");
                 }
 
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -684,18 +684,19 @@ namespace IBS.Services
                     : "-",
                 remarks = ticket.Remarks ?? "No remarks",
                 status = ticket.Status,
-                totalHours = ticket.TotalHours.ToString("N4"),
-                dispatchRate = ticket.DispatchRate.ToString("N4"),
-                dispatchDiscount = ticket.DispatchDiscount.ToString("N4"),
-                dispatchBilling = ticket.DispatchBillingAmount.ToString("N4"),
-                bafRate = ticket.BAFRate.ToString("N4"),
-                bafDiscount = ticket.BAFDiscount.ToString("N4"),
-                bafBilling = ticket.BAFBillingAmount.ToString("N4"),
-                totalBilling = ticket.TotalBilling.ToString("N4"),
-                totalNetRevenue = ticket.TotalNetRevenue.ToString("N4")
+                totalHours = ticket.TotalHours.ToString("N2"),
+                dispatchRate = ticket.DispatchRate.ToString("N2"),
+                dispatchDiscount = ticket.DispatchDiscount.ToString("N2"),
+                dispatchBilling = ticket.DispatchBillingAmount.ToString("N2"),
+                bafRate = ticket.BAFRate.ToString("N2"),
+                bafDiscount = ticket.BAFDiscount.ToString("N2"),
+                bafBilling = ticket.BAFBillingAmount.ToString("N2"),
+                totalBilling = ticket.TotalBilling.ToString("N2"),
+                totalNetRevenue = ticket.TotalNetRevenue.ToString("N2")
             };
         }
     }
 }
+
 
 

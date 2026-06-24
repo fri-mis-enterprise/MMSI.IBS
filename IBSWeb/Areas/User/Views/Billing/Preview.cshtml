@@ -131,7 +131,7 @@
                 <div class="mb-2" style="font-size: 13px;">
                     <div class="flex items-center mb-1">
                         <div style="width: 160px;"><b>FOR THE SERVICE RE:</b></div>
-                        <div class="flex-grow border-bottom-dark px-2 font-bold uppercase">@Model.Vessel?.VesselName @Model.Vessel?.VesselType</div>
+                        <div class="flex-grow border-bottom-dark px-2 font-bold uppercase">@Model.Vessel?.VesselName @Model.Vessel?.VesselType — @Model.Port?.PortName</div>
                         <div style="width: 100px;" class="text-right px-2"><b>VOYAGE #:</b></div>
                         <div style="width: 120px;" class="border-bottom-dark px-2">@Model.VoyageNumber</div>
                     </div>
@@ -168,9 +168,9 @@
                                     <td>@dt.Service?.ServiceName</td>
                                     <td class="text-center">@dt.DateLeft?.ToString("MM/dd") @dt.TimeLeft</td>
                                     <td class="text-center">@dt.DateArrived?.ToString("MM/dd") @dt.TimeArrived</td>
-                                    <td class="text-center">@dt.TotalHours.ToString("N4")</td>
-                                    <td class="text-right">@dt.DispatchRate.ToString("N4")</td>
-                                    <td class="text-right">@dt.DispatchNetRevenue.ToString("N4")</td>
+                                    <td class="text-center">@dt.TotalHours.ToString("N2")</td>
+                                    <td class="text-right">@dt.DispatchRate.ToString("N2")</td>
+                                    <td class="text-right">@dt.DispatchNetRevenue.ToString("N2")</td>
                                 </tr>
                             }
                         }
@@ -187,9 +187,9 @@
                                     <td>@dt.Service?.ServiceName (BAF)</td>
                                     <td class="text-center">@dt.DateLeft?.ToString("MM/dd") @dt.TimeLeft</td>
                                     <td class="text-center">@dt.DateArrived?.ToString("MM/dd") @dt.TimeArrived</td>
-                                    <td class="text-center">@dt.TotalHours.ToString("N4")</td>
-                                    <td class="text-right">@dt.BAFRate.ToString("N4")</td>
-                                    <td class="text-right">@dt.BAFNetRevenue.ToString("N4")</td>
+                                    <td class="text-center">@dt.TotalHours.ToString("N2")</td>
+                                    <td class="text-right">@dt.BAFRate.ToString("N2")</td>
+                                    <td class="text-right">@dt.BAFNetRevenue.ToString("N2")</td>
                                 </tr>
                             }
                         }
@@ -212,74 +212,43 @@
                         </div>
                     </div>
                     <div class="flex-grow">
+                        @{
+                            var grossAmount = Model.IsVatable ? Math.Round(Model.Amount * 1.12m, 2) : Model.Amount;
+                            var vatAmount = Model.IsVatable ? Math.Round(Model.Amount * 0.12m, 2) : 0m;
+                            var netOfVat = Model.Amount;
+                            var whtRate = 0.02m; // ponytail: hardcoded 2%, legacy default
+                            var whtAmount = Model.PrintWht ? Math.Round(netOfVat * whtRate, 2) : 0m;
+                            var amountDue = netOfVat - whtAmount;
+                            var totalDue = amountDue + vatAmount;
+                        }
                         <table class="statement-table" style="font-size: 12px;">
-                            @if (Model.IsVatable)
-                            {
-                                var vatableSales = Model.Amount / 1.12m;
-                                var taxAmount = Model.Amount - vatableSales;
-                                <tr>
-                                    <td>SERVICE AMOUNT:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>BUNKER ADJUSTMENT FACTOR:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>VATABLE SALES:</td>
-                                    <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>VAT - EXEMPT SALES</td>
-                                    <td class="text-right border-bottom-dark">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td>ZERO RATED SALES</td>
-                                    <td class="text-right border-bottom-dark">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td>TOTAL SALES</td>
-                                    <td class="text-right border-bottom-dark"><b>@vatableSales.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>12% VAT</td>
-                                    <td class="text-right border-bottom-dark"><b>@taxAmount.ToString("N4")</b></td>
-                                </tr>
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td>SERVICE AMOUNT:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.DispatchAmount.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>BUNKER ADJUSTMENT FACTOR:</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.BAFAmount.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>VATABLE SALES:</td>
-                                    <td class="text-right border-bottom-dark">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td>VAT - EXEMPT SALES</td>
-                                    <td class="text-right border-bottom-dark">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td>ZERO RATED SALES</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.Amount.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>TOTAL SALES</td>
-                                    <td class="text-right border-bottom-dark"><b>@Model.Amount.ToString("N4")</b></td>
-                                </tr>
-                                <tr>
-                                    <td>12% VAT</td>
-                                    <td class="text-right border-bottom-dark">0.00</td>
-                                </tr>
-                            }
+                            <tr>
+                                <td style="padding-top: 4px;">TOTAL SALES (VAT INCLUSIVE)</td>
+                                <td class="text-right border-bottom-dark" style="padding-top: 4px;"><b>@grossAmount.ToString("N2")</b></td>
+                            </tr>
+                            <tr>
+                                <td>LESS: VAT</td>
+                                <td class="text-right border-bottom-dark"><b>@vatAmount.ToString("N2")</b></td>
+                            </tr>
+                            <tr>
+                                <td>AMOUNT: NET OF VAT</td>
+                                <td class="text-right border-bottom-dark"><b>@netOfVat.ToString("N2")</b></td>
+                            </tr>
+                            <tr>
+                                <td>LESS: WITHHOLDING TAX</td>
+                                <td class="text-right border-bottom-dark"><b>@whtAmount.ToString("N2")</b></td>
+                            </tr>
+                            <tr>
+                                <td>AMOUNT DUE</td>
+                                <td class="text-right border-bottom-dark"><b>@amountDue.ToString("N2")</b></td>
+                            </tr>
+                            <tr>
+                                <td>ADD: VAT</td>
+                                <td class="text-right border-bottom-dark"><b>@vatAmount.ToString("N2")</b></td>
+                            </tr>
                             <tr style="font-size: 14px;">
                                 <td><b>TOTAL AMOUNT DUE:</b></td>
-                                <td class="text-right" style="border-bottom: 3px double black;"><b>@Model.Amount.ToString("N4")</b></td>
+                                <td class="text-right" style="border-bottom: 3px double black;"><b>@totalDue.ToString("N2")</b></td>
                             </tr>
                         </table>
                     </div>

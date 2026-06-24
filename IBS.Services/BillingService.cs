@@ -135,7 +135,6 @@ namespace IBS.Services
                     dispatch += dt.DispatchNetRevenue;
                     baf += dt.BAFNetRevenue;
 
-                    dt.Status = SD.DispatchTicketStatus.Billed;
                     dt.Billing = model;
                     dt.BillingNumber = model.MsapBillingNumber;
                 }
@@ -148,11 +147,6 @@ namespace IBS.Services
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
-
-                if (model.JobOrderId.HasValue)
-                {
-                    await jobOrderService.TryAutoCloseAsync(model.JobOrderId.Value, username, cancellationToken);
-                }
 
                 // Notify Accounting for Posting
                 await notificationService.NotifyByAccessAsync(
@@ -185,6 +179,13 @@ namespace IBS.Services
                     if (model.Status != SD.BillingStatus.ForPosting)
                     {
                         throw new InvalidOperationException($"Billing #{model.MsapBillingNumber} is already {model.Status}.");
+                    }
+
+                    // Mark linked tickets as Billed
+                    var linkedTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MsapBillingId, cancellationToken);
+                    foreach (var dt in linkedTickets)
+                    {
+                        dt.Status = SD.DispatchTicketStatus.Billed;
                     }
 
                     var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
@@ -342,24 +343,30 @@ namespace IBS.Services
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
                 }
 
+                if (currentModel.Status != SD.BillingStatus.ForPosting)
+                {
+                    return ServiceResult.Failure("Only billings with 'For Posting' status can be edited.");
+                }
+
                 var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
                 if (customer == null)
                 {
                     return ServiceResult.Failure("Customer not found.");
                 }
 
-                currentModel.IsVatable = customer.VatType == SD.VatType_Vatable;
-
-                // Revert old tickets
-                var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MsapBillingId, cancellationToken);
-                foreach (var dt in oldTickets)
+                // Update ticket billing references only when ticket selection was submitted
+                if (model.ToBillDispatchTickets != null)
                 {
-                    dt.Status = SD.DispatchTicketStatus.ForBilling;
-                    dt.BillingId = null;
-                    dt.BillingNumber = null;
+                    var oldTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == model.MsapBillingId, cancellationToken);
+                    foreach (var dt in oldTickets)
+                    {
+                        dt.BillingId = null;
+                        dt.BillingNumber = null;
+                    }
                 }
 
                 // Update properties
+                currentModel.IsVatable = model.IsVatable;
                 currentModel.CustomerId = model.CustomerId;
                 currentModel.PrincipalId = model.PrincipalId;
                 currentModel.VoyageNumber = model.VoyageNumber;
@@ -373,9 +380,9 @@ namespace IBS.Services
                 currentModel.IsVatInclusive = model.IsVatInclusive;
                 currentModel.PrintWht = model.PrintWht;
 
-                decimal total = 0, dispatch = 0, baf = 0;
                 if (model.ToBillDispatchTickets != null)
                 {
+                    decimal total = 0, dispatch = 0, baf = 0;
                     foreach (var ticketIdStr in model.ToBillDispatchTickets)
                     {
                         var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(ticketIdStr), cancellationToken);
@@ -388,23 +395,17 @@ namespace IBS.Services
                         dispatch += dt.DispatchNetRevenue;
                         baf += dt.BAFNetRevenue;
 
-                        dt.Status = SD.DispatchTicketStatus.Billed;
                         dt.Billing = currentModel;
                         dt.BillingNumber = currentModel.MsapBillingNumber;
                     }
-                }
 
-                currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * 1.12m : total;
-                currentModel.DispatchAmount = dispatch;
-                currentModel.BAFAmount = baf;
+                    currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * 1.12m : total;
+                    currentModel.DispatchAmount = dispatch;
+                    currentModel.BAFAmount = baf;
+                }
 
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Edit billing #{currentModel.MsapBillingNumber}", "Billing", currentModel.MsapBillingId, currentModel.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
-
-                if (currentModel.JobOrderId.HasValue)
-                {
-                    await jobOrderService.TryAutoCloseAsync(currentModel.JobOrderId.Value, username, cancellationToken);
-                }
 
                 return ServiceResult.Success("Entry edited successfully!");
             }
@@ -425,18 +426,28 @@ namespace IBS.Services
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
                 }
 
-                // Revert all linked dispatch tickets back to "For Billing" so they can be re-billed.
                 var linkedTickets = await unitOfWork.DispatchTicket
                     .GetAllAsync(dt => dt.BillingId == id, cancellationToken);
                 foreach (var dt in linkedTickets)
                 {
-                    dt.Status = SD.DispatchTicketStatus.ForBilling;
                     dt.BillingId = null;
                     dt.BillingNumber = null;
                 }
 
                 await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
+
+                // Re-open the Job Order if it was auto-closed
+                var jobOrderId = linkedTickets.FirstOrDefault()?.JobOrderId;
+                if (jobOrderId.HasValue)
+                {
+                    var jobOrder = await unitOfWork.JobOrder.GetAsync(jo => jo.JobOrderId == jobOrderId.Value, cancellationToken);
+                    if (jobOrder?.Status == SD.JobOrderStatus.Closed)
+                    {
+                        jobOrder.Status = SD.JobOrderStatus.Open;
+                        await unitOfWork.SaveAsync(cancellationToken);
+                    }
+                }
 
                 return ServiceResult.Success("Billing deleted successfully!");
             }

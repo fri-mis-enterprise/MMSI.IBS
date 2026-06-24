@@ -1,4 +1,4 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -57,7 +57,7 @@ namespace IBS.Services
                     decimal totalAllocated = viewModel.BillingPayments?.Sum(p => p.AmountToPay) ?? 0;
                     if (totalAllocated != viewModel.Amount && !model.IsUndocumented)
                     {
-                        throw new InvalidOperationException($"Collection amount (₱{viewModel.Amount:N2}) does not match the total allocated billing payments (₱{totalAllocated:N2}).");
+                        throw new InvalidOperationException($"Collection amount (â‚±{viewModel.Amount:N2}) does not match the total allocated billing payments (â‚±{totalAllocated:N2}).");
                     }
 
                     await _unitOfWork.Collection.AddAsync(model, cancellationToken);
@@ -137,7 +137,7 @@ namespace IBS.Services
                     decimal totalAllocated = viewModel.BillingPayments?.Sum(p => p.AmountToPay) ?? 0;
                     if (totalAllocated != viewModel.Amount && !currentModel.IsUndocumented)
                     {
-                        throw new InvalidOperationException($"Collection amount (₱{viewModel.Amount:N2}) does not match the total allocated billing payments (₱{totalAllocated:N2}).");
+                        throw new InvalidOperationException($"Collection amount (â‚±{viewModel.Amount:N2}) does not match the total allocated billing payments (â‚±{totalAllocated:N2}).");
                     }
 
                     if (viewModel.BillingPayments != null)
@@ -280,9 +280,9 @@ namespace IBS.Services
                             date = b.Date,
                             amount = b.Amount,
                             balance = b.Balance,
-                            ewt = Math.Round(ewt, 4),
-                            wvat = Math.Round(wvat, 4),
-                            net = Math.Round(b.Amount - ewt - wvat, 4),
+                            ewt = Math.Round(ewt, 2),
+                            wvat = Math.Round(wvat, 2),
+                            net = Math.Round(b.Amount - ewt - wvat, 2),
                             isVatable = b.IsVatable,
                             isSelected = collectionId.HasValue && b.CollectionId == collectionId.Value
                         };
@@ -424,3 +424,4 @@ namespace IBS.Services
         }
     }
 }
+

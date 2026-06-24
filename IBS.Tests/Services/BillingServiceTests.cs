@@ -1,4 +1,4 @@
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MSAP;
@@ -295,7 +295,7 @@ namespace IBS.Tests.Services
 
             // Assert: Total should be Net * 1.12
             // 213,928.57 * 1.12 = 239,599.9984
-            Math.Round(billing.Amount, 4).Should().Be(239599.9984m);
+            Math.Round(billing.Amount, 2).Should().Be(239599.9984m);
         }
 
         [Fact]
@@ -337,5 +337,6 @@ namespace IBS.Tests.Services
         }
     }
 }
+
 
 
