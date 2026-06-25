@@ -240,17 +240,25 @@
                     </div>
                 </div>
 
-                <div class="modern-card mt-4">
-                    <div class="modern-card-header-info">
-                        <span class="material-symbols-outlined">history</span>
-                        <h2 class="modern-headline-md">Workflow Timeline</h2>
-                    </div>
-                    <div class="modern-card-body" id="timelineContainer">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                <div class="modern-card mt-4" id="timelineAccordion">
+                    <button type="button"
+                            id="timelineToggle"
+                            class="modern-card-header-info w-100"
+                            style="border:none; cursor:pointer; width:100%; text-align:left; display:flex; align-items:center; justify-content:space-between; padding: 1rem 1.25rem;"
+                            aria-expanded="false"
+                            aria-controls="timelineBody">
+                        <span class="flex items-center gap-2">
+                            <span class="material-symbols-outlined">history</span>
+                            <h2 class="modern-headline-md" style="margin:0">Workflow Timeline</h2>
+                        </span>
+                        <span class="material-symbols-outlined" id="timelineChevron" style="transition: transform 0.3s ease;">expand_more</span>
+                    </button>
+                    <div id="timelineBody"
+                         style="overflow:hidden; max-height:0; transition: max-height 0.4s ease, opacity 0.3s ease; opacity:0;">
+                        <div class="modern-card-body" id="timelineContainer">
+                            <div class="text-center py-4">
+                                <p class="modern-label">Click above to load the workflow timeline.</p>
                             </div>
-                            <p class="modern-label mt-2">Fetching timeline...</p>
                         </div>
                     </div>
                 </div>
@@ -355,8 +363,32 @@
                 ModernAlert.warning(PageConfig.messages.warning);
             }
 
-            // Load Timeline
-            loadTimeline();
+            // Accordion: lazy-load timeline on first expand
+            let timelineLoaded = false;
+            $('#timelineToggle').on('click', function () {
+                const $body = $('#timelineBody');
+                const $chevron = $('#timelineChevron');
+                const isExpanded = $(this).attr('aria-expanded') === 'true';
+
+                if (isExpanded) {
+                    // Collapse
+                    $body.css({ 'max-height': '0', 'opacity': '0' });
+                    $chevron.css('transform', 'rotate(0deg)');
+                    $(this).attr('aria-expanded', 'false');
+                } else {
+                    // Expand
+                    $(this).attr('aria-expanded', 'true');
+                    $chevron.css('transform', 'rotate(180deg)');
+
+                    if (!timelineLoaded) {
+                        timelineLoaded = true;
+                        loadTimeline();
+                    }
+
+                    // Set to a large enough max-height so content fully shows
+                    $body.css({ 'max-height': '5000px', 'opacity': '1' });
+                }
+            });
         });
 
         function loadTimeline() {
