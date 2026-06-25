@@ -602,6 +602,11 @@ table.dataTable tbody tr:hover {
     background-color: var(--surface-container-low);
 }
 
+.modern-select-option.highlighted {
+    background-color: var(--surface-container-high);
+    font-weight: 600;
+}
+
 .modern-select-option.selected {
     background-color: var(--surface-container);
     color: var(--primary);

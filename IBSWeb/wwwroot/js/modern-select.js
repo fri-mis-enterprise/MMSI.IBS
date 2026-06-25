@@ -72,9 +72,32 @@ const ModernSelect = {
         };
 
         // Event Listeners
+        let focusTime = 0;
+
+        $trigger.on('focus', function() {
+            if (!$dropdown.hasClass('show')) {
+                focusTime = Date.now();
+                $('.modern-select-dropdown').not($dropdown).removeClass('show');
+                $('.modern-select-trigger').not($trigger).removeClass('active');
+                $trigger.addClass('active');
+                $dropdown.addClass('show');
+                positionDropdown();
+                
+                if (isSearchable) {
+                    setTimeout(() => $dropdown.find('input').val('').trigger('input').focus(), 10);
+                }
+            }
+        });
+
         $trigger.on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+
+            // If focus event just fired (e.g. within 300ms), don't immediately toggle closed
+            if (Date.now() - focusTime < 300) {
+                return;
+            }
+
             const isOpen = $dropdown.hasClass('show');
             
             $('.modern-select-dropdown').not($dropdown).removeClass('show');
@@ -94,11 +117,9 @@ const ModernSelect = {
             }
         });
         
-        $dropdown.on('click', '.modern-select-option', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const val = $(this).data('value');
-            const text = $(this).text();
+        const selectOption = ($opt) => {
+            const val = $opt.data('value');
+            const text = $opt.text();
             
             $select.val(val).trigger('change');
             $trigger.find('.selected-text').text(text);
@@ -106,11 +127,19 @@ const ModernSelect = {
             $trigger.removeClass('active');
             
             $optionsContainer.find('.modern-select-option').removeClass('selected');
-            $(this).addClass('selected');
+            $opt.addClass('selected');
+        };
+
+        $dropdown.on('click', '.modern-select-option', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            selectOption($(this));
         });
         
         if (isSearchable) {
-            $dropdown.find('input').on('input', function() {
+            const $input = $dropdown.find('input');
+
+            $input.on('input', function() {
                 const term = $(this).val().toLowerCase();
                 let hasResults = false;
                 
@@ -125,6 +154,73 @@ const ModernSelect = {
                 });
                 
                 $noResults.toggle(!hasResults);
+
+                // Clear any manual keyboard highlight when user types
+                $optionsContainer.find('.modern-select-option.highlighted').removeClass('highlighted');
+
+                // Auto-select if there is exactly 1 matching option and term is at least 2 characters long
+                if (term.length >= 2) {
+                    const $visibleOptions = $optionsContainer.find('.modern-select-option:not(.hidden)');
+                    if ($visibleOptions.length === 1) {
+                        selectOption($visibleOptions.first());
+                    }
+                }
+            });
+
+            // Keyboard navigation (Tab to highlight, Space/Enter to select)
+            $input.on('keydown', function(e) {
+                const $visibleOptions = $optionsContainer.find('.modern-select-option:not(.hidden)');
+                
+                if (e.key === 'Tab') {
+                    if ($visibleOptions.length > 0) {
+                        e.preventDefault(); // Stop focus from leaving the search box
+                        
+                        const $currentHighlighted = $optionsContainer.find('.modern-select-option.highlighted');
+                        let nextIndex = 0;
+                        
+                        if ($currentHighlighted.length) {
+                            const currentIndex = $visibleOptions.index($currentHighlighted);
+                            if (e.shiftKey) {
+                                // Cycle backwards
+                                nextIndex = (currentIndex - 1 + $visibleOptions.length) % $visibleOptions.length;
+                            } else {
+                                // Cycle forwards
+                                nextIndex = (currentIndex + 1) % $visibleOptions.length;
+                            }
+                            $currentHighlighted.removeClass('highlighted');
+                        } else {
+                            // If nothing is highlighted yet, Tab starts at 0, Shift+Tab starts at the end
+                            nextIndex = e.shiftKey ? $visibleOptions.length - 1 : 0;
+                        }
+                        
+                        const $nextOpt = $visibleOptions.eq(nextIndex);
+                        $nextOpt.addClass('highlighted');
+                        
+                        // Scroll option into view if needed
+                        const container = $optionsContainer[0];
+                        const opt = $nextOpt[0];
+                        if (opt.offsetTop < container.scrollTop) {
+                            container.scrollTop = opt.offsetTop;
+                        } else if (opt.offsetTop + opt.offsetHeight > container.scrollTop + container.clientHeight) {
+                            container.scrollTop = opt.offsetTop + opt.offsetHeight - container.clientHeight;
+                        }
+                    }
+                } else if (e.key === ' ' || e.key === 'Enter') {
+                    const $highlighted = $optionsContainer.find('.modern-select-option.highlighted');
+                    if ($highlighted.length) {
+                        e.preventDefault(); // Prevent space character or form submit
+                        selectOption($highlighted);
+                    } else if (e.key === 'Enter' && $visibleOptions.length === 1) {
+                        // Enter also selects the single option if not explicitly highlighted
+                        e.preventDefault();
+                        selectOption($visibleOptions.first());
+                    }
+                }
+            });
+
+            // Clear highlighted class when mouse moves to prevent dual highlight
+            $optionsContainer.on('mouseenter', '.modern-select-option', function() {
+                $optionsContainer.find('.modern-select-option.highlighted').removeClass('highlighted');
             });
         }
         
