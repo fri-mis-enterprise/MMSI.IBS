@@ -395,6 +395,7 @@ namespace IBS.Services
                         dispatch += dt.DispatchNetRevenue;
                         baf += dt.BAFNetRevenue;
 
+                        dt.BillingId = currentModel.MsapBillingId;
                         dt.Billing = currentModel;
                         dt.BillingNumber = currentModel.MsapBillingNumber;
                     }
@@ -606,9 +607,13 @@ namespace IBS.Services
             var customers = await unitOfWork.Customer.SearchCustomersAsync(term ?? string.Empty, 10, cancellationToken);
             var ids = customers.Select(c => c.CustomerId).ToList();
 
-            // Note: If we really want to remove dbContext here, we need IPrincipalRepository.DoPrincipalsExistForCustomersAsync
-            // But let's assume we can just check it via GetAllAsync if needed, or add a method.
-            // For now, I'll use a simpler check or skip the hasPrincipal for the demo of testability.
+            // ponytail: Check which customers have principals (max 10 customers, so N queries is fine)
+            var principalLookup = new HashSet<int>();
+            foreach (var id in ids)
+            {
+                var principals = await unitOfWork.Principal.GetAllAsync(p => p.CustomerId == id, cancellationToken);
+                if (principals.Any()) principalLookup.Add(id);
+            }
 
             return customers.Select(c => (object)new
             {
@@ -619,7 +624,10 @@ namespace IBS.Services
                 address = c.CustomerAddress,
                 tinNo = c.CustomerTin,
                 terms = c.CustomerTerms,
-                businessStyle = c.BusinessStyle ?? "-"
+                businessStyle = c.BusinessStyle ?? "-",
+                withholdingTax = c.WithHoldingTax,
+                withholdingVat = c.WithHoldingVat,
+                hasPrincipal = principalLookup.Contains(c.CustomerId)
             }).ToList();
         }
 

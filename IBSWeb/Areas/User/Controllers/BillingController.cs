@@ -101,6 +101,12 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
+            if (model.Status != SD.BillingStatus.ForPosting)
+            {
+                TempData["error"] = "Only billings with 'For Posting' status can be edited.";
+                return RedirectToAction(nameof(Index));
+            }
+
             model = await billingService.PopulateBillingSelectListsAsync(model, cancellationToken);
             model.UnbilledDispatchTickets = await billingService.GetEditTicketsSelectListAsync(model.CustomerId, model.MsapBillingId, cancellationToken);
 
@@ -112,6 +118,9 @@ namespace IBSWeb.Areas.User.Controllers
             model.ToBillDispatchTickets = await unitOfWork.Billing
                 .GetToBillDispatchTicketListAsync(model.MsapBillingId, cancellationToken);
 
+            model.PaidDispatchTickets = await unitOfWork.Billing
+                .GetPaidDispatchTicketsAsync(model.MsapBillingId, cancellationToken);
+
             ViewData["HasPrincipal"] = model.CustomerPrincipal is { Count: > 0 };
 
             ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
@@ -120,6 +129,7 @@ namespace IBSWeb.Areas.User.Controllers
             ViewData["CustomerBusinessStyle"] = model.Customer.BusinessStyle ?? "-";
             ViewData["CustomerVatType"] = model.Customer.VatType;
             ViewData["CustomerType"] = model.Customer.Type;
+            ViewData["CustomerWht"] = model.Customer.WithHoldingTax;
 
             return View(model);
         }

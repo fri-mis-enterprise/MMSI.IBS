@@ -1,4 +1,4 @@
-﻿using IBS.Models.MasterFile;
+using IBS.Models.MasterFile;
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
@@ -124,7 +124,7 @@ namespace IBSWeb.Areas.User.Controllers
                 bankAccountFile   = ResolveFile(bankAccountFile, bulkFiles, "bank", "bankacct.csv");
                 collectionFile    = ResolveFile(collectionFile, bulkFiles, "collection", "collection.csv");
                 collectBillFile   = ResolveFile(collectBillFile, bulkFiles, "collect_bill", "collect_bill.csv");
-                coaFile           = ResolveFile(coaFile, bulkFiles, "chart_of_accounts", "filpride_chart_of_accounts.csv");
+                coaFile           = ResolveFile(coaFile, bulkFiles, "chart_of_accounts", "msap_chart_of_accounts.csv");
 
                 // Preload maps from existing DB records
                 var maps = new ImportMaps();

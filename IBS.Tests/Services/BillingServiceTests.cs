@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MSAP;
@@ -213,7 +213,7 @@ namespace IBS.Tests.Services
                 {
                     new() { AccountNumber = "101020100", AccountId = 1, AccountName = "AR Trade" },
                     new() { AccountNumber = "401020100", AccountId = 2, AccountName = "Service Revenue" },
-                    new() { AccountNumber = "201010101", AccountId = 3, AccountName = "Output VAT" }
+                    new() { AccountNumber = SD.MsapAccounts.OutputVat, AccountId = 3, AccountName = "Output VAT" }
                 });
 
             _mockBillingRepo.Setup(u => u.ComputeNetOfVat(It.IsAny<decimal>())).Returns(892.86m);

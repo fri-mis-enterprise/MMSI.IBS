@@ -85,30 +85,20 @@
                                         <input type="checkbox" id="UsePrincipalCheckbox" class="form-check-input" style="width: 18px; height: 18px; cursor: pointer;">
                                         <label class="modern-label mb-0 cursor-pointer" for="UsePrincipalCheckbox">BILL TO PRINCIPAL</label>
                                     </div>
-                                </div>
 
-                                <!-- Principal Selection -->
-                                <div id="PrincipalSection" class="relative border-t border-outline-variant pt-3 mt-3" style="display: none;">
-                                    <label class="modern-label">Principal Search</label>
-                                    <div class="relative">
-                                        <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">corporate_fare</span>
-                                        <input type="text" id="PrincipalSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search principals..." autocomplete="off">
-                                    </div>
-                                    <input type="hidden" asp-for="PrincipalId" id="PrincipalId" />
-                                    <div id="PrincipalSearchResults" class="modern-dropdown-menu w-full" style="max-height: 200px; overflow-y: auto;"></div>
-
-                                    <div id="BilledToContainer" class="mt-3" style="display: none;">
-                                        <label class="modern-label">Target Account</label>
-                                        <div class="radio-group">
-                                            <input type="radio" class="radio-tab-input" asp-for="BilledTo" value="LOCAL" id="billLocal" checked>
-                                            <label class="radio-tab-label" for="billLocal">LOCAL</label>
-
-                                            <input type="radio" class="radio-tab-input" asp-for="BilledTo" value="PRINCIPAL" id="billPrincipal">
-                                            <label class="radio-tab-label" for="billPrincipal">PRINCIPAL</label>
+                                    <!-- Principal Selection -->
+                                    <div id="PrincipalSection" class="relative border-t border-outline-variant pt-2 mt-2" style="display: none;">
+                                        <label class="modern-label mt-2">Principal Search</label>
+                                        <div class="relative">
+                                            <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">corporate_fare</span>
+                                            <input type="text" id="PrincipalSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search principals..." autocomplete="off">
                                         </div>
+                                        <input type="hidden" asp-for="PrincipalId" id="PrincipalId" />
+                                        <input type="hidden" asp-for="BilledTo" id="BilledTo" value="LOCAL" />
+                                        <div id="PrincipalSearchResults" class="modern-dropdown-menu w-full" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></div>
                                     </div>
                                 </div>
-                                </div>
+                            </div>
 
                                 <!-- Customer Metadata -->
                                 <div id="CustomerDetailsSection" class="border-t border-outline-variant pt-3" style="gap: 1rem; display: none; flex-direction: column;">
@@ -173,7 +163,7 @@
                                     </label>
                                 </div>
                                 <div class="modern-col-4">
-                                    <label class="modern-label" for="printWhtToggle">Print WHT</label>
+                                    <label class="modern-label" for="printWhtToggle">WHT</label>
                                     <label class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;">
                                         <input asp-for="PrintWht" type="checkbox" class="form-check-input" id="printWhtToggle">
                                         <span class="text-xs font-bold opacity-70">WHT</span>
@@ -326,8 +316,30 @@
     <script>
         $(document).ready(function () {
             let currentCustomerId = null;
+            let currentCustomer = null;
+            let currentPrincipal = null;
             setupEventListeners();
             handleCheckboxChange();
+            
+            // ponytail: Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
+            function lockToggle(toggleId, locked) {
+                const $toggle = $(toggleId);
+                const $container = $toggle.closest('label');
+                if (locked) {
+                    $container.css({
+                        'pointer-events': 'none',
+                        'opacity': '0.6'
+                    });
+                } else {
+                    $container.css({
+                        'pointer-events': 'auto',
+                        'opacity': '1'
+                    });
+                }
+            }
+
+            // ponytail: Initialize VAT inclusive checkbox state
+            lockToggle("#isVatInclusiveToggle", !$("#isVatableToggle").is(":checked"));
 
             function setupEventListeners() {
                 $("#isUndocumentedCheckbox").on("change", handleCheckboxChange);
@@ -337,7 +349,18 @@
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PortSelect").on("change", handlePortChange);
                 $("#legacyToggle").on("change", handleLegacyToggleChange);
-                $("#isVatableToggle, #isVatInclusiveToggle, #printWhtToggle").on("change", updateTotals);
+                $("#isVatableToggle").on("change", function () {
+                    // ponytail: Enable/disable VAT inclusive based on VAT status using lockToggle
+                    const isVatable = $(this).is(":checked");
+                    if (!isVatable) {
+                        $("#isVatInclusiveToggle").prop("checked", false);
+                        lockToggle("#isVatInclusiveToggle", true);
+                    } else {
+                        lockToggle("#isVatInclusiveToggle", false);
+                    }
+                    updateTotals();
+                });
+                $("#isVatInclusiveToggle, #printWhtToggle").on("change", updateTotals);
                 $("#submitButton").on("click", areYouSureToBill);
                 $(window).on('scroll resize', () => $('.modern-dropdown-menu.show').removeClass('show'));
             }
@@ -416,14 +439,37 @@
                 const isChecked = $("#UsePrincipalCheckbox").is(":checked");
                 if (isChecked) {
                     $("#PrincipalSection").show();
-                    $("#BilledToContainer").show();
+                    $("#BilledTo").val("PRINCIPAL");
+                    
+                    if (currentPrincipal) {
+                        $("#CustomerAddress").text(currentPrincipal.address || '-');
+                        $("#CustomerTIN").text(currentPrincipal.tinNo || '-');
+                        $("#CustomerTerms").text(currentPrincipal.terms || '-');
+                        $("#PrincipalSearch").val(currentPrincipal.name);
+                        $("#PrincipalId").val(currentPrincipal.value);
+                    } else {
+                        $("#CustomerAddress").text('-');
+                        $("#CustomerTIN").text('-');
+                        $("#CustomerTerms").text('-');
+                        $("#PrincipalSearch").val('');
+                        $("#PrincipalId").val('');
+                    }
                     setTimeout(() => $("#PrincipalSearch").focus(), 100);
                 } else {
                     $("#PrincipalSection").hide();
                     $("#PrincipalSearch").val("");
                     $("#PrincipalId").val("");
-                    $("#BilledToContainer").hide();
-                    $("#billLocal").prop("checked", true);
+                    $("#BilledTo").val("LOCAL");
+
+                    if (currentCustomer) {
+                        $("#CustomerAddress").text(currentCustomer.address || '-');
+                        $("#CustomerTIN").text(currentCustomer.tinNo || '-');
+                        $("#CustomerTerms").text(currentCustomer.terms || '-');
+                    } else {
+                        $("#CustomerAddress").text('-');
+                        $("#CustomerTIN").text('-');
+                        $("#CustomerTerms").text('-');
+                    }
                 }
             }
 
@@ -481,6 +527,8 @@
             });
 
             function handleCustomerSelected(customer) {
+                currentCustomer = customer;
+                currentPrincipal = null;
                 $("#UsePrincipalCheckbox").prop("checked", false);
                 $("#PrincipalSection, #BilledToContainer").hide();
                 $("#PrincipalSearch").val("");
@@ -495,21 +543,26 @@
 
                 const isVatable = customer.vatType === "Vatable";
                 $("#isVatableToggle").prop("checked", isVatable);
+                
+                // ponytail: Default VAT status, inclusive, and WHT based on customer profile but keep them open for toggling
+                lockToggle("#isVatableToggle", false);
+                if (!isVatable) {
+                    $("#isVatInclusiveToggle").prop("checked", false);
+                    lockToggle("#isVatInclusiveToggle", true);
+                } else {
+                    lockToggle("#isVatInclusiveToggle", false);
+                }
 
+                $("#printWhtToggle").prop("checked", customer.withholdingTax);
+                lockToggle("#printWhtToggle", false);
+
+                // ponytail: Show principal container but never auto-check; user decides
                 if (customer.hasPrincipal) {
                     $("#PrincipalMasterContainer").show();
-                    if (!isVatable) {
-                        $("#UsePrincipalCheckbox").prop("checked", true).trigger('change');
-                        $("#billPrincipal").prop("checked", true);
-                    } else {
-                        $("#UsePrincipalCheckbox").prop("checked", false).trigger('change');
-                        $("#billLocal").prop("checked", true);
-                    }
                 } else {
                     $("#PrincipalMasterContainer").hide();
-                    $("#UsePrincipalCheckbox").prop("checked", false).trigger('change');
-                    $("#billLocal").prop("checked", true);
                 }
+                $("#UsePrincipalCheckbox").prop("checked", false).trigger('change');
 
                 $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
                 handleCheckboxChange();
@@ -659,6 +712,7 @@
 
                 const isVatable = $("#isVatableToggle").is(":checked");
                 const isInclusive = $("#isVatInclusiveToggle").is(":checked");
+                const isWht = $("#printWhtToggle").is(":checked");
 
                 let subTotal = dispatch + baf;
                 let grandTotal = subTotal;
@@ -666,6 +720,7 @@
                 if (isVatable && !isInclusive) {
                     grandTotal = subTotal * 1.12;
                 }
+
 
                 const count = $ticketsTableBody.find('.ticket-checkbox:checked').length;
                 $('#DispatchAmountTotal').text(formatNumber(dispatch));
@@ -693,7 +748,7 @@
                             $principalResults.append(
                                 $('<a href="#" class="modern-dropdown-item">')
                                     .data('principal', item)
-                                    .html(`<span>${item.name}</span>`)
+                                    .html(`<span class="material-symbols-outlined">corporate_fare</span> ${item.name}`)
                             );
                         });
                     } else {
@@ -720,6 +775,7 @@
             $principalResults.on('click', '.modern-dropdown-item', function (e) {
                 e.preventDefault();
                 const principal = $(this).data('principal');
+                currentPrincipal = principal;
                 $principalSearch.val(principal.name);
                 $principalId.val(principal.value);
                 $principalResults.empty().removeClass('show');

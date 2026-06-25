@@ -129,7 +129,7 @@ namespace IBS.Utility.Constants
             public const string ArTradeCwv = "101020300";
             public const string Cwt = "101060400";
             public const string Cwv = "101060600";
-            public const string OutputVat = "201010101";
+            public const string OutputVat = "201030100";
             public const string MaritimeServiceRevenue = "401020100";
         }
 
