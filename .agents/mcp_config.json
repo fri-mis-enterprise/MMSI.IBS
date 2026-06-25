@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "mmsi-ibs-assistant": {
+      "command": "node",
+      "args": [
+        "C:/Users/MIS2/Desktop/MMSI-IBS/mcp-server/build/index.js"
+      ],
+      "env": {
+        "PROJECT_ROOT": "C:/Users/MIS2/Desktop/MMSI-IBS"
+      }
+    }
+  }
+}
