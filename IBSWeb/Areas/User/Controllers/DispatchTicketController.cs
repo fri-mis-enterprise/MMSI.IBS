@@ -502,6 +502,46 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(new { success = true, message = successMessage });
         }
 
+        /// <summary>
+        /// Batch approves multiple tariffs at once.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
+        public async Task<IActionResult> BatchApproveTariff([FromBody] List<int> ids, CancellationToken cancellationToken)
+        {
+            if (ids == null || ids.Count == 0)
+            {
+                return Json(new { success = false, message = "No tickets selected." });
+            }
+
+            var result = await dispatchTicketService.BatchApproveTariffAsync(ids, User.Identity?.Name ?? "System", cancellationToken);
+            return Json(new { success = result.IsSuccess, message = result.Message });
+        }
+
+        /// <summary>
+        /// Batch sets tariff rates for multiple tickets at once.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
+        public async Task<IActionResult> BatchSetTariff(
+            [FromBody] BatchTariffRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (request?.Ids == null || request.Ids.Count == 0)
+            {
+                return Json(new { success = false, message = "No tickets selected." });
+            }
+
+            var result = await dispatchTicketService.BatchSetTariffAsync(
+                request.Ids, request.DispatchRate, request.BafRate,
+                request.ChargeType, request.ChargeType2,
+                User.Identity?.Name ?? "System", cancellationToken);
+
+            return Json(new { success = result.IsSuccess, message = result.Message });
+        }
+
         #endregion
 
         #region AJAX Endpoints
@@ -633,4 +673,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         #endregion
     }
+
+    public class BatchTariffRequest
+    {
+        public List<int> Ids { get; set; } = [];
+        public decimal DispatchRate { get; set; }
+        public decimal BafRate { get; set; }
+        public string ChargeType { get; set; } = "Per hour";
+        public string ChargeType2 { get; set; } = "Per hour";
+    }
+
 }

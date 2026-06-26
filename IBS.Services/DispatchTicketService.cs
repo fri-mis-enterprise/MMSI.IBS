@@ -526,6 +526,143 @@ namespace IBS.Services
             }
         }
 
+        #region Batch Operations
+
+        public async Task<ServiceResult> BatchApproveTariffAsync(List<int> ids, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var tickets = (await unitOfWork.DispatchTicket.GetAllAsync(
+                    dt => ids.Contains(dt.DispatchTicketId), cancellationToken)).ToList();
+
+                var toApprove = tickets.Where(t => t.Status == SD.DispatchTicketStatus.ForApproval).ToList();
+                if (toApprove.Count == 0)
+                {
+                    return ServiceResult.Failure("No tickets in 'For Approval' status found among the selected.");
+                }
+
+                await unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    foreach (var ticket in toApprove)
+                    {
+                        ticket.Status = SD.DispatchTicketStatus.ForBilling;
+                        ticket.EditedBy = username;
+                        ticket.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                        await unitOfWork.AuditTrail.AddAsync(
+                            new AuditTrail(username, $"Batch approved tariff for dispatch ticket #{ticket.DispatchNumber}", "Dispatch Ticket", ticket.DispatchTicketId, ticket.DispatchNumber),
+                            cancellationToken);
+                    }
+
+                    foreach (var skipped in tickets.Where(t => t.Status != SD.DispatchTicketStatus.ForApproval))
+                    {
+                        await unitOfWork.AuditTrail.AddAsync(
+                            new AuditTrail(username, $"Batch approve skipped for #{skipped.DispatchNumber} — current status is '{skipped.Status}'", "Dispatch Ticket", skipped.DispatchTicketId, skipped.DispatchNumber),
+                            cancellationToken);
+                    }
+
+                    await unitOfWork.SaveAsync(cancellationToken);
+                }, cancellationToken);
+
+                var vessels = toApprove.Select(t => t.Vessel?.VesselName).Distinct();
+                await notificationService.NotifyByAccessAsync(
+                    ProcedureEnum.CreateBilling,
+                    $"<b>{toApprove.Count} tariff(s)</b> have been batch-approved for <b>{string.Join(", ", vessels)}</b>. Ready for Billing.",
+                    targetUrl: "/User/Billing/Index",
+                    cancellationToken: cancellationToken);
+
+                var skippedCount = tickets.Count - toApprove.Count;
+                var msg = $"{toApprove.Count} tariff(s) approved successfully.";
+                if (skippedCount > 0) msg += $" {skippedCount} ticket(s) skipped (not in 'For Approval' status).";
+
+                return ServiceResult.Success(msg);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to batch approve tariffs.");
+                return ServiceResult.Failure($"Failed to batch approve tariffs: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
+        public async Task<ServiceResult> BatchSetTariffAsync(List<int> ids, decimal dispatchRate, decimal bafRate, string chargeType, string chargeType2, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var tickets = (await unitOfWork.DispatchTicket.GetAllAsync(
+                    dt => ids.Contains(dt.DispatchTicketId), cancellationToken)).ToList();
+
+                var toSet = tickets.Where(t => t.Status is SD.DispatchTicketStatus.ForTariff or SD.DispatchTicketStatus.Pending).ToList();
+                if (toSet.Count == 0)
+                {
+                    return ServiceResult.Failure("No tickets eligible for tariff setting (status must be 'For Tariff' or 'Pending').");
+                }
+
+                var now = DateTimeHelper.GetCurrentPhilippineTime();
+
+                await unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    foreach (var ticket in toSet)
+                    {
+                        var hours = Math.Round(ticket.TotalHours, 2);
+
+                        decimal dispatchBilling = chargeType == "Per hour" ? dispatchRate * hours : dispatchRate;
+                        decimal dispatchDiscountAmount = dispatchRate * (0 / 100m);
+                        decimal dispatchRevenue = chargeType == "Per hour"
+                            ? (dispatchRate - dispatchDiscountAmount) * hours
+                            : dispatchRate - dispatchDiscountAmount;
+
+                        decimal bafBilling = chargeType2 == "Per hour" ? bafRate * hours : bafRate;
+                        decimal bafDiscountAmount = bafRate * (0 / 100m);
+                        decimal bafRevenue = chargeType2 == "Per hour"
+                            ? (bafRate - bafDiscountAmount) * hours
+                            : bafRate - bafDiscountAmount;
+
+                        ticket.Status = SD.DispatchTicketStatus.ForApproval;
+                        ticket.DispatchChargeType = chargeType;
+                        ticket.BAFChargeType = chargeType2;
+                        ticket.DispatchRate = dispatchRate;
+                        ticket.BAFRate = bafRate;
+                        ticket.DispatchDiscount = 0;
+                        ticket.BAFDiscount = 0;
+                        ticket.DispatchBillingAmount = Math.Round(dispatchBilling, 2);
+                        ticket.BAFBillingAmount = Math.Round(bafBilling, 2);
+                        ticket.DispatchNetRevenue = Math.Round(dispatchRevenue, 2);
+                        ticket.BAFNetRevenue = Math.Round(bafRevenue, 2);
+                        ticket.TotalBilling = Math.Round(dispatchBilling + bafBilling, 2);
+                        ticket.TotalNetRevenue = Math.Round(dispatchRevenue + bafRevenue, 2);
+                        ticket.TariffBy = username;
+                        ticket.TariffDate = now;
+
+                        await unitOfWork.AuditTrail.AddAsync(
+                            new AuditTrail(username, $"Batch set tariff for #{ticket.DispatchNumber}: Dispatch={dispatchRate:N2}, BAF={bafRate:N2}, Total={ticket.TotalBilling:N2}", "Tariff", ticket.DispatchTicketId, ticket.DispatchNumber),
+                            cancellationToken);
+                    }
+
+                    foreach (var skipped in tickets.Where(t => t.Status is not SD.DispatchTicketStatus.ForTariff and not SD.DispatchTicketStatus.Pending))
+                    {
+                        await unitOfWork.AuditTrail.AddAsync(
+                            new AuditTrail(username, $"Batch tariff skipped for #{skipped.DispatchNumber} — status is '{skipped.Status}'", "Tariff", skipped.DispatchTicketId, skipped.DispatchNumber),
+                            cancellationToken);
+                    }
+
+                    await unitOfWork.SaveAsync(cancellationToken);
+                }, cancellationToken);
+
+                var skippedCount = tickets.Count - toSet.Count;
+                var msg = $"{toSet.Count} tariff(s) set successfully.";
+                if (skippedCount > 0) msg += $" {skippedCount} ticket(s) skipped (not eligible).";
+
+                return ServiceResult.Success(msg);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to batch set tariffs.");
+                return ServiceResult.Failure($"Failed to batch set tariffs: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
+        #endregion
+
         public async Task<ServiceResult> CancelTicketAsync(int id, string username, CancellationToken cancellationToken)
         {
             try

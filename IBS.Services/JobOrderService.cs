@@ -125,6 +125,11 @@ namespace IBS.Services
                     return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} is {jobOrder.Status.ToLower()} and cannot be edited.");
                 }
 
+                if (await unitOfWork.Billing.GetAsync(b => b.JobOrderId == model.JobOrderId && b.Status == SD.BillingStatus.ForPosting, cancellationToken) != null)
+                {
+                    return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} has an unposted billing. Please delete the billing first before editing.");
+                }
+
                 if (model.PlannedStartTime.HasValue && model.PlannedEndTime.HasValue)
                 {
                     if (model.PlannedEndTime <= model.PlannedStartTime)
@@ -132,6 +137,8 @@ namespace IBS.Services
                         return ServiceResult.Failure("Planned End Time must be strictly after Planned Start Time.");
                     }
                 }
+
+                var old = (CustomerId: jobOrder.CustomerId, VesselId: jobOrder.VesselId, PortId: jobOrder.PortId, TerminalId: jobOrder.TerminalId);
 
                 jobOrder.Date = model.Date;
                 jobOrder.CustomerId = model.CustomerId;
@@ -149,7 +156,7 @@ namespace IBS.Services
                 jobOrder.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 // Cascade updates to related records
-                await SyncRelatedRecordsAsync(jobOrder, cancellationToken);
+                await SyncRelatedRecordsAsync(jobOrder, old, cancellationToken);
 
                 await RecordAuditAsync($"Edited Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
@@ -163,8 +170,13 @@ namespace IBS.Services
             }
         }
 
-        private async Task SyncRelatedRecordsAsync(JobOrder jobOrder, CancellationToken cancellationToken)
+        private async Task SyncRelatedRecordsAsync(JobOrder jobOrder, (int CustomerId, int VesselId, int PortId, int TerminalId) old, CancellationToken cancellationToken)
         {
+            var criticalChanged = jobOrder.CustomerId != old.CustomerId ||
+                                  jobOrder.VesselId != old.VesselId ||
+                                  jobOrder.PortId != old.PortId ||
+                                  jobOrder.TerminalId != old.TerminalId;
+
             // 1. Update unbilled dispatch tickets
             var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
                 dt => dt.JobOrderId == jobOrder.JobOrderId &&
@@ -180,6 +192,26 @@ namespace IBS.Services
                 ticket.PortId = jobOrder.PortId;
                 ticket.TerminalId = jobOrder.TerminalId;
                 ticket.Date = jobOrder.Date;
+
+                if (criticalChanged && ticket.Status is not (SD.DispatchTicketStatus.Pending or SD.DispatchTicketStatus.ForTariff))
+                {
+                    ticket.Status = SD.DispatchTicketStatus.ForTariff;
+                    ticket.DispatchRate = 0;
+                    ticket.DispatchBillingAmount = 0;
+                    ticket.DispatchDiscount = 0;
+                    ticket.DispatchNetRevenue = 0;
+                    ticket.BAFRate = 0;
+                    ticket.BAFBillingAmount = 0;
+                    ticket.BAFDiscount = 0;
+                    ticket.BAFNetRevenue = 0;
+                    ticket.TotalBilling = 0;
+                    ticket.TotalNetRevenue = 0;
+                    ticket.ApOtherTugs = 0;
+                    ticket.TariffBy = string.Empty;
+                    ticket.TariffDate = default;
+                    ticket.TariffEditedBy = string.Empty;
+                    ticket.TariffEditedDate = null;
+                }
             }
 
             // 2. Update unposted/uncollected billings

@@ -123,10 +123,27 @@
                         }
                     </div>
 
+                    <div id="batchToolbar" class="batch-toolbar" style="display:none; padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--outline-variant); background: var(--surface-container-low);">
+                        <div class="flex items-center justify-between">
+                            <span id="batchCount" class="modern-label font-bold">0 selected</span>
+                            <div class="flex gap-2">
+                                <button type="button" id="batchApproveBtn" class="modern-btn-primary text-sm" style="display:none; padding:0.4rem 0.75rem;" onclick="batchApprove()">
+                                    <span class="material-symbols-outlined" style="font-size:16px">check_circle</span> Approve Selected
+                                </button>
+                                <button type="button" id="batchSetTariffBtn" class="modern-btn-secondary text-sm" style="display:none; padding:0.4rem 0.75rem;" onclick="showBatchTariffModal()">
+                                    <span class="material-symbols-outlined" style="font-size:16px">payments</span> Set Tariff
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="modern-table-container">
                         <table class="modern-table">
                             <thead>
                                 <tr>
+                                    <th class="text-center" style="width:40px">
+                                        <input type="checkbox" id="selectAll" class="batch-checkbox" title="Select all">
+                                    </th>
                                     <th>Ticket #</th>
                                     <th>Timeline</th>
                                     <th>Date</th>
@@ -142,6 +159,9 @@
                                 @foreach (var ticket in Model.DispatchTickets)
                                 {
                                     <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status">
+                                        </td>
                                         <td class="font-bold">
                                             <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" style="text-decoration:none; color: var(--primary)" target="_blank">
                                                 @ticket.DispatchNumber
@@ -293,6 +313,54 @@
     }
 }
 
+<!-- Batch Set Tariff Modal -->
+<div id="batchTariffModal" class="modern-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+    <div class="modern-card" style="max-width:480px; width:90%; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div class="modern-card-header-action" style="padding:1rem 1.25rem;">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">payments</span>
+                <h2 class="modern-headline-md" style="margin:0;">Batch Set Tariff</h2>
+            </div>
+            <button type="button" class="modern-btn-text" onclick="closeBatchTariffModal()" style="border:none; background:none; cursor:pointer; padding:0.25rem;">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="modern-card-body">
+            <div class="mb-3">
+                <label class="modern-label">Dispatch Rate <span class="text-error">*</span></label>
+                <input type="number" id="batchDispatchRate" class="modern-input" step="0.01" min="0" value="0" placeholder="0.00" required>
+            </div>
+            <div class="mb-3">
+                <label class="modern-label">BAF Rate <span class="text-error">*</span></label>
+                <input type="number" id="batchBafRate" class="modern-input" step="0.01" min="0" value="0" placeholder="0.00" required>
+            </div>
+            <div class="modern-grid-compact">
+                <div class="modern-col-6">
+                    <label class="modern-label">Dispatch Charge Type</label>
+                    <select id="batchChargeType" class="modern-input">
+                        <option value="Per hour" selected>Per hour</option>
+                        <option value="Per move">Per move</option>
+                    </select>
+                </div>
+                <div class="modern-col-6">
+                    <label class="modern-label">BAF Charge Type</label>
+                    <select id="batchChargeType2" class="modern-input">
+                        <option value="Per hour" selected>Per hour</option>
+                        <option value="Per move">Per move</option>
+                    </select>
+                </div>
+            </div>
+            <p class="modern-label text-xs mt-3" style="color:var(--on-surface-variant);">Applies to <span id="batchModalCount" class="font-bold">0</span> selected ticket(s).</p>
+        </div>
+        <div class="flex gap-2 justify-end" style="padding:1rem 1.25rem; border-top:1px solid var(--outline-variant);">
+            <button type="button" class="modern-btn-secondary" onclick="closeBatchTariffModal()">Cancel</button>
+            <button type="button" class="modern-btn-primary" onclick="batchSetTariff()">
+                <span class="material-symbols-outlined" style="font-size:18px">payments</span> Apply Tariff
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const PageConfig = {
@@ -363,6 +431,31 @@
                 ModernAlert.warning(PageConfig.messages.warning);
             }
 
+            // Batch checkboxes
+            function updateBatchToolbar() {
+                const checked = $('.row-checkbox:checked');
+                const count = checked.length;
+                if (count > 0) {
+                    $('#batchToolbar').show();
+                    $('#batchCount').text(count + ' selected');
+
+                    const hasApproval = checked.filter(function() { return $(this).data('status') === 'For Approval'; }).length > 0;
+                    const hasTariffable = checked.filter(function() { return $(this).data('status') === 'For Tariff' || $(this).data('status') === 'Pending'; }).length > 0;
+
+                    $('#batchApproveBtn').toggle(hasApproval);
+                    $('#batchSetTariffBtn').toggle(hasTariffable);
+                } else {
+                    $('#batchToolbar').hide();
+                }
+            }
+
+            $(document).on('change', '.row-checkbox', updateBatchToolbar);
+
+            $('#selectAll').on('change', function() {
+                $('.row-checkbox').prop('checked', this.checked);
+                updateBatchToolbar();
+            });
+
             // Accordion: lazy-load timeline on first expand
             let timelineLoaded = false;
             $('#timelineToggle').on('click', function () {
@@ -397,6 +490,92 @@
             }).fail(function() {
                 $('#timelineContainer').html('<div class="text-center py-4 text-danger"><p>Failed to load timeline.</p></div>');
             });
+        }
+
+        function getSelectedIds() {
+            return $('.row-checkbox:checked').map(function() { return parseInt($(this).val()); }).get();
+        }
+
+        function getRequestToken() {
+            return $('input[name="__RequestVerificationToken"]').val();
+        }
+
+        function batchApprove() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return;
+
+            ModernAlert.confirm({
+                title: 'Batch Approve Tariffs?',
+                text: `Approve tariffs for ${ids.length} selected ticket(s)?`,
+                icon: 'question',
+                confirmText: 'Yes, approve all!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+            $('#batchToolbar').hide();
+            ModernAlert.showLoading("Approving tariffs...");
+            fetch('@Url.Action("BatchApproveTariff", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getRequestToken() },
+                        body: JSON.stringify(ids)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success(data.message).then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(err => ModernAlert.error(`Request failed: ${err}`));
+                }
+            });
+        }
+
+        function showBatchTariffModal() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return;
+            const tariffable = $('.row-checkbox:checked').filter(function() {
+                return $(this).data('status') === 'For Tariff' || $(this).data('status') === 'Pending';
+            });
+            $('#batchModalCount').text(tariffable.length);
+            $('#batchTariffModal').css('display', 'flex');
+        }
+
+        function closeBatchTariffModal() {
+            $('#batchTariffModal').hide();
+        }
+
+        function batchSetTariff() {
+            const ids = getSelectedIds();
+            const dispatchRate = parseFloat($('#batchDispatchRate').val()) || 0;
+            const bafRate = parseFloat($('#batchBafRate').val()) || 0;
+            if (dispatchRate <= 0 && bafRate <= 0) {
+                ModernAlert.warning('Please enter at least one rate.');
+                return;
+            }
+
+            closeBatchTariffModal();
+            ModernAlert.showLoading("Setting tariffs...");
+            fetch('@Url.Action("BatchSetTariff", "DispatchTicket", new { area = "User" })', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getRequestToken() },
+                body: JSON.stringify({
+                    ids: ids,
+                    dispatchRate: dispatchRate,
+                    bafRate: bafRate,
+                    chargeType: $('#batchChargeType').val(),
+                    chargeType2: $('#batchChargeType2').val()
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    ModernAlert.success(data.message).then(() => location.reload());
+                } else {
+                    ModernAlert.error(data.message);
+                }
+            })
+            .catch(err => ModernAlert.error(`Request failed: ${err}`));
         }
 
         function confirmCancel() {

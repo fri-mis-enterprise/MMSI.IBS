@@ -254,9 +254,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
-            await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
-            return View(viewModel);
+            TempData["error"] = result.Message;
+            return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
         }
 
         #endregion
