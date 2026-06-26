@@ -191,6 +191,7 @@
                 confirmText: 'Yes, post it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    ModernAlert.showLoading("Posting to books...");
                     window.location.href = '@Url.Action("Post", "Billing")?id=' + id;
                 }
             });
@@ -204,6 +205,7 @@
                 confirmText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    ModernAlert.showLoading("Deleting billing...");
                     window.location.href = '@Url.Action("Delete", "Billing")?id=' + id;
                 }
             });

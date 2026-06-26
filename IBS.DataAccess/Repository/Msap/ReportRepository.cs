@@ -7,48 +7,52 @@ namespace IBS.DataAccess.Repository.Msap
 {
     public class ReportRepository(ApplicationDbContext db): IReportRepository
     {
-        public async Task<List<DispatchTicket>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
+        public async Task<List<DispatchTicket>> GetDispatchReportData(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
-                throw new ArgumentException("Date From must be greater than Date To !");
+                throw new ArgumentException("Date From must not be earlier than Date To.");
             }
 
-            var dispatchTickets = await db.MsapDispatchTickets
-                .Where(dt => dt.Date >= dateFrom
-                             && dt.Date <= dateTo
-                             && dt.Status != "For Posting"
-                             && dt.Status != "Cancelled"
-                             && dt.Status != "Disapproved")
+            var tickets = await db.MsapDispatchTickets
+                .Where(dt => dt.Date >= dateFrom && dt.Date <= dateTo)
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Tugboat)
+                .ThenInclude(t => t.TugboatOwner)
+                .Include(dt => dt.TugMaster)
                 .Include(dt => dt.Terminal)
                 .ThenInclude(t => t.Port)
                 .Include(dt => dt.Service)
                 .OrderBy(dt => dt.Date)
+                .ThenBy(dt => dt.DispatchNumber)
                 .ToListAsync(cancellationToken);
 
-            foreach (var dispatchTicket in dispatchTickets)
+            var billingIds = tickets.Where(t => t.BillingId.HasValue).Select(t => t.BillingId!.Value).Distinct().ToList();
+            if (billingIds.Count != 0)
             {
-                if (dispatchTicket.BillingId != null)
-                {
-                    dispatchTicket.Billing = await db.MsapBillings
-                        .Where(b => b.MsapBillingId == dispatchTicket.BillingId)
-                        .Include(b => b.Customer)
-                        .Include(b => b.Principal)
-                        .FirstOrDefaultAsync(cancellationToken);
+                var billings = await db.MsapBillings
+                    .Where(b => billingIds.Contains(b.MsapBillingId))
+                    .Include(b => b.Customer)
+                    .Include(b => b.Principal)
+                    .ToListAsync(cancellationToken);
 
-                    if (dispatchTicket.Billing?.CollectionId != null)
+                var collectionIds = billings.Where(b => b.CollectionId.HasValue).Select(b => b.CollectionId!.Value).Distinct().ToList();
+                var collections = collectionIds.Count != 0
+                    ? await db.MsapCollections.Where(c => collectionIds.Contains(c.MsapCollectionId)).ToListAsync(cancellationToken)
+                    : [];
+
+                foreach (var ticket in tickets.Where(t => t.BillingId.HasValue))
+                {
+                    ticket.Billing = billings.FirstOrDefault(b => b.MsapBillingId == ticket.BillingId);
+                    if (ticket.Billing?.CollectionId != null)
                     {
-                        dispatchTicket.Billing.Collection = await db.MsapCollections
-                            .Where(c => c.MsapCollectionId == dispatchTicket.Billing.CollectionId)
-                            .FirstOrDefaultAsync(cancellationToken);
+                        ticket.Billing.Collection = collections.FirstOrDefault(c => c.MsapCollectionId == ticket.Billing.CollectionId);
                     }
                 }
             }
 
-            return dispatchTickets;
+            return tickets;
         }
     }
 }
