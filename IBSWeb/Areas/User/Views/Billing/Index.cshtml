@@ -129,7 +129,7 @@
                             if (row.status === "@SD.BillingStatus.ForPosting") {
                                 return ModernTable.render.dropdown([
                                     { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Post to Books', icon: 'send', url: `${postUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Post to Books', icon: 'send', onclick: `confirmPost(${row.msapBillingId})` },
                                     { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}` },
                                     { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})` }
                                 ]);
@@ -182,6 +182,19 @@
                 else if (status === "@SD.BillingStatus.Collected") $('#filterCollected').addClass('active');
             }
         });
+
+        function confirmPost(id) {
+            ModernAlert.confirm({
+                title: 'Post to Books?',
+                text: "This will post the billing to the Sales Book and General Ledger. Continue?",
+                icon: 'question',
+                confirmText: 'Yes, post it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '@Url.Action("Post", "Billing")?id=' + id;
+                }
+            });
+        }
 
         function confirmDelete(id) {
             ModernAlert.confirm({
