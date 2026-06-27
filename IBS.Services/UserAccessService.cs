@@ -53,6 +53,7 @@ namespace IBS.Services
                 ProcedureEnum.AccessTreasury => userAccess.CanAccessTreasury,
                 ProcedureEnum.CreateDisbursement => userAccess.CanCreateDisbursement,
                 ProcedureEnum.ManageMsapImport => userAccess.CanManageMsapImport,
+                ProcedureEnum.ManageMaritimeMasterFile => userAccess.CanManageMaritimeMasterFile,
                 ProcedureEnum.ViewGeneralLedger => userAccess.CanViewGeneralLedger,
                 ProcedureEnum.ViewInventoryReport => userAccess.CanViewInventoryReport,
                 ProcedureEnum.ViewMaritimeReport => userAccess.CanViewMaritimeReport,
@@ -139,6 +140,7 @@ namespace IBS.Services
                 if (existing.CanAccessTreasury != model.CanAccessTreasury) changes.Add($"Access Treasury: {existing.CanAccessTreasury} → {model.CanAccessTreasury}");
                 if (existing.CanCreateDisbursement != model.CanCreateDisbursement) changes.Add($"Create Disbursement: {existing.CanCreateDisbursement} → {model.CanCreateDisbursement}");
                 if (existing.CanManageMsapImport != model.CanManageMsapImport) changes.Add($"Manage Import: {existing.CanManageMsapImport} → {model.CanManageMsapImport}");
+                if (existing.CanManageMaritimeMasterFile != model.CanManageMaritimeMasterFile) changes.Add($"Manage Maritime MF: {existing.CanManageMaritimeMasterFile} → {model.CanManageMaritimeMasterFile}");
                 if (existing.CanViewGeneralLedger != model.CanViewGeneralLedger) changes.Add($"View GL: {existing.CanViewGeneralLedger} → {model.CanViewGeneralLedger}");
                 if (existing.CanViewInventoryReport != model.CanViewInventoryReport) changes.Add($"View Inventory: {existing.CanViewInventoryReport} → {model.CanViewInventoryReport}");
                 if (existing.CanViewMaritimeReport != model.CanViewMaritimeReport) changes.Add($"View Maritime: {existing.CanViewMaritimeReport} → {model.CanViewMaritimeReport}");
@@ -169,6 +171,7 @@ namespace IBS.Services
                     existing.CanAccessTreasury = model.CanAccessTreasury;
                     existing.CanCreateDisbursement = model.CanCreateDisbursement;
                     existing.CanManageMsapImport = model.CanManageMsapImport;
+                    existing.CanManageMaritimeMasterFile = model.CanManageMaritimeMasterFile;
                     existing.CanViewGeneralLedger = model.CanViewGeneralLedger;
                     existing.CanViewInventoryReport = model.CanViewInventoryReport;
                     existing.CanViewMaritimeReport = model.CanViewMaritimeReport;

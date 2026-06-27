@@ -62,6 +62,12 @@ namespace IBS.Models.MSAP.MasterFile
 
         #endregion -- MSAP Import --
 
+        #region -- Master Files --
+
+        public bool CanManageMaritimeMasterFile { get; set; }
+
+        #endregion -- Master Files --
+
         #region -- Reports --
 
         public bool CanViewGeneralLedger { get; set; }

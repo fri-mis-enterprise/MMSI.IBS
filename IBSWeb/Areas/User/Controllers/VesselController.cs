@@ -1,12 +1,15 @@
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
 using IBS.Services;
+using IBS.Models.Enums;
+using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [RequireAnyAccess("Access denied. You don't have permission to manage maritime master files.", ProcedureEnum.ManageMaritimeMasterFile)]
     public class VesselController(
         IVesselService vesselService,
         UserManager<ApplicationUser> userManager)

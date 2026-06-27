@@ -44,6 +44,12 @@ namespace IBS.Models.Enums
 
         #endregion -- MSAP Import --
 
+        #region -- Master Files --
+
+        ManageMaritimeMasterFile,
+
+        #endregion -- Master Files --
+
         #region -- Reports --
 
         ViewGeneralLedger,

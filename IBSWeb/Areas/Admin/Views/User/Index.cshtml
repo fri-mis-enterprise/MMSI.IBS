@@ -62,6 +62,7 @@
             </div>
             <div class="modern-card-body">
                 <form id="userForm" class="flex flex-col gap-4">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" id="userId" />
 
                     <div class="modern-grid">
@@ -378,6 +379,7 @@
                 url: '/Admin/User/Upsert',
                 type: 'POST',
                 contentType: 'application/json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                 data: JSON.stringify(userData),
                 success: function (response) {
                     saveBtn.prop('disabled', false).html('<i class="bi bi-save"></i> Save User');
@@ -410,7 +412,7 @@
                 if (result.isConfirmed) {
                     ModernAlert.showLoading("Processing...");
 
-                    $.post(`/Admin/User/ToggleStatus?id=${encodeURIComponent(userId)}`)
+                    $.post(`/Admin/User/ToggleStatus?id=${encodeURIComponent(userId)}`, { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() })
                         .done(function (response) {
                             if (response.success) {
                                 ModernAlert.success(response.message).then(() => {
@@ -456,6 +458,7 @@
                 url: '/Admin/User/ResetPassword',
                 type: 'POST',
                 contentType: 'application/json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                 data: JSON.stringify({
                     UserId: userId,
                     NewPassword: newPassword
