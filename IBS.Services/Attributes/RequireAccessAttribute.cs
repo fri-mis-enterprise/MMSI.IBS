@@ -46,6 +46,15 @@ namespace IBS.Services.Attributes
 
         private void SetErrorAndRedirect(AuthorizationFilterContext context, string message)
         {
+            var isJsonRequest = context.HttpContext.Request.Headers["Content-Type"].ToString()
+                .Contains("application/json", StringComparison.OrdinalIgnoreCase);
+
+            if (isJsonRequest)
+            {
+                context.Result = new JsonResult(new { success = false, message }) { StatusCode = 403 };
+                return;
+            }
+
             // Set TempData error message
             var tempDataFactory = context.HttpContext.RequestServices
                 .GetRequiredService<ITempDataDictionaryFactory>();
@@ -141,6 +150,15 @@ namespace IBS.Services.Attributes
 
         private void SetErrorAndRedirect(AuthorizationFilterContext context, string message)
         {
+            var isJsonRequest = context.HttpContext.Request.Headers["Content-Type"].ToString()
+                .Contains("application/json", StringComparison.OrdinalIgnoreCase);
+
+            if (isJsonRequest)
+            {
+                context.Result = new JsonResult(new { success = false, message }) { StatusCode = 403 };
+                return;
+            }
+
             // Set TempData error message
             var tempDataFactory = context.HttpContext.RequestServices
                 .GetRequiredService<ITempDataDictionaryFactory>();

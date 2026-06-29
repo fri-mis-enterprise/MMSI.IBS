@@ -160,7 +160,7 @@
                                 {
                                     <tr>
                                         <td class="text-center">
-                                            <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status">
+                                            <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status" @(ticket.Status == "Cancelled" ? "disabled" : "")>
                                         </td>
                                         <td class="font-bold">
                                             <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" style="text-decoration:none; color: var(--primary)" target="_blank">
@@ -369,7 +369,7 @@
             status: '@Model.Status',
             hasTickets: @(Model.DispatchTickets.Any() ? "true" : "false"),
             messages: {
-                error:   @Json.Serialize(TempData.Peek("error")),
+                error:   @Json.Serialize(TempData.Peek("error") ?? TempData.Peek("Denied")),
                 success: @Json.Serialize(TempData.Peek("success")),
                 warning: @Json.Serialize(TempData.Peek("warning"))
             }
@@ -452,7 +452,7 @@
             $(document).on('change', '.row-checkbox', updateBatchToolbar);
 
             $('#selectAll').on('change', function() {
-                $('.row-checkbox').prop('checked', this.checked);
+                $('.row-checkbox:not(:disabled)').prop('checked', this.checked);
                 updateBatchToolbar();
             });
 
@@ -500,6 +500,14 @@
             return $('input[name="__RequestVerificationToken"]').val();
         }
 
+        function fetchJson(url, body) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getRequestToken() },
+                body: JSON.stringify(body)
+            }).then(r => r.json());
+        }
+
         function batchApprove() {
             const ids = getSelectedIds();
             if (ids.length === 0) return;
@@ -513,12 +521,7 @@
                 if (result.isConfirmed) {
             $('#batchToolbar').hide();
             ModernAlert.showLoading("Approving tariffs...");
-            fetch('@Url.Action("BatchApproveTariff", "DispatchTicket", new { area = "User" })', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getRequestToken() },
-                        body: JSON.stringify(ids)
-                    })
-                    .then(r => r.json())
+            fetchJson('@Url.Action("BatchApproveTariff", "DispatchTicket", new { area = "User" })', ids)
                     .then(data => {
                         if (data.success) {
                             ModernAlert.success(data.message).then(() => location.reload());
@@ -526,7 +529,7 @@
                             ModernAlert.error(data.message);
                         }
                     })
-                    .catch(err => ModernAlert.error(`Request failed: ${err}`));
+                    .catch(err => ModernAlert.error(err.message));
                 }
             });
         }
@@ -546,7 +549,9 @@
         }
 
         function batchSetTariff() {
-            const ids = getSelectedIds();
+            const ids = $('.row-checkbox:checked').filter(function() {
+                return $(this).data('status') === 'For Tariff' || $(this).data('status') === 'Pending';
+            }).map(function() { return parseInt($(this).val()); }).get();
             const dispatchRate = parseFloat($('#batchDispatchRate').val()) || 0;
             const bafRate = parseFloat($('#batchBafRate').val()) || 0;
             if (dispatchRate <= 0 && bafRate <= 0) {
@@ -556,26 +561,21 @@
 
             closeBatchTariffModal();
             ModernAlert.showLoading("Setting tariffs...");
-            fetch('@Url.Action("BatchSetTariff", "DispatchTicket", new { area = "User" })', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getRequestToken() },
-                body: JSON.stringify({
+            fetchJson('@Url.Action("BatchSetTariff", "DispatchTicket", new { area = "User" })', {
                     ids: ids,
                     dispatchRate: dispatchRate,
                     bafRate: bafRate,
                     chargeType: $('#batchChargeType').val(),
                     chargeType2: $('#batchChargeType2').val()
                 })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    ModernAlert.success(data.message).then(() => location.reload());
-                } else {
-                    ModernAlert.error(data.message);
-                }
-            })
-            .catch(err => ModernAlert.error(`Request failed: ${err}`));
+                .then(data => {
+                    if (data.success) {
+                        ModernAlert.success(data.message).then(() => location.reload());
+                    } else {
+                        ModernAlert.error(data.message);
+                    }
+                })
+                .catch(err => ModernAlert.error(err.message));
         }
 
         function confirmCancel() {
