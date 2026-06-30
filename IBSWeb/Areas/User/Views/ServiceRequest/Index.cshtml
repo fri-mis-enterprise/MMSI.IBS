@@ -49,7 +49,6 @@
                     <table class="modern-table" id="paginatedTable">
                         <thead>
                             <tr>
-                                <th data-orderable="false" class="text-center" style="width: 40px;"><input type="checkbox" id="selectAll"></th>
                                 <th>Date</th>
                                 <th>COS #</th>
                                 <th>Ticket #</th>
@@ -67,14 +66,6 @@
                     </table>
                 </div>
 
-                <div class="flex justify-end gap-2 mt-3">
-                    <button class="modern-btn-primary selected-options" id="postSelected" style="display:none">
-                        <span class="material-symbols-outlined">check_circle</span> POST SELECTED
-                    </button>
-                    <button class="modern-btn-secondary selected-options" id="cancelSelected" style="display:none; color: var(--error); border-color: var(--error);">
-                        <span class="material-symbols-outlined">cancel</span> CANCEL SELECTED
-                    </button>
-                </div>
             </div>
         </div>
     </main>
@@ -90,43 +81,16 @@
 
 @section Scripts {
     <script>
-        const selectedRecords = new Set();
-
-        function toggleSelectAll(selectAllCheckbox) {
-            const checkboxes = document.querySelectorAll(".selectCheckbox");
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-                if (selectAllCheckbox.checked) selectedRecords.add(checkbox.value);
-                else selectedRecords.delete(checkbox.value);
-            });
-            toggleButtons();
-        }
-
-        function toggleButtons() {
-            const anyChecked = selectedRecords.size > 0;
-            $(".selected-options").toggle(anyChecked);
-        }
-
         $(document).ready(function () {
             const editUrl = '@Url.Action("Edit", "ServiceRequest", new { area = "User" })';
 
             let table = $('#paginatedTable').DataTable(ModernTable.config({
-                order: [[1, 'desc']],
+                order: [[0, 'desc']],
                 columnDefs: [
-                    { orderable: false, targets: [0, 12] }
+                    { orderable: false, targets: [0, 11] }
                 ],
                 ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "ServiceRequest", new { area = "User" })"),
                 columns: [
-                    {
-                        data: null,
-                        orderable: false,
-                        render: (data, type, row) => {
-                            const isChecked = selectedRecords.has(String(row.dispatchTicketId)) ? 'checked' : '';
-                            return (row.status !== "Cancelled" && row.status !== "Draft") 
-                                ? `<div class="text-center"><input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}></div>`
-                                : `<div class="text-center"><input type="checkbox" disabled></div>`;
-                        }
-                    },
                     { data: "date", defaultContent: "" },
                     { data: "cosNumber", defaultContent: "" },
                     {
@@ -186,36 +150,6 @@
                 ]
             }));
 
-            // Handlers
-            $(document).on("click", "#selectAll", function () { toggleSelectAll(this); });
-            $(document).on("change", ".selectCheckbox", function() {
-                if (this.checked) selectedRecords.add(this.value);
-                else selectedRecords.delete(this.value);
-                toggleButtons();
-                $("#selectAll").prop("checked", $(".selectCheckbox").length === $(".selectCheckbox:checked").length);
-            });
-
-            $("#postSelected").click(() => {
-                ModernAlert.confirm({
-                    title: "Post selected?",
-                    text: "Proceed to post these requests?",
-                    confirmText: "Yes, post"
-                }).then((r) => {
-                    if (r.isConfirmed) window.location.href = `@Url.Action("PostSelected", "ServiceRequest")?records=${encodeURIComponent(JSON.stringify(Array.from(selectedRecords)))}`;
-                });
-            });
-
-            $("#cancelSelected").click(() => {
-                ModernAlert.confirm({
-                    title: "Cancel selected?",
-                    text: "This action cannot be undone.",
-                    icon: 'warning',
-                    confirmText: "Yes, cancel"
-                }).then((r) => {
-                    if (r.isConfirmed) window.location.href = `@Url.Action("CancelSelected", "ServiceRequest")?records=${encodeURIComponent(JSON.stringify(Array.from(selectedRecords)))}`;
-                });
-            });
-
             // Filter logic
             $('.modern-btn-secondary[id^="filter"]').on('click', function() {
                 const id = $(this).attr('id');
@@ -224,7 +158,7 @@
                 else if (id === 'filterDraft') status = 'Draft';
                 else if (id === 'filterCancelled') status = 'Cancelled';
 
-                table.column(11).search(status).draw();
+                table.column(10).search(status).draw();
                 $('.modern-btn-secondary').removeClass('active');
                 $(this).addClass('active');
             });

@@ -30,7 +30,6 @@ namespace IBSWeb.Areas.User.Controllers
         UserManager<ApplicationUser> userManager,
         ICloudStorageService cloudStorageService,
         ILogger<ServiceRequestController> logger,
-        IUserAccessService userAccessService,
         INotificationService notificationService)
         : Controller
     {
@@ -179,7 +178,9 @@ namespace IBSWeb.Areas.User.Controllers
 
                 var audit = new AuditTrail(
                     await GetUserNameAsync() ?? throw new InvalidOperationException(),
-                    $"Create service request #{model.DispatchNumber}",
+                    model.JobOrderId.HasValue
+                        ? $"Create service request #{model.DispatchNumber} (Job Order #{model.JobOrderId})"
+                        : $"Create service request #{model.DispatchNumber}",
                     "Service Request"
                 );
 
@@ -203,15 +204,9 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to edit Service Requests.")]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
-                    ProcedureEnum.CreateServiceRequest,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
 
             await GetCompanyClaimAsync();
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id,
@@ -244,15 +239,9 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to edit Service Requests.")]
         public async Task<IActionResult> Edit(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
-                    ProcedureEnum.CreateServiceRequest,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
 
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
@@ -691,15 +680,37 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to post Service Requests.")]
+        public async Task<IActionResult> Post(int id, int? jobOrderId, CancellationToken cancellationToken = default)
+        {
+            var record = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+            if (record != null && record.Status == SD.DispatchTicketStatus.Requested)
+            {
+                record.Status = SD.DispatchTicketStatus.ForTariff;
+
+                var auditMsg = jobOrderId.HasValue
+                    ? $"Posted service request #{record.DispatchNumber} (Job Order #{jobOrderId})"
+                    : $"Posted service request #{record.DispatchNumber}";
+
+                var audit = new AuditTrail(
+                    await GetUserNameAsync() ?? throw new InvalidOperationException(),
+                    auditMsg,
+                    "Service Request"
+                );
+                await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = $"Service Request #{record.DispatchNumber} has been posted.";
+            }
+
+            if (jobOrderId.HasValue)
+                return RedirectToAction("Details", "JobOrder", new { id = jobOrderId.Value });
+            return RedirectToAction(nameof(Index));
+        }
+
+        [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to post Service Requests.")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
-                    ProcedureEnum.PostServiceRequest,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
 
             if (string.IsNullOrEmpty(records))
             {
@@ -722,7 +733,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     if (recordToUpdate != null && recordToUpdate.Status == SD.DispatchTicketStatus.Requested)
                     {
-                        recordToUpdate.Status = SD.DispatchTicketStatus.Pending;
+                        recordToUpdate.Status = SD.DispatchTicketStatus.ForTariff;
                         postedTickets.Add($"{recordToUpdate.DispatchNumber}");
                     }
                 }
@@ -769,15 +780,9 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to cancel Service Requests.")]
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
-            if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
-                    ProcedureEnum.CreateServiceRequest,
-                    cancellationToken))
-            {
-                TempData["error"] = "Access denied.";
-                return RedirectToAction(nameof(Index));
-            }
 
             if (string.IsNullOrEmpty(records))
             {
@@ -870,21 +875,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return await cloudStorageService.GetSignedUrlAsync(uploadName);
             }
             throw new Exception("Upload name invalid.");
-        }
-
-        private async Task<bool> HasServiceRequestAccessAsync(CancellationToken cancellationToken)
-        {
-            var userId = userManager.GetUserId(User)!;
-            var hasCreateAccess = await userAccessService.CheckAccess(userId,
-                ProcedureEnum.CreateServiceRequest,
-                cancellationToken);
-            var hasPostAccess = await userAccessService.CheckAccess(userId,
-                ProcedureEnum.PostServiceRequest,
-                cancellationToken);
-
-            return hasCreateAccess || hasPostAccess;
-        }
-    }
+        }    }
 }
 
 

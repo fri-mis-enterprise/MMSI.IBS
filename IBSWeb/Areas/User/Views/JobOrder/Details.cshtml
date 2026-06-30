@@ -200,6 +200,12 @@
 
                                                     @if (ticket.Status is "Draft" or "Requested")
                                                     {
+                                                        @if (ticket.Status == "Requested")
+                                                        {
+                                                            <a asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item" style="color: var(--primary)">
+                                                                <span class="material-symbols-outlined">check_circle</span> Post Request
+                                                            </a>
+                                                        }
                                                         <a asp-controller="ServiceRequest" asp-action="Edit" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item">
                                                             <span class="material-symbols-outlined">edit</span> Edit Request
                                                         </a>
@@ -720,6 +726,6 @@
                 }
             });
 
-        });
+        }
     </script>
 }
