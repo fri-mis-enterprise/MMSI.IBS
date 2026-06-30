@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Repository.Msap
                 ProcedureEnum.PostServiceRequest => query.Where(u => u.CanPostServiceRequest),
                 ProcedureEnum.CreateDispatchTicket => query.Where(u => u.CanCreateDispatchTicket),
                 ProcedureEnum.EditDispatchTicket => query.Where(u => u.CanEditDispatchTicket),
-                ProcedureEnum.CancelDispatchTicket => query.Where(u => u.CanCancelDispatchTicket),
+                ProcedureEnum.DeleteDispatchTicket => query.Where(u => u.CanDeleteDispatchTicket),
                 ProcedureEnum.SetTariff => query.Where(u => u.CanSetTariff),
                 ProcedureEnum.ApproveTariff => query.Where(u => u.CanApproveTariff),
                 ProcedureEnum.CreateBilling => query.Where(u => u.CanCreateBilling),

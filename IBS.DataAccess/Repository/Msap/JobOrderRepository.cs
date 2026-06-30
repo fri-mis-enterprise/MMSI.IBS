@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets)
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
                 .ToListAsync(cancellationToken);
         }
 
@@ -28,7 +28,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets)
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
                 .Where(j => j.PlannedStartTime <= end && j.PlannedEndTime >= start)
                 .ToListAsync(cancellationToken);
         }
@@ -40,13 +40,13 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets)
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
                     .ThenInclude(dt => dt.Service)
-                .Include(j => j.DispatchTickets)
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
                     .ThenInclude(dt => dt.Terminal)
-                .Include(j => j.DispatchTickets)
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
                     .ThenInclude(dt => dt.Tugboat)
-                .Include(j => j.DispatchTickets)
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
                     .ThenInclude(dt => dt.TugMaster)
                 .FirstOrDefaultAsync(j => j.JobOrderId == id, cancellationToken);
         }
@@ -99,7 +99,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets);
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"));
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {

@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.User.Controllers
             "Access denied. You don't have permission to access Dispatch Tickets.",
             ProcedureEnum.CreateDispatchTicket,
             ProcedureEnum.EditDispatchTicket,
-            ProcedureEnum.CancelDispatchTicket)]
+            ProcedureEnum.DeleteDispatchTicket)]
         public Task<IActionResult> Index(string filterType)
         {
             ViewBag.FilterType = filterType;
@@ -106,7 +106,7 @@ namespace IBSWeb.Areas.User.Controllers
             "Access denied. You don't have permission to view Dispatch Tickets.",
             ProcedureEnum.CreateDispatchTicket,
             ProcedureEnum.EditDispatchTicket,
-            ProcedureEnum.CancelDispatchTicket)]
+            ProcedureEnum.DeleteDispatchTicket)]
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
             var model = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
@@ -468,14 +468,26 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
-        /// Cancels a Dispatch Ticket.
+        /// Deletes a Dispatch Ticket.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.CancelDispatchTicket, "Access denied. You don't have permission to cancel Dispatch Tickets.", "DispatchTicket")]
-        public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
+        [RequireAccess(ProcedureEnum.DeleteDispatchTicket, "Access denied. You don't have permission to delete Dispatch Tickets.", "DispatchTicket")]
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var result = await dispatchTicketService.CancelTicketAsync(id, User.Identity?.Name ?? "System", cancellationToken);
+            var result = await dispatchTicketService.DeleteTicketAsync(id, User.Identity?.Name ?? "System", cancellationToken);
+            return Json(new { success = result.IsSuccess, message = result.Message });
+        }
+
+        /// <summary>
+        /// Restores a deleted Dispatch Ticket.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.DeleteDispatchTicket, "Access denied. You don't have permission to restore Dispatch Tickets.", "DispatchTicket")]
+        public async Task<IActionResult> Restore(int id, CancellationToken cancellationToken)
+        {
+            var result = await dispatchTicketService.RestoreTicketAsync(id, User.Identity?.Name ?? "System", cancellationToken);
             return Json(new { success = result.IsSuccess, message = result.Message });
         }
 
@@ -570,7 +582,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var items = status == "All"
                 ? await unitOfWork.DispatchTicket.GetAllAsync(
-                    dt => dt.Status != "Cancelled" && dt.Status != "For Posting", cancellationToken)
+                    dt => dt.Status != "For Posting", cancellationToken)
                 : await unitOfWork.DispatchTicket.GetAllAsync(
                     dt => dt.Status == status, cancellationToken);
 

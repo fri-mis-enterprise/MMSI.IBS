@@ -17,7 +17,7 @@ namespace IBS.Models.Enums
         PostServiceRequest,
         CreateDispatchTicket,
         EditDispatchTicket,
-        CancelDispatchTicket,
+        DeleteDispatchTicket,
         SetTariff,
         ApproveTariff,
         CreateBilling,

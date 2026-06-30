@@ -39,7 +39,7 @@ namespace IBS.Services
                 ProcedureEnum.PostServiceRequest => userAccess.CanPostServiceRequest,
                 ProcedureEnum.CreateDispatchTicket => userAccess.CanCreateDispatchTicket,
                 ProcedureEnum.EditDispatchTicket => userAccess.CanEditDispatchTicket,
-                ProcedureEnum.CancelDispatchTicket => userAccess.CanCancelDispatchTicket,
+                ProcedureEnum.DeleteDispatchTicket => userAccess.CanDeleteDispatchTicket,
                 ProcedureEnum.SetTariff => userAccess.CanSetTariff,
                 ProcedureEnum.ApproveTariff => userAccess.CanApproveTariff,
                 ProcedureEnum.CreateBilling => userAccess.CanCreateBilling,
@@ -126,7 +126,7 @@ namespace IBS.Services
                 if (existing.CanPostServiceRequest != model.CanPostServiceRequest) changes.Add($"Post SR: {existing.CanPostServiceRequest} → {model.CanPostServiceRequest}");
                 if (existing.CanCreateDispatchTicket != model.CanCreateDispatchTicket) changes.Add($"Create DT: {existing.CanCreateDispatchTicket} → {model.CanCreateDispatchTicket}");
                 if (existing.CanEditDispatchTicket != model.CanEditDispatchTicket) changes.Add($"Edit DT: {existing.CanEditDispatchTicket} → {model.CanEditDispatchTicket}");
-                if (existing.CanCancelDispatchTicket != model.CanCancelDispatchTicket) changes.Add($"Cancel DT: {existing.CanCancelDispatchTicket} → {model.CanCancelDispatchTicket}");
+                if (existing.CanDeleteDispatchTicket != model.CanDeleteDispatchTicket) changes.Add($"Delete DT: {existing.CanDeleteDispatchTicket} → {model.CanDeleteDispatchTicket}");
                 if (existing.CanSetTariff != model.CanSetTariff) changes.Add($"Set Tariff: {existing.CanSetTariff} → {model.CanSetTariff}");
                 if (existing.CanApproveTariff != model.CanApproveTariff) changes.Add($"Approve Tariff: {existing.CanApproveTariff} → {model.CanApproveTariff}");
                 if (existing.CanCreateBilling != model.CanCreateBilling) changes.Add($"Create Billing: {existing.CanCreateBilling} → {model.CanCreateBilling}");
@@ -157,7 +157,7 @@ namespace IBS.Services
                     existing.CanPostServiceRequest = model.CanPostServiceRequest;
                     existing.CanCreateDispatchTicket = model.CanCreateDispatchTicket;
                     existing.CanEditDispatchTicket = model.CanEditDispatchTicket;
-                    existing.CanCancelDispatchTicket = model.CanCancelDispatchTicket;
+                    existing.CanDeleteDispatchTicket = model.CanDeleteDispatchTicket;
                     existing.CanSetTariff = model.CanSetTariff;
                     existing.CanApproveTariff = model.CanApproveTariff;
                     existing.CanCreateBilling = model.CanCreateBilling;

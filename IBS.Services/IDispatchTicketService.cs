@@ -15,7 +15,8 @@ namespace IBS.Services
         Task<ServiceResult> SaveTariffAsync(DispatchTicket model, string chargeType, string chargeType2, string username, bool isEdit, CancellationToken cancellationToken);
         Task<ServiceResult> ApproveTariffAsync(int id, string username, CancellationToken cancellationToken);
         Task<ServiceResult> DisapproveTariffAsync(int id, string reason, string username, CancellationToken cancellationToken);
-        Task<ServiceResult> CancelTicketAsync(int id, string username, CancellationToken cancellationToken);
+        Task<ServiceResult> DeleteTicketAsync(int id, string username, CancellationToken cancellationToken);
+        Task<ServiceResult> RestoreTicketAsync(int id, string username, CancellationToken cancellationToken);
         Task<ServiceResult> DeleteImageAsync(int id, CancellationToken cancellationToken);
         Task<ServiceResult> BatchApproveTariffAsync(List<int> ids, string username, CancellationToken cancellationToken);
         Task<ServiceResult> BatchSetTariffAsync(List<int> ids, decimal dispatchRate, decimal bafRate, string chargeType, string chargeType2, string username, CancellationToken cancellationToken);

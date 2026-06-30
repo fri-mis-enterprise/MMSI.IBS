@@ -180,7 +180,8 @@ namespace IBS.Services
             // 1. Update unbilled dispatch tickets
             var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
                 dt => dt.JobOrderId == jobOrder.JobOrderId &&
-                      dt.Status != SD.DispatchTicketStatus.Billed,
+                      dt.Status != SD.DispatchTicketStatus.Billed &&
+                      dt.Status != "Deleted",
                 cancellationToken);
 
             foreach (var ticket in tickets)
@@ -237,7 +238,7 @@ namespace IBS.Services
             try
             {
                 var anyUnbilled = await unitOfWork.DispatchTicket.GetAsync(
-                    dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed,
+                    dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed && dt.Status != "Deleted",
                     cancellationToken) != null;
 
                 if (anyUnbilled) return;

@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -663,13 +663,13 @@ namespace IBS.Services
 
         #endregion
 
-        public async Task<ServiceResult> CancelTicketAsync(int id, string username, CancellationToken cancellationToken)
+        public async Task<ServiceResult> DeleteTicketAsync(int id, string username, CancellationToken cancellationToken)
         {
             try
             {
                 if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
                 {
-                    return ServiceResult.Failure("Cannot cancel ticket â€” parent Job Order is cancelled or closed.");
+                    return ServiceResult.Failure("Cannot delete ticket — parent Job Order is closed or cancelled.");
                 }
 
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -678,24 +678,70 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
 
-                if (model.Status is "Cancelled")
+                if (model.Status != SD.DispatchTicketStatus.ForTariff &&
+                    model.Status != SD.DispatchTicketStatus.Pending &&
+                    model.Status != SD.DispatchTicketStatus.Disapproved)
                 {
-                    return ServiceResult.Failure("Ticket is already cancelled.");
+                    return ServiceResult.Failure($"Cannot delete ticket — status is '{model.Status}' and must be disapproved or have no tariff applied.");
                 }
 
-                model.Status = "Cancelled";
+                model.Status = "Deleted";
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Cancelled dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Deleted dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
-                return ServiceResult.Success($"Dispatch Ticket #{model.DispatchNumber} cancelled successfully.");
+                return ServiceResult.Success($"Dispatch Ticket #{model.DispatchNumber} deleted successfully.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to cancel ticket.");
-                return ServiceResult.Failure($"Failed to cancel ticket: {ExceptionHelper.GetErrorMessage(ex)}");
+                logger.LogError(ex, "Failed to delete ticket.");
+                return ServiceResult.Failure($"Failed to delete ticket: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
+        public async Task<ServiceResult> RestoreTicketAsync(int id, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!await IsTicketJobOrderEditableAsync(id, cancellationToken))
+                {
+                    return ServiceResult.Failure("Cannot restore ticket — parent Job Order is closed or cancelled.");
+                }
+
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                if (model == null)
+                {
+                    return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
+                }
+
+                if (model.Status != "Deleted")
+                {
+                    return ServiceResult.Failure("Ticket is not in a deleted state.");
+                }
+
+                if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
+                {
+                    model.Status = SD.DispatchTicketStatus.ForTariff;
+                }
+                else
+                {
+                    model.Status = SD.DispatchTicketStatus.Pending;
+                }
+
+                model.EditedBy = username;
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Restored dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success($"Dispatch Ticket #{model.DispatchNumber} restored successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to restore ticket.");
+                return ServiceResult.Failure($"Failed to restore ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
 

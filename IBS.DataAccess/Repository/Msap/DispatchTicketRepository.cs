@@ -135,7 +135,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(dt => dt.TugMaster)
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Customer)
-                .Where(dt => dt.Status != "For Posting" && dt.Status != "Cancelled" && dt.Status != "Incomplete");
+                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete");
 
             if (!string.IsNullOrEmpty(filterType))
             {
@@ -146,8 +146,13 @@ namespace IBS.DataAccess.Repository.Msap
                     "disapproved" => query.Where(dt => dt.Status == "Disapproved"),
                     "for billing" => query.Where(dt => dt.Status == "For Billing"),
                     "billed" => query.Where(dt => dt.Status == "Billed"),
-                    _ => query
+                    "deleted" => query.Where(dt => dt.Status == "Deleted"),
+                    _ => query.Where(dt => dt.Status != "Deleted")
                 };
+            }
+            else
+            {
+                query = query.Where(dt => dt.Status != "Deleted");
             }
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -185,7 +190,7 @@ namespace IBS.DataAccess.Repository.Msap
                 }
             }
 
-            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Cancelled" && dt.Status != "Incomplete", cancellationToken);
+            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != "Deleted", cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
             if (parameters.Order?.Count > 0 && parameters.Columns != null)

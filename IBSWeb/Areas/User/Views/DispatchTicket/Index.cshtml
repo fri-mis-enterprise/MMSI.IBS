@@ -30,6 +30,9 @@
             <button id="filterDisapproved" class="modern-btn-secondary">DISAPPROVED</button>
             <button id="filterForBilling" class="modern-btn-secondary">FOR BILLING</button>
             <button id="filterBilled" class="modern-btn-secondary">BILLED</button>
+            <button id="filterDeleted" class="modern-btn-secondary" style="color: var(--error); border-color: var(--error);">
+                <span class="material-symbols-outlined" style="font-size:16px; vertical-align: middle;">delete</span> DELETED
+            </button>
         </div>
 
         <!-- Table Card -->
@@ -85,7 +88,7 @@
             const setTariffUrl = '@Url.Action("SetTariff", "DispatchTicket")';
             const editTariffUrl = '@Url.Action("EditTariff", "DispatchTicket")';
             const editTicketUrl = '@Url.Action("EditTicket", "DispatchTicket")';
-            const filterType = '@ViewBag.FilterType';
+            let filterType = '@ViewBag.FilterType';
 
             const urlParams = new URLSearchParams(window.location.search);
             const statusFilter = urlParams.get('status') || '';
@@ -175,6 +178,19 @@
                                 icon: 'check_circle',
                                 onclick: `confirmApprove(${row.dispatchTicketId})`,
                                 condition: row.status === "@SD.DispatchTicketStatus.ForApproval"
+                            },
+                            {
+                                label: 'Delete Ticket',
+                                icon: 'delete',
+                                isError: true,
+                                onclick: `confirmDeleteTicket(${row.dispatchTicketId})`,
+                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.Disapproved"].includes(row.status)
+                            },
+                            {
+                                label: 'Restore Ticket',
+                                icon: 'restore',
+                                onclick: `confirmRestoreTicket(${row.dispatchTicketId})`,
+                                condition: row.status === "Deleted"
                             }
                         ])
                     }
@@ -201,7 +217,9 @@
                 else if (id === 'filterDisapproved') status = '@SD.DispatchTicketStatus.Disapproved';
                 else if (id === 'filterForBilling') status = '@SD.DispatchTicketStatus.ForBilling';
                 else if (id === 'filterBilled') status = '@SD.DispatchTicketStatus.Billed';
+                else if (id === 'filterDeleted') status = 'Deleted';
 
+                filterType = status === 'Deleted' ? 'deleted' : status ? '' : '';
                 table.column(10).search(status).draw();
                 updateUrl(status);
                 updateFilterButtons(status);
@@ -222,30 +240,61 @@
                 else if (status === "@SD.DispatchTicketStatus.Disapproved") $('#filterDisapproved').addClass('active');
                 else if (status === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
                 else if (status === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
+                else if (status === "Deleted") $('#filterDeleted').addClass('active');
             }
         });
 
-        function confirmApprove(id) {
+        function confirmDeleteTicket(id) {
             ModernAlert.confirm({
-                title: 'Approve Tariff?',
-                text: "This ticket will be marked for billing.",
-                icon: 'question',
-                confirmText: 'Yes, approve it!'
+                title: 'Delete Dispatch Ticket?',
+                text: "This will delete the ticket. You can restore it later.",
+                icon: 'warning',
+                confirmText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    ModernAlert.showLoading("Approving tariff...");
+                    ModernAlert.showLoading("Deleting ticket...");
                     const formData = new FormData();
                     formData.append('id', id);
                     formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
 
-                    fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
+                    fetch('@Url.Action("Delete", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
                         body: new URLSearchParams(formData)
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            ModernAlert.success('The tariff has been approved.').then(() => location.reload());
+                            ModernAlert.success('Dispatch ticket deleted.').then(() => location.reload());
+                        } else {
+                            ModernAlert.error(data.message);
+                        }
+                    })
+                    .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+
+        function confirmRestoreTicket(id) {
+            ModernAlert.confirm({
+                title: 'Restore Dispatch Ticket?',
+                text: "This will restore the ticket to its previous status.",
+                icon: 'question',
+                confirmText: 'Yes, restore it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Restoring ticket...");
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                    fetch('@Url.Action("Restore", "DispatchTicket", new { area = "User" })', {
+                        method: 'POST',
+                        body: new URLSearchParams(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            ModernAlert.success('Dispatch ticket restored.').then(() => location.reload());
                         } else {
                             ModernAlert.error(data.message);
                         }

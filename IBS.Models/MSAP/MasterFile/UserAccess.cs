@@ -24,7 +24,8 @@ namespace IBS.Models.MSAP.MasterFile
 
         public bool CanEditDispatchTicket { get; set; }
 
-        public bool CanCancelDispatchTicket { get; set; }
+        [Column("can_cancel_dispatch_ticket")]
+        public bool CanDeleteDispatchTicket { get; set; }
 
         public bool CanSetTariff { get; set; }
 

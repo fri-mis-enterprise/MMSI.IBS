@@ -114,7 +114,7 @@ namespace IBS.Services.AccessControl
             return await accessControl.HasAnyAccessAsync(userId,
                 ProcedureEnum.CreateDispatchTicket,
                 ProcedureEnum.EditDispatchTicket,
-                ProcedureEnum.CancelDispatchTicket);
+                ProcedureEnum.DeleteDispatchTicket);
         }
 
         public static async Task<bool> HasBillingAccessAsync(this IAccessControlService accessControl, string userId)
@@ -143,7 +143,7 @@ namespace IBS.Services.AccessControl
                 ProcedureEnum.PostServiceRequest,
                 ProcedureEnum.CreateDispatchTicket,
                 ProcedureEnum.EditDispatchTicket,
-                ProcedureEnum.CancelDispatchTicket,
+                ProcedureEnum.DeleteDispatchTicket,
                 ProcedureEnum.SetTariff,
                 ProcedureEnum.ApproveTariff,
                 ProcedureEnum.CreateBilling,

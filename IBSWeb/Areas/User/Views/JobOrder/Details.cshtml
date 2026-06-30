@@ -160,7 +160,7 @@
                                 {
                                     <tr>
                                         <td class="text-center">
-                                            <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status" @(ticket.Status == "Cancelled" ? "disabled" : "")>
+                                            <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status">
                                         </td>
                                         <td class="font-bold">
                                             <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" style="text-decoration:none; color: var(--primary)" target="_blank">
@@ -203,8 +203,8 @@
                                                         <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
                                                             <span class="material-symbols-outlined">payments</span> Set Tariff
                                                         </a>
-                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmCancelTicket(@ticket.DispatchTicketId)">
-                                                            <span class="material-symbols-outlined">cancel</span> Cancel Ticket
+                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDeleteTicket(@ticket.DispatchTicketId)">
+                                                            <span class="material-symbols-outlined">delete</span> Delete Ticket
                                                         </button>
                                                         @if (Model.Status == SD.JobOrderStatus.Open)
                                                         {
@@ -233,6 +233,9 @@
                                                         <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
                                                             <span class="material-symbols-outlined">edit</span> Edit Tariff
                                                         </a>
+                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDeleteTicket(@ticket.DispatchTicketId)">
+                                                            <span class="material-symbols-outlined">delete</span> Delete Ticket
+                                                        </button>
                                                     }
                                                     else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
                                                     {
@@ -668,20 +671,20 @@
             });
         }
 
-        function confirmCancelTicket(id) {
+        function confirmDeleteTicket(id) {
             ModernAlert.confirm({
-                title: 'Cancel Dispatch Ticket?',
-                text: "This action will mark the ticket as Cancelled.",
+                title: 'Delete Dispatch Ticket?',
+                text: "This action will permanently delete the ticket record from the database.",
                 icon: 'warning',
-                confirmText: 'Yes, cancel it!'
+                confirmText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    ModernAlert.showLoading("Cancelling ticket...");
+                    ModernAlert.showLoading("Deleting ticket...");
                     const formData = new FormData();
                     formData.append('id', id);
                     formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
 
-                    fetch('@Url.Action("Cancel", "DispatchTicket", new { area = "User" })', {
+                    fetch('@Url.Action("Delete", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
                         body: new URLSearchParams(formData)
                     })
