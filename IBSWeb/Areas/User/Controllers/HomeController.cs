@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +46,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- MMSI
 
                 MsapServiceRequestForPosting = await dbContext.MsapDispatchTickets
-                        .Where(po => po.Status == "For Posting")
+                        .Where(po => po.Status == SD.DispatchTicketStatus.Requested)
                         .CountAsync(),
 
                 MsapDispatchTicketForTariff = await dbContext.MsapDispatchTickets

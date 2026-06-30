@@ -2,330 +2,374 @@
 
 @{
     ViewData["Title"] = "Service Request - Create";
+    ViewData["IsFullWidth"] = true;
+    var now = DateTimeHelper.GetCurrentPhilippineTime();
 }
 
-<style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    .section-header {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-    }
-
-    .duration-badge {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
-    }
-
-    @@media (max-width: 768px) {
-        .btn{
-            width: 100px !important;
-        }
-        
-        label {
-            font-size: .8em !important
-        }
-        input {
-            font-size: .9em !important;
-        }
-        html {
-            font-size: 16px;
-        }
-
-        table td {
-            font-size: 10px;
-            padding: 5px !important;
-            margin: 0 !important;
-        }
-
-        table th {
-            font-size: 12px;
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-
-        span {
-            font-size: 10px !important;
-        }
-
-        .btn {
-            font-size: 12px !important;
-        }
-
-        ul li {
-            font-size: 12px !important;
-        }
-
-        .form-select {
-            font-size: 10px;
-            min-width: 120px; /* Adjust as needed */
-            width: auto; /* Adjust or set a fixed width if necessary */
-            max-width: 120px; /* Prevent it from being too wide */
-        }
-
-        label[for="dt-length-0"] {
-            font-size: 10px;
-            margin-left: 2px;
-        }
-
-        label[for="dt-search-0"] {
-            font-size: .8em;
-        }
-    }
-</style>
-
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="card text-dark bg-white shadow mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center">
-            <h2 class="text-white py-2">@ViewData["Title"]</h2>
-        </div>
-    </div>
-
-    <div class="card-body">
-        <form id="myForm" method="post" class="row" enctype="multipart/form-data">
-            <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
-
-                <!-- I. Reference Information -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-info-circle me-2"></i>I. Reference Information</h5>
-                <div class="row">
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input asp-for="Date" type="date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="Date" placeholder=" ">
-                        <label asp-for="Date" for="Date" class="ms-2">Date Today<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
+<div class="modern-layout">
+    <form id="myForm" method="post" enctype="multipart/form-data">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label" style="color: var(--on-surface-variant)">Service Request</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Request</span>
                     </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input asp-for="DispatchNumber" type="text" class="form-control border-0 shadow" id="DispatchNumber" placeholder=" " maxlength="20" title="Dispatch Number must not exceed 20 characters" required>
-                        <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch/Mooring #<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="DispatchNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input asp-for="COSNumber" type="text" class="form-control border-0 shadow" id="COSNumber" placeholder="" maxlength="10" title="COS Number must not exceed 10 characters">
-                        <label asp-for="COSNumber" for="COSNumber" class="ms-2">COS#(Optional)</label>
-                        <span asp-validation-for="COSNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder=" " maxlength="20">
-                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage#(Optional)</label>
-                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
-                    </div>
+                    <h1 class="modern-headline-lg">Create Service Request</h1>
                 </div>
-
-                <!-- II. Timeline & Duration -->
-                <div class="d-flex justify-content-between align-items-center border-bottom mt-4 mb-2">
-                    <h5 class="section-header text-secondary mb-0 border-0"><i class="bi bi-clock-history me-2"></i>II. Timeline & Duration</h5>
-                    <div id="durationDisplay" class="badge bg-secondary duration-badge shadow-sm" style="display: none;">
-                        Duration: <span id="totalHours">0</span> hours
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input type="date" asp-for="DateLeft" class="form-control border-0 shadow timeline-input" id="DateLeft" placeholder=" ">
-                        <label asp-for="DateLeft" for="DateLeft" class="ms-2">Date Start</label>
-                        <span asp-validation-for="DateLeft" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input type="time" asp-for="TimeLeft" class="form-control border-0 shadow timeline-input" id="TimeLeft" placeholder=" ">
-                        <label asp-for="TimeLeft" for="TimeLeft" class="ms-2">Time Start</label>
-                        <span asp-validation-for="TimeLeft" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input type="date" asp-for="DateArrived" class="form-control border-0 shadow timeline-input" id="DateArrived" placeholder=" ">
-                        <label asp-for="DateArrived" for="DateArrived" class="ms-2">Date End</label>
-                        <span asp-validation-for="DateArrived" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-md-3 col-6 my-2">
-                        <input type="time" asp-for="TimeArrived" class="form-control border-0 shadow timeline-input" id="TimeArrived" placeholder=" ">
-                        <label asp-for="TimeArrived" for="TimeArrived" class="ms-2">Time End</label>
-                        <span asp-validation-for="TimeArrived" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <!-- III. Service Details -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-geo-alt me-2"></i>III. Service Details</h5>
-                <div class="row">
-                    <div class="form-group col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Customer</label>
-                        <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span asp-validation-for="CustomerId" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-group col-md-6 col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Vessel</label>
-                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Vessel</option>
-                        </select>
-                        <span asp-validation-for="VesselId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-md-3 col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Port</label>
-                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Port</option>
-                        </select>
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-md-3 col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Terminal <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
-                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Terminal</option>
-                        </select>
-                        <span asp-validation-for="TerminalId" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <!-- IV. Provider Details -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-person-badge me-2"></i>IV. Provider Details</h5>
-                <div class="row">
-                    <div class="form-group col-md-4 col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Activity/Service Type</label>
-                        <select asp-for="ServiceId" asp-items="@Model.Services" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Service</option>
-                        </select>
-                        <span asp-validation-for="ServiceId" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group col-md-4 col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Tugboat/Service provider</label>
-                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Tugboat</option>
-                        </select>
-                        <span asp-validation-for="TugBoatId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-md-4 col-6 my-2">
-                        <label class="control-label pb-1">Master on Duty</label>
-                        <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
-                            <option value="">Select Tug Master</option>
-                        </select>
-                        <span asp-validation-for="TugMasterId" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <!-- V. Remarks & Media -->
-                <h5 class="section-header text-secondary border-bottom"><i class="bi bi-chat-left-text me-2"></i>V. Media & Remarks</h5>
-                <div class="row">
-                    <div class="form-floating col-12 my-2">
-                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" maxlength="100" placeholder=" ">
-                        <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
-                        <span asp-validation-for="Remarks" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-group col-md-6 col-12 my-2">
-                        <label for="imageUpload" class="form-label">Upload image of Dispatch Ticket</label>
-                        <input class="form-control form-control-sm border-0 shadow" id="imageUpload" name="imageFile" type='file' accept="image/png, image/jpg, image/jpeg"/>
-                    </div>
-                    <div class="form-group col-md-6 col-12 my-2">
-                        <label for="videoUpload" class="form-label">Upload video of service operation</label>
-                        <input class="form-control form-control-sm border-0 shadow" id="videoUpload" name="videoFile" type='file' accept="video/mp4, video/ogg"/>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row col-12 justify-content-end my-4">
-                <div class="text-center" style="width: 150px">
-                    <button class="btn btn-primary custom-btn col-12 align-content-center selected-options shadow" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                </div>
-                <div class="text-center" style="width: 150px">
-                    <a class="btn btn-outline-primary col-12 align-content-center selected-options shadow" asp-controller="ServiceRequest" asp-action="Index">
-                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" id="submitButton">
+                        <span class="material-symbols-outlined">save</span> SUBMIT
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">arrow_back</span> BACK
                     </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid">
+                <div class="modern-col-8 flex flex-column" style="gap: 1.5rem;">
+                    <!-- 0. Job Order Reference -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">assignment</span>
+                            <h2 class="modern-headline-md">Job Order Reference</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-12">
+                                    <label class="modern-label">Link to Job Order <span class="text-xs" style="color: var(--on-surface-variant)">(Optional — select to pre-fill details below)</span></label>
+                                    <select id="JobOrderId" asp-for="JobOrderId" asp-items="@Model.JobOrders" class="js-modern-select" data-placeholder="-- Select Job Order --">
+                                        <option value="">-- No Job Order (Fill Manually) --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="jobOrderInfo" class="modern-grid-compact mt-2" style="display:none; background: var(--surface-container-low); padding: 0.75rem; border-radius: var(--radius-xl);">
+                                <div class="modern-col-6">
+                                    <span class="modern-label text-xs">Customer</span>
+                                    <p id="joCustomer" class="modern-value-sm font-bold">-</p>
+                                </div>
+                                <div class="modern-col-6">
+                                    <span class="modern-label text-xs">Vessel</span>
+                                    <p id="joVessel" class="modern-value-sm font-bold uppercase">-</p>
+                                </div>
+                                <div class="modern-col-4">
+                                    <span class="modern-label text-xs">Port</span>
+                                    <p id="joPort" class="modern-value-sm">-</p>
+                                </div>
+                                <div class="modern-col-4">
+                                    <span class="modern-label text-xs">Terminal</span>
+                                    <p id="joTerminal" class="modern-value-sm">-</p>
+                                </div>
+                                <div class="modern-col-4">
+                                    <span class="modern-label text-xs">Voyage / COS</span>
+                                    <p id="joVoyage" class="modern-value-sm">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- I. Reference Information -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">info</span>
+                            <h2 class="modern-headline-md">Reference Information</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="modern-grid-compact">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Date Today <span class="text-error">*</span></label>
+                                    <input asp-for="Date" type="date" value="@(Model.Date == default ? now.ToString("yyyy-MM-dd") : Model.Date.ToString("yyyy-MM-dd"))" class="modern-input">
+                                    <span asp-validation-for="Date" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Dispatch/Mooring # <span class="text-error">*</span></label>
+                                    <input asp-for="DispatchNumber" class="modern-input" placeholder="Enter Dispatch #" maxlength="20" required>
+                                    <span asp-validation-for="DispatchNumber" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">COS # (Optional)</label>
+                                    <input asp-for="COSNumber" class="modern-input" placeholder="Optional" maxlength="10">
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Voyage # (Optional)</label>
+                                    <input asp-for="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="20">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- II. Service Details -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">anchor</span>
+                            <h2 class="modern-headline-md">Service Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-2">
+                                <label class="modern-label">Customer <span class="text-error">*</span></label>
+                                <div id="CustomerContainer">
+                                    <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" data-placeholder="-- Select Customer --" required>
+                                        <option value="">-- Select Customer --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modern-grid-compact mt-2">
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Vessel <span class="text-error">*</span></label>
+                                    <div id="VesselContainer">
+                                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="js-modern-select" data-placeholder="-- Select Vessel --" required>
+                                            <option value="">-- Select Vessel --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Activity/Service Type <span class="text-error">*</span></label>
+                                    <div id="ServiceContainer">
+                                        <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" data-placeholder="-- Select Service --" required>
+                                            <option value="">-- Select Service --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Port <span class="text-error">*</span></label>
+                                    <div id="PortContainer">
+                                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --" required>
+                                            <option value="">-- Select Port --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Terminal <span class="text-error">*</span> <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
+                                    <div id="TerminalContainer">
+                                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="js-modern-select" data-placeholder="-- Select Terminal --" required>
+                                            <option value="">-- Select Terminal --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Tugboat/Service provider <span class="text-error">*</span></label>
+                                    <div id="TugboatContainer">
+                                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="js-modern-select" data-placeholder="-- Select Tugboat --" required>
+                                            <option value="">-- Select Tugboat --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Master on Duty <span class="text-error">*</span></label>
+                                    <div id="TugMasterContainer">
+                                        <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="js-modern-select" data-placeholder="-- Select Tug Master --" required>
+                                            <option value="">-- Select Tug Master --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- III. Remarks -->
+                    <div class="modern-card" style="flex: 1;">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">chat</span>
+                            <h2 class="modern-headline-md">Remarks</h2>
+                        </div>
+                        <div class="modern-card-body" style="height: 100%;">
+                            <textarea asp-for="Remarks" class="modern-input" placeholder="Enter remarks (Optional)" style="height: 100%; min-height: 120px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
+                    <!-- Timeline & Duration -->
+                    <div class="modern-card sticky top-24">
+                        <div class="modern-card-header-info" style="background-color: var(--primary); color: white;">
+                            <span class="material-symbols-outlined">schedule</span>
+                            <div class="flex justify-content-between w-full gap-2">
+                                <h2 class="modern-headline-md" style="color: white">Timeline</h2>
+                                <span id="durationBadge" class="modern-badge" style="background: white; color: var(--primary);">0.00 hrs</span>
+                            </div>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-2">
+                                <label class="modern-label font-bold">Start Date & Time <span class="text-error">*</span></label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="date" asp-for="DateLeft" id="DateLeft" value="@(Model.DateLeft?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
+                                    <input type="time" asp-for="TimeLeft" id="TimeLeft" value="@(Model.TimeLeft?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="modern-label font-bold">End Date & Time <span class="text-error">*</span></label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="date" asp-for="DateArrived" id="DateArrived" value="@(Model.DateArrived?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
+                                    <input type="time" asp-for="TimeArrived" id="TimeArrived" value="@(Model.TimeArrived?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Uploads -->
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--surface-container-low); color: var(--on-surface);">
+                            <span class="material-symbols-outlined">camera</span>
+                            <h2 class="modern-headline-md">Media Attachments</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="modern-label">Dispatch Ticket Image <span class="text-error">*</span></label>
+                                    <button type="button" id="btnPreviewImage" class="modern-btn-text text-xs" style="display:none;">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                    </button>
+                                </div>
+                                <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;" required>
+                                <span class="text-error text-xs">An image of the Dispatch/Mooring Ticket is required.</span>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="modern-label">Operation Video</label>
+                                    <button type="button" id="btnPreviewVideo" class="modern-btn-text text-xs" style="display:none;">
+                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                    </button>
+                                </div>
+                                <input class="modern-input" id="videoUpload" name="videoFile" type="file" accept="video/*" style="padding: 0.35rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </form>
 </div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            const port = $("#PortSelect");
-            const terminalSelectVar = $("#TerminalSelect");
-            const terminalLoading = $("#terminalLoading");
-            
-            // Port Change Logic
-            function HandlePortChange() {
-                let portId = port.val();
-                if (!portId) return;
+            // --- Job Order Auto-fill ---
+            $('#JobOrderId').on('change', function () {
+                const joId = $(this).val();
+                if (!joId) {
+                    $('#jobOrderInfo').hide();
+                    return;
+                }
 
-                terminalLoading.show();
-                $.ajax({
-                    url: '@Url.Action("ChangeTerminal", "DispatchTicket")',
-                    type: "GET",
-                    data: { portId: portId },
-                    success: function (data) {
-                        terminalSelectVar.empty();
-                        if (Array.isArray(data) && data.length > 0) {
-                            terminalSelectVar.append('<option value="">Select Terminal</option>');
-                            $.each(data, function (index, item) {
-                                terminalSelectVar.append($('<option>', {
-                                    value: item.value,
-                                    text: item.text
-                                }));
-                            });
-                        } else {
-                            terminalSelectVar.append('<option value="">No terminals found</option>');
+                $.get('@Url.Action("GetJobOrderDetails", "ServiceRequest")', { jobOrderId: joId }, function (data) {
+                    if (data.success) {
+                        $('#jobOrderInfo').show();
+                        $('#joCustomer').text(data.customerName || '-');
+                        $('#joVessel').text(data.vesselName || '-');
+                        $('#joPort').text(data.portName || '-');
+                        $('#joTerminal').text(data.terminalName || '-');
+                        $('#joVoyage').text((data.voyageNumber || '') + ' / ' + (data.cosNumber || ''));
+
+                        // Auto-fill form fields
+                        if (data.customerId) {
+                            $('#CustomerId').val(data.customerId).trigger('change');
                         }
-                    },
-                    complete: function() {
-                        terminalLoading.hide();
+                        if (data.vesselId) {
+                            $('#VesselId').val(data.vesselId).trigger('change');
+                        }
+                        if (data.portId) {
+                            $('#PortSelect').val(data.portId).trigger('change');
+                        }
+                        if (data.terminalId) {
+                            setTimeout(function() {
+                                $('#TerminalSelect').val(data.terminalId).trigger('change');
+                            }, 500);
+                        }
+                        if (data.voyageNumber) {
+                            $('#VoyageNumber').val(data.voyageNumber);
+                        }
+                        if (data.cosNumber) {
+                            $('#COSNumber').val(data.cosNumber);
+                        }
+                        if (data.date) {
+                            $('#Date').val(data.date);
+                        }
                     }
                 });
-            }
-            port.change(HandlePortChange);
-
-            // Date Mirroring & Duration Logic
-            const dateLeft = $("#DateLeft");
-            const timeLeft = $("#TimeLeft");
-            const dateArrived = $("#DateArrived");
-            const timeArrived = $("#TimeArrived");
-            const durationDisplay = $("#durationDisplay");
-            const totalHoursSpan = $("#totalHours");
-
-            function calculateDuration() {
-                if (dateLeft.val() && timeLeft.val() && dateArrived.val() && timeArrived.val()) {
-                    const start = new Date(`${dateLeft.val()}T${timeLeft.val()}`);
-                    const end = new Date(`${dateArrived.val()}T${timeArrived.val()}`);
-                    
-                    if (!isNaN(start) && !isNaN(end)) {
-                        const diffMs = end - start;
-                        if (diffMs < 0) {
-                            durationDisplay.removeClass("bg-secondary").addClass("bg-danger").show();
-                            totalHoursSpan.text("Invalid (End is before Start)");
-                        } else {
-                            const diffHrs = (diffMs / (1000 * 60 * 60)).toFixed(2);
-                            durationDisplay.removeClass("bg-danger").addClass("bg-secondary").show();
-                            totalHoursSpan.text(diffHrs);
-                        }
-                    }
-                } else {
-                    durationDisplay.hide();
-                }
-            }
-
-            dateLeft.change(function() {
-                if (dateArrived.val() === dateLeft.data('previous-val') || !dateArrived.val()) {
-                    dateArrived.val(dateLeft.val());
-                }
-                dateLeft.data('previous-val', dateLeft.val());
-                calculateDuration();
             });
 
-            $(".timeline-input").on("input change", calculateDuration);
-            
-            dateLeft.data('previous-val', dateLeft.val());
+            // --- Port/Terminal Cascading Dropdown ---
+            $('#PortSelect').on('change', function () {
+                const portId = $(this).val();
+                if (!portId) return;
+
+                $('#terminalLoading').show();
+                $.get('@Url.Action("ChangeTerminal", "ServiceRequest")', { portId: portId }, function (data) {
+                    const $select = $('#TerminalSelect');
+                    $select.empty().append('<option value="">-- Select Terminal --</option>');
+                    $.each(data, function (i, item) {
+                        $select.append($('<option>', { value: item.value, text: item.text }));
+                    });
+                    if (typeof refreshModernSelect === 'function') {
+                        refreshModernSelect($select);
+                    }
+                }).always(() => $('#terminalLoading').hide());
+            });
+
+            // --- Duration Calculation ---
+            function calculateDuration() {
+                const startD = $('#DateLeft').val();
+                const startT = $('#TimeLeft').val();
+                const endD = $('#DateArrived').val();
+                const endT = $('#TimeArrived').val();
+
+                if (startD && startT && endD && endT) {
+                    const start = new Date(`${startD}T${startT}`);
+                    const end = new Date(`${endD}T${endT}`);
+                    if (!isNaN(start) && !isNaN(end)) {
+                        const diff = (end - start) / 3600000;
+                        const $badge = $('#durationBadge');
+                        if (diff < 0) {
+                            $badge.text("Invalid").css({'background': 'var(--error)', 'color': 'white'});
+                        } else {
+                            $badge.text(diff.toFixed(2) + " hrs").css({'background': 'white', 'color': 'var(--primary)'});
+                        }
+                    }
+                }
+            }
+            $('.timeline-input').on('change input', calculateDuration);
             calculateDuration();
+
+            // --- Media Preview Logic ---
+            let imageBlobUrl = null;
+            let videoBlobUrl = null;
+
+            $('#imageUpload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (imageBlobUrl) URL.revokeObjectURL(imageBlobUrl);
+                    imageBlobUrl = URL.createObjectURL(file);
+                    $('#btnPreviewImage').show();
+                } else {
+                    $('#btnPreviewImage').hide();
+                }
+            });
+
+            $('#videoUpload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+                    videoBlobUrl = URL.createObjectURL(file);
+                    $('#btnPreviewVideo').show();
+                } else {
+                    $('#btnPreviewVideo').hide();
+                }
+            });
+
+            $('#btnPreviewImage').on('click', function() {
+                if (imageBlobUrl) {
+                    ModernAlert.image(imageBlobUrl, "Dispatch Ticket Image Preview");
+                }
+            });
+
+            $('#btnPreviewVideo').on('click', function() {
+                if (videoBlobUrl) {
+                    ModernAlert.video(videoBlobUrl, "Operation Video Preview");
+                }
+            });
         });
     </script>
 }

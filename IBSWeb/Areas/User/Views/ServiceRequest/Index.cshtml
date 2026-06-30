@@ -1,110 +1,92 @@
-@model IEnumerable<DispatchTicket>
+@model IEnumerable<IBS.Models.MSAP.DispatchTicket>
 
 @{
-    ViewData["Title"] = "Service Request";
+    ViewData["Title"] = "Service Requests";
+    ViewData["IsFullWidth"] = true;
 }
 
-<style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-    .actions-dropdown .dropdown-item:hover {
-        background-color: #f3f4f6;
-    }
-</style>
-
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-area="User" asp-controller="ServiceRequest" asp-action="Create" class="btn btn-light shadow-sm">
-            <i class="bi bi-plus-circle"></i> Create Request
-        </a>
-    </div>
-
-    <div class="card shadow border-0 mt-3">
-        <div class="card-body p-3">
-            <div class="table-responsive" style="max-height: 70vh">
-                <div class="btn-group mb-3 shadow-sm" role="group" aria-label="Filter Options">
-                    <button id="filterAll" class="btn btn-outline-primary active">
-                        <i class="bi bi-list"></i> All
-                    </button>
-                    <button id="filterForPosting" class="btn btn-outline-primary">
-                        <i class="bi bi-check-circle"></i> For Posting
-                    </button>
-                    <button id="filterIncomplete" class="btn btn-outline-primary">
-                        <i class="bi bi-dash-circle"></i> Incomplete
-                    </button>
-                    <button id="filterCancelled" class="btn btn-outline-primary">
-                        <i class="bi bi-x-circle"></i> Cancelled
-                    </button>
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Service Requests</span>
                 </div>
-                <table class="table table-hover mb-0" id="paginatedTable">
-                    <thead class="bg-light">
-                    <tr>
-                        <th data-orderable="false" class="px-3 py-1 text-center align-content-center"><input type="checkbox" id="selectAll"></th>
-                        <th class="text-start">DATE</th>
-                        <th class="text-start">COS #</th>
-                        <th class="text-start">DISPATCH/ <br/> MOORING TICKET</th>
-                        <th class="text-start">DATE/TIME START</th>
-                        <th class="text-start">DATE/TIME END</th>
-                        <th class="text-start">ACTIVITY/ <br/>SERVICE TYPE</th>
-                        <th class="text-start">PORT-<br/> TERMINAL</th>
-                        <th class="text-start">TUGBOAT</th>
-                        <th class="text-start">CUSTOMER</th>
-                        <th class="text-start">VESSEL</th>
-                        <th class="text-start">STATUS</th>
-                        <th class="text-center" style="width: 100px;">Actions</th>
-                    </tr>
-                    </thead>
-                </table>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE REQUEST
+                </a>
+            </div>
+        </div>
 
-                <div class="row m-0 p-0 justify-content-end mt-3 gap-2">
-                    <div style="width: 200px;">
-                        <button class="btn btn-primary w-100 shadow selected-options" id="postSelected" style="display:none"><i class="bi bi-check-circle"></i> Post Selected</button>
-                    </div>
-                    <div style="width: 200px;">
-                        <button class="btn btn-outline-danger w-100 shadow selected-options" id="cancelSelected" style="display:none"><i class="bi bi-x-circle"></i> Cancel Selected</button>
-                    </div>
+        <div class="flex flex-wrap gap-2">
+            <button id="filterAll" class="modern-btn-secondary active">ALL</button>
+            <button id="filterRequested" class="modern-btn-secondary">REQUESTED</button>
+            <button id="filterDraft" class="modern-btn-secondary">DRAFT</button>
+            <button id="filterCancelled" class="modern-btn-secondary" style="color: var(--error); border-color: var(--error);">
+                <span class="material-symbols-outlined" style="font-size:16px; vertical-align: middle;">cancel</span> CANCELLED
+            </button>
+        </div>
+
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">assignment</span>
+                    <h2 class="modern-headline-md">Request List</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                    <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <div class="modern-table-container">
+                    <table class="modern-table" id="paginatedTable">
+                        <thead>
+                            <tr>
+                                <th data-orderable="false" class="text-center" style="width: 40px;"><input type="checkbox" id="selectAll"></th>
+                                <th>Date</th>
+                                <th>COS #</th>
+                                <th>Ticket #</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Activity/Service</th>
+                                <th>Port - Terminal</th>
+                                <th>Tugboat</th>
+                                <th>Customer</th>
+                                <th>Vessel</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center" style="width: 100px;">Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-3">
+                    <button class="modern-btn-primary selected-options" id="postSelected" style="display:none">
+                        <span class="material-symbols-outlined">check_circle</span> POST SELECTED
+                    </button>
+                    <button class="modern-btn-secondary selected-options" id="cancelSelected" style="display:none; color: var(--error); border-color: var(--error);">
+                        <span class="material-symbols-outlined">cancel</span> CANCEL SELECTED
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
+
+<style>
+    .modern-btn-secondary.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
 
 @section Scripts {
     <script>
@@ -126,90 +108,83 @@
         }
 
         $(document).ready(function () {
-            const editUrl = '@Url.Action("Edit", "ServiceRequest")';
+            const editUrl = '@Url.Action("Edit", "ServiceRequest", new { area = "User" })';
 
-            let table = $('#paginatedTable').DataTable({
-                "order": [[1, 'asc']],
-                "columnDefs": [
-                    { "orderable": false, "targets": [0, 12] }
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                order: [[1, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: [0, 12] }
                 ],
-                "processing": true,
-                "serverSide": true,
-                "ajax": {
-                    "url": "@Url.Action("GetDispatchTicketLists", "ServiceRequest", new { area = "User" })",
-                    "type": "POST",
-                    "data": function (d) {
-                        return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        });
-                    }
-                },
-                "preDrawCallback": () => $('#paginatedTable').addClass('table-loading'),
-                "drawCallback": () => $('#paginatedTable').removeClass('table-loading'),
-                "columns": [
+                ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "ServiceRequest", new { area = "User" })"),
+                columns: [
                     {
-                        "data": null,
-                        "render": (data, type, row) => {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
                             const isChecked = selectedRecords.has(String(row.dispatchTicketId)) ? 'checked' : '';
-                            return (row.status !== "Cancelled" && row.status !== "Incomplete") 
+                            return (row.status !== "Cancelled" && row.status !== "Draft") 
                                 ? `<div class="text-center"><input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}></div>`
                                 : `<div class="text-center"><input type="checkbox" disabled></div>`;
                         }
                     },
-                    {"data": "date"},
-                    {"data": "cosNumber"},
-                    {"data": "dispatchNumber"},
+                    { data: "date", defaultContent: "" },
+                    { data: "cosNumber", defaultContent: "" },
                     {
-                        "data": "dateLeft",
-                        "render": (data, type, row) => row.dateLeft ? `${row.dateLeft} ${row.timeLeft || ""}` : ""
+                        data: "dispatchNumber",
+                        render: (data, type, row) => `<a href="${editUrl}?id=${row.dispatchTicketId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
                     },
                     {
-                        "data": "dateArrived",
-                        "render": (data, type, row) => row.dateArrived ? `${row.dateArrived} ${row.timeArrived || ""}` : ""
+                        data: null,
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateLeft, row.timeLeft)
                     },
-                    {"data": "service.serviceName"},
                     {
-                        "data": null,
-                        "render": (data, type, row) => {
-                            const p = row.terminal?.port?.portName || "";
-                            const t = row.terminal?.terminalName || "";
-                            return p || t ? `${p} - ${t}` : "";
+                        data: null,
+                        render: (data, type, row) => ModernTable.render.dateTime(row.dateArrived, row.timeArrived)
+                    },
+                    { data: "service.serviceName", defaultContent: "" },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
+                            const portName = row.terminal?.port?.portName ?? "";
+                            const terminalName = row.terminal?.terminalName ?? "";
+                            return portName || terminalName ? `${portName} - ${terminalName}` : "";
                         }
                     },
-                    {"data": "tugboat.tugboatName"},
+                    { data: "tugboat.tugboatName", defaultContent: "" },
                     {
-                        "data": "customer.customerName",
-                        "render": (data, type, row) => row.customer?.customerName || '<span class="text-muted italic small">(Not Assigned)</span>'
+                        data: "customer.customerName",
+                        render: (data, type, row) => row.customerId ? data : '<span class="text-xs opacity-60">(Not Assigned)</span>'
                     },
-                    {"data": "vessel.vesselName"},
+                    { data: "vessel.vesselName", defaultContent: "" },
                     {
-                        "data": "status",
-                        "render": (data, type, row) => {
-                            let color = row.status === "For Posting" ? "bg-info" : "bg-secondary";
-                            return `<span class="badge rounded-pill ${color} text-white">${row.status}</span>`;
+                        data: "status",
+                        className: "text-center",
+                        render: (data) => {
+                            let cls = data === "Requested" ? "status-approval" : data === "Draft" ? "status-tariff" : "status-closed";
+                            return ModernTable.render.badge(data, cls);
                         }
                     },
                     {
-                        "data": null,
-                        "render": (data, type, row) => {
-                            let actions = `<div class="d-flex justify-content-center"><div style="width:120px;">`;
-                            if (row.imageName || row.videoName) {
-                                actions += `<div class="dropdown w-100">
-                                    <button class="btn btn-sm btn-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">Actions</button>
-                                    <ul class="dropdown-menu shadow">
-                                        ${row.status !== "Cancelled" ? `<li><a class="dropdown-item" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>` : ""}
-                                        ${row.imageName ? `<li><a class="dropdown-item view-upload" href="#" data-uploadname="${row.imageSignedUrl}"><i class="bi bi-image"></i> View Image</a></li>` : ""}
-                                        ${row.videoName ? `<li><a class="dropdown-item view-video" href="#" data-videolink="${row.videoSignedUrl}"><i class="bi bi-play-circle"></i> Play Video</a></li>` : ""}
-                                    </ul>
-                                </div>`;
-                            } else {
-                                actions += `<a class="btn btn-sm btn-primary w-100 shadow-sm" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => {
+                            const items = [];
+                            if (row.status !== "Cancelled") {
+                                items.push({ label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.dispatchTicketId}` });
                             }
-                            return actions + `</div></div>`;
+                            if (row.imageSignedUrl) {
+                                items.push({ label: 'View Image', icon: 'image', onclick: `ModernAlert.image('${row.imageSignedUrl}', 'Upload Preview')` });
+                            }
+                            if (row.videoSignedUrl) {
+                                items.push({ label: 'Play Video', icon: 'play_circle', onclick: `ModernAlert.video('${row.videoSignedUrl}', 'Video Preview')` });
+                            }
+                            return ModernTable.render.dropdown(items);
                         }
                     }
                 ]
-            });
+            }));
 
             // Handlers
             $(document).on("click", "#selectAll", function () { toggleSelectAll(this); });
@@ -241,20 +216,22 @@
                 });
             });
 
-            $(document).on("click", ".view-upload", function () {
-                ModernAlert.image($(this).data("uploadname"), "Upload Preview");
-            });
-
-            $(document).on("click", ".view-video", function () {
-                ModernAlert.video($(this).data("videolink"), "Video Preview");
-            });
-
             // Filter logic
-            $('.btn-group button').on('click', function() {
-                $('.btn-group button').removeClass('active');
+            $('.modern-btn-secondary[id^="filter"]').on('click', function() {
+                const id = $(this).attr('id');
+                let status = '';
+                if (id === 'filterRequested') status = 'Requested';
+                else if (id === 'filterDraft') status = 'Draft';
+                else if (id === 'filterCancelled') status = 'Cancelled';
+
+                table.column(11).search(status).draw();
+                $('.modern-btn-secondary').removeClass('active');
                 $(this).addClass('active');
-                const filter = $(this).attr('id').replace('filter', '');
-                table.columns(11).search(filter === 'All' ? '' : filter).draw();
+            });
+
+            // Date filter
+            $('#dateFilter').on('change', function () {
+                table.column(1).search($(this).val()).draw();
             });
         });
     </script>

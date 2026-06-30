@@ -291,7 +291,8 @@
                 return;
             }
 
-            if (!$("#CustomerId").val()) {
+            var customerId = $("#CustomerId").val();
+            if (!customerId || customerId === "0") {
                 $("#customerError").show();
                 return;
             }

@@ -20,6 +20,7 @@ namespace IBSWeb.Areas.User.Controllers
         IJobOrderService jobOrderService,
         IDispatchTicketService dispatchTicketService,
         ITerminalService terminalService,
+        ICloudStorageService cloudStorageService,
         ILogger<JobOrderController> logger,
         IHubContext<TugboatHub> hubContext,
         IHubContext<PlanningHub> planningHubContext) : Controller
@@ -156,6 +157,20 @@ namespace IBSWeb.Areas.User.Controllers
 
             var ticketViewModel = await dispatchTicketService.PopulateServiceRequestViewModelAsync(null, id, cancellationToken);
             ViewData["TicketViewModel"] = ticketViewModel;
+
+            foreach (var ticket in jobOrder.DispatchTickets)
+            {
+                if (!string.IsNullOrEmpty(ticket.ImageName))
+                {
+                    try { ticket.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.ImageName); }
+                    catch { logger.LogWarning("Image file not found: {Name}", ticket.ImageName); }
+                }
+                if (!string.IsNullOrEmpty(ticket.VideoName))
+                {
+                    try { ticket.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.VideoName); }
+                    catch { logger.LogWarning("Video file not found: {Name}", ticket.VideoName); }
+                }
+            }
 
             return View(jobOrder);
         }

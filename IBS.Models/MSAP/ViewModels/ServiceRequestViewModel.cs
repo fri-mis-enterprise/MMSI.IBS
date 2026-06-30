@@ -58,6 +58,8 @@ namespace IBS.Models.MSAP.ViewModels
         [StringLength(100)]
         public string? Remarks { get; set; }
 
+        public string? Status { get; set; }
+
         #region ---Select Lists---
 
         public List<SelectListItem>? Tugboats { get; set; }
@@ -73,6 +75,8 @@ namespace IBS.Models.MSAP.ViewModels
         public List<SelectListItem>? Services { get; set; }
 
         public List<SelectListItem>? Customers { get; set; }
+
+        public List<SelectListItem>? JobOrders { get; set; }
 
         #endregion ---Select Lists---
 
@@ -121,8 +125,11 @@ namespace IBS.Models.MSAP.ViewModels
             PortId = entity.PortId;
             Remarks = entity.Remarks;
             ImageName = entity.ImageName;
+            ImageSignedUrl = entity.ImageSignedUrl;
             VideoName = entity.VideoName;
+            VideoSignedUrl = entity.VideoSignedUrl;
             DispatchTicketId = entity.DispatchTicketId;
+            Status = entity.Status;
             JobOrderId = entity.JobOrderId;
         }
     }

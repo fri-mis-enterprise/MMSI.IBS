@@ -198,7 +198,25 @@
                                                         <span class="material-symbols-outlined">visibility</span> View Ticket
                                                     </a>
 
-                                                    @if (ticket.Status is "For Tariff" or "Pending")
+                                                    @if (ticket.Status is "Draft" or "Requested")
+                                                    {
+                                                        <a asp-controller="ServiceRequest" asp-action="Edit" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item">
+                                                            <span class="material-symbols-outlined">edit</span> Edit Request
+                                                        </a>
+                                                        @if (!string.IsNullOrEmpty(ticket.ImageSignedUrl))
+                                                        {
+                                                            <button type="button" class="modern-dropdown-item" style="width:100%; border:none; background:none; cursor:pointer;" onclick="ModernAlert.image('@ticket.ImageSignedUrl', 'Upload Preview')">
+                                                                <span class="material-symbols-outlined">image</span> View Image
+                                                            </button>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(ticket.VideoSignedUrl))
+                                                        {
+                                                            <button type="button" class="modern-dropdown-item" style="width:100%; border:none; background:none; cursor:pointer;" onclick="ModernAlert.video('@ticket.VideoSignedUrl', 'Video Preview')">
+                                                                <span class="material-symbols-outlined">play_circle</span> Play Video
+                                                            </button>
+                                                        }
+                                                    }
+                                                    else if (ticket.Status is "For Tariff" or "Pending")
                                                     {
                                                         <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
                                                             <span class="material-symbols-outlined">payments</span> Set Tariff
@@ -311,6 +329,8 @@
             "Billed" => "status-open",
             "Disapproved" => "status-closed",
             "Cancelled" => "status-closed",
+            "Draft" => "status-closed",
+            "Requested" => "status-approval",
             _ => "status-closed"
         };
     }
@@ -699,6 +719,7 @@
                     .catch(error => ModernAlert.error(`Request failed: ${error}`));
                 }
             });
-        }
+
+        });
     </script>
 }

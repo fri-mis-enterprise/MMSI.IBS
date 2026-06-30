@@ -8,6 +8,7 @@ using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -33,49 +34,24 @@ namespace IBSWeb.Areas.User.Controllers
         INotificationService notificationService)
         : Controller
     {
-        private const string FilterTypeClaimType = "DispatchTicket.FilterType";
-
-        private async Task UpdateFilterTypeClaim(string filterType)
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var user = await userManager.GetUserAsync(User);
-            if (user != null)
-            {
-                var existingClaim = (await userManager.GetClaimsAsync(user))
-                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
-
-                if (existingClaim != null)
-                {
-                    await userManager.RemoveClaimAsync(user,
-                        existingClaim);
-                }
-
-                if (!string.IsNullOrEmpty(filterType))
-                {
-                    await userManager.AddClaimAsync(user,
-                        new Claim(FilterTypeClaimType,
-                            filterType));
-                }
-            }
-        }
-
-        private async Task<string?> GetCurrentFilterType()
-        {
-            var user = await userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
-        }
-
-        public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
-        {
-            await UpdateFilterTypeClaim(filterType);
-            ViewBag.FilterType = await GetCurrentFilterType();
             return View(Enumerable.Empty<DispatchTicket>());
+        }
+
+        private async Task PopulateJobOrdersList(ServiceRequestViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var openJobOrders = await dbContext.MsapJobOrders
+                .Where(j => j.Status == SD.JobOrderStatus.Open)
+                .Include(j => j.Vessel)
+                .Include(j => j.Customer)
+                .OrderByDescending(j => j.JobOrderNumber)
+                .Select(j => new SelectListItem
+                {
+                    Value = j.JobOrderId.ToString(),
+                    Text = $"{j.JobOrderNumber} - {j.Vessel.VesselName} ({j.Customer.CustomerName})"
+                }).ToListAsync(cancellationToken);
+            viewModel.JobOrders = openJobOrders;
         }
 
         [HttpGet]
@@ -87,6 +63,7 @@ namespace IBSWeb.Areas.User.Controllers
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = 0;
             return View(viewModel);
         }
@@ -96,7 +73,15 @@ namespace IBSWeb.Areas.User.Controllers
         {
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
+
+            if (imageFile == null || imageFile.Length == 0)
+            {
+                TempData["warning"] = "An image of the Dispatch/Mooring Ticket is strictly required!";
+                return View(viewModel);
+            }
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -107,7 +92,7 @@ namespace IBSWeb.Areas.User.Controllers
                     throw new Exception("Can't create entry, please review your input.");
                 }
 
-                var model = ServiceRequestVmToDispatchTicketModel(viewModel);
+                var model = viewModel.ToEntity();
 
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -179,12 +164,12 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                model.Status = "Incomplete";
+                model.Status = SD.DispatchTicketStatus.Draft;
 
                 if (model is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
                     model.TerminalId != 0 && model.ServiceId != 0 && model.TugBoatId != 0 && model.TugMasterId != null && model.VesselId != 0)
                 {
-                    model.Status = "For Posting";
+                    model.Status = SD.DispatchTicketStatus.Requested;
                 }
 
                 await unitOfWork.DispatchTicket.AddAsync(model,
@@ -237,10 +222,12 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var viewModel = DispatchTicketModelToServiceRequestVm(model);
+            var viewModel = new ServiceRequestViewModel();
+            viewModel.FromEntity(model);
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            await PopulateJobOrdersList(viewModel, cancellationToken);
 
             if (!string.IsNullOrEmpty(viewModel.ImageName))
             {
@@ -252,7 +239,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
-            ViewBag.FilterType = await GetCurrentFilterType();
             return View(viewModel);
         }
 
@@ -270,6 +256,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -281,9 +269,9 @@ namespace IBSWeb.Areas.User.Controllers
                     throw new Exception("Can't apply edit, please review your input.");
                 }
 
-                var model = ServiceRequestVmToDispatchTicketModel(viewModel);
+                var incoming = viewModel.ToEntity();
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt =>
-                        dt.DispatchTicketId == model.DispatchTicketId,
+                        dt.DispatchTicketId == incoming.DispatchTicketId,
                     cancellationToken);
 
                 if (currentModel == null)
@@ -291,79 +279,72 @@ namespace IBSWeb.Areas.User.Controllers
                     throw new NullReferenceException("Current record not found.");
                 }
 
+                // Only allow editing while still in pre-approval states
+                if (currentModel.Status != SD.DispatchTicketStatus.Draft &&
+                    currentModel.Status != SD.DispatchTicketStatus.Requested &&
+                    currentModel.Status != SD.DispatchTicketStatus.Cancelled)
+                {
+                    TempData["error"] = "Service request can no longer be edited — it has already been accepted into the workflow.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 currentModel.EditedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                if (model.CustomerId != 0)
+                if (incoming.CustomerId != 0)
                 {
-                    model.Customer = (await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
+                    incoming.Customer = (await unitOfWork.Customer.GetAsync(c => c.CustomerId == incoming.CustomerId,
                         cancellationToken))!;
                 }
 
                 if (imageFile != null)
                 {
-                    // delete existing before replacing
                     if (!string.IsNullOrEmpty(currentModel.ImageName))
                     {
                         await cloudStorageService.DeleteFileAsync(currentModel.ImageName);
                     }
 
-                    model.ImageName = GenerateFileNameToSave(imageFile.FileName,
-                        "img");
-                    model.ImageSavedUrl = await cloudStorageService.UploadFileAsync(imageFile,
-                        model.ImageName!);
+                    incoming.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                    incoming.ImageSavedUrl = await cloudStorageService.UploadFileAsync(imageFile, incoming.ImageName!);
                 }
 
                 if (videoFile != null)
                 {
-                    // delete existing before replacing
                     if (!string.IsNullOrEmpty(currentModel.VideoName))
                     {
                         await cloudStorageService.DeleteFileAsync(currentModel.VideoName);
                     }
 
-                    model.VideoName = GenerateFileNameToSave(videoFile.FileName,
-                        "vid");
-                    model.VideoSavedUrl = await cloudStorageService.UploadFileAsync(videoFile,
-                        model.VideoName!);
+                    incoming.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                    incoming.VideoSavedUrl = await cloudStorageService.UploadFileAsync(videoFile, incoming.VideoName!);
                 }
 
-                if (model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
+                if (incoming is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
                 {
-                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                    if (incoming.DateLeft < incoming.DateArrived || (incoming.DateLeft == incoming.DateArrived && incoming.TimeLeft < incoming.TimeArrived))
                     {
-                        var dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
-                        var dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+                        var dateTimeLeft = incoming.DateLeft.Value.ToDateTime(incoming.TimeLeft.Value);
+                        var dateTimeArrived = incoming.DateArrived.Value.ToDateTime(incoming.TimeArrived.Value);
                         var timeDifference = dateTimeArrived - dateTimeLeft;
-                        var totalHours = Math.Round((decimal)timeDifference.TotalHours,
-                            2);
+                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
-                        // find the nearest half hour if the new customer is phil-ceb
-                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                        if (incoming.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                         {
                             var wholeHours = Math.Truncate(totalHours);
                             var fractionalPart = totalHours - wholeHours;
 
                             if (fractionalPart >= 0.75m)
-                            {
-                                totalHours = wholeHours + 1.0m; // round up to next hour
-                            }
+                                totalHours = wholeHours + 1.0m;
                             else if (fractionalPart >= 0.25m)
-                            {
-                                totalHours = wholeHours + 0.5m; // round to half hour
-                            }
+                                totalHours = wholeHours + 0.5m;
                             else
-                            {
-                                totalHours = wholeHours; // keep as is
-                            }
+                                totalHours = wholeHours;
 
                             if (totalHours == 0)
-                            {
                                 totalHours = 0.5m;
-                            }
                         }
 
-                        model.TotalHours = totalHours;
+                        incoming.TotalHours = totalHours;
                     }
                     else
                     {
@@ -376,66 +357,68 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- Audit changes
 
                 var changes = new List<string>();
-                if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
-                if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                if (currentModel.COSNumber != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
-                if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
-                if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
-                if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
-                if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
-                if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
-                if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
-                if (currentModel.ServiceId != model.ServiceId) { changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}"); }
-                if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
-                if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
-                if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
-                if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
-                if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
-                if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
+                if (currentModel.Date != incoming.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {incoming.Date}"); }
+                if (currentModel.DispatchNumber != incoming.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {incoming.DispatchNumber}"); }
+                if (currentModel.COSNumber != incoming.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {incoming.COSNumber}"); }
+                if (currentModel.VoyageNumber != incoming.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {incoming.VoyageNumber}"); }
+                if (currentModel.CustomerId != incoming.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {incoming.CustomerId}"); }
+                if (currentModel.DateLeft != incoming.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {incoming.DateLeft}"); }
+                if (currentModel.TimeLeft != incoming.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {incoming.TimeLeft}"); }
+                if (currentModel.DateArrived != incoming.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {incoming.DateArrived}"); }
+                if (currentModel.TimeArrived != incoming.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {incoming.TimeArrived}"); }
+                if (currentModel.TotalHours != incoming.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {incoming.TotalHours}"); }
+                if (currentModel.TerminalId != incoming.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {incoming.TerminalId}"); }
+                if (currentModel.ServiceId != incoming.ServiceId) { changes.Add($"ServiceId: {currentModel.ServiceId} -> {incoming.ServiceId}"); }
+                if (currentModel.TugBoatId != incoming.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {incoming.TugBoatId}"); }
+                if (currentModel.TugMasterId != incoming.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {incoming.TugMasterId}"); }
+                if (currentModel.VesselId != incoming.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {incoming.VesselId}"); }
+                if (currentModel.Remarks != incoming.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{incoming.Remarks}'"); }
+                if (imageFile != null && currentModel.ImageName != incoming.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{incoming.ImageName}'"); }
+                if (videoFile != null && currentModel.VideoName != incoming.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{incoming.VideoName}'"); }
 
-                #endregion -- Audit changes
+                #endregion
 
                 #region -- Apply changes
 
-                currentModel.Date = model.Date;
-                currentModel.DispatchNumber = model.DispatchNumber;
-                currentModel.COSNumber = model.COSNumber;
-                currentModel.VoyageNumber = model.VoyageNumber;
-                currentModel.CustomerId = model.CustomerId;
-                currentModel.DateLeft = model.DateLeft;
-                currentModel.TimeLeft = model.TimeLeft;
-                currentModel.DateArrived = model.DateArrived;
-                currentModel.TimeArrived = model.TimeArrived;
-                currentModel.TotalHours = model.TotalHours;
-                currentModel.TerminalId = model.TerminalId;
-                currentModel.ServiceId = model.ServiceId;
-                currentModel.TugBoatId = model.TugBoatId;
-                currentModel.TugMasterId = model.TugMasterId;
-                currentModel.VesselId = model.VesselId;
-                currentModel.Remarks = model.Remarks;
+                currentModel.Date = incoming.Date;
+                currentModel.JobOrderId = incoming.JobOrderId;
+                currentModel.DispatchNumber = incoming.DispatchNumber;
+                currentModel.COSNumber = incoming.COSNumber;
+                currentModel.VoyageNumber = incoming.VoyageNumber;
+                currentModel.CustomerId = incoming.CustomerId;
+                currentModel.DateLeft = incoming.DateLeft;
+                currentModel.TimeLeft = incoming.TimeLeft;
+                currentModel.DateArrived = incoming.DateArrived;
+                currentModel.TimeArrived = incoming.TimeArrived;
+                currentModel.TotalHours = incoming.TotalHours;
+                currentModel.TerminalId = incoming.TerminalId;
+                currentModel.ServiceId = incoming.ServiceId;
+                currentModel.TugBoatId = incoming.TugBoatId;
+                currentModel.TugMasterId = incoming.TugMasterId;
+                currentModel.VesselId = incoming.VesselId;
+                currentModel.PortId = incoming.PortId;
+                currentModel.Remarks = incoming.Remarks;
 
                 if (currentModel is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
                     currentModel.TerminalId != 0 && currentModel.ServiceId != 0 && currentModel.TugBoatId != 0 && currentModel.TugMasterId != null && currentModel.VesselId != 0)
                 {
-                    currentModel.Status = "For Posting";
+                    currentModel.Status = SD.DispatchTicketStatus.Requested;
                 }
                 else
                 {
-                    currentModel.Status = "Incomplete";
+                    currentModel.Status = SD.DispatchTicketStatus.Draft;
                 }
 
                 if (imageFile != null)
                 {
-                    currentModel.ImageName = model.ImageName;
-                    currentModel.ImageSavedUrl = model.ImageSavedUrl;
+                    currentModel.ImageName = incoming.ImageName;
+                    currentModel.ImageSavedUrl = incoming.ImageSavedUrl;
                 }
 
                 if (videoFile != null)
                 {
-                    currentModel.VideoName = model.VideoName;
-                    currentModel.VideoSavedUrl = model.VideoSavedUrl;
+                    currentModel.VideoName = incoming.VideoName;
+                    currentModel.VideoSavedUrl = incoming.VideoSavedUrl;
                 }
 
                 await unitOfWork.SaveAsync(cancellationToken);
@@ -474,6 +457,38 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetJobOrderDetails(int jobOrderId, CancellationToken cancellationToken = default)
+        {
+            var jobOrder = await dbContext.MsapJobOrders
+                .Include(j => j.Customer)
+                .Include(j => j.Vessel)
+                .Include(j => j.Port)
+                .Include(j => j.Terminal)
+                .FirstOrDefaultAsync(j => j.JobOrderId == jobOrderId, cancellationToken);
+
+            if (jobOrder == null)
+            {
+                return Json(new { success = false });
+            }
+
+            return Json(new
+            {
+                success = true,
+                customerId = jobOrder.CustomerId,
+                customerName = jobOrder.Customer?.CustomerName,
+                vesselId = jobOrder.VesselId,
+                vesselName = jobOrder.Vessel?.VesselName,
+                portId = jobOrder.PortId,
+                portName = jobOrder.Port?.PortName,
+                terminalId = jobOrder.TerminalId,
+                terminalName = jobOrder.Terminal?.TerminalName,
+                voyageNumber = jobOrder.VoyageNumber,
+                cosNumber = jobOrder.COSNumber,
+                date = jobOrder.Date.ToString("yyyy-MM-dd")
+            });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken = default)
         {
             var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId,
@@ -495,9 +510,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                var filterTypeClaim = await GetCurrentFilterType();
-
-                var queried = await dbContext.MsapDispatchTickets
+                var queriedBase = dbContext.MsapDispatchTickets
                     .Include(dt => dt.Service)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt.Port)
@@ -505,41 +518,17 @@ namespace IBSWeb.Areas.User.Controllers
                     .Include(dt => dt.TugMaster)
                     .Include(dt => dt.Vessel)
                     .Include(dt => dt.Customer)
-                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled" || dt.Status == "Incomplete")
-                    .ToListAsync(cancellationToken);
+                    .Where(dt => dt.Status == SD.DispatchTicketStatus.Draft ||
+                                 dt.Status == SD.DispatchTicketStatus.Requested ||
+                                 dt.Status == SD.DispatchTicketStatus.Cancelled);
 
-                // Apply status filter based on filterType
-                if (!string.IsNullOrEmpty(filterTypeClaim))
+                // Port Coordinators can only see their own requests
+                if (User.IsInRole("PortCoordinator"))
                 {
-                    switch (filterTypeClaim)
-                    {
-                        case "ForPosting":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Posting").ToList();
-                            break;
-                        case "Incomplete":
-                            queried = queried.Where(dt =>
-                                dt.Status == "Incomplete").ToList();
-                            break;
-                        case "ForTariff":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Tariff").ToList();
-                            break;
-                        case "TariffPending":
-                            queried = queried.Where(dt =>
-                                dt.Status == "Tariff Pending").ToList();
-                            break;
-                        case "ForBilling":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Billing").ToList();
-                            break;
-                        case "ForCollection":
-                            queried = queried.Where(dt =>
-                                dt.Status == "For Collection").ToList();
-                            break;
-                            // Add other cases as needed
-                    }
+                    queriedBase = queriedBase.Where(dt => dt.CreatedBy == currentUser!.UserName);
                 }
+
+                var queried = await queriedBase.ToListAsync(cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -570,22 +559,13 @@ namespace IBSWeb.Areas.User.Controllers
                         switch (column.Data)
                         {
                             case "status":
-                                if (searchValue == "for posting")
+                                queried = searchValue switch
                                 {
-                                    queried = queried.Where(s => s.Status == "For Posting").ToList();
-                                }
-                                if (searchValue == "cancelled")
-                                {
-                                    queried = queried.Where(s => s.Status == "Cancelled").ToList();
-                                }
-                                if (searchValue == "incomplete")
-                                {
-                                    queried = queried.Where(s => s.Status == "Incomplete").ToList();
-                                }
-                                else
-                                {
-                                    queried = queried.Where(s => !string.IsNullOrEmpty(s.Status)).ToList();
-                                }
+                                    "requested" => queried.Where(s => s.Status == SD.DispatchTicketStatus.Requested).ToList(),
+                                    "draft" => queried.Where(s => s.Status == SD.DispatchTicketStatus.Draft).ToList(),
+                                    "cancelled" => queried.Where(s => s.Status == SD.DispatchTicketStatus.Cancelled).ToList(),
+                                    _ => queried.Where(s => !string.IsNullOrEmpty(s.Status)).ToList()
+                                };
                                 break;
                         }
                     }
@@ -611,12 +591,6 @@ namespace IBSWeb.Areas.User.Controllers
                     .Take(parameters.Length)
                     .ToList();
 
-                if (User.IsInRole("PortCoordinator"))
-                {
-                    pagedData = pagedData.Where(t => t.CreatedBy == currentUser!.UserName)
-                        .ToList();
-                }
-
                 foreach (var dispatchTicket in pagedData.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
                 {
                     dispatchTicket.ImageSignedUrl = await GenerateSignedUrl(dispatchTicket.ImageName!);
@@ -639,9 +613,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 logger.LogError(ex,
                     "Failed to dispatch tickets.");
-                TempData["error"] = ex.Message;
-
-                return RedirectToAction(nameof(Index));
+                return Json(new { draw = parameters.Draw, error = ex.Message });
             }
         }
 
@@ -719,7 +691,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
             if (!await userAccessService.CheckAccess(userManager.GetUserId(User)!,
@@ -749,9 +720,9 @@ namespace IBSWeb.Areas.User.Controllers
                     var recordToUpdate = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind,
                         cancellationToken);
 
-                    if (recordToUpdate != null)
+                    if (recordToUpdate != null && recordToUpdate.Status == SD.DispatchTicketStatus.Requested)
                     {
-                        recordToUpdate.Status = "Pending";
+                        recordToUpdate.Status = SD.DispatchTicketStatus.Pending;
                         postedTickets.Add($"{recordToUpdate.DispatchNumber}");
                     }
                 }
@@ -829,7 +800,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     if (recordToUpdate != null)
                     {
-                        recordToUpdate.Status = "Cancelled";
+                        recordToUpdate.Status = SD.DispatchTicketStatus.Cancelled;
                         cancelledTickets.Add(recordToUpdate.DispatchNumber);
                     }
                 }
@@ -845,7 +816,7 @@ namespace IBSWeb.Areas.User.Controllers
                 var audit = new AuditTrail(
                     await GetUserNameAsync() ?? throw new InvalidOperationException(),
                     activity,
-                    "ServiceRequest"
+                    "Service Request"
                 );
 
                 await unitOfWork.AuditTrail.AddAsync(audit,
@@ -899,69 +870,6 @@ namespace IBSWeb.Areas.User.Controllers
                 return await cloudStorageService.GetSignedUrlAsync(uploadName);
             }
             throw new Exception("Upload name invalid.");
-        }
-
-        public DispatchTicket ServiceRequestVmToDispatchTicketModel(ServiceRequestViewModel vm)
-        {
-            return new DispatchTicket
-            {
-                DispatchTicketId = vm.DispatchTicketId ?? 0,
-                Date = vm.Date,
-                COSNumber = vm.COSNumber,
-                DispatchNumber = vm.DispatchNumber,
-                VoyageNumber = vm.VoyageNumber,
-                CustomerId = vm.CustomerId,
-                DateLeft = vm.DateLeft,
-                TimeLeft = vm.TimeLeft,
-                DateArrived = vm.DateArrived,
-                TimeArrived = vm.TimeArrived,
-                TerminalId = vm.TerminalId,
-                ServiceId = vm.ServiceId,
-                TugBoatId = vm.TugBoatId,
-                TugMasterId = vm.TugMasterId,
-                VesselId = vm.VesselId,
-                PortId = vm.PortId,
-                Remarks = vm.Remarks,
-                DispatchChargeType = string.Empty,
-                BAFChargeType = string.Empty,
-                TariffBy = string.Empty,
-                TariffEditedBy = string.Empty
-            };
-        }
-
-        public ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(DispatchTicket model)
-        {
-            var viewModel = new ServiceRequestViewModel
-            {
-                Date = model.Date,
-                COSNumber = model.COSNumber,
-                DispatchNumber = model.DispatchNumber,
-                VoyageNumber = model.VoyageNumber,
-                CustomerId = model.CustomerId,
-                DateLeft = model.DateLeft,
-                TimeLeft = model.TimeLeft,
-                DateArrived = model.DateArrived,
-                TimeArrived = model.TimeArrived,
-                TerminalId = model.TerminalId,
-                ServiceId = model.ServiceId,
-                TugBoatId = model.TugBoatId,
-                TugMasterId = model.TugMasterId,
-                VesselId = model.VesselId,
-                Terminal = model.Terminal,
-                Remarks = model.Remarks,
-                ImageName = model.ImageName,
-                ImageSignedUrl = model.ImageSignedUrl,
-                VideoName = model.VideoName,
-                VideoSignedUrl = model.VideoSignedUrl,
-                DispatchTicketId = model.DispatchTicketId,
-            };
-
-            if (model.Terminal?.Port != null)
-            {
-                viewModel.PortId = model.Terminal.Port.PortId;
-            }
-
-            return viewModel;
         }
 
         private async Task<bool> HasServiceRequestAccessAsync(CancellationToken cancellationToken)

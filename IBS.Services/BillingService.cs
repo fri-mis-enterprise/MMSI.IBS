@@ -67,8 +67,33 @@ namespace IBS.Services
                         {
                             model.COSNumber = jobOrder.COSNumber;
                         }
+
+                        // Block billing if any ticket under this Job Order is not yet ready for billing
+                        var unreadyStatuses = new[]
+                        {
+                            SD.DispatchTicketStatus.Draft,
+                            SD.DispatchTicketStatus.Requested,
+                            SD.DispatchTicketStatus.Pending,
+                            SD.DispatchTicketStatus.ForTariff,
+                            SD.DispatchTicketStatus.ForApproval
+                        };
+
+                        var hasUnreadyTickets = jobOrder.DispatchTickets?
+                            .Any(dt => unreadyStatuses.Contains(dt.Status)) == true;
+
+                        if (hasUnreadyTickets)
+                        {
+                            var unreadyList = jobOrder.DispatchTickets!
+                                .Where(dt => unreadyStatuses.Contains(dt.Status))
+                                .Select(dt => $"#{dt.DispatchNumber} ({dt.Status})")
+                                .ToList();
+
+                            return ServiceResult<int>.Failure(
+                                $"Cannot create billing — the following ticket(s) under Job Order #{jobOrder.JobOrderNumber} are not yet ready: {string.Join(", ", unreadyList)}.");
+                        }
                     }
                 }
+
 
                 var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
                 if (customer == null)

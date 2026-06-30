@@ -1,3 +1,4 @@
+﻿@using IBS.Models.Enums
 @using IBS.Services.AccessControl
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<ApplicationUser> SignInManager
@@ -17,11 +18,22 @@
 
     ViewBag.AppVersion = "2.1.4"; // Incrementing version for the layout update
 
-    // Helper function to check if user has MSAP access
+    // Helper function to check if user has operational MSAP access (excludes ServiceRequest)
     async Task<bool> HasMsapAccess()
     {
         if (string.IsNullOrEmpty(userId)) return false;
-        return await AccessControl.HasMsapAccessAsync(userId);
+        return await AccessControl.HasAnyAccessAsync(userId,
+            ProcedureEnum.CreateDispatchTicket,
+            ProcedureEnum.EditDispatchTicket,
+            ProcedureEnum.DeleteDispatchTicket,
+            ProcedureEnum.SetTariff,
+            ProcedureEnum.ApproveTariff,
+            ProcedureEnum.CreateBilling,
+            ProcedureEnum.CreateCollection,
+            ProcedureEnum.CreateJobOrder,
+            ProcedureEnum.EditJobOrder,
+            ProcedureEnum.DeleteJobOrder,
+            ProcedureEnum.CloseJobOrder);
     }
 
     // Helper function to check MSAP Import access
@@ -29,6 +41,13 @@
     {
         if (string.IsNullOrEmpty(userId)) return false;
         return await AccessControl.HasMsapImportAccessAsync(userId);
+    }
+
+    // Helper function to check Service Request access
+    async Task<bool> HasServiceRequestNavAccess()
+    {
+        if (string.IsNullOrEmpty(userId)) return false;
+        return await AccessControl.HasServiceRequestAccessAsync(userId);
     }
 
 }
@@ -133,6 +152,16 @@
                                             </ul>
                                         </li>
                                     }
+                                }
+
+                                @if (await HasServiceRequestNavAccess())
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="User" asp-controller="ServiceRequest" asp-action="Index" title="Submit and track your service requests">
+                                            <span class="material-symbols-outlined align-middle" style="font-size:1.1rem;">assignment</span>
+                                            Service Requests
+                                        </a>
+                                    </li>
                                 }
 
                                 @if (User.IsInRole("Admin"))

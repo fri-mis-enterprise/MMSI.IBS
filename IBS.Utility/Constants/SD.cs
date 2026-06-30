@@ -100,12 +100,15 @@ namespace IBS.Utility.Constants
 
         public static class DispatchTicketStatus
         {
+            public const string Draft = "Draft";
+            public const string Requested = "Requested";
             public const string Pending = "Pending";
             public const string ForTariff = "For Tariff";
             public const string ForApproval = "For Approval";
             public const string Disapproved = "Disapproved";
             public const string ForBilling = "For Billing";
             public const string Billed = "Billed";
+            public const string Cancelled = "Cancelled";
         }
 
         public static class BillingStatus

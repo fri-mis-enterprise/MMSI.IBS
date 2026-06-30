@@ -22,6 +22,7 @@ namespace IBS.Tests.Controllers
         private readonly Mock<IDispatchTicketService> _mockDispatchTicketService;
         private readonly Mock<ITerminalService> _mockTerminalService;
         private readonly Mock<ILogger<JobOrderController>> _mockLogger;
+        private readonly Mock<ICloudStorageService> _mockCloudStorageService;
         private readonly Mock<IHubContext<TugboatHub>> _mockTugboatHubContext;
         private readonly Mock<IHubContext<PlanningHub>> _mockPlanningHubContext;
         private readonly JobOrderController _controller;
@@ -33,6 +34,7 @@ namespace IBS.Tests.Controllers
             _mockDispatchTicketService = new Mock<IDispatchTicketService>();
             _mockTerminalService = new Mock<ITerminalService>();
             _mockLogger = new Mock<ILogger<JobOrderController>>();
+            _mockCloudStorageService = new Mock<ICloudStorageService>();
             _mockTugboatHubContext = new Mock<IHubContext<TugboatHub>>();
             _mockPlanningHubContext = new Mock<IHubContext<PlanningHub>>();
             _mockTempData = new Mock<ITempDataDictionary>();
@@ -53,6 +55,7 @@ namespace IBS.Tests.Controllers
                 _mockJobOrderService.Object,
                 _mockDispatchTicketService.Object,
                 _mockTerminalService.Object,
+                _mockCloudStorageService.Object,
                 _mockLogger.Object,
                 _mockTugboatHubContext.Object,
                 _mockPlanningHubContext.Object

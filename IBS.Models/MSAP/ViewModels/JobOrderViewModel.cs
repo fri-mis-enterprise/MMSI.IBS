@@ -12,18 +12,22 @@ namespace IBS.Models.MSAP.ViewModels
         public DateOnly Date { get; set; }
 
         [Required(ErrorMessage = "Please select a customer")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a customer")]
         [Display(Name = "Customer")]
         public int CustomerId { get; set; }
 
         [Required(ErrorMessage = "Please select a vessel")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a vessel")]
         [Display(Name = "Vessel")]
         public int VesselId { get; set; }
 
         [Required(ErrorMessage = "Please select a port")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a port")]
         [Display(Name = "Port")]
         public int PortId { get; set; }
 
         [Required(ErrorMessage = "Please select a terminal")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a terminal")]
         [Display(Name = "Terminal")]
         public int TerminalId { get; set; }
 
