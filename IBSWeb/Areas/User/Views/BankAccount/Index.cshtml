@@ -1,62 +1,82 @@
-@model IEnumerable<BankAccount>
-
 @{
     ViewData["Title"] = "Bank Account Master File";
+    ViewData["IsFullWidth"] = true;
 }
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <a asp-area="User" asp-controller="BankAccount" asp-action="Create" class="btn btn-light">
-            <i class="bi bi-plus-circle"></i> Create New Bank Account
-        </a>
-    </div>
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">MSAP</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Bank Accounts</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <a asp-action="Create" class="modern-btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    CREATE NEW
+                </a>
+            </div>
+        </div>
 
-    <div class="card shadow border-0 mt-3">
-        <div class="card-body p-3">
-            <div class="table-responsive" style="max-height: 70vh">
-                <table class="table table-hover mb-0" id="paginatedTable">
-                    <thead class="bg-light">
+        <div class="modern-card">
+            <div class="modern-card-header-action flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">account_balance</span>
+                    <h2 class="modern-headline-md">Bank Account List</h2>
+                </div>
+            </div>
+            <div class="modern-card-body">
+                <table class="modern-table" id="bankAccountTable">
+                    <thead>
                         <tr>
-                            <th class="text-start">Code</th>
-                            <th class="text-start">Bank</th>
-                            <th class="text-start">Branch</th>
-                            <th class="text-start">Account No</th>
-                            <th class="text-start">Account Name</th>
-                            <th class="text-start">Company</th>
-                            <th></th>
+                            <th>Code</th>
+                            <th>Bank</th>
+                            <th>Branch</th>
+                            <th>Account No</th>
+                            <th>Account Name</th>
+                            <th>Company</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@item.BankAccountCode</td>
-                                <td>@item.Bank</td>
-                                <td>@item.Branch</td>
-                                <td>@item.AccountNo</td>
-                                <td>@item.AccountName</td>
-                                <td>@item.Company</td>
-                                <td class="text-end">
-                                    <a asp-action="Edit" asp-route-id="@item.BankAccountId" class="btn btn-primary btn-sm">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
                 </table>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $('#paginatedTable').DataTable({
-                "order": [[0, 'asc']]
-            });
+            const editUrl = '@Url.Action("Edit", "BankAccount", new { area = "User" })';
+
+            let table = $('#bankAccountTable').DataTable(ModernTable.config({
+                serverSide: false,
+                ajax: {
+    url: "@Url.Action("GetAll", "BankAccount", new { area = "User" })",
+    type: "GET",
+    data: function(d) { return d; }
+},
+                columns: [
+                    { data: "bankAccountCode" },
+                    { data: "bank" },
+                    { data: "branch", defaultContent: "-" },
+                    { data: "accountNo" },
+                    { data: "accountName" },
+                    { data: "company" },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'Edit Bank Account', icon: 'edit', url: `${editUrl}?id=${row.bankAccountId}` }
+                        ])
+                    }
+                ]
+            }));
         });
     </script>
 }

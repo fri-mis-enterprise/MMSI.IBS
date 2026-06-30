@@ -1,54 +1,70 @@
-@model Terms
+@model IBS.Models.MasterFile.Terms
 
 @{
-    ViewData["Title"] = "Terms - Create";
+    ViewData["Title"] = "Create Terms";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">@ViewData["Title"]</h2>
-            </div>
-        </div>
-    </div>
-    <div class="card-body p-4">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
-            <div class="form-floating mb-3" id="tradeList">
-                <input asp-for="TermsCode" class="form-control " placeholder="" />
-                <label asp-for="TermsCode" class="control-label">Terms Code<span class="required">*</span></label>
-                <span asp-validation-for="TermsCode" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="NumberOfDays" class="form-control " placeholder="" />
-                <label asp-for="NumberOfDays" class="control-label">Number of Days<span class="required">*</span></label>
-                <span asp-validation-for="NumberOfDays" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="NumberOfMonths" class="form-control " placeholder="" />
-                <label asp-for="NumberOfMonths" class="control-label">Number of Months<span class="required">*</span></label>
-                <span asp-validation-for="NumberOfMonths" class="text-danger"></span>
-            </div>
-
-            <div class="row pt-2">
-                <div class="col-6 col-md-3">
-                    <button type="submit" class="btn btn-primary form-control">Create</button>
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Payment Terms</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Terms</span>
+                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
                 </div>
-                <div class="col-6 col-md-3">
-                    <a asp-area="User" asp-controller="PaymentTerms" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">payments</span>
+                            <h2 class="modern-headline-md">Terms Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+
+                            <div class="flex flex-column gap-4">
+                                <div>
+                                    <label asp-for="TermsCode" class="modern-label">Terms Code <span class="text-error">*</span></label>
+                                    <input asp-for="TermsCode" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter terms code" />
+                                    <span asp-validation-for="TermsCode" class="text-error text-xs"></span>
+                                </div>
+
+                                <div class="modern-grid">
+                                    <div class="modern-col-6">
+                                        <label asp-for="NumberOfDays" class="modern-label">Number of Days <span class="text-error">*</span></label>
+                                        <input asp-for="NumberOfDays" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Days" />
+                                        <span asp-validation-for="NumberOfDays" class="text-error text-xs"></span>
+                                    </div>
+                                    <div class="modern-col-6">
+                                        <label asp-for="NumberOfMonths" class="modern-label">Number of Months <span class="text-error">*</span></label>
+                                        <input asp-for="NumberOfMonths" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Months" />
+                                        <span asp-validation-for="NumberOfMonths" class="text-error text-xs"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
 
 @section Scripts {
