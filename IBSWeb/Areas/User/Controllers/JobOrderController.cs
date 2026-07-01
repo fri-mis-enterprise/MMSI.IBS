@@ -71,8 +71,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get job orders.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { draw = parameters.Draw, error = ex.Message });
             }
         }
 
@@ -102,25 +101,12 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["warning"] = "Can't create entry, please review your input.";
                 await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
                 return View(viewModel);
             }
 
-            var jobOrder = new JobOrder
-            {
-                Date = viewModel.Date,
-                CustomerId = viewModel.CustomerId,
-                VesselId = viewModel.VesselId,
-                PortId = viewModel.PortId,
-                TerminalId = viewModel.TerminalId,
-                COSNumber = viewModel.COSNumber,
-                VoyageNumber = viewModel.VoyageNumber,
-                PlannedStartTime = viewModel.PlannedStartTime,
-                PlannedEndTime = viewModel.PlannedEndTime,
-                PreferredTugboatId = viewModel.PreferredTugboatId,
-                RequiredTugCount = viewModel.RequiredTugCount,
-                Remarks = viewModel.Remarks
-            };
+            var jobOrder = MapToEntity(viewModel);
 
             var result = await jobOrderService.CreateJobOrderAsync(jobOrder, User.Identity?.Name ?? "Unknown", cancellationToken);
 
@@ -240,22 +226,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(viewModel);
             }
 
-            var jobOrder = new JobOrder
-            {
-                JobOrderId = viewModel.JobOrderId,
-                Date = viewModel.Date,
-                CustomerId = viewModel.CustomerId,
-                VesselId = viewModel.VesselId,
-                PortId = viewModel.PortId,
-                TerminalId = viewModel.TerminalId,
-                COSNumber = viewModel.COSNumber,
-                VoyageNumber = viewModel.VoyageNumber,
-                PlannedStartTime = viewModel.PlannedStartTime,
-                PlannedEndTime = viewModel.PlannedEndTime,
-                PreferredTugboatId = viewModel.PreferredTugboatId,
-                RequiredTugCount = viewModel.RequiredTugCount,
-                Remarks = viewModel.Remarks
-            };
+            var jobOrder = MapToEntity(viewModel);
+            jobOrder.JobOrderId = viewModel.JobOrderId;
 
             var result = await jobOrderService.UpdateJobOrderAsync(jobOrder, User.Identity?.Name ?? "Unknown", cancellationToken);
 
@@ -283,6 +255,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves terminals associated with a specific port. Used for dynamic dropdowns.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.CreateJobOrder, ProcedureEnum.EditJobOrder)]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
             var list = await terminalService.GetTerminalsByPortAsync(portId, cancellationToken);
@@ -293,6 +266,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves detailed information for a specific Dispatch Ticket.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.CreateJobOrder, ProcedureEnum.EditJobOrder)]
         public async Task<IActionResult> GetTicketDetails(int id, CancellationToken cancellationToken)
         {
             var details = await dispatchTicketService.GetTicketDetailsAsync(id, cancellationToken);
@@ -308,6 +282,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Searches for customers matching a search term.
         /// </summary>
         [HttpGet]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.CreateJobOrder, ProcedureEnum.EditJobOrder)]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
         {
             var result = await unitOfWork.Customer.SearchCustomersDtoAsync(term ?? string.Empty, 10, cancellationToken);
@@ -318,33 +293,50 @@ namespace IBSWeb.Areas.User.Controllers
         /// Assigns a preferred tugboat to a Job Order.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.EditJobOrder)]
         public async Task<IActionResult> AssignTugboat(int jobOrderId, int tugboatId, CancellationToken cancellationToken)
         {
-            var result = await jobOrderService.AssignTugboatAsync(jobOrderId, tugboatId, User.Identity?.Name ?? "Unknown", cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                // Notify planning subscribers
-                var jobOrder = await jobOrderService.GetJobOrderByIdAsync(jobOrderId, cancellationToken);
-                if (jobOrder is { PortId: > 0 })
-                {
-                    await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-                    await planningHubContext.Clients.All.SendAsync("OnPlanUpdated", jobOrder.PortId, cancellationToken);
-                }
-
-                return Json(new { success = true });
-            }
-
-            return Json(new { success = false, message = result.Message });
+            return await HandleTugboatAssignmentAsync(jobOrderId, tugboatId, true, cancellationToken);
         }
 
         /// <summary>
         /// Unassigns a tugboat from a Job Order.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.EditJobOrder)]
         public async Task<IActionResult> UnassignTugboat(int jobOrderId, int tugboatId, CancellationToken cancellationToken)
         {
-            var result = await jobOrderService.UnassignTugboatAsync(jobOrderId, tugboatId, User.Identity?.Name ?? "Unknown", cancellationToken);
+            return await HandleTugboatAssignmentAsync(jobOrderId, tugboatId, false, cancellationToken);
+        }
+
+        #endregion
+
+        private static JobOrder MapToEntity(JobOrderViewModel viewModel)
+        {
+            return new JobOrder
+            {
+                Date = viewModel.Date,
+                CustomerId = viewModel.CustomerId,
+                VesselId = viewModel.VesselId,
+                PortId = viewModel.PortId,
+                TerminalId = viewModel.TerminalId,
+                COSNumber = viewModel.COSNumber,
+                VoyageNumber = viewModel.VoyageNumber,
+                PlannedStartTime = viewModel.PlannedStartTime,
+                PlannedEndTime = viewModel.PlannedEndTime,
+                PreferredTugboatId = viewModel.PreferredTugboatId,
+                RequiredTugCount = viewModel.RequiredTugCount,
+                Remarks = viewModel.Remarks
+            };
+        }
+
+        private async Task<IActionResult> HandleTugboatAssignmentAsync(int jobOrderId, int tugboatId, bool isAssign, CancellationToken cancellationToken)
+        {
+            var result = isAssign
+                ? await jobOrderService.AssignTugboatAsync(jobOrderId, tugboatId, User.Identity?.Name ?? "Unknown", cancellationToken)
+                : await jobOrderService.UnassignTugboatAsync(jobOrderId, tugboatId, User.Identity?.Name ?? "Unknown", cancellationToken);
 
             if (result.IsSuccess)
             {
@@ -360,7 +352,5 @@ namespace IBSWeb.Areas.User.Controllers
 
             return Json(new { success = false, message = result.Message });
         }
-
-        #endregion
     }
 }

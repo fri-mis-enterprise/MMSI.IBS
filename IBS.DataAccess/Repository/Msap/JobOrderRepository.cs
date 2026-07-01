@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP;
+using IBS.Utility.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Msap
@@ -17,7 +18,8 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted))
+                .OrderByDescending(j => j.JobOrderNumber)
                 .ToListAsync(cancellationToken);
         }
 
@@ -28,7 +30,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted))
                 .Where(j => j.PlannedStartTime <= end && j.PlannedEndTime >= start)
                 .ToListAsync(cancellationToken);
         }
@@ -40,13 +42,13 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted))
                     .ThenInclude(dt => dt.Service)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted))
                     .ThenInclude(dt => dt.Terminal)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted))
                     .ThenInclude(dt => dt.Tugboat)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"))
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted))
                     .ThenInclude(dt => dt.TugMaster)
                 .FirstOrDefaultAsync(j => j.JobOrderId == id, cancellationToken);
         }
@@ -99,7 +101,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(j => j.Vessel)
                 .Include(j => j.Port)
                 .Include(j => j.Terminal)
-                .Include(j => j.DispatchTickets.Where(dt => dt.Status != "Deleted"));
+                .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted));
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {

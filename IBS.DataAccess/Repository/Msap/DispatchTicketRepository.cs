@@ -4,6 +4,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP;
+using IBS.Utility.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Msap
@@ -146,13 +147,13 @@ namespace IBS.DataAccess.Repository.Msap
                     "disapproved" => query.Where(dt => dt.Status == "Disapproved"),
                     "for billing" => query.Where(dt => dt.Status == "For Billing"),
                     "billed" => query.Where(dt => dt.Status == "Billed"),
-                    "deleted" => query.Where(dt => dt.Status == "Deleted"),
-                    _ => query.Where(dt => dt.Status != "Deleted")
+                    "deleted" => query.Where(dt => dt.Status == SD.DispatchTicketStatus.Deleted),
+                    _ => query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted)
                 };
             }
             else
             {
-                query = query.Where(dt => dt.Status != "Deleted");
+                query = query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted);
             }
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -190,7 +191,7 @@ namespace IBS.DataAccess.Repository.Msap
                 }
             }
 
-            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != "Deleted", cancellationToken);
+            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.Deleted, cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
             if (parameters.Order?.Count > 0 && parameters.Columns != null)

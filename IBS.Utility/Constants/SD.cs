@@ -109,6 +109,7 @@ namespace IBS.Utility.Constants
             public const string ForBilling = "For Billing";
             public const string Billed = "Billed";
             public const string Cancelled = "Cancelled";
+            public const string Deleted = "Deleted";
         }
 
         public static class BillingStatus

@@ -686,7 +686,7 @@ namespace IBS.Services
                     return ServiceResult.Failure($"Cannot delete ticket — status is '{model.Status}' and must be disapproved or have no tariff applied.");
                 }
 
-                model.Status = "Deleted";
+                model.Status = SD.DispatchTicketStatus.Deleted;
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -717,7 +717,7 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
 
-                if (model.Status != "Deleted")
+                if (model.Status != SD.DispatchTicketStatus.Deleted)
                 {
                     return ServiceResult.Failure("Ticket is not in a deleted state.");
                 }

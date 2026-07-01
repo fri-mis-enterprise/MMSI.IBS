@@ -15,7 +15,7 @@ namespace IBS.Services
         public async Task<IEnumerable<JobOrder>> GetAllJobOrdersAsync(CancellationToken cancellationToken)
         {
             var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
-            return jobOrders.OrderByDescending(j => j.JobOrderNumber);
+            return jobOrders;
         }
 
         public async Task<JobOrder?> GetJobOrderByIdAsync(int id, CancellationToken cancellationToken)
@@ -77,12 +77,10 @@ namespace IBS.Services
         {
             try
             {
-                if (jobOrder.PlannedStartTime.HasValue && jobOrder.PlannedEndTime.HasValue)
+                var timeError = ValidateTimeRange(jobOrder.PlannedStartTime, jobOrder.PlannedEndTime);
+                if (timeError != null)
                 {
-                    if (jobOrder.PlannedEndTime <= jobOrder.PlannedStartTime)
-                    {
-                        return ServiceResult<int>.Failure("Planned End Time must be strictly after Planned Start Time.");
-                    }
+                    return ServiceResult<int>.Failure(timeError);
                 }
 
                 jobOrder.Status = SD.JobOrderStatus.Open;
@@ -130,12 +128,10 @@ namespace IBS.Services
                     return ServiceResult.Failure($"Job Order #{jobOrder.JobOrderNumber} has an unposted billing. Please delete the billing first before editing.");
                 }
 
-                if (model.PlannedStartTime.HasValue && model.PlannedEndTime.HasValue)
+                var timeError = ValidateTimeRange(model.PlannedStartTime, model.PlannedEndTime);
+                if (timeError != null)
                 {
-                    if (model.PlannedEndTime <= model.PlannedStartTime)
-                    {
-                        return ServiceResult.Failure("Planned End Time must be strictly after Planned Start Time.");
-                    }
+                    return ServiceResult.Failure(timeError);
                 }
 
                 var old = (CustomerId: jobOrder.CustomerId, VesselId: jobOrder.VesselId, PortId: jobOrder.PortId, TerminalId: jobOrder.TerminalId);
@@ -181,7 +177,7 @@ namespace IBS.Services
             var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
                 dt => dt.JobOrderId == jobOrder.JobOrderId &&
                       dt.Status != SD.DispatchTicketStatus.Billed &&
-                      dt.Status != "Deleted",
+                      dt.Status != SD.DispatchTicketStatus.Deleted,
                 cancellationToken);
 
             foreach (var ticket in tickets)
@@ -238,7 +234,7 @@ namespace IBS.Services
             try
             {
                 var anyUnbilled = await unitOfWork.DispatchTicket.GetAsync(
-                    dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed && dt.Status != "Deleted",
+                    dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed && dt.Status != SD.DispatchTicketStatus.Deleted,
                     cancellationToken) != null;
 
                 if (anyUnbilled) return;
@@ -298,8 +294,12 @@ namespace IBS.Services
                 {
                     // Assign as an additional tugboat by creating a pending DispatchTicket
                     var services = await unitOfWork.Service.GetAllAsync(cancellationToken: cancellationToken);
-                    var defaultService = services.FirstOrDefault();
-                    int serviceId = defaultService?.ServiceId ?? 1;
+                    var service = services.FirstOrDefault();
+                    if (service == null)
+                    {
+                        return ServiceResult.Failure("Cannot assign tugboat: no service configured.");
+                    }
+                    int serviceId = service.ServiceId;
 
                     var ticket = new DispatchTicket
                     {
@@ -311,17 +311,11 @@ namespace IBS.Services
                         TerminalId = jobOrder.TerminalId,
                         ServiceId = serviceId,
                         Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
-                        DispatchNumber = $"PL-{jobOrder.JobOrderId}-{tugboatId}",
+                        DispatchNumber = $"P{jobOrder.JobOrderId:X}T{tugboatId:X}",
                         Status = SD.DispatchTicketStatus.Pending,
                         CreatedBy = username,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                     };
-
-                    // Truncate DispatchNumber if it exceeds 20 characters
-                    if (ticket.DispatchNumber.Length > 20)
-                    {
-                        ticket.DispatchNumber = ticket.DispatchNumber.Substring(0, 20);
-                    }
 
                     await unitOfWork.DispatchTicket.AddAsync(ticket, cancellationToken);
                 }
@@ -348,12 +342,11 @@ namespace IBS.Services
                     return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
                 }
 
-                string? tugboatName = null;
+                var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
+                string? tugboatName = tug?.TugboatName;
 
                 if (jobOrder.PreferredTugboatId == tugboatId)
                 {
-                    var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
-                    tugboatName = tug?.TugboatName;
                     jobOrder.PreferredTugboatId = null;
                 }
 
@@ -363,12 +356,6 @@ namespace IBS.Services
                     if (ticketToRemove.Status != SD.DispatchTicketStatus.Pending && ticketToRemove.Status != SD.DispatchTicketStatus.ForTariff)
                     {
                         return ServiceResult.Failure("Cannot unassign a tugboat with an active or processed dispatch ticket.");
-                    }
-
-                    if (tugboatName == null)
-                    {
-                        var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
-                        tugboatName = tug?.TugboatName;
                     }
 
                     await unitOfWork.DispatchTicket.RemoveAsync(ticketToRemove, cancellationToken);
@@ -390,7 +377,6 @@ namespace IBS.Services
         {
             var jobOrders = await unitOfWork.JobOrder.GetAllJobOrdersWithDetailsAsync(cancellationToken);
             return jobOrders
-                .OrderByDescending(j => j.JobOrderNumber)
                 .Take(100)
                 .Select(j => new SelectListItem
                 {
@@ -398,6 +384,15 @@ namespace IBS.Services
                     Text = $"{j.JobOrderNumber} - {j.Vessel?.VesselName ?? "No Vessel"}"
                 })
                 .ToList();
+        }
+
+        private static string? ValidateTimeRange(DateTime? start, DateTime? end)
+        {
+            if (start.HasValue && end.HasValue && end <= start)
+            {
+                return "Planned End Time must be strictly after Planned Start Time.";
+            }
+            return null;
         }
     }
 }
