@@ -670,7 +670,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
         {
-            var result = await dispatchTicketService.SearchCustomersAsync(term, cancellationToken);
+            var result = await unitOfWork.Customer.SearchCustomersDtoAsync(term ?? string.Empty, 10, cancellationToken);
             return Json(result);
         }
 

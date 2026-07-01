@@ -627,35 +627,6 @@ namespace IBS.Services
             return await package.GetAsByteArrayAsync(cancellationToken);
         }
 
-        public async Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken)
-        {
-            var customers = await unitOfWork.Customer.SearchCustomersAsync(term ?? string.Empty, 10, cancellationToken);
-            var ids = customers.Select(c => c.CustomerId).ToList();
-
-            // ponytail: Check which customers have principals (max 10 customers, so N queries is fine)
-            var principalLookup = new HashSet<int>();
-            foreach (var id in ids)
-            {
-                var principals = await unitOfWork.Principal.GetAllAsync(p => p.CustomerId == id, cancellationToken);
-                if (principals.Any()) principalLookup.Add(id);
-            }
-
-            return customers.Select(c => (object)new
-            {
-                value = c.CustomerId,
-                name = c.CustomerName,
-                vatType = c.VatType,
-                isUndoc = c.Type,
-                address = c.CustomerAddress,
-                tinNo = c.CustomerTin,
-                terms = c.CustomerTerms,
-                businessStyle = c.BusinessStyle ?? "-",
-                withholdingTax = c.WithHoldingTax,
-                withholdingVat = c.WithHoldingVat,
-                hasPrincipal = principalLookup.Contains(c.CustomerId)
-            }).ToList();
-        }
-
         public async Task<List<object>> SearchPrincipalsAsync(string? term, int customerId, CancellationToken cancellationToken)
         {
             var result = await unitOfWork.Principal.SearchPrincipalsAsync(term ?? string.Empty, customerId, 10, cancellationToken);

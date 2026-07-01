@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
@@ -26,10 +27,12 @@ namespace IBS.Tests.Controllers
         private readonly Mock<IHubContext<TugboatHub>> _mockTugboatHubContext;
         private readonly Mock<IHubContext<PlanningHub>> _mockPlanningHubContext;
         private readonly JobOrderController _controller;
+        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ITempDataDictionary> _mockTempData;
 
         public JobOrderControllerTests()
         {
+            _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockJobOrderService = new Mock<IJobOrderService>();
             _mockDispatchTicketService = new Mock<IDispatchTicketService>();
             _mockTerminalService = new Mock<ITerminalService>();
@@ -52,6 +55,7 @@ namespace IBS.Tests.Controllers
             mockPlanningClients.Setup(c => c.All).Returns(mockPlanningClientProxy.Object);
 
             _controller = new JobOrderController(
+                _mockUnitOfWork.Object,
                 _mockJobOrderService.Object,
                 _mockDispatchTicketService.Object,
                 _mockTerminalService.Object,

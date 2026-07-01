@@ -60,7 +60,7 @@ public class JobOrderController(
 ```
 
 - **Primary constructor** for DI
-- All business logic delegated to **typed services** — never access `IUnitOfWork` directly
+- Mutations delegated to **typed services**; pure read queries (e.g., customer search dropdowns) may access `IUnitOfWork` directly from the controller
 - `[RequireAccess]` / `[RequireAnyAccess]` on every action
 - `User.Identity?.Name` for current user
 - `TempData["success"]` / `TempData["error"]` for feedback
@@ -115,7 +115,6 @@ public class Repository<T> : IRepository<T> where T : class
 | # | Topic | Location | Notes |
 |---|-------|----------|-------|
 | S1 | **Interface-per-service (single impl)** | All 4 MSAP services | Each has exactly one implementation, which violates AGENTS.md "No interface with one implementation" guidance. Kept because test mocking requires interfaces. |
-| S2 | **Customer search duplicated across services** | `JobOrderService`, `DispatchTicketService`, `BillingService`, `CollectionService` | Each has its own `SearchCustomersAsync` with different return shapes. Consolidation into a shared helper or `CustomerRepository` method would reduce duplication but each caller has distinct field requirements. |
 
 ### 5.3 Repository Layer
 

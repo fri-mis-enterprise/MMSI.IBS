@@ -20,7 +20,6 @@ namespace IBS.Services
         Task<ServiceResult<object>> GetBankAccountDetailsAsync(int bankId, CancellationToken cancellationToken);
         Task<List<SelectListItem>?> GetUncollectedBillingsSelectListAsync(int? customerId, CancellationToken cancellationToken);
         Task<List<SelectListItem>> GetCustomerSelectListAsync(int? collectionId, int customerId, CancellationToken cancellationToken);
-        Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
     }
 }
 

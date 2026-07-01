@@ -12,5 +12,7 @@ namespace IBS.DataAccess.Repository.MasterFile.IRepository
         Task UpdateAsync(Customer model, CancellationToken cancellationToken = default);
 
         Task<List<Customer>> SearchCustomersAsync(string term, int limit, CancellationToken cancellationToken);
+
+        Task<List<object>> SearchCustomersDtoAsync(string term, int limit, CancellationToken cancellationToken);
     }
 }

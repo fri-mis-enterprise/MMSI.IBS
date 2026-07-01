@@ -15,7 +15,6 @@ namespace IBS.Services
         Task<ServiceResult> DeleteBillingAsync(int id, CancellationToken cancellationToken);
         Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken);
         Task<byte[]> GenerateExcelForPrintingAsync(int id, CancellationToken cancellationToken);
-        Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
         Task<List<object>> SearchPrincipalsAsync(string? term, int customerId, CancellationToken cancellationToken);
         Task<List<object>> SearchJobOrdersAsync(string? term, int customerId, CancellationToken cancellationToken);
         Task<ServiceResult<JobOrderBillingDto>> GetDispatchTicketsByJobOrderAsync(int jobOrderId, CancellationToken cancellationToken);

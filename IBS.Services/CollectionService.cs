@@ -319,25 +319,6 @@ namespace IBS.Services
             return await unitOfWork.Collection.GetMsapUncollectedBillingsByCustomer(customerId, cancellationToken);
         }
 
-        public async Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken)
-        {
-            var customers = await unitOfWork.Customer.SearchCustomersAsync(term ?? string.Empty, 10, cancellationToken);
-
-            return customers.Select(c => (object)new
-            {
-                value = c.CustomerId,
-                name = c.CustomerName,
-                vatType = c.VatType,
-                isUndoc = c.Type,
-                address = c.CustomerAddress,
-                tinNo = c.CustomerTin,
-                terms = c.CustomerTerms,
-                businessStyle = c.BusinessStyle ?? "-",
-                withholdingTax = c.WithHoldingTax,
-                withholdingVat = c.WithHoldingVat
-            }).ToList();
-        }
-
         private async Task<Collection> MapToEntityAsync(CreateCollectionViewModel viewModel, CancellationToken cancellationToken)
         {
             var model = new Collection

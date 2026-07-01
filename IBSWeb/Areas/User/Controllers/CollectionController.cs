@@ -1,3 +1,4 @@
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP.ViewModels;
@@ -13,6 +14,7 @@ namespace IBSWeb.Areas.User.Controllers
     /// </summary>
     [Area("User")]
     public class CollectionController(
+        IUnitOfWork unitOfWork,
         ICollectionService collectionService,
         ILogger<CollectionController> logger)
         : Controller
@@ -219,7 +221,7 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
         {
-            var result = await collectionService.SearchCustomersAsync(term, cancellationToken);
+            var result = await unitOfWork.Customer.SearchCustomersDtoAsync(term ?? string.Empty, 10, cancellationToken);
             return Json(result);
         }
 

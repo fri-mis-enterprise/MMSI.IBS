@@ -1,3 +1,4 @@
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -14,6 +15,7 @@ namespace IBSWeb.Areas.User.Controllers
     /// </summary>
     [Area("User")]
     public class BillingController(
+        IUnitOfWork unitOfWork,
         IBillingService billingService,
         ILogger<BillingController> logger)
         : Controller
@@ -302,7 +304,7 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
         {
-            var result = await billingService.SearchCustomersAsync(term, cancellationToken);
+            var result = await unitOfWork.Customer.SearchCustomersDtoAsync(term ?? string.Empty, 10, cancellationToken);
             return Json(result);
         }
 

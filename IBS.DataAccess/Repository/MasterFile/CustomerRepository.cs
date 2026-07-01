@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Enums;
 using IBS.Models.MasterFile;
+using IBS.Models.MSAP.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -123,6 +124,35 @@ namespace IBS.DataAccess.Repository.MasterFile
                 .OrderBy(c => c.CustomerName)
                 .Take(limit)
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<object>> SearchCustomersDtoAsync(string term, int limit, CancellationToken cancellationToken)
+        {
+            var customers = await SearchCustomersAsync(term, limit, cancellationToken);
+            var ids = customers.Select(c => c.CustomerId).ToList();
+
+            var customerIdsWithPrincipals = await _db.Set<Principal>()
+                .Where(p => ids.Contains(p.CustomerId))
+                .Select(p => p.CustomerId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var principalLookup = customerIdsWithPrincipals.ToHashSet();
+
+            return customers.Select(c => (object)new
+            {
+                value = c.CustomerId,
+                name = c.CustomerName,
+                vatType = c.VatType,
+                isUndoc = c.Type,
+                address = c.CustomerAddress,
+                tinNo = c.CustomerTin,
+                terms = c.CustomerTerms,
+                businessStyle = c.BusinessStyle ?? "-",
+                withholdingTax = c.WithHoldingTax,
+                withholdingVat = c.WithHoldingVat,
+                hasPrincipal = principalLookup.Contains(c.CustomerId)
+            }).ToList();
         }
     }
 }
