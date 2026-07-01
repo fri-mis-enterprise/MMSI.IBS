@@ -39,8 +39,7 @@ namespace IBS.DataAccess.Repository
 
         public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {
-            dbSet.Add(entity);
-            await _db.SaveChangesAsync(cancellationToken);
+            await dbSet.AddAsync(entity, cancellationToken);
         }
 
         public bool IsJournalEntriesBalanced(IEnumerable<GeneralLedgerBook> journals)
@@ -61,13 +60,11 @@ namespace IBS.DataAccess.Repository
         public async Task RemoveAsync(T entity, CancellationToken cancellationToken = default)
         {
             dbSet.Remove(entity);
-            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
         {
             dbSet.RemoveRange(entities);
-            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<SupplierDto?> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)

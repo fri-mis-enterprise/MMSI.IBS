@@ -66,7 +66,7 @@
                                         <span class="input-group-text bg-white border-0">
                                             <span class="material-symbols-outlined text-sm">search</span>
                                         </span>
-                                        <input type="text" id="CustomerSearch" class="form-control border-0" placeholder="Search customer..." autocomplete="off">
+                                        <input type="text" id="CustomerSearch" class="modern-input border-0" placeholder="Search customer..." autocomplete="off">
                                         <input type="hidden" asp-for="CustomerId" id="CustomerId" />
                                     </div>
                                     <div id="CustomerSearchResults" class="modern-dropdown-menu w-full shadow-lg"></div>
@@ -74,7 +74,7 @@
                                 </div>
                                 <div class="modern-col-4">
                                     <label asp-for="Date" class="modern-label">Order Date</label>
-                                    <input asp-for="Date" type="date" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <input asp-for="Date" type="date" class="modern-input" />
                                     <span asp-validation-for="Date" class="text-error text-xs"></span>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@
                             <h2 class="modern-headline-md">Remarks</h2>
                         </div>
                         <div class="modern-card-body" style="height: 100%;">
-                            <textarea asp-for="Remarks" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl); height: 100%; min-height: 150px;" placeholder="Additional notes..."></textarea>
+                            <textarea asp-for="Remarks" class="modern-input" style="height: 100%; min-height: 150px;" placeholder="Additional notes..."></textarea>
                             <span asp-validation-for="Remarks" class="text-error text-xs"></span>
                         </div>
                     </div>
@@ -127,12 +127,12 @@
                         <div class="modern-card-body">
                             <div>
                                 <label asp-for="COSNumber" class="modern-label">COS Number</label>
-                                <input asp-for="COSNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Optional" maxlength="20" />
+                                <input asp-for="COSNumber" class="modern-input" placeholder="Optional" maxlength="20" />
                                 <span asp-validation-for="COSNumber" class="text-error text-xs"></span>
                             </div>
                             <div class="mt-3">
                                 <label asp-for="VoyageNumber" class="modern-label">Voyage Number</label>
-                                <input asp-for="VoyageNumber" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Optional" maxlength="100" />
+                                <input asp-for="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="100" />
                                 <span asp-validation-for="VoyageNumber" class="text-error text-xs"></span>
                             </div>
                         </div>
@@ -147,12 +147,12 @@
                             <div class="flex flex-column" style="gap: 1.25rem;">
                                 <div>
                                     <label asp-for="PlannedStartTime" class="modern-label">Planned Arrival/Start</label>
-                                    <input asp-for="PlannedStartTime" type="datetime-local" class="form-control timeline-input" id="PlannedStartTime" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <input asp-for="PlannedStartTime" type="datetime-local" class="modern-input timeline-input" id="PlannedStartTime" />
                                     <span asp-validation-for="PlannedStartTime" class="text-error text-xs"></span>
                                 </div>
                                 <div>
                                     <label asp-for="PlannedEndTime" class="modern-label">Planned Departure/End</label>
-                                    <input asp-for="PlannedEndTime" type="datetime-local" class="form-control timeline-input" id="PlannedEndTime" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" />
+                                    <input asp-for="PlannedEndTime" type="datetime-local" class="modern-input timeline-input" id="PlannedEndTime" />
                                     <span asp-validation-for="PlannedEndTime" class="text-error text-xs"></span>
                                     <div id="durationWarning" class="text-error text-xs mt-1" style="display: none;">
                                         <span class="material-symbols-outlined text-xs" style="vertical-align: middle;">warning</span> End time must be after start time.

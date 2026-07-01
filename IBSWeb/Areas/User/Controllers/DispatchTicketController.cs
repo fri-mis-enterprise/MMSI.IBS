@@ -176,7 +176,9 @@ namespace IBSWeb.Areas.User.Controllers
                 BAFRate = ticket.BAFRate,
                 BAFDiscount = ticket.BAFDiscount,
                 ApOtherTugs = ticket.ApOtherTugs,
-                Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
+                DispatchChargeType = ticket.DispatchChargeType,
+                BAFChargeType = ticket.BAFChargeType,
+                Customers = await dispatchTicketService.GetCustomerSelectListAsync(cancellationToken)
             };
 
             if (!string.IsNullOrEmpty(ticket.ImageName))
@@ -298,7 +300,7 @@ namespace IBSWeb.Areas.User.Controllers
                 ApOtherTugs = ticket.ApOtherTugs,
                 DispatchChargeType = ticket.DispatchChargeType,
                 BAFChargeType = ticket.BAFChargeType,
-                Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken)
+                Customers = await dispatchTicketService.GetCustomerSelectListAsync(cancellationToken)
             };
 
             if (!string.IsNullOrEmpty(ticket.ImageName))
@@ -315,7 +317,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
-        /// Processes the update of the tariff for a Dispatch Ticket.
+        /// Processes the saving of the tariff for a Dispatch Ticket.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -398,8 +400,7 @@ namespace IBSWeb.Areas.User.Controllers
                 viewModel.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(model.VideoName);
             }
 
-            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            viewModel = await dispatchTicketService.PopulateSelectListsAsync(viewModel, cancellationToken);
 
             ViewData["PortId"] = model.Terminal.Port.PortId;
             ViewData["JobOrderId"] = viewModel.JobOrderId;
@@ -496,6 +497,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to change Dispatch Ticket status.", "DispatchTicket")]
         public async Task<IActionResult> ChangeStatus(int id, string status, string activity, string docType, string successMessage, CancellationToken cancellationToken)
         {
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -564,13 +566,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
-            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
-            var list = terminals.Select(t => new SelectListItem
-            {
-                Value = t.TerminalId.ToString(),
-                Text = t.TerminalName
-            }).ToList();
-
+            var list = await dispatchTicketService.GetTerminalsByPortAsync(portId, cancellationToken);
             return Json(list);
         }
 
@@ -580,12 +576,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken)
         {
-            var items = status == "All"
-                ? await unitOfWork.DispatchTicket.GetAllAsync(
-                    dt => dt.Status != "For Posting", cancellationToken)
-                : await unitOfWork.DispatchTicket.GetAllAsync(
-                    dt => dt.Status == status, cancellationToken);
-
+            var items = await dispatchTicketService.GetDispatchTicketsByFilterAsync(status, cancellationToken);
             return Json(items);
         }
 

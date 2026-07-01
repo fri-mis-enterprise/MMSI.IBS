@@ -106,55 +106,44 @@ public class Repository<T> : IRepository<T> where T : class
 
 ### 5.1 Controller Architecture
 
-| # | Issue | Location | Standard | Actual | Fix |
-|---|-------|----------|----------|--------|-----|
-| C1 | **Direct IUnitOfWork usage** | `DispatchTicketController`, `BillingController`, `CollectionController` | Delegate all data access to services | Some actions access `unitOfWork.X` directly alongside service calls | Move direct UoW calls into the respective services |
-| C2 | **No auth on action** | `MasterFileController.GenerateExcel` | `[RequireAccess]` or `[RequireAnyAccess]` on every action | No authorization attribute | Add `[RequireAccess(ProcedureEnum.ManageMaritimeMasterFile)]` |
-| C3 | **No auth on status change** | `DispatchTicketController.ChangeStatus` | `[RequireAccess]` on all mutation endpoints | No authorization attribute | Add appropriate `[RequireAccess]` |
-| C4 | **Username resolution inconsistency** | `BillingController` | `User.Identity?.Name` (JobOrder, DispatchTicket, Collection) | Uses `UserManager<ApplicationUser>` to fetch user + claims | Replace with `User.Identity?.Name` |
-| C5 | **JSON vs TempData responses** | `BillingController.Create/Edit` | `TempData` + `RedirectToAction` (JobOrder, Collection) | Returns JSON via `Success()`/`Failure()` helpers | Standardize on TempData + redirect (or keep if AJAX submit is intentional — document why) |
+| # | Issue | Location | Notes |
+|---|-------|----------|-------|
+| C1 | **Direct IUnitOfWork usage** | `DispatchTicketController`, `BillingController`, `CollectionController` | Some actions access `unitOfWork.X` directly alongside service calls instead of delegating all data access to services |
+| C2 | **No auth on action** | `MasterFileController.GenerateExcel` | Export endpoint lacks authorization attribute |
+| C3 | **No auth on status change** | `DispatchTicketController.ChangeStatus` | Status mutation endpoint lacks authorization attribute |
+| C4 | **Username resolution inconsistency** | `BillingController` | Uses `UserManager<ApplicationUser>` instead of `User.Identity?.Name` (as used in JobOrder, DispatchTicket, Collection) |
+| C5 | **JSON vs TempData responses** | `BillingController.Create/Edit` | Returns JSON via `Success()`/`Failure()` helpers instead of `TempData` + `RedirectToAction` |
 
 ### 5.2 Service Layer
 
-| # | Issue | Location | Standard | Actual | Fix |
-|---|-------|----------|----------|--------|-----|
-| S1 | **Traditional constructor instead of primary** | `CollectionService` | Primary constructor (JobOrder, DispatchTicket, Billing services) | Field-backed traditional constructor with `_field` naming | Convert to primary constructor |
-| S2 | **Interface-per-service (single impl)** | All 4 MSAP services | AGENTS.md: "No interface with one implementation" | `IJobOrderService`/`JobOrderService`, etc. — each has exactly one implementation | Either remove interfaces and use classes directly, or keep only if testing requires mocking |
+| # | Issue | Location | Notes |
+|---|-------|----------|-------|
+| S1 | **Interface-per-service (single impl)** | All 4 MSAP services | Each has exactly one implementation, violating AGENTS.md "No interface with one implementation" rule — kept for test mocking |
+| S2 | **Customer search duplicated across services** | `JobOrderService`, `DispatchTicketService`, `BillingService`, `CollectionService` | Each service has its own `SearchCustomersAsync` with different return shapes instead of a shared helper or `CustomerRepository` method |
 
 ### 5.3 Repository Layer
 
-| # | Issue | Location | Standard | Actual | Fix |
-|---|-------|----------|----------|--------|-----|
-| R1 | **Immediate SaveChanges in base Repository** | `Repository<T>.AddAsync()`, `.RemoveAsync()` | UoW pattern: accumulate changes, call `SaveAsync()` once | Calls `SaveChangesAsync()` immediately on every add/remove | Remove `SaveChangesAsync()` from base `AddAsync`/`RemoveAsync` — let the caller's `unitOfWork.SaveAsync()` control persistence |
-| R2 | **RemoveRangeAsync not on interface** | `Repository<T>` implementation | All public methods should be on `IRepository<T>` | `RemoveRangeAsync` exists only on implementation class | Add to `IRepository<T>` |
-| R3 | **MapSupplierToDTO, RemoveRecords not on interface** | `Repository<T>` | Interface should define all public contracts | Implementation-only methods | Add to interface or make private |
-| R4 | **Property declaration style mismatch** | `UnitOfWork` | Consistent `{ get; }` or `{ get; private set; }` | Mix of both styles | Pick one pattern and align all properties |
+| # | Issue | Location | Notes |
+|---|-------|----------|-------|
+| R1 | **RemoveRangeAsync not on interface** | `Repository<T>` implementation | Public method exists only on implementation class, not on `IRepository<T>` |
+| R2 | **MapSupplierToDTO, RemoveRecords not on interface** | `Repository<T>` | Public methods exist only on implementation, not on interface |
+| R3 | **Property declaration style mismatch** | `UnitOfWork` | Mix of `{ get; }` and `{ get; private set; }` styles across properties |
 
 ### 5.4 View Layer
 
-| # | Issue | Location | Standard | Actual | Fix |
-|---|-------|----------|----------|--------|-----|
-| V1 | **Model type inconsistency** | `Billing Create.cshtml` | Typed ViewModel (`JobOrderViewModel`, `ServiceRequestViewModel`, `CreateCollectionViewModel`) | Uses domain entity `@model Billing` directly | Create a dedicated `BillingViewModel` or use existing pattern |
-| V2 | **CSS class inconsistency** | DispatchTicket/Billing/Collection Create vs JobOrder Create | Consistent input class naming | JobOrder uses `form-control` + inline border/radius styles; others use `.modern-input` | Align all forms to use `.modern-input` (or `form-control`) consistently |
-| V3 | **Direct DataTable init bypassing ModernTable** | `Collection Create.cshtml` (`#billingsTable`) | All Index pages use `ModernTable.config()` + `ModernTable.ajax()` | Direct `$('#billingsTable').DataTable({...})` | Wrap in ModernTable utility or document why inline is needed |
-| V4 | **No @model on Index pages** | `JobOrder Index.cshtml`, `Collection Index.cshtml` | Optional (DataTable loads via AJAX) | No `@model` declaration | Consider adding `@model IEnumerable<T>` for consistency with Billing/DispatchTicket Index |
-| V5 | **Missing partial views for repeated UI** | Customer search, Port-Terminal cascade, media preview | Avoid inline code duplication | Same customer search ~80 lines repeated in 3+ Create/Edit views | Extract to shared partials or JS modules |
+| # | Issue | Location | Notes |
+|---|-------|----------|-------|
+| V1 | **Model type inconsistency** | `Billing Create.cshtml` | Uses domain entity `@model Billing` with `[Bind]` workaround instead of a dedicated ViewModel |
+| V2 | **Direct DataTable init bypassing ModernTable** | `Collection Create.cshtml` (`#billingsTable`) | Direct `$('#billingsTable').DataTable({...})` instead of `ModernTable.config()` + `ModernTable.ajax()` |
+| V3 | **No @model on Index pages** | `JobOrder Index.cshtml`, `Collection Index.cshtml` | Inconsistent with Billing/DispatchTicket Index which declare `@model` |
+| V4 | **Missing partial views for repeated UI** | Customer search, Port-Terminal cascade, media preview | Same customer search ~80 lines repeated in 3+ Create/Edit views |
 
 ### 5.5 Authorization & Access Control
 
-| # | Issue | Location | Standard | Actual | Fix |
-|---|-------|----------|----------|--------|-----|
-| A1 | **Missing access control** | `MasterFileController` (all actions) | `[RequireAccess]` / `[RequireAnyAccess]` | No authorization anywhere on this controller | Add per-action or class-level `[Authorize]` |
-| A2 | **Missing access control** | `DispatchTicketController.ChangeStatus` | Same as above | No auth attribute | Add `[RequireAccess(ProcedureEnum.EditDispatchTicket)]` |
-
-### 5.6 Code Organization & Duplication
-
-| # | Issue | Location | Standard | Actual | Fix |
-|---|-------|----------|----------|--------|-----|
-| D1 | **Customer search duplicated across services** | Every service has its own `SearchCustomersAsync` | Single shared query method | 4 separate implementations (`JobOrderService`, `DispatchTicketService`, `BillingService`, `CollectionService`) | Consolidate into a shared helper or add to `CustomerRepository` |
-| D2 | **`DispatchTicketController.ChangeStatus` bypasses service** | `DispatchTicketController.ChangeStatus` | All mutations through typed service | Direct UoW access in controller | Move status change logic into `IDispatchTicketService` |
-
----
+| # | Issue | Location | Notes |
+|---|-------|----------|-------|
+| A1 | **Missing access control** | `MasterFileController` (all actions) | No authorization on any endpoint |
+| A2 | **Missing access control** | `DispatchTicketController.ChangeStatus` | No authorization attribute on status mutation |
 
 ## 6. Migration Architecture Notes
 
@@ -162,35 +151,3 @@ public class Repository<T> : IRepository<T> where T : class
 - Some models extend `BaseEntity` (JobOrder, Billing, Collection) while `DispatchTicket` has its own `CreatedBy`/`EditedBy` fields (legacy carryover)
 - `DispatchTicket` has a `DispatchTicketId` PK but also legacy `RECID` column mapping
 
----
-
-## 7. AGENTS.md Rule Compliance
-
-| Rule | Status | Notes |
-|------|--------|-------|
-| Primary constructors | ❌ Partial | `CollectionService` uses traditional constructor |
-| No interface with one impl | ❌ Violated | All 4 MSAP services have single-impl interfaces |
-| `TreatWarningsAsErrors` | ✅ | Enforced in `.csproj` |
-| Audit trail on every mutation | ✅ | Present in all service methods |
-| Workflow state validation | ✅ | Guard clauses at top of mutation methods |
-| `DateTimeHelper.GetCurrentPhilippineTime()` | ✅ | Used consistently |
-| `IUnitOfWork` exposes all repos | ✅ | Via `UnitOfWork` properties |
-
----
-
-## 8. Fix Priority Ranking
-
-| Priority | Issue | Effort | Risk | Why |
-|----------|-------|--------|------|-----|
-| **P0** | R1: Immediate SaveChanges in base Repository | Medium | High | Data integrity risk — partial saves bypass UoW transaction |
-| **P0** | A1/A2: Missing auth on MasterFile/ChangeStatus | Low | High | Security hole — unauthenticated access to data |
-| **P1** | C1: Direct IUnitOfWork in controllers | Medium | Medium | Bypasses service layer, inconsistent transaction handling |
-| **P1** | S1: CollectionService traditional constructor | Low | Low | Code style inconsistency |
-| **P1** | V1: Billing Create uses domain entity as model | Medium | Medium | Over-posting risk, [Bind] attribute needed as workaround |
-| **P1** | V2: CSS class naming inconsistency | Low | Low | Visual inconsistency |
-| **P2** | S2: Interface-per-service | Low | Low | Violates project convention but functionally harmless |
-| **P2** | C4: Username resolution inconsistency | Low | Low | Inconsistent but both work |
-| **P2** | D1: Duplicated customer search | Medium | Low | Code smell, maintenance burden |
-| **P2** | R2/R3: Interface gaps | Low | Low | Missing interface members |
-| **P3** | V5: Repeated UI patterns | Medium | Low | Maintainability |
-| **P3** | R4: Property style in UnitOfWork | Low | Low | Cosmetic |

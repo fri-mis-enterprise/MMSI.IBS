@@ -6,6 +6,7 @@ using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
@@ -840,6 +841,35 @@ namespace IBS.Services
                 value = c.CustomerId,
                 name = c.CustomerName
             }).ToList();
+        }
+
+        public async Task<List<SelectListItem>> GetCustomerSelectListAsync(CancellationToken cancellationToken)
+        {
+            return await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetTerminalsByPortAsync(int portId, CancellationToken cancellationToken)
+        {
+            var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
+            return terminals.Select(t => new SelectListItem
+            {
+                Value = t.TerminalId.ToString(),
+                Text = t.TerminalName
+            }).ToList();
+        }
+
+        public async Task<ServiceRequestViewModel> PopulateSelectListsAsync(ServiceRequestViewModel viewModel, CancellationToken cancellationToken)
+        {
+            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+            return viewModel;
+        }
+
+        public async Task<IEnumerable<DispatchTicket>> GetDispatchTicketsByFilterAsync(string status, CancellationToken cancellationToken)
+        {
+            return status == "All"
+                ? await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status != "For Posting", cancellationToken)
+                : await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.Status == status, cancellationToken);
         }
 
         public async Task<object?> GetTicketDetailsAsync(int id, CancellationToken cancellationToken)

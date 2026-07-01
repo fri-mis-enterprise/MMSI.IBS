@@ -3,6 +3,7 @@ using IBS.Models.MSAP.ViewModels;
 using IBS.Models;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Services
 {
@@ -26,6 +27,10 @@ namespace IBS.Services
         Task<bool> IsTicketJobOrderEditableAsync(int dispatchTicketId, CancellationToken cancellationToken);
         Task<List<object>> SearchCustomersAsync(string? term, CancellationToken cancellationToken);
         Task<object?> GetTicketDetailsAsync(int id, CancellationToken cancellationToken);
+        Task<List<SelectListItem>> GetCustomerSelectListAsync(CancellationToken cancellationToken);
+        Task<List<SelectListItem>> GetTerminalsByPortAsync(int portId, CancellationToken cancellationToken);
+        Task<ServiceRequestViewModel> PopulateSelectListsAsync(ServiceRequestViewModel viewModel, CancellationToken cancellationToken);
+        Task<IEnumerable<DispatchTicket>> GetDispatchTicketsByFilterAsync(string status, CancellationToken cancellationToken);
     }
 }
 

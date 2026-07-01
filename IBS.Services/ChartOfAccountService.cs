@@ -103,10 +103,11 @@ namespace IBS.Services
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
                     await unitOfWork.ChartOfAccount.AddAsync(newAccount, cancellationToken);
-                    await unitOfWork.SaveAsync(cancellationToken);
-                    
+
                     AuditTrail auditTrail = new(createdBy, $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts");
                     await unitOfWork.AuditTrail.AddAsync(auditTrail, cancellationToken);
+
+                    await unitOfWork.SaveAsync(cancellationToken);
                 }, cancellationToken);
 
                 await cacheService.RemoveAsync($"coa:{company}", cancellationToken);

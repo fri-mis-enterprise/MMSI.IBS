@@ -494,8 +494,8 @@
                 $("#CustomerTerms").text(customer.terms || '-');
 
                 // Store withholding flags on the customer input for later use in calculations
-                $("#customerId").data("with-holding-tax", customer.withHoldingTax);
-                $("#customerId").data("with-holding-vat", customer.withHoldingVat);
+                $("#customerId").data("with-holding-tax", customer.withholdingTax);
+                $("#customerId").data("with-holding-vat", customer.withholdingVat);
 
                 $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
                 handleCheckboxChange();

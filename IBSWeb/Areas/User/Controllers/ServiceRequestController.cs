@@ -189,6 +189,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion --Audit Trail
 
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Service Request #{model.DispatchNumber} was successfully created.";
                 return RedirectToAction(nameof(Index));
