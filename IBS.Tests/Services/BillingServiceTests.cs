@@ -30,19 +30,19 @@ namespace IBS.Tests.Services
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
         private readonly Mock<INotificationService> _mockNotification;
-        private readonly Mock<IJobOrderService> _mockJobOrderService;
+        private readonly Mock<JobOrderService> _mockJobOrderService;
 
         public BillingServiceTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger<BillingService>>();
             _mockNotification = new Mock<INotificationService>();
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, new Mock<ILogger<JobOrderService>>().Object, _mockNotification.Object);
             _mockBillingRepo = new Mock<IBillingRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockCustomerRepo = new Mock<ICustomerRepository>();
             _mockTicketRepo = new Mock<IDispatchTicketRepository>();
             _mockVesselRepo = new Mock<IVesselRepository>();
-            _mockJobOrderService = new Mock<IJobOrderService>();
 
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "BillingTestDb")
@@ -295,7 +295,7 @@ namespace IBS.Tests.Services
 
             // Assert: Total should be Net * 1.12
             // 213,928.57 * 1.12 = 239,599.9984
-            Math.Round(billing.Amount, 2).Should().Be(239599.9984m);
+            billing.Amount.Should().Be(239599.9984m);
         }
 
         [Fact]

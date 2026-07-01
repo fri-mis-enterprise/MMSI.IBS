@@ -110,20 +110,7 @@ public class Repository<T> : IRepository<T> where T : class
 |---|-------|----------|-------|
 | C1 | **JSON responses for AJAX forms** | `BillingController.Create/Edit` | Returns JSON via `Success()`/`Failure()` helpers instead of `TempData` + `RedirectToAction`. Intentional — both Create and Edit views use AJAX submit via `fetch()`, expecting `{ success, message, redirectUrl }`. |
 
-### 5.2 Service Layer
-
-| # | Topic | Location | Notes |
-|---|-------|----------|-------|
-| S1 | **Interface-per-service (single impl)** | All 4 MSAP services | Each has exactly one implementation, which violates AGENTS.md "No interface with one implementation" guidance. Kept because test mocking requires interfaces. |
-
-### 5.3 Repository Layer
-
-| # | Topic | Location | Notes |
-|---|-------|----------|-------|
-| R1 | **Interface gaps** | `Repository<T>` | `RemoveRangeAsync`, `MapSupplierToDTO`, `RemoveRecords` are public on the implementation class but not declared on `IRepository<T>`. Low impact — `RemoveRangeAsync` has zero callers. |
-| R2 | **Property declaration style mismatch** | `UnitOfWork` | Mix of `{ get; }` and `{ get; private set; }` across repository properties. Cosmetic only. |
-
-### 5.4 View Layer
+### 5.2 View Layer
 
 | # | Topic | Location | Notes |
 |---|-------|----------|-------|

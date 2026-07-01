@@ -91,10 +91,10 @@ else
 }
 builder.Services.AddScoped<ITugboatMonitoringService, TugboatMonitoringService>();
 builder.Services.AddScoped<IVesselPlanningService, VesselPlanningService>();
-builder.Services.AddScoped<IJobOrderService, JobOrderService>();
-builder.Services.AddScoped<IDispatchTicketService, DispatchTicketService>();
-builder.Services.AddScoped<IBillingService, BillingService>();
-builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddScoped<JobOrderService>();
+builder.Services.AddScoped<DispatchTicketService>();
+builder.Services.AddScoped<BillingService>();
+builder.Services.AddScoped<CollectionService>();
 builder.Services.AddScoped<IMaritimeServiceService, MaritimeServiceService>();
 builder.Services.AddScoped<IPortService, PortService>();
 builder.Services.AddScoped<IPrincipalService, PrincipalService>();

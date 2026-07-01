@@ -19,8 +19,8 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class JobOrderController(
         IUnitOfWork unitOfWork,
-        IJobOrderService jobOrderService,
-        IDispatchTicketService dispatchTicketService,
+        JobOrderService jobOrderService,
+        DispatchTicketService dispatchTicketService,
         ITerminalService terminalService,
         ICloudStorageService cloudStorageService,
         ILogger<JobOrderController> logger,

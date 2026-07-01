@@ -1,7 +1,6 @@
 using IBS.Models.Books;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.DTOs;
@@ -62,24 +61,6 @@ namespace IBS.DataAccess.Repository
             dbSet.Remove(entity);
         }
 
-        public async Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
-        {
-            dbSet.RemoveRange(entities);
-        }
-
-        public async Task<SupplierDto?> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)
-        {
-            return await _db.Set<Supplier>()
-                .Where(s => s.SupplierCode == supplierCode)
-                .Select(s => new SupplierDto
-                {
-                    SupplierId = s.SupplierId,
-                    SupplierCode = s.SupplierCode!,
-                    SupplierName = s.SupplierName
-                })
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-
         public decimal ComputeNetOfVat(decimal grossAmount)
         {
             if (grossAmount == 0)
@@ -93,23 +74,6 @@ namespace IBS.DataAccess.Repository
         public decimal ComputeVatAmount(decimal netOfVatAmount)
         {
             return netOfVatAmount * VatRate;
-        }
-
-        public async Task RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
-       where TEntity : class
-        {
-            var entitySet = _db.Set<TEntity>();
-            var entitiesToRemove = await entitySet.Where(predicate).ToListAsync(cancellationToken);
-
-            if (entitiesToRemove.Any())
-            {
-                foreach (var entity in entitiesToRemove)
-                {
-                    entitySet.Remove(entity);
-                }
-
-                await _db.SaveChangesAsync(cancellationToken);
-            }
         }
 
         public decimal ComputeEwtAmount(decimal netOfVatAmount, decimal percent)

@@ -26,7 +26,9 @@ namespace IBS.Tests.Services
         private readonly Mock<IJobOrderRepository> _mockJobOrderRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
         private readonly Mock<IPrincipalRepository> _mockPrincipalRepo;
-        private readonly Mock<IJobOrderService> _mockJobOrderService;
+        private readonly Mock<JobOrderService> _mockJobOrderService;
+        private readonly Mock<ILogger<JobOrderService>> _mockJobOrderLogger;
+        private readonly Mock<INotificationService> _mockNotification;
 
         public LegacyBillingTests()
         {
@@ -37,7 +39,9 @@ namespace IBS.Tests.Services
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockVesselRepo = new Mock<IVesselRepository>();
             _mockPrincipalRepo = new Mock<IPrincipalRepository>();
-            _mockJobOrderService = new Mock<IJobOrderService>();
+            _mockJobOrderLogger = new Mock<ILogger<JobOrderService>>();
+            _mockNotification = new Mock<INotificationService>();
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, _mockJobOrderLogger.Object, _mockNotification.Object);
             var mockLogger = new Mock<ILogger<BillingService>>();
             var mockNotification = new Mock<INotificationService>();
 

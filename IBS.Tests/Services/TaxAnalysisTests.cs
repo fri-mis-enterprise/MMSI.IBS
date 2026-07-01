@@ -24,7 +24,7 @@ namespace IBS.Tests.Services
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IJobOrderRepository> _mockJobOrderRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
-        private readonly Mock<IJobOrderService> _mockJobOrderService;
+        private readonly Mock<JobOrderService> _mockJobOrderService;
 
         public TaxAnalysisTests()
         {
@@ -34,10 +34,11 @@ namespace IBS.Tests.Services
             _mockTicketRepo = new Mock<IDispatchTicketRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockVesselRepo = new Mock<IVesselRepository>();
-            _mockJobOrderService = new Mock<IJobOrderService>();
+            var mockJobOrderLogger = new Mock<ILogger<JobOrderService>>();
+            var mockNotification = new Mock<INotificationService>();
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, mockJobOrderLogger.Object, mockNotification.Object);
             var mockBillingLogger = new Mock<ILogger<BillingService>>();
             var mockCollectionLogger = new Mock<ILogger<CollectionService>>();
-            var mockNotification = new Mock<INotificationService>();
 
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.Customer).Returns(_mockCustomerRepo.Object);

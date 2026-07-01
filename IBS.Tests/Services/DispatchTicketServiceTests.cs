@@ -124,6 +124,10 @@ namespace IBS.Tests.Services
             };
 
             _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((DispatchTicket)null!);
+            _mockTicketRepo.Setup(u => u.GetAsync(
+                It.Is<Expression<Func<DispatchTicket, bool>>>(e => e.Compile()(new DispatchTicket { DispatchTicketId = 1 })),
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingTicket);
             _mockUnitOfWork.Setup(u => u.DispatchTicket.IsJobOrderEditableAsync(It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
@@ -160,6 +164,10 @@ namespace IBS.Tests.Services
             };
 
             _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((DispatchTicket)null!);
+            _mockTicketRepo.Setup(u => u.GetAsync(
+                It.Is<Expression<Func<DispatchTicket, bool>>>(e => e.Compile()(new DispatchTicket { DispatchTicketId = 1 })),
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingTicket);
             _mockUnitOfWork.Setup(u => u.DispatchTicket.IsJobOrderEditableAsync(It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);

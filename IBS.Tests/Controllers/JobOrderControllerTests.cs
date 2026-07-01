@@ -19,8 +19,8 @@ namespace IBS.Tests.Controllers
 {
     public class JobOrderControllerTests
     {
-        private readonly Mock<IJobOrderService> _mockJobOrderService;
-        private readonly Mock<IDispatchTicketService> _mockDispatchTicketService;
+        private readonly Mock<JobOrderService> _mockJobOrderService;
+        private readonly Mock<DispatchTicketService> _mockDispatchTicketService;
         private readonly Mock<ITerminalService> _mockTerminalService;
         private readonly Mock<ILogger<JobOrderController>> _mockLogger;
         private readonly Mock<ICloudStorageService> _mockCloudStorageService;
@@ -33,11 +33,11 @@ namespace IBS.Tests.Controllers
         public JobOrderControllerTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockJobOrderService = new Mock<IJobOrderService>();
-            _mockDispatchTicketService = new Mock<IDispatchTicketService>();
+            _mockCloudStorageService = new Mock<ICloudStorageService>();
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, new Mock<ILogger<JobOrderService>>().Object, new Mock<INotificationService>().Object);
+            _mockDispatchTicketService = new Mock<DispatchTicketService>(_mockUnitOfWork.Object, _mockCloudStorageService.Object, new Mock<ILogger<DispatchTicketService>>().Object, new Mock<INotificationService>().Object);
             _mockTerminalService = new Mock<ITerminalService>();
             _mockLogger = new Mock<ILogger<JobOrderController>>();
-            _mockCloudStorageService = new Mock<ICloudStorageService>();
             _mockTugboatHubContext = new Mock<IHubContext<TugboatHub>>();
             _mockPlanningHubContext = new Mock<IHubContext<PlanningHub>>();
             _mockTempData = new Mock<ITempDataDictionary>();

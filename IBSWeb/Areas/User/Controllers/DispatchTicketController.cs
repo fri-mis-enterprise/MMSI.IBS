@@ -19,7 +19,7 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class DispatchTicketController(
         IUnitOfWork unitOfWork,
-        IDispatchTicketService dispatchTicketService,
+        DispatchTicketService dispatchTicketService,
         IHubContext<TugboatHub> hubContext,
         ICloudStorageService cloudStorageService,
         ILogger<DispatchTicketController> logger)

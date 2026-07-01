@@ -13,7 +13,7 @@ namespace IBS.Services
     public class CollectionService(
         IUnitOfWork unitOfWork,
         ILogger<CollectionService> logger,
-        INotificationService notificationService) : ICollectionService
+        INotificationService notificationService)
     {
 
         public async Task<Collection?> GetCollectionByIdAsync(int id, CancellationToken cancellationToken)

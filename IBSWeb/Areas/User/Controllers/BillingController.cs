@@ -16,7 +16,7 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class BillingController(
         IUnitOfWork unitOfWork,
-        IBillingService billingService,
+        BillingService billingService,
         ILogger<BillingController> logger)
         : Controller
     {

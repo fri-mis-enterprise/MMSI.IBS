@@ -15,7 +15,7 @@ namespace IBS.Services
         IUnitOfWork unitOfWork,
         ICloudStorageService cloudStorageService,
         ILogger<DispatchTicketService> logger,
-        INotificationService notificationService) : IDispatchTicketService
+        INotificationService notificationService)
     {
         public async Task<DispatchTicket?> GetDispatchTicketByIdAsync(int id, CancellationToken cancellationToken)
         {

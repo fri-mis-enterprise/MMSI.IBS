@@ -15,9 +15,9 @@ namespace IBS.Services
 {
     public class BillingService(
         IUnitOfWork unitOfWork,
-        IJobOrderService jobOrderService,
+        JobOrderService jobOrderService,
         ILogger<BillingService> logger,
-        INotificationService notificationService) : IBillingService
+        INotificationService notificationService)
     {
         public async Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken)
         {

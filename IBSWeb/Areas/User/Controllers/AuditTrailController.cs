@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class AuditTrailController(IAuditTrailService auditTrailService, IJobOrderService jobOrderService, ILogger<AuditTrailController> logger): Controller
+    public class AuditTrailController(IAuditTrailService auditTrailService, JobOrderService jobOrderService, ILogger<AuditTrailController> logger): Controller
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {

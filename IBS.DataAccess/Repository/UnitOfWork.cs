@@ -42,40 +42,40 @@ namespace IBS.DataAccess.Repository
 
         #region--Master Files
 
-        public IChartOfAccountRepository ChartOfAccount { get; private set; }
-        public ISupplierRepository Supplier { get; private set; }
-        public ICustomerRepository Customer { get; private set; }
-        public IAuditTrailRepository AuditTrail { get; private set; }
-        public IEmployeeRepository Employee { get; private set; }
+        public IChartOfAccountRepository ChartOfAccount { get; }
+        public ISupplierRepository Supplier { get; }
+        public ICustomerRepository Customer { get; }
+        public IAuditTrailRepository AuditTrail { get; }
+        public IEmployeeRepository Employee { get; }
         public ITermsRepository Terms { get; }
 
         #endregion
 
         #region --Master File
 
-        public IBankAccountRepository BankAccount { get; private set; }
+        public IBankAccountRepository BankAccount { get; }
 
         #endregion
 
         #region --MSAP
 
-        public IMsapRepository Msap { get; private set; }
-        public IServiceRequestRepository ServiceRequest { get; private set; }
-        public IJobOrderRepository JobOrder { get; private set; }
-        public IDispatchTicketRepository DispatchTicket { get; private set; }
-        public IBillingRepository Billing { get; private set; }
-        public ICollectionRepository Collection { get; private set; }
-        public IReportRepository Report { get; private set; }
-        public ITariffTableRepository TariffTable { get; private set; }
-        public IPortRepository Port { get; private set; }
-        public IPrincipalRepository Principal { get; private set; }
-        public IServiceRepository Service { get; private set; }
-        public ITerminalRepository Terminal { get; private set; }
-        public ITugboatRepository Tugboat { get; private set; }
-        public ITugMasterRepository TugMaster { get; private set; }
-        public ITugboatOwnerRepository TugboatOwner { get; private set; }
-        public IUserAccessRepository UserAccess { get; private set; }
-        public IVesselRepository Vessel { get; private set; }
+        public IMsapRepository Msap { get; }
+        public IServiceRequestRepository ServiceRequest { get; }
+        public IJobOrderRepository JobOrder { get; }
+        public IDispatchTicketRepository DispatchTicket { get; }
+        public IBillingRepository Billing { get; }
+        public ICollectionRepository Collection { get; }
+        public IReportRepository Report { get; }
+        public ITariffTableRepository TariffTable { get; }
+        public IPortRepository Port { get; }
+        public IPrincipalRepository Principal { get; }
+        public IServiceRepository Service { get; }
+        public ITerminalRepository Terminal { get; }
+        public ITugboatRepository Tugboat { get; }
+        public ITugMasterRepository TugMaster { get; }
+        public ITugboatOwnerRepository TugboatOwner { get; }
+        public IUserAccessRepository UserAccess { get; }
+        public IVesselRepository Vessel { get; }
 
         #endregion
 

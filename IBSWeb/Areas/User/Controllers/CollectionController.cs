@@ -15,7 +15,7 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class CollectionController(
         IUnitOfWork unitOfWork,
-        ICollectionService collectionService,
+        CollectionService collectionService,
         ILogger<CollectionController> logger)
         : Controller
     {
