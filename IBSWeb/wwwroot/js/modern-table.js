@@ -7,9 +7,18 @@ const ModernTable = {
     config: function(options = {}) {
         return $.extend(true, {
             dom: '<"flex-stack mb-2"lf><"modern-table-container"t><"flex-stack mt-2"ip>',
-            pageLength: 25,
+            pageLength: 10,
             processing: true,
             serverSide: true,
+            stateSave: true,
+            stateSaveCallback: function(settings, data) {
+                const key = 'dt_' + window.location.pathname + '_' + settings.nTable.id;
+                sessionStorage.setItem(key, JSON.stringify(data));
+            },
+            stateLoadCallback: function(settings) {
+                const key = 'dt_' + window.location.pathname + '_' + settings.nTable.id;
+                return JSON.parse(sessionStorage.getItem(key));
+            },
             language: {
                 search: "",
                 searchPlaceholder: options.placeholder || "Search records...",
