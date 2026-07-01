@@ -23,6 +23,8 @@ namespace IBS.Services
         Task<List<SelectListItem>?> GetPrincipalsSelectListAsync(int customerId, CancellationToken cancellationToken);
         Task<List<SelectListItem>?> GetEditTicketsSelectListAsync(int? customerId, int billingId, CancellationToken cancellationToken);
         Task<Billing> PopulateBillingSelectListsAsync(Billing model, CancellationToken cancellationToken);
+        Task<Billing> PopulateTicketListsAsync(Billing model, CancellationToken cancellationToken);
+        Task<IEnumerable<DispatchTicket>> GetDispatchTicketsByIdsAsync(List<int> dispatchTicketIds, CancellationToken cancellationToken);
         Task<ServiceResult<object>> GetCustomerDetailsAsync(int customerId, CancellationToken cancellationToken);
     }
 }

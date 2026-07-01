@@ -771,6 +771,27 @@ namespace IBS.Services
             return list;
         }
 
+        public async Task<Billing> PopulateTicketListsAsync(Billing model, CancellationToken cancellationToken)
+        {
+            model.ToBillDispatchTickets = await unitOfWork.Billing
+                .GetToBillDispatchTicketListAsync(model.MsapBillingId, cancellationToken);
+
+            model.PaidDispatchTickets = await unitOfWork.Billing
+                .GetPaidDispatchTicketsAsync(model.MsapBillingId, cancellationToken);
+
+            model.UniqueTugboats = await unitOfWork.Billing
+                .GetUniqueTugboatsListAsync(model.MsapBillingId, cancellationToken);
+
+            unitOfWork.Billing.ProcessAddress(model, cancellationToken);
+            return model;
+        }
+
+        public async Task<IEnumerable<DispatchTicket>> GetDispatchTicketsByIdsAsync(List<int> dispatchTicketIds, CancellationToken cancellationToken)
+        {
+            return await unitOfWork.DispatchTicket
+                .GetAllAsync(t => dispatchTicketIds.Contains(t.DispatchTicketId), cancellationToken);
+        }
+
         public async Task<Billing> PopulateBillingSelectListsAsync(Billing model, CancellationToken cancellationToken)
         {
             model.Vessels = await unitOfWork.Vessel.GetMsapVesselsSelectList(cancellationToken);

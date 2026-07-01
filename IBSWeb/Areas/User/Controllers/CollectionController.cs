@@ -1,4 +1,3 @@
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP.ViewModels;
@@ -15,7 +14,6 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class CollectionController(
         ICollectionService collectionService,
-        IUnitOfWork unitOfWork,
         ILogger<CollectionController> logger)
         : Controller
     {
@@ -64,9 +62,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(0,
-                string.Empty,
-                cancellationToken);
+            viewModel.Customers = await collectionService.GetCustomerSelectListAsync(0, viewModel.CustomerId, cancellationToken);
             return View(viewModel);
         }
 
@@ -113,11 +109,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            var cust = await unitOfWork.Customer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
-            viewModel.Customers = await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(
-                viewModel.MsapCollectionId ?? 0,
-                cust?.Type ?? string.Empty,
-                cancellationToken);
+            viewModel.Customers = await collectionService.GetCustomerSelectListAsync(viewModel.MsapCollectionId ?? 0, viewModel.CustomerId, cancellationToken);
             return View(viewModel);
         }
 

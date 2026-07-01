@@ -1,9 +1,7 @@
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using IBS.Services.Attributes;
 using IBS.Services;
@@ -16,9 +14,7 @@ namespace IBSWeb.Areas.User.Controllers
     /// </summary>
     [Area("User")]
     public class BillingController(
-        IUnitOfWork unitOfWork,
         IBillingService billingService,
-        UserManager<ApplicationUser> userManager,
         ILogger<BillingController> logger)
         : Controller
     {
@@ -65,8 +61,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var username = await GetUserNameAsync() ?? "System";
-                var company = await GetCompanyClaimAsync() ?? SD.Company_MMSI;
+                var username = User.Identity?.Name ?? "System";
+                var company = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? SD.Company_MMSI;
 
                 var result = await billingService.CreateBillingAsync(model, username, company, cancellationToken);
 
@@ -115,11 +111,7 @@ namespace IBSWeb.Areas.User.Controllers
                 model.CustomerPrincipal = await billingService.GetPrincipalsSelectListAsync(model.CustomerId, cancellationToken);
             }
 
-            model.ToBillDispatchTickets = await unitOfWork.Billing
-                .GetToBillDispatchTicketListAsync(model.MsapBillingId, cancellationToken);
-
-            model.PaidDispatchTickets = await unitOfWork.Billing
-                .GetPaidDispatchTicketsAsync(model.MsapBillingId, cancellationToken);
+            model = await billingService.PopulateTicketListsAsync(model, cancellationToken);
 
             ViewData["HasPrincipal"] = model.CustomerPrincipal is { Count: > 0 };
 
@@ -143,7 +135,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                var result = await billingService.UpdateBillingAsync(model, await GetUserNameAsync() ?? "System", cancellationToken);
+                var result = await billingService.UpdateBillingAsync(model, User.Identity?.Name ?? "System", cancellationToken);
 
                 if (result.IsSuccess)
                 {
@@ -228,16 +220,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            model.ToBillDispatchTickets = await unitOfWork.Billing
-                .GetToBillDispatchTicketListAsync(model.MsapBillingId, cancellationToken);
-
-            model.PaidDispatchTickets = await unitOfWork.Billing
-                .GetPaidDispatchTicketsAsync(model.MsapBillingId, cancellationToken);
-
-            model.UniqueTugboats = await unitOfWork.Billing
-                .GetUniqueTugboatsListAsync(model.MsapBillingId, cancellationToken);
-
-            unitOfWork.Billing.ProcessAddress(model, cancellationToken);
+            model = await billingService.PopulateTicketListsAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -274,8 +257,7 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var intDispatchTicketIds = dispatchTicketIds.Select(int.Parse).ToList();
-                var dispatchTickets = await unitOfWork.DispatchTicket
-                    .GetAllAsync(t => intDispatchTicketIds.Contains(t.DispatchTicketId));
+                var dispatchTickets = await billingService.GetDispatchTicketsByIdsAsync(intDispatchTicketIds, cancellationToken: default);
 
                 return Json(new { success = true, data = dispatchTickets });
             }
@@ -448,31 +430,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             var errors = data?.GetType().GetProperty("errors")?.GetValue(data);
             return Json(new { success = false, message = finalMessage, errors });
-        }
-
-        /// <summary>
-        /// Retrieves the company claim value for the current user.
-        /// </summary>
-        private async Task<string?> GetCompanyClaimAsync()
-        {
-            var user = await userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
-        /// <summary>
-        /// Retrieves the username of the current user.
-        /// </summary>
-        private async Task<string?> GetUserNameAsync()
-        {
-            var user = await userManager.GetUserAsync(User);
-            return user?.UserName;
         }
 
         #endregion

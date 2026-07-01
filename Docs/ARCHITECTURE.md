@@ -102,48 +102,35 @@ public class Repository<T> : IRepository<T> where T : class
 
 ---
 
-## 5. Inconsistencies & Deviations
+## 5. Notes & Deviations
 
 ### 5.1 Controller Architecture
 
-| # | Issue | Location | Notes |
+| # | Topic | Location | Notes |
 |---|-------|----------|-------|
-| C1 | **Direct IUnitOfWork usage** | `DispatchTicketController`, `BillingController`, `CollectionController` | Some actions access `unitOfWork.X` directly alongside service calls instead of delegating all data access to services |
-| C2 | **No auth on action** | `MasterFileController.GenerateExcel` | Export endpoint lacks authorization attribute |
-| C3 | **No auth on status change** | `DispatchTicketController.ChangeStatus` | Status mutation endpoint lacks authorization attribute |
-| C4 | **Username resolution inconsistency** | `BillingController` | Uses `UserManager<ApplicationUser>` instead of `User.Identity?.Name` (as used in JobOrder, DispatchTicket, Collection) |
-| C5 | **JSON vs TempData responses** | `BillingController.Create/Edit` | Returns JSON via `Success()`/`Failure()` helpers instead of `TempData` + `RedirectToAction` |
+| C1 | **JSON responses for AJAX forms** | `BillingController.Create/Edit` | Returns JSON via `Success()`/`Failure()` helpers instead of `TempData` + `RedirectToAction`. Intentional — both Create and Edit views use AJAX submit via `fetch()`, expecting `{ success, message, redirectUrl }`. |
 
 ### 5.2 Service Layer
 
-| # | Issue | Location | Notes |
+| # | Topic | Location | Notes |
 |---|-------|----------|-------|
-| S1 | **Interface-per-service (single impl)** | All 4 MSAP services | Each has exactly one implementation, violating AGENTS.md "No interface with one implementation" rule — kept for test mocking |
-| S2 | **Customer search duplicated across services** | `JobOrderService`, `DispatchTicketService`, `BillingService`, `CollectionService` | Each service has its own `SearchCustomersAsync` with different return shapes instead of a shared helper or `CustomerRepository` method |
+| S1 | **Interface-per-service (single impl)** | All 4 MSAP services | Each has exactly one implementation, which violates AGENTS.md "No interface with one implementation" guidance. Kept because test mocking requires interfaces. |
+| S2 | **Customer search duplicated across services** | `JobOrderService`, `DispatchTicketService`, `BillingService`, `CollectionService` | Each has its own `SearchCustomersAsync` with different return shapes. Consolidation into a shared helper or `CustomerRepository` method would reduce duplication but each caller has distinct field requirements. |
 
 ### 5.3 Repository Layer
 
-| # | Issue | Location | Notes |
+| # | Topic | Location | Notes |
 |---|-------|----------|-------|
-| R1 | **RemoveRangeAsync not on interface** | `Repository<T>` implementation | Public method exists only on implementation class, not on `IRepository<T>` |
-| R2 | **MapSupplierToDTO, RemoveRecords not on interface** | `Repository<T>` | Public methods exist only on implementation, not on interface |
-| R3 | **Property declaration style mismatch** | `UnitOfWork` | Mix of `{ get; }` and `{ get; private set; }` styles across properties |
+| R1 | **Interface gaps** | `Repository<T>` | `RemoveRangeAsync`, `MapSupplierToDTO`, `RemoveRecords` are public on the implementation class but not declared on `IRepository<T>`. Low impact — `RemoveRangeAsync` has zero callers. |
+| R2 | **Property declaration style mismatch** | `UnitOfWork` | Mix of `{ get; }` and `{ get; private set; }` across repository properties. Cosmetic only. |
 
 ### 5.4 View Layer
 
-| # | Issue | Location | Notes |
+| # | Topic | Location | Notes |
 |---|-------|----------|-------|
-| V1 | **Model type inconsistency** | `Billing Create.cshtml` | Uses domain entity `@model Billing` with `[Bind]` workaround instead of a dedicated ViewModel |
-| V2 | **Direct DataTable init bypassing ModernTable** | `Collection Create.cshtml` (`#billingsTable`) | Direct `$('#billingsTable').DataTable({...})` instead of `ModernTable.config()` + `ModernTable.ajax()` |
-| V3 | **No @model on Index pages** | `JobOrder Index.cshtml`, `Collection Index.cshtml` | Inconsistent with Billing/DispatchTicket Index which declare `@model` |
-| V4 | **Missing partial views for repeated UI** | Customer search, Port-Terminal cascade, media preview | Same customer search ~80 lines repeated in 3+ Create/Edit views |
-
-### 5.5 Authorization & Access Control
-
-| # | Issue | Location | Notes |
-|---|-------|----------|-------|
-| A1 | **Missing access control** | `MasterFileController` (all actions) | No authorization on any endpoint |
-| A2 | **Missing access control** | `DispatchTicketController.ChangeStatus` | No authorization attribute on status mutation |
+| V1 | **Model type inconsistency** | `Billing Create.cshtml`, `Billing Edit.cshtml` | Uses domain entity `@model Billing` with `[Bind]` attribute workaround instead of a ViewModel. Low risk — `[Bind]` restricts over-posting. |
+| V2 | **Direct DataTable init** | `Collection Create.cshtml` (`#billingsTable`) | Uses direct `$('#billingsTable').DataTable({...})` instead of `ModernTable.config()` + `ModernTable.ajax()`. Intentional — this is a sub-table within a form, not a primary list, so ModernTable's server-side pattern doesn't apply. |
+| V3 | **No @model on Index pages** | `JobOrder Index.cshtml`, `Collection Index.cshtml` | Inconsistent with Billing/DispatchTicket Index which declare `@model`. DataTable loads via AJAX server-side, so `@model` is functionally optional. |
 
 ## 6. Migration Architecture Notes
 

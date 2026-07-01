@@ -402,6 +402,15 @@ namespace IBS.Services
             };
         }
 
+        public async Task<List<SelectListItem>> GetCustomerSelectListAsync(int? collectionId, int customerId, CancellationToken cancellationToken)
+        {
+            var cust = await unitOfWork.Customer.GetAsync(c => c.CustomerId == customerId, cancellationToken);
+            return await unitOfWork.Collection.GetMsapCustomersWithCollectiblesSelectList(
+                collectionId ?? 0,
+                cust?.Type ?? string.Empty,
+                cancellationToken);
+        }
+
         private async Task<List<SelectListItem>?> GetEditBillingsAsync(int? customerId, int? collectionId, CancellationToken cancellationToken)
         {
             var list = await unitOfWork.Collection.GetMsapUncollectedBillingsByCustomer(customerId, cancellationToken);
