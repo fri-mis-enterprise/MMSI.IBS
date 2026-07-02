@@ -58,6 +58,7 @@ dotnet test IBS.Tests # unit tests
 
 ## Coding guardrails
 
+- **Architecture first** — `Docs/ARCHITECTURE.md` defines the data flow, state machine, and standard patterns (controller, service, repo, view). Read it before writing new code. The `code-review` agent checks against it.
 - **Patterns first**. Read reference implementations before writing new code:
   - Standard Index: `Areas/User/Views/JobOrder/Index.cshtml`
   - Standard Create/Edit: `Areas/User/Views/JobOrder/Create.cshtml`
@@ -87,6 +88,33 @@ dotnet test IBS.Tests.UI   # UI integration (Playwright)
 ```
 
 - Migrations in `IBS.DataAccess/Migrations/`, auto-applied at startup.
+
+## Changelog
+
+Every significant change (new feature, refactor, bug fix, test) is auto-logged
+to `CHANGELOG.md` in reverse chronological order. Entries follow this format:
+
+```markdown
+## [2026-07-02]
+### Added
+- New feature description (scope: file/module)
+
+### Changed
+- Refactor or enhancement description (scope: file/module)
+
+### Fixed
+- Bug fix description (scope: file/module)
+```
+
+**Trigger rule**: When a task results in a user-visible or architecture-level
+change, append an entry before concluding. Skip trivial edits (whitespace,
+comment-only, rename-only).
+
+## Committing
+
+Never commit without asking. After completing a task, present a summary of
+what changed (files modified, diff highlights) and ask: *"Commit?"*. Only
+proceed if the user says yes.
 
 ## Project layout
 

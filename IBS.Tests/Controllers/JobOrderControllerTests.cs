@@ -5,11 +5,9 @@ using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Utility.Helpers;
 using IBSWeb.Areas.User.Controllers;
-using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -24,8 +22,6 @@ namespace IBS.Tests.Controllers
         private readonly Mock<ITerminalService> _mockTerminalService;
         private readonly Mock<ILogger<JobOrderController>> _mockLogger;
         private readonly Mock<ICloudStorageService> _mockCloudStorageService;
-        private readonly Mock<IHubContext<TugboatHub>> _mockTugboatHubContext;
-        private readonly Mock<IHubContext<PlanningHub>> _mockPlanningHubContext;
         private readonly JobOrderController _controller;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ITempDataDictionary> _mockTempData;
@@ -38,21 +34,7 @@ namespace IBS.Tests.Controllers
             _mockDispatchTicketService = new Mock<DispatchTicketService>(_mockUnitOfWork.Object, _mockCloudStorageService.Object, new Mock<ILogger<DispatchTicketService>>().Object, new Mock<INotificationService>().Object);
             _mockTerminalService = new Mock<ITerminalService>();
             _mockLogger = new Mock<ILogger<JobOrderController>>();
-            _mockTugboatHubContext = new Mock<IHubContext<TugboatHub>>();
-            _mockPlanningHubContext = new Mock<IHubContext<PlanningHub>>();
             _mockTempData = new Mock<ITempDataDictionary>();
-
-            // Mock SignalR Clients for TugboatHub
-            var mockTugboatClients = new Mock<IHubClients>();
-            var mockTugboatClientProxy = new Mock<IClientProxy>();
-            _mockTugboatHubContext.Setup(h => h.Clients).Returns(mockTugboatClients.Object);
-            mockTugboatClients.Setup(c => c.All).Returns(mockTugboatClientProxy.Object);
-
-            // Mock SignalR Clients for PlanningHub
-            var mockPlanningClients = new Mock<IHubClients>();
-            var mockPlanningClientProxy = new Mock<IClientProxy>();
-            _mockPlanningHubContext.Setup(h => h.Clients).Returns(mockPlanningClients.Object);
-            mockPlanningClients.Setup(c => c.All).Returns(mockPlanningClientProxy.Object);
 
             _controller = new JobOrderController(
                 _mockUnitOfWork.Object,
@@ -60,9 +42,7 @@ namespace IBS.Tests.Controllers
                 _mockDispatchTicketService.Object,
                 _mockTerminalService.Object,
                 _mockCloudStorageService.Object,
-                _mockLogger.Object,
-                _mockTugboatHubContext.Object,
-                _mockPlanningHubContext.Object
+                _mockLogger.Object
             );
 
             // Mock User Identity
