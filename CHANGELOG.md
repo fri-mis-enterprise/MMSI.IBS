@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-07-02]
+### Removed
+- Experimental Vessel Planning module (Fleet Control Dashboard) — removed controller, service, DTOs, view, JS, CSS, SignalR hub, nav entry
+- Experimental Tugboat Monitoring module (Timeline/Scheduling) — removed controller, service, view, JS, CSS, SignalR hub, nav entry
+- Cleared TugboatHub and PlanningHub dependencies from JobOrderController, DispatchTicketController, Program.cs, and tests
+
+## [2026-07-02]
 ### Added
 - Test cases with audit trail verification (scope: IBS.Tests)
 - Agent code-review to enforce standard controller patterns (scope: .opencode/)

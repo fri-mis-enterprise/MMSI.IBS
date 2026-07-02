@@ -5,9 +5,7 @@ using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
-using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using IBS.Services;
 using IBS.Utility.Constants;
 
@@ -23,9 +21,7 @@ namespace IBSWeb.Areas.User.Controllers
         DispatchTicketService dispatchTicketService,
         ITerminalService terminalService,
         ICloudStorageService cloudStorageService,
-        ILogger<JobOrderController> logger,
-        IHubContext<TugboatHub> hubContext,
-        IHubContext<PlanningHub> planningHubContext) : Controller
+        ILogger<JobOrderController> logger) : Controller
     {
         #region Index
 
@@ -105,7 +101,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (result.IsSuccess)
             {
-                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
                 TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Details), new { id = result.Data });
             }
@@ -220,7 +215,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (result.IsSuccess)
             {
-                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
                 TempData["success"] = result.Message;
                 return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
             }
@@ -327,13 +321,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (result.IsSuccess)
             {
-                var jobOrder = await jobOrderService.GetJobOrderByIdAsync(jobOrderId, cancellationToken);
-                if (jobOrder is { PortId: > 0 })
-                {
-                    await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
-                    await planningHubContext.Clients.All.SendAsync("OnPlanUpdated", jobOrder.PortId, cancellationToken);
-                }
-
                 return Json(new { success = true });
             }
 

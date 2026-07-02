@@ -7,10 +7,8 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
-using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.SignalR;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -21,7 +19,6 @@ namespace IBSWeb.Areas.User.Controllers
     public class DispatchTicketController(
         IUnitOfWork unitOfWork,
         DispatchTicketService dispatchTicketService,
-        IHubContext<TugboatHub> hubContext,
         ICloudStorageService cloudStorageService,
         ILogger<DispatchTicketController> logger)
         : Controller
@@ -73,7 +70,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (result.IsSuccess)
             {
-                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
                 TempData["success"] = result.Message;
 
                 if (viewModel.JobOrderId.HasValue)
@@ -409,7 +405,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (result.IsSuccess)
             {
-                await hubContext.Clients.All.SendAsync("TimelineChanged", cancellationToken);
                 TempData["success"] = result.Message;
 
                 return viewModel.JobOrderId.HasValue
