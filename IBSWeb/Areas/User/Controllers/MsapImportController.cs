@@ -1653,7 +1653,6 @@ namespace IBSWeb.Areas.User.Controllers
                     PortId = pId.Value,
                     TerminalId = tId.Value,
                     BillingId = billingId,
-                    BillingNumber = billNumStr != "-" ? billNumStr : null,
                     BaseOrStation = NullIfDash(GetString(record, "base")),
                     ApOtherTugs = ParseDecimal(record, "apothertug"),
                     DispatchChargeType = ParseBool(record, "perhour") ? "Per hour" : "Per move",

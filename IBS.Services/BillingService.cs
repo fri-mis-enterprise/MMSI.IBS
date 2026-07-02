@@ -159,7 +159,6 @@ namespace IBS.Services
                     baf += dt.BAFNetRevenue;
 
                     dt.Billing = model;
-                    dt.BillingNumber = model.MsapBillingNumber;
                 }
 
                 model.Amount = model.Balance = model.IsVatable && !model.IsVatInclusive ? total * 1.12m : total;
@@ -384,7 +383,6 @@ namespace IBS.Services
                     foreach (var dt in oldTickets)
                     {
                         dt.BillingId = null;
-                        dt.BillingNumber = null;
                     }
                 }
 
@@ -420,7 +418,6 @@ namespace IBS.Services
 
                         dt.BillingId = currentModel.MsapBillingId;
                         dt.Billing = currentModel;
-                        dt.BillingNumber = currentModel.MsapBillingNumber;
                     }
 
                     currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * 1.12m : total;
@@ -455,7 +452,6 @@ namespace IBS.Services
                 foreach (var dt in linkedTickets)
                 {
                     dt.BillingId = null;
-                    dt.BillingNumber = null;
                 }
 
                 await unitOfWork.Billing.RemoveAsync(model, cancellationToken);

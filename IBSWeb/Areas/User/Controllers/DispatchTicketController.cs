@@ -5,6 +5,7 @@ using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Mvc;
@@ -489,6 +490,28 @@ namespace IBSWeb.Areas.User.Controllers
             if (model == null)
             {
                 return Json(new { success = false, message = "Ticket not found." });
+            }
+
+            var validStatuses = new HashSet<string>
+            {
+                SD.DispatchTicketStatus.Pending,
+                SD.DispatchTicketStatus.ForTariff,
+                SD.DispatchTicketStatus.ForApproval,
+                SD.DispatchTicketStatus.ForBilling,
+                SD.DispatchTicketStatus.Billed,
+                SD.DispatchTicketStatus.Disapproved,
+                SD.DispatchTicketStatus.Deleted
+            };
+
+            if (!validStatuses.Contains(status))
+            {
+                return Json(new { success = false, message = "Invalid target status." });
+            }
+
+            // ponytail: prevent transitions from terminal states
+            if (model.Status is SD.DispatchTicketStatus.Billed or SD.DispatchTicketStatus.Cancelled or SD.DispatchTicketStatus.Deleted)
+            {
+                return Json(new { success = false, message = "Cannot change status from a terminal state." });
             }
 
             model.Status = status;

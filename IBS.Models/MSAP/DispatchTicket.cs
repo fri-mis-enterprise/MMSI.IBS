@@ -160,8 +160,6 @@ namespace IBS.Models.MSAP
         [ForeignKey(nameof(BillingId))]
         public Billing? Billing { get; set; }
 
-        public string? BillingNumber { get; set; }
-
         #region ---Columns with Table relations---
 
         [Column("CUSTNO")]

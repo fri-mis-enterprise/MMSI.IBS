@@ -153,12 +153,26 @@ namespace IBS.DataAccess.Data
             {
                 b.HasIndex(x => new { x.MsapBillingNumber, x.Company }).IsUnique();
                 b.HasIndex(x => x.Date);
+                b.HasIndex(x => x.CustomerId);
+                b.HasIndex(x => x.Status);
+                b.HasIndex(x => x.CollectionId);
+
+                b.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.Vessel).WithMany().HasForeignKey(x => x.VesselId).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.Port).WithMany().HasForeignKey(x => x.PortId).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.Terminal).WithMany().HasForeignKey(x => x.TerminalId).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.Principal).WithMany().HasForeignKey(x => x.PrincipalId).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.JobOrder).WithMany().HasForeignKey(x => x.JobOrderId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<Collection>(c =>
             {
                 c.HasIndex(x => new { x.MsapCollectionNumber, x.Company }).IsUnique();
                 c.HasIndex(x => x.Date);
+                c.HasIndex(x => x.CustomerId);
+
+                c.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+                c.HasOne(x => x.BankAccount).WithMany().HasForeignKey(x => x.BankId).OnDelete(DeleteBehavior.Restrict);
 
                 c.HasMany(x => x.PaidBills)
                     .WithOne(x => x.Collection)
@@ -168,6 +182,14 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<JobOrder>(jo =>
             {
+                jo.HasIndex(x => x.CustomerId);
+                jo.HasIndex(x => x.Status);
+                jo.HasIndex(x => x.JobOrderNumber);
+
+                jo.HasOne(j => j.Customer).WithMany().HasForeignKey(j => j.CustomerId).OnDelete(DeleteBehavior.Restrict);
+                jo.HasOne(j => j.Vessel).WithMany().HasForeignKey(j => j.VesselId).OnDelete(DeleteBehavior.Restrict);
+                jo.HasOne(j => j.Port).WithMany().HasForeignKey(j => j.PortId).OnDelete(DeleteBehavior.Restrict);
+                jo.HasOne(j => j.Terminal).WithMany().HasForeignKey(j => j.TerminalId).OnDelete(DeleteBehavior.Restrict);
                 jo.HasOne(j => j.PreferredTugboat)
                     .WithMany()
                     .HasForeignKey(j => j.PreferredTugboatId)
@@ -177,12 +199,49 @@ namespace IBS.DataAccess.Data
                 jo.Property(j => j.PlannedEndTime).HasColumnType("timestamp without time zone");
             });
 
+            builder.Entity<DispatchTicket>(dt =>
+            {
+                dt.HasIndex(x => x.Status);
+                dt.HasIndex(x => x.CustomerId);
+                dt.HasIndex(x => x.JobOrderId);
+                dt.HasIndex(x => x.BillingId);
+
+                dt.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.Tugboat).WithMany().HasForeignKey(x => x.TugBoatId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.TugMaster).WithMany().HasForeignKey(x => x.TugMasterId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.Vessel).WithMany().HasForeignKey(x => x.VesselId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.Port).WithMany().HasForeignKey(x => x.PortId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.Terminal).WithMany().HasForeignKey(x => x.TerminalId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.JobOrder).WithMany(j => j.DispatchTickets).HasForeignKey(x => x.JobOrderId).OnDelete(DeleteBehavior.Restrict);
+                dt.HasOne(x => x.Billing).WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<Tugboat>(t =>
             {
                 t.HasOne(x => x.Port)
                     .WithMany()
                     .HasForeignKey(x => x.PortId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<BillDispatch>(bd =>
+            {
+                bd.HasOne(x => x.Billing).WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
+                bd.HasOne(x => x.DispatchTicket).WithMany().HasForeignKey(x => x.DispatchTicketId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<BillAdjust>(ba =>
+            {
+                ba.HasOne(x => x.Billing).WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
+                ba.HasOne(x => x.DispatchTicket).WithMany().HasForeignKey(x => x.DispatchTicketId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<CollectionBill>(cb =>
+            {
+                cb.HasOne(x => x.Collection).WithMany().HasForeignKey(x => x.CollectionId).OnDelete(DeleteBehavior.Restrict);
+                cb.HasOne(x => x.Billing).WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
+                cb.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<AuditTrail>(a =>

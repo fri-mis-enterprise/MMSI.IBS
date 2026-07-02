@@ -22,6 +22,7 @@ namespace IBS.DataAccess.Repository.Msap
         public override async Task<IEnumerable<DispatchTicket>> GetAllAsync(Expression<Func<DispatchTicket, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<DispatchTicket> query = dbSet
+                .Include(a => a.Customer)
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
@@ -38,40 +39,26 @@ namespace IBS.DataAccess.Repository.Msap
 
         public override async Task<DispatchTicket?> GetAsync(Expression<Func<DispatchTicket, bool>> filter, CancellationToken cancellationToken = default)
         {
-            var model =  await dbSet.Where(filter)
+            return await dbSet.Where(filter)
+                .Include(a => a.Customer)
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
-
-            if (model != null && model.CustomerId != 0)
-            {
-                model.Customer = (await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken))!;
-            }
-
-            return model;
         }
 
         public async Task<DispatchTicket?> GetDispatchTicketWithDetailsAsync(int id, CancellationToken cancellationToken = default)
         {
-            var model = await dbSet.Where(dt => dt.DispatchTicketId == id)
+            return await dbSet.Where(dt => dt.DispatchTicketId == id)
+                .Include(a => a.Customer)
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
-
-            if (model != null && model.CustomerId != 0)
-            {
-                model.Customer = (await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken))!;
-            }
-
-            return model;
         }
 
         public async Task<IEnumerable<DispatchTicket>> GetDispatchTicketsWithDetailsAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default)
@@ -79,7 +66,8 @@ namespace IBS.DataAccess.Repository.Msap
             var startDate = DateOnly.FromDateTime(start);
             var endDate = DateOnly.FromDateTime(end);
 
-            var tickets = await dbSet
+            return await dbSet
+                .Include(a => a.Customer)
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
@@ -87,33 +75,18 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(a => a.Vessel)
                 .Where(dt => dt.DateLeft <= endDate && dt.DateArrived >= startDate)
                 .ToListAsync(cancellationToken);
-
-            foreach (var ticket in tickets.Where(t => t.CustomerId != 0))
-            {
-                ticket.Customer = (await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken))!;
-            }
-
-            return tickets;
         }
 
         public async Task<IEnumerable<DispatchTicket>> GetAllDispatchTicketsWithDetailsAsync(CancellationToken cancellationToken = default)
         {
-            var tickets = await dbSet
+            return await dbSet
+                .Include(a => a.Customer)
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .ToListAsync(cancellationToken);
-
-            foreach (var ticket in tickets.Where(t => t.CustomerId != 0))
-            {
-                ticket.Customer = (await _db.Customers
-                    .FirstOrDefaultAsync(x => x.CustomerId == ticket.CustomerId, cancellationToken))!;
-            }
-
-            return tickets;
         }
 
         public async Task<bool> IsJobOrderEditableAsync(int? jobOrderId, CancellationToken cancellationToken = default)
