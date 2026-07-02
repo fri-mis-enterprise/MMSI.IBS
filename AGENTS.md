@@ -132,3 +132,7 @@ IBS.Utility/                      — helpers, constants
 IBS.Tests/                        — xUnit unit tests
 IBS.Tests.UI/                     — Playwright integration tests
 ```
+## Docs
+
+Update Docs and manual if there's any significant changes happen on the
+workflow or architectural changes

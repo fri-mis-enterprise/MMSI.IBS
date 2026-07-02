@@ -2,6 +2,10 @@
 
 ## [2026-07-02]
 ### Added
+- User manual with per-module documentation in `Docs/manual/` (scope: Docs/manual/)
+- Rendered docs viewer via `DocsController` — Markdig-based markdown rendering with sidebar navigation (scope: IBSWeb)
+- "Manual" nav link in main layout sidebar (scope: IBSWeb)
+- `Markdig` NuGet dependency for server-side markdown rendering (scope: IBSWeb)
 - `billing_year` column to `msap_billings` to scope billing number uniqueness per year (scope: IBS.Models, IBS.DataAccess, IBS.Services)
 
 ### Changed
