@@ -29,6 +29,7 @@ RUN dotnet publish "./IBSWeb.csproj" \
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=build /src/Docs /Docs
 
 USER app
 
