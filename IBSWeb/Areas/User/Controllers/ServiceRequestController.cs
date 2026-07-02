@@ -1,5 +1,4 @@
 using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -57,7 +56,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to create Service Requests.")]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            await GetCompanyClaimAsync();
             var viewModel = new ServiceRequestViewModel();
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
@@ -68,6 +66,8 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to create Service Requests.")]
         public async Task<IActionResult> Create(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
@@ -75,6 +75,12 @@ namespace IBSWeb.Areas.User.Controllers
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Can't create entry, please review your input.";
+                return View(viewModel);
+            }
 
             if (imageFile == null || imageFile.Length == 0)
             {
@@ -86,21 +92,10 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    throw new Exception("Can't create entry, please review your input.");
-                }
-
                 var model = viewModel.ToEntity();
 
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                if (model.CustomerId != 0)
-                {
-                    model.Customer = (await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId,
-                        cancellationToken))!;
-                }
 
                 if (imageFile is { Length: > 0 })
                 {
@@ -125,35 +120,8 @@ namespace IBSWeb.Areas.User.Controllers
                         var dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
                         var dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
                         var timeDifference = dateTimeArrived - dateTimeLeft;
-                        var totalHours = Math.Round((decimal)timeDifference.TotalHours,
+                        model.TotalHours = Math.Round((decimal)timeDifference.TotalHours,
                             2);
-
-                        // find the nearest half hour if the customer is phil-ceb
-                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
-                        {
-                            var wholeHours = Math.Truncate(totalHours);
-                            var fractionalPart = totalHours - wholeHours;
-
-                            if (fractionalPart >= 0.75m)
-                            {
-                                totalHours = wholeHours + 1.0m; // round up to next hour
-                            }
-                            else if (fractionalPart >= 0.25m)
-                            {
-                                totalHours = wholeHours + 0.5m; // round to half hour
-                            }
-                            else
-                            {
-                                totalHours = wholeHours; // keep as is
-                            }
-
-                            if (totalHours == 0)
-                            {
-                                totalHours = 0.5m;
-                            }
-                        }
-
-                        model.TotalHours = totalHours;
                     }
                     else
                     {
@@ -208,8 +176,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to edit Service Requests.")]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-
-            await GetCompanyClaimAsync();
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id,
                 cancellationToken);
 
@@ -243,22 +209,22 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to edit Service Requests.")]
         public async Task<IActionResult> Edit(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
 
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Can't apply edit, please review your input.";
+                return View(viewModel);
+            }
+
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    throw new Exception("Can't apply edit, please review your input.");
-                }
-
                 var incoming = viewModel.ToEntity();
                 var currentModel = await unitOfWork.DispatchTicket.GetAsync(dt =>
                         dt.DispatchTicketId == incoming.DispatchTicketId,
@@ -280,12 +246,6 @@ namespace IBSWeb.Areas.User.Controllers
 
                 currentModel.EditedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                if (incoming.CustomerId != 0)
-                {
-                    incoming.Customer = (await unitOfWork.Customer.GetAsync(c => c.CustomerId == incoming.CustomerId,
-                        cancellationToken))!;
-                }
 
                 if (imageFile != null)
                 {
@@ -316,25 +276,7 @@ namespace IBSWeb.Areas.User.Controllers
                         var dateTimeLeft = incoming.DateLeft.Value.ToDateTime(incoming.TimeLeft.Value);
                         var dateTimeArrived = incoming.DateArrived.Value.ToDateTime(incoming.TimeArrived.Value);
                         var timeDifference = dateTimeArrived - dateTimeLeft;
-                        var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
-
-                        if (incoming.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
-                        {
-                            var wholeHours = Math.Truncate(totalHours);
-                            var fractionalPart = totalHours - wholeHours;
-
-                            if (fractionalPart >= 0.75m)
-                                totalHours = wholeHours + 1.0m;
-                            else if (fractionalPart >= 0.25m)
-                                totalHours = wholeHours + 0.5m;
-                            else
-                                totalHours = wholeHours;
-
-                            if (totalHours == 0)
-                                totalHours = 0.5m;
-                        }
-
-                        incoming.TotalHours = totalHours;
+                        incoming.TotalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
                     }
                     else
                     {
@@ -607,6 +549,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken = default)
         {
             try
@@ -644,6 +588,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVideo(int id, CancellationToken cancellationToken = default)
         {
             try
@@ -681,6 +627,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to post Service Requests.")]
         public async Task<IActionResult> Post(int id, int? jobOrderId, CancellationToken cancellationToken = default)
         {
@@ -709,6 +657,8 @@ namespace IBSWeb.Areas.User.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to post Service Requests.")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
@@ -781,6 +731,8 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to cancel Service Requests.")]
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
@@ -851,18 +803,6 @@ namespace IBSWeb.Areas.User.Controllers
             return $"{fileName}-{type}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
-        private async Task<string?> GetCompanyClaimAsync()
-        {
-            var user = await userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         private async Task<string?> GetUserNameAsync()
         {
             var user = await userManager.GetUserAsync(User);
@@ -875,8 +815,9 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return await cloudStorageService.GetSignedUrlAsync(uploadName);
             }
-            throw new Exception("Upload name invalid.");
-        }    }
+            throw new ArgumentException("Upload name is null or empty.", nameof(uploadName));
+        }
+    }
 }
 
 

@@ -7,6 +7,7 @@
 
 <div class="modern-layout">
     <form id="myForm" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         <input asp-for="DispatchTicketId" type="hidden">
         <main class="modern-container">
             <div class="flex-stack">
@@ -437,7 +438,10 @@
             $('#deleteImageBtn').on('click', function() {
                 ModernAlert.confirm({ title: "Delete image?", icon: 'warning' }).then((r) => {
                     if (r.isConfirmed) {
-                        window.location.href = '@Url.Action("DeleteImage", "ServiceRequest", new { id = Model.DispatchTicketId })';
+                        const token = $('input[name="__RequestVerificationToken"]').val();
+                        $.post('@Url.Action("DeleteImage", "ServiceRequest")', { id: @Model.DispatchTicketId, __RequestVerificationToken: token })
+                            .done(() => { window.location.href = '@Url.Action("Edit", "ServiceRequest", new { id = Model.DispatchTicketId })'; })
+                            .fail(() => { window.location.href = '@Url.Action("Edit", "ServiceRequest", new { id = Model.DispatchTicketId })'; });
                     }
                 });
             });
@@ -449,7 +453,10 @@
             $('#deleteVideoBtn').on('click', function() {
                 ModernAlert.confirm({ title: "Delete video?", icon: 'warning' }).then((r) => {
                     if (r.isConfirmed) {
-                        window.location.href = '@Url.Action("DeleteVideo", "ServiceRequest", new { id = Model.DispatchTicketId })';
+                        const token = $('input[name="__RequestVerificationToken"]').val();
+                        $.post('@Url.Action("DeleteVideo", "ServiceRequest")', { id: @Model.DispatchTicketId, __RequestVerificationToken: token })
+                            .done(() => { window.location.href = '@Url.Action("Edit", "ServiceRequest", new { id = Model.DispatchTicketId })'; })
+                            .fail(() => { window.location.href = '@Url.Action("Edit", "ServiceRequest", new { id = Model.DispatchTicketId })'; });
                     }
                 });
             });

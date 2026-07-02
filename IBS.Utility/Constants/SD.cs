@@ -136,7 +136,7 @@ namespace IBS.Utility.Constants
             public const string OutputVat = "201030100";
             public const string MaritimeServiceRevenue = "401020100";
         }
-
         #endregion
+
     }
 }
