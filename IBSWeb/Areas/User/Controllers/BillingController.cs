@@ -77,18 +77,16 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (result.IsSuccess)
                 {
-                    TempData["success"] = model.IsUndocumented ? $"Created. Control No: {model.MsapBillingNumber}" : "Billing created successfully.";
-                    return RedirectToAction(nameof(Index));
+                    var msg = model.IsUndocumented ? $"Created. Control No: {model.MsapBillingNumber}" : "Billing created successfully.";
+                    return Json(new { success = true, message = msg, redirectUrl = Url.Action(nameof(Index)) });
                 }
 
-                TempData["error"] = result.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = result.Message });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to create billing.");
-                TempData["error"] = ExceptionHelper.GetErrorMessage(ex);
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = ExceptionHelper.GetErrorMessage(ex) });
             }
         }
 

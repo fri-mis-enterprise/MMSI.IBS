@@ -168,25 +168,23 @@ namespace IBS.DataAccess.Repository.Msap
 
         public async Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default)
         {
-            // Get the highest BL-prefixed billing number across all billings
             var lastRecord = await _db.MsapBillings
-                .Where(b => !string.IsNullOrEmpty(b.MsapBillingNumber) && b.MsapBillingNumber.StartsWith("BL"))
+                .Where(b => !string.IsNullOrEmpty(b.MsapBillingNumber) && b.MsapBillingNumber.StartsWith("B"))
                 .OrderByDescending(b => b.MsapBillingNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (lastRecord == null)
             {
-                return "BL00000001";
+                return "B000001";
             }
 
-            var lastSeries = lastRecord.MsapBillingNumber.Substring(2); // "BL" is 2 chars
+            var lastSeries = lastRecord.MsapBillingNumber.Substring(1); // "B" is 1 char
             if (int.TryParse(lastSeries, out int lastNumber))
             {
-                return "BL" + ((lastNumber + 1).ToString("D8"));
+                return "B" + ((lastNumber + 1).ToString("D6"));
             }
 
-            // Fallback if parsing fails
-            return "BL" + (DateTime.Now.Ticks % 100000000).ToString("D8");
+            return "B" + (DateTime.Now.Ticks % 1000000).ToString("D6");
         }
 
         public Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default)

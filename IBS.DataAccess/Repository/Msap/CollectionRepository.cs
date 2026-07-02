@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository.Msap
         public async Task<List<SelectListItem>> GetMsapCustomersWithCollectiblesSelectList(int collectionId, string type, CancellationToken cancellationToken = default)
         {
             var billingsToBeCollected = await _db.MsapBillings
-                .Where(t => t.Balance > 0 || (collectionId != 0 && t.CollectionId == collectionId))
+                .Where(t => (t.Balance > 0 || (collectionId != 0 && t.CollectionId == collectionId)) && t.Status == SD.BillingStatus.ForCollection)
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository.Msap
         {
             var billings = await _db
                 .MsapBillings
-                .Where(b => b.CustomerId == customerId && b.Balance > 0)
+                .Where(b => b.CustomerId == customerId && b.Balance > 0 && b.Status == SD.BillingStatus.ForCollection)
                 .Include(b => b.Customer)
                 .OrderBy(b => b.MsapBillingNumber)
                 .ToListAsync(cancellationToken);
@@ -128,7 +128,7 @@ namespace IBS.DataAccess.Repository.Msap
         {
             return await _db
                 .MsapBillings
-                .Where(b => b.CustomerId == customerId && b.Balance > 0)
+                .Where(b => b.CustomerId == customerId && b.Balance > 0 && b.Status == SD.BillingStatus.ForCollection)
                 .OrderBy(b => b.MsapBillingNumber)
                 .ToListAsync(cancellationToken);
         }
@@ -473,7 +473,7 @@ namespace IBS.DataAccess.Repository.Msap
                 if (billing.Balance <= 0)
                 {
                     billing.IsPaid = true;
-                    billing.Status = SD.BillingStatus.Paid;
+                    billing.Status = SD.BillingStatus.Collected;
                 }
                 await _db.SaveChangesAsync(cancellationToken);
             }
@@ -502,16 +502,16 @@ namespace IBS.DataAccess.Repository.Msap
 
             if (lastRecord == null)
             {
-                return "CL00000001";
+                return "C000001";
             }
 
-            var lastSeries = lastRecord.MsapCollectionNumber.Substring(2); // "CL" is 2 chars
+            var lastSeries = lastRecord.MsapCollectionNumber.Substring(1); // "C" is 1 char
             if (int.TryParse(lastSeries, out int lastNumber))
             {
-                return "CL" + ((lastNumber + 1).ToString("D8"));
+                return "C" + ((lastNumber + 1).ToString("D6"));
             }
 
-            return "CL" + (DateTime.Now.Ticks % 100000000).ToString("D8");
+            return "C" + (DateTime.Now.Ticks % 1000000).ToString("D6");
         }
 
         public async Task<(IEnumerable<Collection> Data, int RecordsFiltered, int TotalRecords)> GetPagedCollectionsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
