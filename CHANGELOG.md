@@ -1,131 +1,25 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-The format of this file follows **Keep a Changelog**  
-and this project adheres to **Semantic Versioning (SemVer)**.
-
----
-
-## [v2.1.2] - 2026-02-20
-### Fixed
-- Fixed CV payment showing not accurate payable amount.
-
----
-
-## [v2.1.1] - 2026-02-18
-### Fixed
-- Fixed input type of payment to show the values in to 4 decimals.
-- Fixed general apis to allow anonymous.
-
----
-
-## [v2.1.0] - 2026-02-18
-### Changed
-- Redesign the CV Non Trade payment to accept partial payment.
-
----
-
-## [v2.0.1] - 2026-02-13
-### Fixed
-- Fixed discrepancy due to rounding 4 decimals.
-
----
-
-## [v2.0.0] - 2026-02-12
-### Changed
-- Upgrade version to.NET10.
-
----
-
-## [v1.2.6] - 2025-01-17
+## [2026-07-02]
 ### Added
-- Implement the subaccount in journal voucher.
-
----
-
-## [v1.2.5] - 2026-01-16
-### Added
-- Added default commissionee and commission rate to the customer file
+- Test cases with audit trail verification (scope: IBS.Tests)
+- Agent code-review to enforce standard controller patterns (scope: .opencode/)
 
 ### Changed
-- Modified the date parameter needed when generating AR Per Customer.
-- Revised the payroll invoice.
+- Removed shadow job order ID from migrations (scope: IBS.DataAccess/Migrations)
+- Removed redundant model fields for consistent data integrity (scope: IBS.Models)
+- Removed unnecessary ModelState checks from controllers (scope: IBSWeb/Areas)
+- Formalized Collection controller and architecture (scope: IBSWeb, IBS.Services)
+- Formalized Billing controller and architecture (scope: IBSWeb, IBS.Services)
+- Formalized Service Request functionalities (scope: IBSWeb, IBS.Services)
+- Made MCP server more reliable for context analysis (scope: .opencode/)
 
 ### Fixed
-- Moved the otc fuel sales report to path correctly.
+- Job Order TempData on edit not firing proper info (scope: IBSWeb/Areas/User/Controllers)
+- Job Order controller inconsistencies (scope: IBSWeb/Areas/User/Controllers)
+- Billing controller not using services properly (scope: IBSWeb/Areas/User/Controllers)
+- Various cross-codebase inconsistencies (scope: multiple)
 
----
-
-## [v1.2.4] - 2025-12-16
+## [2026-07-01]
 ### Changed
-- Modified the configuration of notification.js to low the cost of GCP.
-
----
-
-## [v1.2.3] - 2025-12-04
-### Added
-- Added locking of database when creating new series no.
-
----
-
-## [v1.2.2] - 2025-12-01
-### Added
-- Added journal entries for updating the commission and freight.
-
-### Fixed
-- Fixed atl booking card in dashboard not accurate.
-
----
-
-## [v1.2.1] - 2025-11-29
-### Changed
-- Changed in to raw sql the query for getting the latest series, applied locking of row to prevent duplicate.
-
----
-
-## [v1.2.0] - 2025-11-28
-### Fixed
-- Fixed redundant switch condition on the COS index.
-- Fixed the CV Non-trade invoice to mark only the AP Non-Trade payable.
-
-### Changed
-- Username value when creating audit trail
-
----
-
-## [v1.0.0] - 2025-11-28
-### Added
-- Initial implementation of **IBSWeb – Integrated Business System**.
-- Added **N-Tier architecture** structure:
-    - `IBS.DataAccess` for repositories and Unit of Work
-    - `IBS.Models` for entity models
-    - `IBS.DTOs` for data transfer objects
-    - `IBS.Utility` for enums, constants, helpers
-    - `IBS.Services` for business logic modules
-    - `IBSWeb` for UI controllers and views
-- Implemented **Chart of Accounts** module with hierarchical level support.
-- Added **General Ledger**, **Journal Entry**, and posting logic.
-- Implemented **role-based access control** (Admin, Accountant, User).
-- Added **session-based authentication** support.
-- Added reusable **JavaScript utilities** and global `site.js`.
-- Implemented partials and modular views for accounting pages.
-- Added database context configuration and initial EF Core integrations.
-- Added basic **audit logging** for tracking user actions.
-- Added initial documentation structure (README, repository organization).
-
-### Changed
-- Refactored repository methods to use **async/await** and cleaner LINQ.
-- Improved data validation and error handling across the project.
-- Updated folder naming and namespace conventions for consistency.
-
-### Fixed
-- Fixed issues in Chart of Accounts sorting and retrieval.
-- Fixed session retrieval inconsistencies on user login.
-- Fixed bugs in DataTables initialization and hidden column searching.
-- Fixed authentication redirect issues in restricted pages.
-
----
-
-## [Unreleased]
-
-
+- Deduplicated customer search into a shared helper (scope: IBS.Utility)
