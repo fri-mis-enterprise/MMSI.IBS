@@ -116,6 +116,16 @@ namespace IBS.Services
                         throw new InvalidOperationException("Collection not found.");
                     }
 
+                    if (currentModel.CustomerId != viewModel.CustomerId)
+                    {
+                        throw new InvalidOperationException("Customer cannot be changed on an existing collection.");
+                    }
+
+                    if (currentModel.IsPrinted)
+                    {
+                        throw new InvalidOperationException("Cannot edit a collection that has already been printed.");
+                    }
+
                     // Revert old allocations
                     var oldBillings = await unitOfWork.Billing.GetAllAsync(b => b.CollectionId == currentModel.MsapCollectionId, cancellationToken);
                     foreach (var billing in oldBillings)
@@ -184,6 +194,9 @@ namespace IBS.Services
                             currentModel.BankAccountName = bank.AccountName;
                         }
                     }
+
+                    currentModel.EditedBy = username;
+                    currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     await unitOfWork.SaveAsync(cancellationToken);
                 }, cancellationToken);

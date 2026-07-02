@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(collection);
             }
 
-            TempData["Error"] = "Error: collection record not found.";
+            TempData["error"] = "Error: collection record not found.";
             return RedirectToAction("Index");
         }
 
