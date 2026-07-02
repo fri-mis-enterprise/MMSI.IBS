@@ -123,12 +123,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             model.PaymentTerms = await unitOfWork.Terms.GetTermsListAsyncByCode(cancellationToken);
 
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
-                return View(model);
-            }
-
             if (await unitOfWork.Supplier.IsSupplierExistAsync(model.SupplierName, model.Category,
                     companyClaims, cancellationToken))
             {
@@ -308,11 +302,6 @@ namespace IBSWeb.Areas.User.Controllers
                 .ToListAsync(cancellationToken);
 
             model.PaymentTerms = await unitOfWork.Terms.GetTermsListAsyncByCode(cancellationToken);
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 

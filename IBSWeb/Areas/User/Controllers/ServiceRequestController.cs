@@ -76,12 +76,6 @@ namespace IBSWeb.Areas.User.Controllers
             await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
 
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Can't create entry, please review your input.";
-                return View(viewModel);
-            }
-
             if (imageFile == null || imageFile.Length == 0)
             {
                 TempData["warning"] = "An image of the Dispatch/Mooring Ticket is strictly required!";
@@ -214,12 +208,6 @@ namespace IBSWeb.Areas.User.Controllers
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
-
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Can't apply edit, please review your input.";
-                return View(viewModel);
-            }
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 

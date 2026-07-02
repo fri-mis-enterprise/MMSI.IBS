@@ -68,13 +68,6 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? videoFile,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                await dispatchTicketService.PopulateServiceRequestViewModelAsync(viewModel, null, cancellationToken);
-                TempData["warning"] = "Can't create entry, please review your input.";
-                return View(viewModel);
-            }
-
             var result = await dispatchTicketService.CreateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
@@ -204,14 +197,6 @@ namespace IBSWeb.Areas.User.Controllers
             TariffViewModel viewModel,
             string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-                logger.LogWarning("Invalid ModelState for SetTariff: {Errors}", errors);
-                TempData["warning"] = "Please check your inputs. " + errors;
-                return RedirectToAction(nameof(SetTariff), new { id = viewModel.DispatchTicketId, filterType });
-            }
-
             var model = new DispatchTicket
             {
                 DispatchTicketId = viewModel.DispatchTicketId,

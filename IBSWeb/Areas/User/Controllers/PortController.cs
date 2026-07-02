@@ -37,11 +37,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Port model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var result = await portService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)
@@ -68,11 +63,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Port model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var result = await portService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)

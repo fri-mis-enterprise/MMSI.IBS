@@ -78,12 +78,6 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Customer model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
-                return View(model);
-            }
-
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -163,11 +157,6 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Customer model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             model.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);
 

@@ -109,12 +109,6 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Terms model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
-                return View(model);
-            }
-
             var getUserFullName = GetUserFullName();
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -179,12 +173,6 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Terms model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
-                return View(model);
-            }
-
             var getUserFullName = GetUserFullName();
             var companyClaims = await GetCompanyClaimAsync();
 

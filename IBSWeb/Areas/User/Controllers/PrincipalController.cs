@@ -38,12 +38,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Principal model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                await principalService.PopulateSelectListsAsync(model, cancellationToken);
-                return View(model);
-            }
-
             var result = await principalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)
@@ -73,12 +67,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Principal model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                await principalService.PopulateSelectListsAsync(model, cancellationToken);
-                return View(model);
-            }
-
             var result = await principalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)

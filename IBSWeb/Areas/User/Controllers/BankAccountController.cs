@@ -35,23 +35,19 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BankAccount bankAccount, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (await unitOfWork.BankAccount.IsBankAccountNoExist(bankAccount.AccountNo, cancellationToken))
             {
-                if (await unitOfWork.BankAccount.IsBankAccountNoExist(bankAccount.AccountNo, cancellationToken))
-                {
-                    ModelState.AddModelError("AccountNo", "Account Number already exists.");
-                    return View(bankAccount);
-                }
-
-                bankAccount.CreatedBy = GetUserFullName();
-                bankAccount.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                await unitOfWork.BankAccount.AddAsync(bankAccount, cancellationToken);
-                await unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Bank Account created successfully.";
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("AccountNo", "Account Number already exists.");
+                return View(bankAccount);
             }
-            return View(bankAccount);
+
+            bankAccount.CreatedBy = GetUserFullName();
+            bankAccount.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+            await unitOfWork.BankAccount.AddAsync(bankAccount, cancellationToken);
+            await unitOfWork.SaveAsync(cancellationToken);
+            TempData["success"] = "Bank Account created successfully.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -69,35 +65,31 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(BankAccount bankAccount, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            var existingBankAccount = await unitOfWork.BankAccount.GetAsync(b => b.BankAccountId == bankAccount.BankAccountId, cancellationToken);
+            if (existingBankAccount == null)
             {
-                var existingBankAccount = await unitOfWork.BankAccount.GetAsync(b => b.BankAccountId == bankAccount.BankAccountId, cancellationToken);
-                if (existingBankAccount == null)
-                {
-                    return NotFound();
-                }
-
-                if (existingBankAccount.AccountNo != bankAccount.AccountNo)
-                {
-                    if (await unitOfWork.BankAccount.IsBankAccountNoExist(bankAccount.AccountNo, cancellationToken))
-                    {
-                        ModelState.AddModelError("AccountNo", "Account Number already exists.");
-                        return View(bankAccount);
-                    }
-                }
-
-                existingBankAccount.BankAccountCode = bankAccount.BankAccountCode;
-                existingBankAccount.Bank = bankAccount.Bank;
-                existingBankAccount.Branch = bankAccount.Branch;
-                existingBankAccount.AccountNo = bankAccount.AccountNo;
-                existingBankAccount.AccountName = bankAccount.AccountName;
-                existingBankAccount.Company = bankAccount.Company;
-
-                await unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Bank Account updated successfully.";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            return View(bankAccount);
+
+            if (existingBankAccount.AccountNo != bankAccount.AccountNo)
+            {
+                if (await unitOfWork.BankAccount.IsBankAccountNoExist(bankAccount.AccountNo, cancellationToken))
+                {
+                    ModelState.AddModelError("AccountNo", "Account Number already exists.");
+                    return View(bankAccount);
+                }
+            }
+
+            existingBankAccount.BankAccountCode = bankAccount.BankAccountCode;
+            existingBankAccount.Bank = bankAccount.Bank;
+            existingBankAccount.Branch = bankAccount.Branch;
+            existingBankAccount.AccountNo = bankAccount.AccountNo;
+            existingBankAccount.AccountName = bankAccount.AccountName;
+            existingBankAccount.Company = bankAccount.Company;
+
+            await unitOfWork.SaveAsync(cancellationToken);
+            TempData["success"] = "Bank Account updated successfully.";
+            return RedirectToAction(nameof(Index));
         }
         
         #region API Calls

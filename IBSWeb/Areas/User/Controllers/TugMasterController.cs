@@ -37,11 +37,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(TugMaster model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var result = await tugMasterService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)
@@ -68,11 +63,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(TugMaster model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var result = await tugMasterService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)

@@ -35,11 +35,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(TariffRate model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
-                return View(model);
-            }
+            await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
 
             if (model is { Dispatch: <= 0, BAF: <= 0 })
             {
@@ -77,11 +73,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(TariffRate model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
-                return View(model);
-            }
+            await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
 
             var result = await tariffRateService.UpsertAsync(model, userManager.GetUserName(User)!, cancellationToken);
 

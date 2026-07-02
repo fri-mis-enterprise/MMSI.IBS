@@ -99,13 +99,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateJobOrder, "Access denied. You don't have permission to create Job Orders.")]
         public async Task<IActionResult> Create(JobOrderViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Can't create entry, please review your input.";
-                await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
-                return View(viewModel);
-            }
-
             var jobOrder = MapToEntity(viewModel);
 
             var result = await jobOrderService.CreateJobOrderAsync(jobOrder, User.Identity?.Name ?? "Unknown", cancellationToken);
@@ -220,13 +213,6 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.EditJobOrder, "Access denied. You don't have permission to edit Job Orders.")]
         public async Task<IActionResult> Edit(JobOrderViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Can't update entry, please review your input.";
-                await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
-                return View(viewModel);
-            }
-
             var jobOrder = MapToEntity(viewModel);
             jobOrder.JobOrderId = viewModel.JobOrderId;
 

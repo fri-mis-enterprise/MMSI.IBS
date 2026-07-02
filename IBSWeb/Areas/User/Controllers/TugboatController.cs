@@ -38,12 +38,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Tugboat model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
-                return View(model);
-            }
-
             var result = await tugboatService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)
@@ -73,12 +67,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Tugboat model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
-                return View(model);
-            }
-
             var result = await tugboatService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)

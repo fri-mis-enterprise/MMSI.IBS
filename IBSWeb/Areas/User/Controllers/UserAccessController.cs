@@ -66,12 +66,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(UserAccess model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Invalid input please try again.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var result = await userAccessService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)
@@ -102,12 +96,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(UserAccess model, CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "Invalid input please try again.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var result = await userAccessService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
             if (result.IsSuccess)

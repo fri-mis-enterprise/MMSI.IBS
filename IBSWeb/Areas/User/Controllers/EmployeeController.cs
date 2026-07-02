@@ -45,12 +45,6 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "The submitted information is invalid.";
-                return View(model);
-            }
-
             var companyClaims = await GetCompanyClaimAsync();
             var result = await employeeService.CreateAsync(model, companyClaims, GetUserFullName(), cancellationToken);
 
@@ -99,12 +93,6 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Employee model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["warning"] = "The submitted information is invalid.";
-                return View(model);
-            }
-
             var result = await employeeService.UpdateAsync(model, GetUserFullName(), cancellationToken);
 
             if (result.IsSuccess)

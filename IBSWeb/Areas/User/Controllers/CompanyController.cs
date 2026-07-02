@@ -55,12 +55,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Company model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
-                return View(model);
-            }
-
             bool companyExist = await unitOfWork
                 .Company
                 .IsCompanyExistAsync(model.CompanyName, cancellationToken);
@@ -192,11 +186,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Company model, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
