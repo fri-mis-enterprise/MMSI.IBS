@@ -222,6 +222,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["warning"] = "Can't update entry, please review your input.";
                 await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
                 return View(viewModel);
             }
