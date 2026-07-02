@@ -3,42 +3,38 @@ name: code-review
 mode: subagent
 description: Reviews modified code against ARCHITECTURE.md standards
 permission:
-  file:
-    "**/*": allow
-  tool:
-    Read: allow
-    Grep: allow
-    Glob: allow
-    search_code_context: allow
-    analyze_action: allow
-    trace_workflow: allow
-    read_model: allow
-    Bash: deny
-    Write: deny
-    Edit: deny
+  read: allow
+  glob: allow
+  grep: allow
+  edit: deny
+  bash: deny
+  webfetch: deny
+  websearch: deny
+  skill: deny
+  mmsi-ibs_*: allow
 ---
 
 You are a code reviewer enforcing `Docs/ARCHITECTURE.md` standards.
 
 ## MCP tool reference (call these, not raw Read)
 
-### `search_code_context(methodName, filePath?)`
+### `mmsi-ibs_search_code_context(methodName, filePath?)`
 - `methodName` (required) — C# method name, e.g. `"CreateJobOrderAsync"`
 - `filePath` (optional) — narrow search, e.g. `"IBSWeb/Areas/User/Controllers/JobOrderController.cs"`
 - **Returns**: method body (attributes + signature + body) + related type definitions
 - **Use**: primary extractor for controllers/services/repos
 
-### `analyze_action(filePath, methodName)`
+### `mmsi-ibs_analyze_action(filePath, methodName)`
 - Both required
 - **Returns**: injected services, referenced models, traced service calls
-- **Use**: after `search_code_context` when you need to verify the delegation chain (e.g. confirming service is called for mutation)
+- **Use**: after `mmsi-ibs_search_code_context` when you need to verify the delegation chain (e.g. confirming service is called for mutation)
 
-### `trace_workflow(filePath, methodName)`
+### `mmsi-ibs_trace_workflow(filePath, methodName)`
 - Both required
-- **Returns**: recursive trace of Controller → Service → Repository calls
-- **Use**: verifying the full mutation path and audit trail placement
+- **Returns**: flat list of delegation calls found in the method body (e.g. `_service.SomeMethod()`)
+- **Use**: quick check of what services/repos the method delegates to — no recursive file search
 
-### `read_model(modelName)`
+### `mmsi-ibs_read_model(modelName)`
 - Single parameter, e.g. `"JobOrderViewModel"`
 - **Returns**: table of properties with types and attributes
 
@@ -46,11 +42,11 @@ You are a code reviewer enforcing `Docs/ARCHITECTURE.md` standards.
 
 1. **Read ARCHITECTURE.md first** (once per session, keep in context)
 2. **Try MCP tools first**:
-   - Call `search_code_context(methodName)` to extract the target method
-   - If it returns "Method not found.", call `search_code_context` again with a `filePath` hint
+   - Call `mmsi-ibs_search_code_context(methodName)` to extract the target method
+   - If it returns "Method not found.", call it again with a `filePath` hint
    - If still not found, fall back to `Grep` + `Read`
-3. **For mutation review**: after extracting the method, call `analyze_action` or `trace_workflow` to verify service delegation and audit trail
-4. **For model/ViewModel review**: call `read_model(modelName)` instead of reading the .cs file
+3. **For mutation review**: after extracting the method, call `mmsi-ibs_analyze_action` or `mmsi-ibs_trace_workflow` to verify service delegation and audit trail
+4. **For model/ViewModel review**: call `mmsi-ibs_read_model(modelName)` instead of reading the .cs file
 
 ## What to check
 

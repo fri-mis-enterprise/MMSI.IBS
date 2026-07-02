@@ -37,7 +37,7 @@ export function formatActionAnalysis(analysis) {
         output += `#### 📦 Referenced Models\n` + analysis.referencedModels.map((m) => `- ${m}`).join("\n") + "\n\n";
     }
     if (analysis.calls.length > 0) {
-        output += `#### 📞 Method Calls\n` + analysis.calls.map((c) => `- \`${c.member}.${c.method}\``).join("\n") + "\n\n";
+        output += `#### 📞 Delegation Calls\n` + analysis.calls.map((c) => `- \`${c.member}.${c.method}()\``).join("\n") + "\n\n";
     }
     return output;
 }
@@ -52,18 +52,11 @@ export function formatCodeContext(data) {
     }
     return output;
 }
-export function formatWorkflowTrace(traces, level = 0) {
-    if (!traces || traces.length === 0)
-        return level === 0 ? "No service/repository calls detected." : "";
-    let output = level === 0 ? "### Workflow Trace\n\n" : "";
-    const indent = "  ".repeat(level);
-    for (const trace of traces) {
-        output += `${indent}- **${trace.member}.${trace.method}** (\`${trace.file}\`)\n`;
-        if (trace.calls && trace.calls.length > 0) {
-            output += formatWorkflowTrace(trace.calls, level + 1);
-        }
-    }
-    return output;
+export function formatWorkflowTrace(calls) {
+    if (!calls || calls.length === 0)
+        return "No delegation calls detected.";
+    const lines = calls.map(c => `- \`${c.member}.${c.method}()\``);
+    return "### Delegation Calls\n\n" + lines.join("\n");
 }
 export function formatCsvList(files) {
     let output = "### CSV Files\n\n| Path | Size (bytes) |\n| --- | --- |\n";

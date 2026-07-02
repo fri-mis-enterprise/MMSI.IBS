@@ -113,49 +113,29 @@ export async function findTypeDefinition(projectRoot: string, typeName: string) 
   return null;
 }
 
-export async function traceMethodCalls(projectRoot: string, code: string, depth: number = 2) {
-  if (depth === 0) return [];
-
-  // Look for patterns like _someService.SomeMethod( or unitOfWork.SomeRepo.SomeMethod(
-  // Matches variableName.MethodName( or variableName.Property.MethodName(
-  // Allows for whitespace/newlines around dots.
-  const callRegex = /\b(_?[a-z][\w]*(?:\s*\.\s*[A-Z][\w]*)*)\s*\.\s*(\w+)\s*\(/g;
+/** Lightweight delegation scan: regex-parse method body for calls, no recursive file search */
+export function traceMethodCalls(code: string): { member: string; method: string }[] {
+  const callRegex = /\b([a-z_]\w*)\s*\.\s*(\w+)\s*\(/g;
   const matches = [...code.matchAll(callRegex)];
-  const traces: any[] = [];
-
+  const skipMembers = new Set(['logger', 'console', 'await', 'task', 'string', 'result', 'ex', 'e', 'viewModel', 'model', 'query', 'key', 'value', 'pair', 'item', 'arg', 'args', 'options', 'config', 'configuration', 'httpClient', 'httpContext', 'url', 'path', 'dir', 'file', 'stream', 'reader', 'writer']);
+  
+  const seen = new Set<string>();
+  const calls: { member: string; method: string }[] = [];
+  
   for (const match of matches) {
-    const memberName = match[1];
-    const methodName = match[2];
-
-    if (['logger', 'console', 'await', 'task', 'string'].includes(memberName.toLowerCase().split('.')[0])) continue;
-
-    // Try to find where this member is defined (e.g., in the constructor or field)
-    // This is hard without a full parser, so we'll search for the method in Services and DataAccess
-    const searchPatterns = [
-      path.join(projectRoot, 'IBS.Services', '**', '*.cs'),
-      path.join(projectRoot, 'IBS.DataAccess', '**', '*.cs')
-    ];
-
-    for (const pattern of searchPatterns) {
-      const files = await glob(pattern.replace(/\\/g, '/'));
-      for (const file of files) {
-        const methodBody = await findMethodInFile(file, methodName);
-        if (methodBody) {
-          const subTraces = await traceMethodCalls(projectRoot, methodBody, depth - 1);
-          traces.push({
-            member: memberName,
-            method: methodName,
-            file: path.relative(projectRoot, file),
-            body: methodBody,
-            calls: subTraces
-          });
-          break; // Found it, move to next match
-        }
-      }
-    }
+    const member = match[1];
+    const method = match[2];
+    const key = `${member}.${method}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    
+    const root = member.toLowerCase().split('.')[0];
+    if (skipMembers.has(root)) continue;
+    
+    calls.push({ member, method });
   }
-
-  return traces;
+  
+  return calls;
 }
 
 export function extractModelInfo(code: string) {
@@ -212,7 +192,7 @@ export async function analyzeActionRelations(projectRoot: string, filePath: stri
   if (!methodBody) throw new Error(`Action ${methodName} not found in ${filePath}`);
 
   const referencedModels = extractReferencedTypes(methodBody);
-  const calls = await traceMethodCalls(projectRoot, methodBody, 1);
+  const calls = traceMethodCalls(methodBody);
 
   return {
     methodName,

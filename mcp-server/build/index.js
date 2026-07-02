@@ -205,9 +205,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const methodBody = await findMethodInFile(fullPath, methodName);
             if (!methodBody)
                 return { content: [{ type: "text", text: "Method not found." }] };
-            const trace = await traceMethodCalls(PROJECT_ROOT, methodBody);
+            const calls = traceMethodCalls(methodBody);
             return {
-                content: [{ type: "text", text: Formatter.formatWorkflowTrace(trace) }],
+                content: [{ type: "text", text: Formatter.formatWorkflowTrace(calls) }],
             };
         }
         if (name === "list_csv_files") {
