@@ -1,0 +1,45 @@
+account_id,is_main,account_number,account_name,account_type,normal_balance,level,created_by,created_date,edited_by,edited_date,has_children,parent_account_id,financial_statement_type,is_hidden
+1,true,100000000,Assets,Asset,Debit,1,admin,2026-06-25 00:00:00,-,-,true,-,BalanceSheet,false
+2,false,101000000,Current Assets,Asset,Debit,2,admin,2026-06-25 00:00:00,-,-,true,1,BalanceSheet,false
+3,false,101010000,Cash and Cash Equivalents,Asset,Debit,3,admin,2026-06-25 00:00:00,-,-,true,2,BalanceSheet,false
+4,false,101010100,Cash in Bank,Asset,Debit,4,admin,2026-06-25 00:00:00,-,-,false,3,BalanceSheet,false
+5,false,101020000,Trade Receivables,Asset,Debit,3,admin,2026-06-25 00:00:00,-,-,true,2,BalanceSheet,false
+6,false,101020100,AR - Trade Receivable,Asset,Debit,4,admin,2026-06-25 00:00:00,-,-,false,5,BalanceSheet,false
+7,false,101020200,AR - Trade CWT Receivable,Asset,Debit,4,admin,2026-06-25 00:00:00,-,-,false,5,BalanceSheet,false
+8,false,101020300,AR - Trade CWVAT Receivable,Asset,Debit,4,admin,2026-06-25 00:00:00,-,-,false,5,BalanceSheet,false
+9,false,101060000,Other Current Assets,Asset,Debit,3,admin,2026-06-25 00:00:00,-,-,true,2,BalanceSheet,false
+10,false,101060400,Creditable Withholding Tax,Asset,Debit,4,admin,2026-06-25 00:00:00,-,-,false,9,BalanceSheet,false
+11,false,101060600,Creditable Withholding VAT - Input,Asset,Debit,4,admin,2026-06-25 00:00:00,-,-,false,9,BalanceSheet,false
+12,true,200000000,Liabilities,Liabilities,Credit,1,admin,2026-06-25 00:00:00,-,-,true,-,BalanceSheet,false
+13,false,201000000,Current Liabilities,Liabilities,Credit,2,admin,2026-06-25 00:00:00,-,-,true,12,BalanceSheet,false
+14,false,201030000,Government Payables,Liabilities,Credit,3,admin,2026-06-25 00:00:00,-,-,true,13,BalanceSheet,false
+15,false,201030100,VAT - Output,Liabilities,Credit,4,admin,2026-06-25 00:00:00,-,-,false,14,BalanceSheet,false
+16,false,201030200,Expanded Withholding Tax Payable,Liabilities,Credit,4,admin,2026-06-25 00:00:00,-,-,false,14,BalanceSheet,false
+17,true,300000000,Equity,Equity,Credit,1,admin,2026-06-25 00:00:00,-,-,true,-,BalanceSheet,false
+18,false,301000000,Stockholders Equity,Equity,Credit,2,admin,2026-06-25 00:00:00,-,-,true,17,BalanceSheet,false
+19,false,301010000,Capital Stock,Equity,Credit,3,admin,2026-06-25 00:00:00,-,-,true,18,BalanceSheet,false
+20,false,301010100,Common Stock,Equity,Credit,4,admin,2026-06-25 00:00:00,-,-,false,19,BalanceSheet,false
+21,false,301020000,Retained Earnings,Equity,Credit,3,admin,2026-06-25 00:00:00,-,-,true,18,BalanceSheet,false
+22,false,301020100,Retained Earnings - Unappropriated,Equity,Credit,4,admin,2026-06-25 00:00:00,-,-,false,21,BalanceSheet,false
+23,true,400000000,Revenue,Revenue,Credit,1,admin,2026-06-25 00:00:00,-,-,true,-,PnL,false
+24,false,401000000,Operating Revenue,Revenue,Credit,2,admin,2026-06-25 00:00:00,-,-,true,23,PnL,false
+25,false,401010000,Maritime Service Revenue,Revenue,Credit,3,admin,2026-06-25 00:00:00,-,-,true,24,PnL,false
+26,false,401020000,Maritime Service Revenue - Tugboat Operations,Revenue,Credit,3,admin,2026-06-25 00:00:00,-,-,true,24,PnL,false
+27,false,401020100,Maritime Service Revenue - Dispatch,Revenue,Credit,4,admin,2026-06-25 00:00:00,-,-,false,26,PnL,false
+28,false,401020200,Maritime Service Revenue - BAF,Revenue,Credit,4,admin,2026-06-25 00:00:00,-,-,false,26,PnL,false
+29,true,500000000,Expenses,Expenses,Debit,1,admin,2026-06-25 00:00:00,-,-,true,-,PnL,false
+30,false,501000000,Operating Expenses,Expenses,Debit,2,admin,2026-06-25 00:00:00,-,-,true,29,PnL,false
+31,false,501010000,Tugboat Operating Expenses,Expenses,Debit,3,admin,2026-06-25 00:00:00,-,-,true,30,PnL,false
+32,false,501010100,Fuel and Lubricants,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,31,PnL,false
+33,false,501010200,Crew Wages and Benefits,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,31,PnL,false
+34,false,501010300,Repairs and Maintenance,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,31,PnL,false
+35,false,501010400,Port Charges and Dues,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,31,PnL,false
+36,false,501020000,General and Administrative Expenses,Expenses,Debit,3,admin,2026-06-25 00:00:00,-,-,true,30,PnL,false
+37,false,501020100,Salaries and Wages,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+38,false,501020200,Employee Benefits,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+39,false,501020300,Office Supplies,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+40,false,501020400,Utilities,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+41,false,501020500,Communications,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+42,false,501020600,Transportation and Travel,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+43,false,501020700,Depreciation Expense,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false
+44,false,501020800,Miscellaneous Expenses,Expenses,Debit,4,admin,2026-06-25 00:00:00,-,-,false,36,PnL,false

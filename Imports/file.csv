@@ -1,0 +1,9 @@
+NUM,FILENAME,FILEDESC
+1,CUSTOMER,Customer/Principal records.
+2,VESSEL,Vessel records.
+3,USERACCESS,Access to file or module.
+4,USERFILE,User Accounts.
+5,TUGBOAT,Tug Boat records.
+6,TUGMASTER,Tug Master records.
+7,PORT,Port/Terminal records.
+8,RATE,Tariff rate table.

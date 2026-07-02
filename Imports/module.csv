@@ -1,0 +1,7 @@
+NUM,MODNAME,DESCRIPTIO,BUTTONLABE
+1,DISPATCH,Create dispatch ticket.,Dispatch
+2,BILLING,Create billing statement.,Billing
+3,REPORTS,Print reports.,Reports
+4,MAINTENANCE,Maintenance of system files.,File Maintenance
+5,TARIFF,Tariff price setter.,Tariff
+6,COLLECTION,Encode collection.,Collection
