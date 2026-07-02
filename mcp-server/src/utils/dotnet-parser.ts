@@ -2,6 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import { glob } from 'glob';
 
+/** Walk backwards from match index to collect preceding attribute lines */
+function collectAttributes(content: string, matchIndex: number): string {
+  const lines = content.substring(0, matchIndex).split('\n');
+  const attrLines: string[] = [];
+  let inMultiLine = false;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const trimmed = lines[i].trim();
+    if (trimmed.startsWith('[')) {
+      attrLines.unshift(lines[i]);
+      inMultiLine = !trimmed.endsWith(']');
+    } else if (inMultiLine) {
+      attrLines.unshift(lines[i]);
+      if (trimmed.includes(']')) inMultiLine = false;
+    } else if (trimmed === '' || trimmed.startsWith('//')) {
+      continue; // skip blanks and comments — attributes may be above them
+    } else {
+      break; // non-attribute code → stop
+    }
+  }
+  return attrLines.join('\n');
+}
+
 export async function findMethodInFile(filePath: string, methodName: string) {
   if (!fs.existsSync(filePath)) return null;
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -13,6 +35,7 @@ export async function findMethodInFile(filePath: string, methodName: string) {
   let match;
   while ((match = methodRegex.exec(content)) !== null) {
     const startIdx = match.index;
+    const attributes = collectAttributes(content, startIdx);
     const openingBraceIdx = content.indexOf('{', startIdx + match[0].length);
     if (openingBraceIdx === -1) continue;
 
@@ -25,7 +48,8 @@ export async function findMethodInFile(filePath: string, methodName: string) {
     }
 
     if (braceCount === 0) {
-      bodies.push(content.substring(startIdx, endIdx));
+      const preamble = attributes ? attributes + '\n' : '';
+      bodies.push(preamble + content.substring(startIdx, endIdx));
     }
   }
   return bodies.length > 0 ? bodies.join('\n\n') : null;
