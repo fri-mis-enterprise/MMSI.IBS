@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using FluentAssertions;
+using IBS.Models;
 using System.Linq.Expressions;
 
 namespace IBS.Tests.Services
@@ -21,6 +22,7 @@ namespace IBS.Tests.Services
         private readonly DispatchTicketService _service;
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IJobOrderRepository> _mockJobOrderRepo;
+        private readonly Mock<IAuditTrailRepository> _mockAuditTrail;
 
         public DispatchTicketServiceTests()
         {
@@ -33,7 +35,8 @@ namespace IBS.Tests.Services
 
             _mockUnitOfWork.Setup(u => u.DispatchTicket).Returns(_mockTicketRepo.Object);
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
-            _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockAuditTrail = new Mock<IAuditTrailRepository>();
+            _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(_mockAuditTrail.Object);
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(new Mock<IVesselRepository>().Object);
 
             _service = new DispatchTicketService(
@@ -73,6 +76,7 @@ namespace IBS.Tests.Services
                 dt.TotalHours == 2.5m &&
                 dt.Status == SD.DispatchTicketStatus.ForTariff),
                 It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -123,8 +127,6 @@ namespace IBS.Tests.Services
                 JobOrderId = 1
             };
 
-            _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((DispatchTicket)null!);
             _mockTicketRepo.Setup(u => u.GetAsync(
                 It.Is<Expression<Func<DispatchTicket, bool>>>(e => e.Compile()(new DispatchTicket { DispatchTicketId = 1 })),
                 It.IsAny<CancellationToken>()))
@@ -140,6 +142,7 @@ namespace IBS.Tests.Services
             existingTicket.Status.Should().Be(SD.DispatchTicketStatus.ForBilling);
             existingTicket.DispatchRate.Should().Be(1000m);
             existingTicket.Remarks.Should().Be("New Remark");
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -163,8 +166,6 @@ namespace IBS.Tests.Services
                 JobOrderId = 1
             };
 
-            _mockTicketRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((DispatchTicket)null!);
             _mockTicketRepo.Setup(u => u.GetAsync(
                 It.Is<Expression<Func<DispatchTicket, bool>>>(e => e.Compile()(new DispatchTicket { DispatchTicketId = 1 })),
                 It.IsAny<CancellationToken>()))
@@ -179,6 +180,7 @@ namespace IBS.Tests.Services
             result.IsSuccess.Should().BeTrue();
             existingTicket.Status.Should().Be(SD.DispatchTicketStatus.ForTariff);
             existingTicket.DispatchRate.Should().Be(0);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

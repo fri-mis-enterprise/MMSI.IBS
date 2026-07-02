@@ -1,6 +1,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.Models;
 using IBS.Models.MSAP;
 using IBS.Services;
 using IBS.Utility.Constants;
@@ -10,12 +11,9 @@ using Moq;
 using Xunit;
 using FluentAssertions;
 using System.Linq.Expressions;
-using IBS.DataAccess.Data;
 using IBS.Models.MasterFile;
 using IBS.Models.MSAP.MasterFile;
-using Microsoft.EntityFrameworkCore;
 using IBS.Models.Books;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using IBS.DTOs;
 
 namespace IBS.Tests.Services
@@ -31,6 +29,7 @@ namespace IBS.Tests.Services
         private readonly Mock<IVesselRepository> _mockVesselRepo;
         private readonly Mock<INotificationService> _mockNotification;
         private readonly Mock<JobOrderService> _mockJobOrderService;
+        private readonly Mock<IAuditTrailRepository> _mockAuditTrail;
 
         public BillingServiceTests()
         {
@@ -43,22 +42,17 @@ namespace IBS.Tests.Services
             _mockCustomerRepo = new Mock<ICustomerRepository>();
             _mockTicketRepo = new Mock<IDispatchTicketRepository>();
             _mockVesselRepo = new Mock<IVesselRepository>();
-
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "BillingTestDb")
-                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
-                .Options;
-            var dbContext = new ApplicationDbContext(options);
+            _mockAuditTrail = new Mock<IAuditTrailRepository>();
 
             _mockUnitOfWork.Setup(u => u.Billing).Returns(_mockBillingRepo.Object);
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
             _mockUnitOfWork.Setup(u => u.Customer).Returns(_mockCustomerRepo.Object);
             _mockUnitOfWork.Setup(u => u.DispatchTicket).Returns(_mockTicketRepo.Object);
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(_mockVesselRepo.Object);
-            _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(_mockAuditTrail.Object);
             _mockUnitOfWork.Setup(u => u.Principal).Returns(new Mock<IPrincipalRepository>().Object);
             _mockUnitOfWork.Setup(u => u.SaveAsync(It.IsAny<CancellationToken>()))
-                .Returns((CancellationToken ct) => dbContext.SaveChangesAsync(ct));
+                .Returns(Task.CompletedTask);
 
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
@@ -131,6 +125,7 @@ namespace IBS.Tests.Services
             billing.Amount.Should().Be(1000m);
 
             _mockBillingRepo.Verify(u => u.AddAsync(billing, It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -178,6 +173,7 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeTrue(result.Message);
             billing.Status.Should().Be(SD.BillingStatus.ForCollection);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -229,6 +225,7 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeTrue();
             _mockJobOrderService.Verify(s => s.TryAutoCloseAsync(100, "user", It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
         [Fact]
         public async Task CreateBillingAsync_CalculatesCorrectAmount_VatInclusive_Jan2026Data()
@@ -261,6 +258,7 @@ namespace IBS.Tests.Services
 
             // Assert: Total should remain 840,622.50 because it's inclusive
             billing.Amount.Should().Be(840622.50m);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -296,6 +294,7 @@ namespace IBS.Tests.Services
             // Assert: Total should be Net * 1.12
             // 213,928.57 * 1.12 = 239,599.9984
             billing.Amount.Should().Be(239599.9984m);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -334,6 +333,7 @@ namespace IBS.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeTrue();
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Msap.IRepository;
+using IBS.Models;
 using IBS.Models.MSAP;
 using IBS.Services;
 using IBS.Utility.Constants;
@@ -52,6 +53,7 @@ namespace IBS.Tests.Services
             jobOrder.Status.Should().Be(SD.JobOrderStatus.Open);
             _mockJobOrderRepo.Verify(u => u.AddAsync(jobOrder, It.IsAny<CancellationToken>()), Times.Once);
             _mockUnitOfWork.Verify(u => u.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -98,6 +100,7 @@ namespace IBS.Tests.Services
             result.IsSuccess.Should().BeTrue();
             existingJob.Remarks.Should().Be("Updated Remarks");
             _mockUnitOfWork.Verify(u => u.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -148,6 +151,7 @@ namespace IBS.Tests.Services
             tickets[0].VoyageNumber.Should().Be("V-NEW");
             billings[0].CustomerId.Should().Be(2);
             billings[0].VoyageNumber.Should().Be("V-NEW");
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         #endregion

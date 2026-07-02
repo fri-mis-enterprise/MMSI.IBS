@@ -11,6 +11,7 @@ using FluentAssertions;
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using IBS.Models.MSAP.ViewModels;
+using IBS.Tests.TestHelpers;
 
 namespace IBS.Tests.Services
 {
@@ -108,8 +109,8 @@ namespace IBS.Tests.Services
             // Assert
             var data = (IEnumerable<object>)result.Data!;
             var row = data.First();
-            var ewt = (decimal)row.GetType().GetProperty("ewt")!.GetValue(row)!;
-            var net = (decimal)row.GetType().GetProperty("net")!.GetValue(row)!;
+            var ewt = AnonymousTypeHelper.Get<decimal>(row, "ewt");
+            var net = AnonymousTypeHelper.Get<decimal>(row, "net");
 
             // Calculation: (1120 / 1.12) * 0.02 = 20
             ewt.Should().Be(20m);
@@ -141,7 +142,7 @@ namespace IBS.Tests.Services
             // Assert
             var data = (IEnumerable<object>)result.Data!;
             var row = data.First();
-            var ewt = (decimal)row.GetType().GetProperty("ewt")!.GetValue(row)!;
+            var ewt = AnonymousTypeHelper.Get<decimal>(row, "ewt");
             
             // Even if Exclusive, the formula (Amount / 1.12) * 0.02 is applied if IsVatable is true
             ewt.Should().Be(20m);
@@ -171,7 +172,7 @@ namespace IBS.Tests.Services
             // Assert
             var data = (IEnumerable<object>)result.Data!;
             var row = data.First();
-            var ewt = (decimal)row.GetType().GetProperty("ewt")!.GetValue(row)!;
+            var ewt = AnonymousTypeHelper.Get<decimal>(row, "ewt");
             
             // For Non-Vatable: Amount * 0.02
             ewt.Should().Be(20m);
@@ -205,13 +206,10 @@ namespace IBS.Tests.Services
             // Assert
             var data = (IEnumerable<object>)result.Data!;
             var row = data.First();
-            var ewt = (decimal)row.GetType().GetProperty("ewt")!.GetValue(row)!;
+            var ewt = AnonymousTypeHelper.Get<decimal>(row, "ewt");
             
-            // Checking if WVAT is present in the anonymous object (currently it's not)
-            var wvatProperty = row.GetType().GetProperty("wvat");
-            wvatProperty.Should().NotBeNull("WVAT should be calculated and returned for the table");
-            var wvat = (decimal)wvatProperty!.GetValue(row)!;
-            var net = (decimal)row.GetType().GetProperty("net")!.GetValue(row)!;
+            var wvat = AnonymousTypeHelper.Get<decimal>(row, "wvat");
+            var net = AnonymousTypeHelper.Get<decimal>(row, "net");
 
             ewt.Should().Be(20m);
             wvat.Should().Be(50m);

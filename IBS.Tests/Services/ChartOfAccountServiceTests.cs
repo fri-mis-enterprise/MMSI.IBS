@@ -19,6 +19,7 @@ namespace IBS.Tests.Services
         private readonly Mock<ILogger<ChartOfAccountService>> _mockLogger;
         private readonly ChartOfAccountService _service;
         private readonly Mock<IChartOfAccountRepository> _mockCoaRepo;
+        private readonly Mock<IAuditTrailRepository> _mockAuditTrail;
 
         public ChartOfAccountServiceTests()
         {
@@ -28,7 +29,8 @@ namespace IBS.Tests.Services
             _mockCoaRepo = new Mock<IChartOfAccountRepository>();
 
             _mockUnitOfWork.Setup(u => u.ChartOfAccount).Returns(_mockCoaRepo.Object);
-            _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
+            _mockAuditTrail = new Mock<IAuditTrailRepository>();
+            _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(_mockAuditTrail.Object);
             
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
@@ -56,6 +58,7 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeTrue();
             _mockCoaRepo.Verify(r => r.AddAsync(It.Is<ChartOfAccount>(a => a.AccountNumber == "1200"), It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -77,6 +80,7 @@ namespace IBS.Tests.Services
             // Assert
             result.IsSuccess.Should().BeTrue();
             _mockCoaRepo.Verify(r => r.AddAsync(It.Is<ChartOfAccount>(a => a.AccountNumber == "1202"), It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -94,6 +98,7 @@ namespace IBS.Tests.Services
             result.IsSuccess.Should().BeTrue();
             existingAccount.AccountName.Should().Be("Updated Name");
             _mockUnitOfWork.Verify(u => u.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+            _mockAuditTrail.Verify(r => r.AddAsync(It.IsAny<AuditTrail>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
