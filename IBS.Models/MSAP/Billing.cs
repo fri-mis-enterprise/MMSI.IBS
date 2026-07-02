@@ -109,6 +109,9 @@ namespace IBS.Models.MSAP
         [StringLength(15)]
         public string? Terms { get; set; }
 
+        [Column("billing_year")]
+        public int Year { get; set; }
+
         [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 

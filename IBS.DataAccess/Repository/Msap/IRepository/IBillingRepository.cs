@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository.Msap.IRepository
 
         Task<List<SelectListItem>> GetMsapBilledTicketsById(int id, CancellationToken cancellationToken = default);
 
-        Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default);
+        Task<string> GenerateBillingNumber(int year, CancellationToken cancellationToken = default);
 
         Billing ProcessAddress(Billing model, CancellationToken cancellationToken = default);
 

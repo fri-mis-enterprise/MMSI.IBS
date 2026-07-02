@@ -151,7 +151,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<Billing>(b =>
             {
-                b.HasIndex(x => new { x.MsapBillingNumber, x.Company }).IsUnique();
+                b.HasIndex(x => new { x.Year, x.MsapBillingNumber, x.Company }).IsUnique();
                 b.HasIndex(x => x.Date);
                 b.HasIndex(x => x.CustomerId);
                 b.HasIndex(x => x.Status);

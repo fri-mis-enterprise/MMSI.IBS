@@ -1,6 +1,14 @@
 # Changelog
 
 ## [2026-07-02]
+### Added
+- `billing_year` column to `msap_billings` to scope billing number uniqueness per year (scope: IBS.Models, IBS.DataAccess, IBS.Services)
+
+### Changed
+- Unique index on `msap_billings` changed from `(NUMBER, company)` to `(billing_year, NUMBER, company)` to prevent year-crossing billing number conflicts
+- `GenerateBillingNumber` scoped per year — sequence resets each year
+- `BillingService.CreateBillingAsync` and import controller auto-set `Year` from `Date`
+
 ### Removed
 - Experimental Vessel Planning module (Fleet Control Dashboard) — removed controller, service, DTOs, view, JS, CSS, SignalR hub, nav entry
 - Experimental Tugboat Monitoring module (Timeline/Scheduling) — removed controller, service, view, JS, CSS, SignalR hub, nav entry

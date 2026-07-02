@@ -1384,6 +1384,7 @@ namespace IBSWeb.Areas.User.Controllers
             var records = csv.GetRecords<dynamic>();
             int count = 0;
             var newRecords = new List<Billing>();
+            var seenBillingKeys = new HashSet<string>();
 
             foreach (var record in records)
             {
@@ -1394,12 +1395,17 @@ namespace IBSWeb.Areas.User.Controllers
                 if (maps.BillingByRecId.ContainsKey(legacyRecId.ToString())) {
                     continue; }
 
-                // 2. Skip if Number already exists to avoid unique constraint violation in DB
-                if (maps.Billing.ContainsKey(billingNumber))
+                var billingDate = ParseDateOnly(record, "date") ?? DateOnly.FromDateTime(DateTime.Today);
+                int billingYear = billingDate.Year;
+                string billingYearKey = $"{billingYear}|{billingNumber}";
+
+                // 2. Skip if (year, number) already seen — same number in same year
+                if (seenBillingKeys.Contains(billingYearKey))
                 {
-                    _importErrors.Add($"Billing {billingNumber} (RECID {legacyRecId}): Duplicate number found. Skipping to avoid DB constraint violation.");
+                    _importErrors.Add($"Billing {billingNumber} (RECID {legacyRecId}): Duplicate (year, number) found. Skipping.");
                     continue;
                 }
+                seenBillingKeys.Add(billingYearKey);
 
                 string vesselNumRaw = GetString(record, "vesselnum");
                 string vesselNum = PadNumber(vesselNumRaw, 4);
@@ -1447,8 +1453,6 @@ namespace IBSWeb.Areas.User.Controllers
                 int? principalId = maps.Principal.TryGetValue($"{customerId}|{principalNum}", out int pid) ? pid : null;
                 int? collectionId = maps.Collection.TryGetValue(crNum, out int cid) ? cid : null;
 
-                DateOnly billingDate = ParseDateOnly(record, "date") ?? DateOnly.FromDateTime(DateTime.Today);
-
                 var entity = new Billing
                 {
                     MsapBillingId = legacyRecId, // Force Legacy ID
@@ -1463,6 +1467,7 @@ namespace IBSWeb.Areas.User.Controllers
                     CollectionId = collectionId,
                     CollectionNumber = crNum != "-" ? crNum : null,
                     Status = collectionId.HasValue ? "Collected" : "For Collection",
+                    Year = billingDate.Year,
                     Date = billingDate,
                     DueDate = billingDate,
                     Amount = ParseDecimal(record, "amount"),

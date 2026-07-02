@@ -166,9 +166,10 @@ namespace IBS.DataAccess.Repository.Msap
             return dispatchTicketList;
         }
 
-        public async Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateBillingNumber(int year, CancellationToken cancellationToken = default)
         {
             var lastRecord = await _db.MsapBillings
+                .Where(b => b.Year == year)
                 .Where(b => !string.IsNullOrEmpty(b.MsapBillingNumber) && b.MsapBillingNumber.StartsWith("B"))
                 .OrderByDescending(b => b.MsapBillingNumber)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -178,7 +179,7 @@ namespace IBS.DataAccess.Repository.Msap
                 return "B000001";
             }
 
-            var lastSeries = lastRecord.MsapBillingNumber.Substring(1); // "B" is 1 char
+            var lastSeries = lastRecord.MsapBillingNumber.Substring(1);
             if (int.TryParse(lastSeries, out int lastNumber))
             {
                 return "B" + ((lastNumber + 1).ToString("D6"));

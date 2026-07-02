@@ -101,6 +101,7 @@ namespace IBS.Services
 
                 model.Customer = customer;
                 model.IsVatable = customer.VatType == SD.VatType_Vatable;
+                model.Year = model.Date.Year;
                 model.Status = SD.BillingStatus.ForPosting; // Changed from ForCollection
                 model.CreatedBy = username;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -128,7 +129,7 @@ namespace IBS.Services
 
                 if (model.IsUndocumented)
                 {
-                    model.MsapBillingNumber = await unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
+                    model.MsapBillingNumber = await unitOfWork.Billing.GenerateBillingNumber(model.Year, cancellationToken);
                 }
                 else if (string.IsNullOrWhiteSpace(model.MsapBillingNumber))
                 {
@@ -393,6 +394,7 @@ namespace IBS.Services
                 currentModel.VoyageNumber = model.VoyageNumber;
                 currentModel.COSNumber = model.COSNumber;
                 currentModel.Date = model.Date;
+                currentModel.Year = model.Date.Year;
                 currentModel.PortId = model.PortId;
                 currentModel.TerminalId = model.TerminalId;
                 currentModel.VesselId = model.VesselId;
