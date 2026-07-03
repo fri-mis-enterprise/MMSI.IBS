@@ -54,7 +54,6 @@
     <!-- ── Brand ── -->
     <a class="mnav-brand" asp-area="" asp-controller="Home" asp-action="Index">
         <img src="~/svg/ibs-logo-white.svg" alt="IBS" />
-        <span>IBS</span>
     </a>
 
     @if (SignInManager.IsSignedIn(User))
@@ -63,6 +62,14 @@
         <nav class="mnav-nav-area" aria-label="Main menu">
             <ul class="mnav-list" role="menubar">
 
+                <!-- Home -->
+                <li class="mnav-item" role="none">
+                    <a class="mnav-trigger"
+                       asp-area="User" asp-controller="Home" asp-action="Index"
+                       role="menuitem">
+                        Home
+                    </a>
+                </li>
 
                 @if (!User.IsInRole("PortCoordinator") && await ModernHasMsapAccess())
                 {
