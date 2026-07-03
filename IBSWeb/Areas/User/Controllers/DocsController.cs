@@ -1,5 +1,9 @@
+using IBS.Models;
+using IBS.Models.Enums;
+using IBS.Services.AccessControl;
 using Markdig;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 
@@ -8,7 +12,10 @@ namespace IBSWeb.Areas.User.Controllers;
 [Area("User")]
 [Route("User/Docs")]
 [Authorize]
-public class DocsController : Controller
+public class DocsController(
+    IWebHostEnvironment env,
+    UserManager<ApplicationUser> userManager,
+    IAccessControlService accessControl) : Controller
 {
     private static readonly string[] ManualFiles =
     [
@@ -24,30 +31,23 @@ public class DocsController : Controller
         "10-notifications-audit"
     ];
 
-    private readonly string _docsRoot;
-    private readonly MarkdownPipeline _pipeline;
-
-    public DocsController(IWebHostEnvironment env)
-    {
-        _docsRoot = Path.GetFullPath(Path.Combine(env.ContentRootPath, "..", "Docs", "manual"));
-        _pipeline = new MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .Build();
-    }
+    private readonly string _docsRoot = Path.GetFullPath(Path.Combine(env.ContentRootPath, "..", "Docs", "manual"));
+    private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
 
     [HttpGet("")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         var html = RenderMarkdownFile("README");
-        var sidebar = GetSidebarItems();
-        ViewBag.Sidebar = sidebar;
+        ViewBag.Sidebar = await GetSidebarItems();
         ViewBag.ActiveSlug = "index";
         ViewBag.Title = "User Manual";
         return View("Index", html);
     }
 
     [HttpGet("{slug}")]
-    public IActionResult Show(string slug)
+    public async Task<IActionResult> Show(string slug)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return RedirectToAction(nameof(Index));
@@ -62,12 +62,14 @@ public class DocsController : Controller
         if (fileSlug == null)
             return NotFound();
 
+        if (!await UserCanAccess(fileSlug))
+            return NotFound();
+
         var html = RenderMarkdownFile(fileSlug);
         if (html == null)
             return NotFound();
 
-        var sidebar = GetSidebarItems();
-        ViewBag.Sidebar = sidebar;
+        ViewBag.Sidebar = await GetSidebarItems();
         ViewBag.ActiveSlug = slug;
         ViewBag.Title = GetTitleFromFile(fileSlug);
         return View("Index", html);
@@ -96,22 +98,42 @@ public class DocsController : Controller
         return char.ToUpper(name[0]) + name[1..];
     }
 
-    private static List<(string Slug, string Title)> GetSidebarItems()
+    private async Task<List<(string Slug, string Title)>> GetSidebarItems()
     {
-        var items = new List<(string Slug, string Title)>
+        var userId = userManager.GetUserId(User)!;
+        var allItems = new List<(string Slug, string Title, Func<string, Task<bool>>? Guard)>
         {
-            ("index", "Overview"),
-            ("job-order", "Job Order"),
-            ("dispatch-ticket", "Dispatch Ticket"),
-            ("billing", "Billing"),
-            ("collection", "Collection"),
-            ("service-request", "Service Request"),
-            ("master-files", "Master Files"),
-            ("admin", "Administration"),
-            ("import-export", "Import & Export"),
-            ("reports", "Reports"),
-            ("notifications-audit", "Notifications & Audit")
+            ("index", "Overview", null),
+            ("job-order", "Job Order", null),
+            ("dispatch-ticket", "Dispatch Ticket", null),
+            ("billing", "Billing", null),
+            ("collection", "Collection", null),
+            ("service-request", "Service Request", null),
+            ("master-files", "Master Files", null),
+            ("admin", "Administration", async uid => User.IsInRole("Admin")),
+            ("import-export", "Import & Export", async uid => await accessControl.HasMsapImportAccessAsync(uid)),
+            ("reports", "Reports", async uid => await accessControl.HasMaritimeReportAccessAsync(uid)),
+            ("notifications-audit", "Notifications & Audit", null)
         };
-        return items;
+
+        var result = new List<(string Slug, string Title)>();
+        foreach (var (slug, title, guard) in allItems)
+        {
+            if (guard == null || await guard(userId))
+                result.Add((slug, title));
+        }
+        return result;
+    }
+
+    private async Task<bool> UserCanAccess(string fileSlug)
+    {
+        var userId = userManager.GetUserId(User)!;
+        return fileSlug switch
+        {
+            "07-admin" => User.IsInRole("Admin"),
+            "08-import-export" => await accessControl.HasMsapImportAccessAsync(userId),
+            "09-reports" => await accessControl.HasMaritimeReportAccessAsync(userId),
+            _ => true
+        };
     }
 }
