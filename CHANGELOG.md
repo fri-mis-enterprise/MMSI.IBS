@@ -1,6 +1,11 @@
 # Changelog
 
 ## [2026-07-03]
+### Added
+- Opt-in modern mega-menu navbar: users can switch to a new premium navigation bar via a "Try Modern Nav" toggle chip in the existing classic navbar; preference persists via localStorage with zero backend changes (scope: `_ModernNavbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`, `_Layout.cshtml`)
+- Spotlight search in modern navbar: includes arrow key navigation, search results grouped by category, match highlighting, and a "/" keyboard shortcut to focus search.
+- Quick Access sidebar suppression: automatically disables and hides the Quick Access panel and its bolt icon trigger when the modern navbar is active, restoring them when deactivated.
+
 ### Changed
 - Quick Access sidebar redesigned: aligned CSS with modern-ui.css custom properties, replaced Bootstrap Icons with Material Symbols, removed left-edge toggle strip (kept navbar lightning trigger), merged Most Used + Recent into single sorted list (scope: wwwroot/css/quick-access-sidebar.css, wwwroot/js/quick-access-sidebar.js)
 

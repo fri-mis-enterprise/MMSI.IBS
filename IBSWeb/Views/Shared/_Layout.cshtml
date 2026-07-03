@@ -1,4 +1,4 @@
-﻿@using IBS.Models.Enums
+@using IBS.Models.Enums
 @using IBS.Services.AccessControl
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<ApplicationUser> SignInManager
@@ -74,6 +74,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/modern-ui.css" asp-append-version="true" />
+    <!-- Opt-in modern navbar -->
+    <link rel="stylesheet" href="~/css/modern-navbar.css" asp-append-version="true" />
 
     <style>
         .material-symbols-outlined {
@@ -90,7 +92,10 @@
     }
 </head>
 <body data-selected-company="@selectedCompany">
-    <header>
+    @* ── Opt-in modern navbar (hidden by default; JS activates on user choice) ── *@
+    <partial name="_ModernNavbar" />
+
+    <header id="classic-navbar-header">
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3 fixed-top">
             <div class="container-fluid px-4">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
@@ -214,6 +219,13 @@
                                     Manual
                                 </a>
                             </div>
+                            @* ── Modern navbar opt-in toggle ── *@
+                            <div class="nav-item ms-3 d-flex align-items-center">
+                                <button class="classic-nav-toggle" data-mnav-toggle title="Try the new modern navigation bar">
+                                    <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle;">toggle_off</span>
+                                    <span class="mnav-toggle-label">Try Modern Nav</span>
+                                </button>
+                            </div>
                         }
                         <partial name="_LoginPartial" />
                     </div>
@@ -250,6 +262,8 @@
     <script src="~/js/modern-table.js" asp-append-version="true"></script>
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/3.1.3/js/select.dataTables.js"></script>
+    <!-- Opt-in modern navbar controller -->
+    <script src="~/js/modern-navbar.js" asp-append-version="true"></script>
 
     <!-- Notification partial (must be after SweetAlert2) -->
     <partial name="_Notification" />

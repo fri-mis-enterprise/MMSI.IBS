@@ -1,0 +1,499 @@
+/* =============================================================
+   modern-navbar.css
+   Opt-in modern mega-menu navbar styles.
+   Shares design tokens with modern-ui.css (:root variables).
+   ============================================================= */
+
+/* ── Design tokens (mirrors modern-ui.css + navbar colour scheme) ── */
+:root {
+    --mnav-primary:            #051919;
+    --mnav-primary-container:  #1a2e2e;
+    --mnav-on-primary:         #ffffff;
+    --mnav-on-primary-70:      rgba(255,255,255,.70);
+    --mnav-on-primary-20:      rgba(255,255,255,.12);
+    --mnav-secondary:          #0059bb;
+    --mnav-secondary-container:#0070ea;
+    --mnav-on-secondary:       #ffffff;
+    --mnav-surface:            #f6faff;
+    --mnav-surface-container:  #e6eff8;
+    --mnav-surface-low:        #ecf5fe;
+    --mnav-on-surface:         #141d23;
+    --mnav-on-surface-variant: #424848;
+    --mnav-outline:            #727878;
+    --mnav-outline-variant:    #c2c8c7;
+    --mnav-height:             64px;
+    --mnav-shadow:             0 2px 12px rgba(5,25,25,.18);
+    --mnav-font:               'Inter', system-ui, sans-serif;
+    --mnav-font-display:       'Hanken Grotesk', system-ui, sans-serif;
+    --mnav-transition:         0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Wrapper ── */
+#modern-navbar {
+    display: none; /* hidden by default; JS enables on opt-in */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1060; /* above Bootstrap's z-index-fixed (1030) */
+    height: var(--mnav-height);
+    background-color: var(--mnav-primary);
+    box-shadow: var(--mnav-shadow);
+    font-family: var(--mnav-font);
+}
+
+#modern-navbar.mnav-active {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    gap: 16px;
+}
+
+/* When classic nav is hidden, body carries the top offset via padding-top */
+body.mnav-enabled {
+    padding-top: var(--mnav-height) !important;
+}
+
+
+/* ── Brand ── */
+.mnav-brand {
+    font-family: var(--mnav-font-display);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--mnav-on-primary);
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1;
+}
+.mnav-brand:hover { color: var(--mnav-on-primary); text-decoration: none; }
+.mnav-brand img { height: 32px; width: auto; }
+
+/* ── Nav list ── */
+.mnav-list {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mnav-item {
+    position: relative;
+    height: var(--mnav-height);
+    display: flex;
+    align-items: center;
+}
+
+.mnav-trigger {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 14px;
+    height: 100%;
+    background: none;
+    border: none;
+    color: var(--mnav-on-primary-70);
+    font-family: var(--mnav-font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color var(--mnav-transition), background var(--mnav-transition);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mnav-trigger:hover,
+.mnav-item.mnav-open .mnav-trigger {
+    color: var(--mnav-on-primary);
+    background: var(--mnav-on-primary-20);
+}
+
+.mnav-trigger .material-symbols-outlined {
+    font-size: 18px;
+    transition: transform var(--mnav-transition);
+}
+.mnav-item.mnav-open .mnav-trigger .material-symbols-outlined {
+    transform: rotate(180deg);
+}
+
+/* ── Mega drop panel ── */
+.mnav-mega {
+    position: absolute;
+    top: var(--mnav-height);
+    left: 0;
+    background: #ffffff;
+    border: 1px solid var(--mnav-outline-variant);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 32px rgba(5,25,25,.14);
+    padding: 20px;
+    min-width: 240px;
+    /* hidden state */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity var(--mnav-transition),
+                visibility var(--mnav-transition),
+                transform var(--mnav-transition);
+    z-index: 1070;
+}
+
+.mnav-item.mnav-open .mnav-mega {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.mnav-mega-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--mnav-cols, 2), 1fr);
+    gap: 24px;
+}
+
+/* ── Section heading in mega ── */
+.mnav-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mnav-outline);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--mnav-outline-variant);
+    margin-bottom: 8px;
+}
+
+/* ── Links inside mega ── */
+.mnav-mega-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--mnav-on-surface);
+    transition: background var(--mnav-transition), transform var(--mnav-transition);
+}
+.mnav-mega-link:hover {
+    background: var(--mnav-surface-low);
+    transform: translateX(2px);
+    color: var(--mnav-on-surface);
+    text-decoration: none;
+}
+.mnav-mega-link .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--mnav-secondary);
+    flex-shrink: 0;
+}
+.mnav-link-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.mnav-link-sub {
+    font-size: 10px;
+    color: var(--mnav-outline);
+    margin-top: 1px;
+}
+
+/* ── Simple (non-grid) links list ── */
+.mnav-link-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ── Right zone ── */
+.mnav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* ── Search box ── */
+.mnav-search-wrap {
+    position: relative;
+    display: none;
+}
+@media (min-width: 900px) {
+    .mnav-search-wrap { display: block; }
+}
+.mnav-search {
+    background: var(--mnav-on-primary-20);
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    color: var(--mnav-on-primary);
+    font-family: var(--mnav-font);
+    font-size: 13px;
+    padding: 7px 14px 7px 36px;
+    width: 220px;
+    outline: none;
+    transition: border-color var(--mnav-transition), width var(--mnav-transition);
+}
+.mnav-search::placeholder { color: var(--mnav-on-primary-70); }
+.mnav-search:focus {
+    width: 280px;
+    border-color: rgba(255,255,255,.3);
+}
+.mnav-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--mnav-on-primary-70);
+    pointer-events: none;
+}
+
+/* ── Icon buttons ── */
+.mnav-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: var(--mnav-on-primary-70);
+    cursor: pointer;
+    transition: background var(--mnav-transition), color var(--mnav-transition);
+    text-decoration: none;
+    position: relative;
+}
+.mnav-icon-btn:hover {
+    background: var(--mnav-on-primary-20);
+    color: var(--mnav-on-primary);
+}
+.mnav-icon-btn .material-symbols-outlined { font-size: 22px; }
+
+/* notification badge */
+.mnav-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+}
+
+/* ── Divider ── */
+.mnav-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--mnav-on-primary-20);
+    flex-shrink: 0;
+}
+
+/* ── User chip ── */
+.mnav-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 12px;
+}
+.mnav-user-text {
+    display: none;
+    text-align: right;
+    line-height: 1.2;
+}
+@media (min-width: 1100px) { .mnav-user-text { display: block; } }
+.mnav-user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mnav-on-primary);
+}
+.mnav-user-role {
+    font-size: 10px;
+    color: var(--mnav-on-primary-70);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.mnav-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.3);
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* ── Toggle chip (shown in BOTH navbars) ── */
+.mnav-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    border: 1px solid var(--mnav-on-primary-20);
+    background: var(--mnav-on-primary-20);
+    color: var(--mnav-on-primary);
+    font-family: var(--mnav-font);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background var(--mnav-transition), border-color var(--mnav-transition);
+    white-space: nowrap;
+}
+.mnav-toggle-btn:hover {
+    background: rgba(255,255,255,.18);
+    border-color: rgba(255,255,255,.4);
+}
+.mnav-toggle-btn .material-symbols-outlined { font-size: 16px; }
+
+/* ── Chip in the classic Bootstrap navbar ── */
+.classic-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255,255,255,.25);
+    background: rgba(255,255,255,.1);
+    color: rgba(255,255,255,.85);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background .18s, border-color .18s;
+    font-family: var(--mnav-font);
+}
+.classic-nav-toggle:hover {
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    border-color: rgba(255,255,255,.45);
+}
+.classic-nav-toggle .material-symbols-outlined { font-size: 15px; }
+
+/* ── Overlay (closes menu on outside click) ── */
+#mnav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    top: var(--mnav-height);
+}
+#mnav-overlay.active { display: block; }
+
+/* ── Responsive: hide nav on small screens, show hamburger ── */
+.mnav-nav-area {
+    display: none;
+}
+@media (min-width: 768px) {
+    .mnav-nav-area {
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+}
+
+/* ── Mobile drawer placeholder ── */
+.mnav-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: var(--mnav-on-primary-20);
+    color: var(--mnav-on-primary);
+    cursor: pointer;
+}
+@media (min-width: 768px) { .mnav-hamburger { display: none; } }
+
+/* ── Spotlight Search Results Dropdown ── */
+#mnav-search-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--mnav-outline-variant);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(5,25,25,.16);
+    overflow: hidden;
+    display: none;
+    z-index: 1080;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.mnav-search-section-header {
+    padding: 10px 16px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mnav-outline);
+    border-top: 1px solid var(--mnav-outline-variant);
+}
+
+.mnav-search-section-header:first-of-type {
+    border-top: none;
+}
+
+.mnav-search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: var(--mnav-on-surface);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background .15s;
+    outline: none;
+}
+
+.mnav-search-result-item:hover,
+.mnav-search-result-item:focus {
+    background: var(--mnav-surface-low);
+    text-decoration: none;
+    color: var(--mnav-on-surface);
+}
+
+.mnav-search-result-item .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--mnav-secondary);
+    flex-shrink: 0;
+}
+
+.mnav-search-result-item mark {
+    background: rgba(0, 89, 187, 0.12);
+    color: var(--mnav-secondary);
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+.mnav-search-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--mnav-outline);
+    font-size: 13px;
+}
+
+.mnav-search-empty .material-symbols-outlined {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: .4;
+}
