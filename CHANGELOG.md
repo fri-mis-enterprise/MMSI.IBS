@@ -2,6 +2,7 @@
 
 ## [2026-07-03]
 ### Added
+- Native Cross-Document View Transition API: enabled smooth, native MPA page transitions across full-page loads, keeping layout elements like the headers, overlay, sidebar, and footer persistent and visually static (scope: `site.css`)
 - Opt-in modern mega-menu navbar: users can switch to a new premium navigation bar via a "Try Modern Nav" toggle chip in the existing classic navbar; preference persists via localStorage with zero backend changes (scope: `_ModernNavbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`, `_Layout.cshtml`)
 - Spotlight search in modern navbar: includes arrow key navigation, search results grouped by category, match highlighting, and a "/" keyboard shortcut to focus search.
 - Quick Access sidebar suppression: automatically disables and hides the Quick Access panel and its bolt icon trigger when the modern navbar is active, restoring them when deactivated.

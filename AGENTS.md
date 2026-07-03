@@ -136,3 +136,10 @@ IBS.Tests.UI/                     — Playwright integration tests
 
 Update Docs and manual if there's any significant changes happen on the
 workflow or architectural changes
+
+## Versioning
+
+Increase app version, ask me if the feature needs increment by 1.
+Format: [0].[DeploymentVersion].[CommitCounts]
+Reset the commit counts base on deployment version, if it increment, reset to 0
+The version is at IBSWeb/Views/Shared/_Layout.cshtml Line 19: ViewBag.AppVersion

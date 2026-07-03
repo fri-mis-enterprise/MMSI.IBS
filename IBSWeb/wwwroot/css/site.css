@@ -712,3 +712,31 @@ body.loading {
 .dt-input {
     margin-right: .5rem;
 }
+
+/* =========================================================
+   View Transitions API (Cross-Document / MPA)
+   ========================================================= */
+@view-transition {
+    navigation: auto;
+}
+
+/* Maintain persistent elements without cross-fading or flashing */
+#classic-navbar-header {
+    view-transition-name: classic-header;
+}
+
+#modern-navbar {
+    view-transition-name: modern-header;
+}
+
+#mnav-overlay {
+    view-transition-name: modern-navbar-overlay;
+}
+
+#qa-panel {
+    view-transition-name: qa-sidebar-panel;
+}
+
+footer.footer {
+    view-transition-name: site-footer;
+}

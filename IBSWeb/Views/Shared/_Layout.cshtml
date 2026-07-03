@@ -16,7 +16,7 @@
     var userName = UserManager.GetUserName(User);
     var userId = UserManager.GetUserId(User);
 
-    ViewBag.AppVersion = "2.1.4"; // Incrementing version for the layout update
+    ViewBag.AppVersion = "0.1.233"; // Incrementing version, last item is for commit count
 
     // Helper function to check if user has operational MSAP access (excludes ServiceRequest)
     async Task<bool> HasMsapAccess()
@@ -92,6 +92,13 @@
     }
 </head>
 <body data-selected-company="@selectedCompany">
+    <script>
+        (function () {
+            if (localStorage.getItem('ibs_modern_nav') === '1') {
+                document.body.classList.add('mnav-enabled');
+            }
+        })();
+    </script>
     @* ── Opt-in modern navbar (hidden by default; JS activates on user choice) ── *@
     <partial name="_ModernNavbar" />
 
@@ -233,7 +240,7 @@
             </div>
         </nav>
     </header>
-    <div class="@(ViewData["IsFullWidth"] is true ? "container-fluid p-0" : "container")" style="padding-top:5rem !important">
+    <div class="@(ViewData["IsFullWidth"] is true ? "container-fluid p-0" : "container") main-content-wrapper">
         <main role="main">
             <input type="hidden" id="hfUsername" value="@userName" />
             @RenderBody()
@@ -242,7 +249,7 @@
 
     <footer b-q5eydxz0xc class="border-top footer bg-primary text-light">
         <div class="container text-center">
-            &copy; 2024 - MMSI <i class="bi bi-r-circle"></i> &middot; @($"v{ViewBag.AppVersion}")
+            &copy; 2026 - MMSI <i class="bi bi-r-circle"></i> &middot; @($"v{ViewBag.AppVersion}")
         </div>
     </footer>
 
