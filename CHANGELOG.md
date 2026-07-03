@@ -1,6 +1,9 @@
 # Changelog
 
 ## [2026-07-03]
+### Changed
+- Quick Access sidebar redesigned: aligned CSS with modern-ui.css custom properties, replaced Bootstrap Icons with Material Symbols, removed left-edge toggle strip (kept navbar lightning trigger), merged Most Used + Recent into single sorted list (scope: wwwroot/css/quick-access-sidebar.css, wwwroot/js/quick-access-sidebar.js)
+
 ### Removed
 - Unused `SD.BillingStatus.Paid` constant ("Paid") — collection workflow now only uses "Collected" as the terminal billing status; "Paid" was never assigned anywhere (scope: IBS.Utility/Constants/SD.cs)
 

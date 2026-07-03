@@ -1,80 +1,42 @@
-/**
- * Quick Access Sidebar
- * - Tracks frequently clicked nav links via localStorage
- * - Search scans ALL nav links in the DOM (not just tracked ones)
- * - Auto-opens on the home page (/)
- *
- * Storage keys:
- *   qa_clicks   — JSON object { url: { label, count, company } }
- *   qa_open     — "true" | "false"  (panel open/closed state)
- */
-
 (function () {
     'use strict';
 
     const STORAGE_KEY = 'qa_clicks';
     const STATE_KEY   = 'qa_open';
-    const MAX_RECENT  = 5;
-    const MAX_TOP     = 8;
+    const MAX_TOP     = 10;
     const MIN_COUNT   = 1;
 
-    /* ─── Safe Storage Helpers ─── */
-
-    /**
-     * Safely retrieve a value from localStorage with a fallback.
-     * Catches SecurityError, QuotaExceededError, or any other exception.
-     */
     function safeLocalGet(key, defaultValue) {
         try {
             return localStorage.getItem(key) ?? defaultValue;
-        } catch (err) {
-            // SecurityError, QuotaExceededError, or other storage access exceptions
-            console.warn(`Cannot access localStorage['${key}']:`, err);
+        } catch {
             return defaultValue;
         }
     }
 
-    /**
-     * Safely retrieve a value from sessionStorage with a fallback.
-     * Catches SecurityError, QuotaExceededError, or any other exception.
-     */
     function safeSessionGet(key, defaultValue) {
         try {
             return sessionStorage.getItem(key) ?? defaultValue;
-        } catch (err) {
-            // SecurityError, QuotaExceededError, or other storage access exceptions
-            console.warn(`Cannot access sessionStorage['${key}']:`, err);
+        } catch {
             return defaultValue;
         }
     }
 
-    /**
-     * Safely write a value to localStorage.
-     * Catches SecurityError, QuotaExceededError, or any other exception.
-     */
     function safeLocalSet(key, value) {
         try {
             localStorage.setItem(key, value);
-        } catch (err) {
-            // SecurityError, QuotaExceededError, or other storage access exceptions
-            console.warn(`Cannot write to localStorage['${key}']:`, err);
+        } catch {
+            /* quota / security */
         }
     }
 
-    /**
-     * Safely write a value to sessionStorage.
-     * Catches SecurityError, QuotaExceededError, or any other exception.
-     */
     function safeSessionSet(key, value) {
         try {
             sessionStorage.setItem(key, value);
-        } catch (err) {
-            // SecurityError, QuotaExceededError, or other storage access exceptions
-            console.warn(`Cannot write to sessionStorage['${key}']:`, err);
+        } catch {
+            /* quota / security */
         }
     }
-
-    /* ─── Data Helpers ─── */
 
     function getClicks() {
         try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
@@ -86,23 +48,8 @@
     }
 
     function clearClicks() {
-        try {
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem('qa_recent');
-        } catch { /* quota/security error */ }
-    }
-
-    function getRecent() {
-        try { return JSON.parse(localStorage.getItem('qa_recent') || '[]'); }
-        catch { return []; }
-    }
-
-    function pushRecent(url, label, breadcrumb) {
-        const company = getCompanyFromUrl(url);
-        let recent    = getRecent().filter(r => r.url !== url);
-        recent.unshift({ url, label, company, breadcrumb: breadcrumb || '' });
-        if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
-        safeLocalSet('qa_recent', JSON.stringify(recent));
+        try { localStorage.removeItem(STORAGE_KEY); }
+        catch { /* quota / security */ }
     }
 
     function isPanelOpen() {
@@ -112,8 +59,6 @@
     function isHomePage() {
         return window.location.pathname === '/';
     }
-
-    /* ─── URL helpers ─── */
 
     function getCurrentCompany() {
         const fromInput = (document.getElementById('hfCompany')?.value || '').trim();
@@ -147,9 +92,7 @@
 
     function isAvailable(entry) {
         const current = getCurrentCompany();
-        // If no company is selected yet (e.g. home page), show everything
         if (!current) return true;
-        // If the link has no company in its URL, always show it
         if (!entry.company) return true;
         return entry.company === current;
     }
@@ -157,8 +100,6 @@
     function isHomeUrl(url) {
         return url === '/' || url.toLowerCase().includes('/home/');
     }
-
-    /* ─── Breadcrumb resolver ─── */
 
     function getBreadcrumb(anchor) {
         const parts = [];
@@ -176,10 +117,8 @@
             el = el.parentElement;
         }
 
-        return parts.join(' › ');
+        return parts.join(' \u203A ');
     }
-
-    /* ─── Collect all nav links from the DOM ─── */
 
     function getAllNavLinks() {
         const seen  = new Set();
@@ -208,8 +147,6 @@
 
         return links;
     }
-
-    /* ─── Track clicks ─── */
 
     const _tracked = new WeakSet();
 
@@ -246,93 +183,61 @@
         data[url].company   = company;
         data[url].breadcrumb = breadcrumb || data[url].breadcrumb || '';
         saveClicks(data);
-        pushRecent(url, label, breadcrumb);
     }
 
-    /* ─── Build sidebar HTML ─── */
+    function makeItem(url, label, count, breadcrumb) {
+        const safeUrl = sanitizeUrl(url);
+        const a = document.createElement('a');
+        // codeql[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
+        a.href      = safeUrl !== null ? safeUrl : '#';
+        a.className = 'qa-item';
+        a.title     = count > 1 ? `${label} \u2014 visited ${count}\u00D7` : label;
 
-    function buildSidebar() {
-        const panel = document.createElement('div');
-        panel.id = 'qa-panel';
+        const labelEl = document.createElement('span');
+        labelEl.className = 'qa-item-label';
+        labelEl.textContent = label;
+        a.appendChild(labelEl);
 
-        // Auto-open on home page, otherwise restore saved state
-        if (!isHomePage() && !isPanelOpen()) {
-            panel.classList.add('qa-hidden');
+        if (breadcrumb) {
+            const crumbEl = document.createElement('span');
+            crumbEl.className = 'qa-item-crumb';
+            crumbEl.textContent = breadcrumb;
+            a.appendChild(crumbEl);
         }
 
-        panel.innerHTML = `
-            <div class="qa-panel-header">
-                <span>Quick Access</span>
-                <button id="qa-close-btn" title="Close" aria-label="Close Quick Access sidebar">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-            <div class="qa-search-wrap">
-                <input type="text" id="qa-search" placeholder="Search all links…" autocomplete="off" />
-            </div>
-            <div class="qa-list-area" id="qa-list"></div>
-            <div class="qa-footer">
-                <button class="qa-clear-btn" id="qa-clear" title="Clear history">
-                    <i class="bi bi-trash"></i> Reset history
-                </button>
-            </div>
-        `;
-
-        const toggleBtn = document.createElement('button');
-        toggleBtn.id = 'qa-toggle-btn';
-        toggleBtn.title = 'Quick Access';
-        toggleBtn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
-        toggleBtn.setAttribute('aria-expanded', String(isHomePage() || isPanelOpen()));
-        toggleBtn.innerHTML = '';
-        if (isHomePage() || isPanelOpen()) toggleBtn.classList.add('qa-panel-open');
-
-        document.body.appendChild(panel);
-        document.body.appendChild(toggleBtn);
-
-        toggleBtn.addEventListener('click', togglePanel);
-        document.getElementById('qa-close-btn').addEventListener('click', togglePanel);
-        document.getElementById('qa-clear').addEventListener('click', () => {
-            if (confirm('Clear all Quick Access history?')) {
-                clearClicks();
-                renderList();
-            }
-        });
-        document.getElementById('qa-search').addEventListener('input', function () {
-            const term = this.value.trim().toLowerCase();
-            safeSessionSet('qa_search', this.value.trim());
-            renderList(term);
+        a.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (safeUrl) recordClick(safeUrl, label, breadcrumb);
+            togglePanel();
         });
 
-        // Restore saved search term from session
-        const savedSearch = safeSessionGet('qa_search', '');
-        const searchInput = document.getElementById('qa-search');
-        searchInput.value = savedSearch;
-        renderList(savedSearch.toLowerCase());
-
-        document.addEventListener('click', function (e) {
-            const panel      = document.getElementById('qa-panel');
-            const toggleBtn  = document.getElementById('qa-toggle-btn');
-            const navTrigger = document.getElementById('qa-nav-trigger');
-            if (!panel.classList.contains('qa-hidden') &&
-                !panel.contains(e.target) &&
-                !toggleBtn.contains(e.target) &&
-                !(navTrigger && navTrigger.contains(e.target))) {
-                togglePanel();
-            }
-        });
+        return a;
     }
 
-    /* ─── Render list ─── */
+    function togglePanel() {
+        const panel = document.getElementById('qa-panel');
+        if (!panel) return;
+        const isNowHidden = panel.classList.toggle('qa-hidden');
+        safeLocalSet(STATE_KEY, isNowHidden ? 'false' : 'true');
+
+        if (!isNowHidden) {
+            const search = document.getElementById('qa-search');
+            if (search) {
+                const savedSearch = safeSessionGet('qa_search', '');
+                search.value = savedSearch;
+                renderList(savedSearch.toLowerCase());
+                search.focus();
+            }
+        }
+    }
 
     function renderList(filter) {
         const list   = document.getElementById('qa-list');
         if (!list) return;
         const clicks = getClicks();
-        const recent = getRecent();
 
         list.innerHTML = '';
 
-        // ── Search mode: scan all nav links from the DOM ──
         if (filter) {
             const allLinks = getAllNavLinks()
                 .filter(l => isAvailable(l))
@@ -360,42 +265,21 @@
             return;
         }
 
-        // ── Default mode: Most Used + Recent ──
-        let topItems = Object.entries(clicks)
+        const items = Object.entries(clicks)
             .filter(([, v]) => v.count >= MIN_COUNT && isAvailable(v))
             .sort((a, b) => b[1].count - a[1].count)
             .slice(0, MAX_TOP);
 
-        if (topItems.length > 0) {
+        if (items.length > 0) {
             const label = document.createElement('div');
             label.className = 'qa-section-label';
-            label.textContent = 'Most Used';
+            label.textContent = 'Quick Access';
             list.appendChild(label);
 
-            topItems.forEach(([url, v]) => {
+            items.forEach(([url, v]) => {
                 list.appendChild(makeItem(url, v.label, v.count, v.breadcrumb));
             });
-        }
-
-        let recentFiltered = recent.filter(r => isAvailable(r));
-
-        if (recentFiltered.length > 0) {
-            if (topItems.length > 0) {
-                const hr = document.createElement('hr');
-                hr.className = 'qa-divider';
-                list.appendChild(hr);
-            }
-            const label = document.createElement('div');
-            label.className = 'qa-section-label';
-            label.textContent = 'Recent';
-            list.appendChild(label);
-
-            recentFiltered.forEach(r => {
-                list.appendChild(makeItem(r.url, r.label, null, r.breadcrumb));
-            });
-        }
-
-        if (topItems.length === 0 && recentFiltered.length === 0) {
+        } else {
             const empty = document.createElement('div');
             empty.className = 'qa-empty';
             empty.textContent = 'Click nav links to start building quick access.';
@@ -403,61 +287,62 @@
         }
     }
 
-    function makeItem(url, label, count, breadcrumb) {
-        const safeUrl = sanitizeUrl(url);
-        const a = document.createElement('a');
-        // codeql[js/xss-through-dom] safeUrl is always a same-origin relative path produced by sanitizeUrl()
-        a.href      = safeUrl !== null ? safeUrl : '#';
-        a.className = 'qa-item';
-        a.title     = count > 1 ? `${label} — visited ${count}×` : label;
+    function buildSidebar() {
+        const panel = document.createElement('div');
+        panel.id = 'qa-panel';
 
-        const labelEl = document.createElement('span');
-        labelEl.className = 'qa-item-label';
-        labelEl.textContent = label;
-        a.appendChild(labelEl);
-
-        if (breadcrumb) {
-            const crumbEl = document.createElement('span');
-            crumbEl.className = 'qa-item-crumb';
-            crumbEl.textContent = breadcrumb;
-            a.appendChild(crumbEl);
+        if (!isHomePage() && !isPanelOpen()) {
+            panel.classList.add('qa-hidden');
         }
 
-        a.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (safeUrl) recordClick(safeUrl, label, breadcrumb);
-            togglePanel();
+        panel.innerHTML = `
+            <div class="qa-panel-header">
+                <span>Quick Access</span>
+                <button id="qa-close-btn" title="Close" aria-label="Close Quick Access sidebar">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="qa-search-wrap">
+                <input type="text" id="qa-search" placeholder="Search all links\u2026" autocomplete="off" />
+            </div>
+            <div class="qa-list-area" id="qa-list"></div>
+            <div class="qa-footer">
+                <button class="qa-clear-btn" id="qa-clear" title="Clear history">
+                    <span class="material-symbols-outlined" style="font-size:16px;">delete</span> Reset history
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+
+        document.getElementById('qa-close-btn').addEventListener('click', togglePanel);
+        document.getElementById('qa-clear').addEventListener('click', () => {
+            if (confirm('Clear all Quick Access history?')) {
+                clearClicks();
+                renderList();
+            }
+        });
+        document.getElementById('qa-search').addEventListener('input', function () {
+            const term = this.value.trim().toLowerCase();
+            safeSessionSet('qa_search', this.value.trim());
+            renderList(term);
         });
 
-        return a;
-    }
+        const savedSearch = safeSessionGet('qa_search', '');
+        const searchInput = document.getElementById('qa-search');
+        searchInput.value = savedSearch;
+        renderList(savedSearch.toLowerCase());
 
-    /* ─── Toggle ─── */
-
-    function togglePanel() {
-        const panel     = document.getElementById('qa-panel');
-        const toggleBtn = document.getElementById('qa-toggle-btn');
-        if (!panel) return;
-        const isNowHidden = panel.classList.toggle('qa-hidden');
-        safeLocalSet(STATE_KEY, isNowHidden ? 'false' : 'true');
-
-        if (toggleBtn) {
-            toggleBtn.setAttribute('aria-expanded', String(!isNowHidden));
-            toggleBtn.classList.toggle('qa-panel-open', !isNowHidden);
-        }
-
-        if (!isNowHidden) {
-            const search = document.getElementById('qa-search');
-            if (search) {
-                const savedSearch = safeSessionGet('qa_search', '');
-                search.value = savedSearch;
-                renderList(savedSearch.toLowerCase());
-                search.focus();
+        document.addEventListener('click', function (e) {
+            const panel      = document.getElementById('qa-panel');
+            const navTrigger = document.getElementById('qa-nav-trigger');
+            if (!panel.classList.contains('qa-hidden') &&
+                !panel.contains(e.target) &&
+                !(navTrigger && navTrigger.contains(e.target))) {
+                togglePanel();
             }
-        }
+        });
     }
-
-    /* ─── Navbar trigger ─── */
 
     function injectNavbarTrigger() {
         const navList = document.querySelector('nav.navbar ul.navbar-nav');
@@ -472,7 +357,7 @@
         btn.href = '#';
         btn.title = 'Quick Access';
         btn.setAttribute('aria-label', 'Toggle Quick Access sidebar');
-        btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i>';
+        btn.innerHTML = '<span class="material-symbols-outlined">bolt</span>';
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             togglePanel();
@@ -481,8 +366,6 @@
         li.appendChild(btn);
         navList.insertBefore(li, navList.firstChild);
     }
-
-    /* ─── Init ─── */
 
     function init() {
         buildSidebar();
