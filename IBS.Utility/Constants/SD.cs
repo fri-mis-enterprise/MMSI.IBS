@@ -117,7 +117,6 @@ namespace IBS.Utility.Constants
             public const string ForPosting = "For Posting";
             public const string ForCollection = "For Collection";
             public const string Collected = "Collected";
-            public const string Paid = "Paid";
         }
 
         public const string BilledTo_Local = "LOCAL";

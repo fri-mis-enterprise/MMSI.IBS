@@ -4,7 +4,7 @@
 
 ## Workflow State
 
-Billing moves to **Collected / Paid** when fully collected.
+Billing moves to **Collected** when fully collected.
 
 ## Pages
 

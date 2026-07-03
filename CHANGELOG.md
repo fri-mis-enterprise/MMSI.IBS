@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-03]
+### Removed
+- Unused `SD.BillingStatus.Paid` constant ("Paid") — collection workflow now only uses "Collected" as the terminal billing status; "Paid" was never assigned anywhere (scope: IBS.Utility/Constants/SD.cs)
+
 ## [2026-07-02]
 ### Added
 - User manual with per-module documentation in `Docs/manual/` (scope: Docs/manual/)
