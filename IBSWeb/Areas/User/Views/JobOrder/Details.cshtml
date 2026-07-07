@@ -202,9 +202,12 @@
                                                     {
                                                         @if (ticket.Status == "Requested")
                                                         {
-                                                            <a asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item" style="color: var(--primary)">
+                                                            <form id="postForm-@ticket.DispatchTicketId" method="post" asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" style="display:none">
+                                                                @Html.AntiForgeryToken()
+                                                            </form>
+                                                            <button type="button" class="modern-dropdown-item" style="color: var(--primary); width:100%; border:none; background:none; cursor:pointer;" onclick="confirmPostRequest(@ticket.DispatchTicketId, @Model.JobOrderId)">
                                                                 <span class="material-symbols-outlined">check_circle</span> Post Request
-                                                            </a>
+                                                            </button>
                                                         }
                                                         <a asp-controller="ServiceRequest" asp-action="Edit" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item">
                                                             <span class="material-symbols-outlined">edit</span> Edit Request
@@ -693,6 +696,20 @@
                         }
                     })
                     .catch(error => ModernAlert.error(`Request failed: ${error}`));
+                }
+            });
+        }
+
+        function confirmPostRequest(id, jobOrderId) {
+            ModernAlert.confirm({
+                title: 'Post Service Request?',
+                text: 'This will mark the service request as ready for tariff.',
+                icon: 'question',
+                confirmText: 'Yes, post it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Posting service request...");
+                    document.getElementById('postForm-' + id).submit();
                 }
             });
         }
