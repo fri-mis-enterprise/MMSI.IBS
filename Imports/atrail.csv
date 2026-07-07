@@ -39129,3 +39129,329 @@ RECID,USERID,COMPUTER,DATE,SOURCE,ACTIVITY,FILE,RECORD_ID,REMARKS
 39545,2436,DESKTOP-TGAAI2Q,2026-07-02 13:41:00,frmtariff.scx,edit record - dispatch #2026-18U,dispatch.dbf,14700,"Update record - DNA P8,000.00 BNA P0.00 Approved"
 39546,2436,DESKTOP-TGAAI2Q,2026-07-02 13:41:53.999000,frmbilling.scx,edit record - billing #1913,billing.dbf,105,"Bill Amount P177,826.00"
 39547,2436,DESKTOP-TGAAI2Q,2026-07-02 13:42:50,frmbilling.scx,printed - billing #1913,billing.dbf,105,"Print Bill Amount P177,826.00"
+39548,2436,DESKTOP-TGAAI2Q,2026-07-02 13:43:11,frmbilling.scx,printed - billing #1913,billing.dbf,105,"Print Bill Amount P177,826.00"
+39549,2436,DESKTOP-TGAAI2Q,2026-07-02 13:44:48,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39550,2436,DESKTOP-TGAAI2Q,2026-07-02 13:48:52,frmtariff.scx,edit record - dispatch #2026-17M,dispatch.dbf,14735,"Update record - DNA P8,000.00 BNA P0.00 Approved"
+39551,2436,DESKTOP-TGAAI2Q,2026-07-02 13:49:29,frmtariff.scx,edit record - dispatch #2026-17U,dispatch.dbf,14736,"Update record - DNA P8,000.00 BNA P0.00 Approved"
+39552,2265,LAPTOP-4A5Q1T1B,2026-07-02 13:50:48.999000,frmdispatch.scx,add record - dispatch #26-0344M,dispatch.dbf,14738,New record V0115 P001 T001-004 C0047 TB056 S007
+39553,2436,DESKTOP-TGAAI2Q,2026-07-02 13:51:28,frmbilling.scx,edit record - billing #1914,billing.dbf,106,Bill Amount P0.00
+39554,2265,LAPTOP-4A5Q1T1B,2026-07-02 13:52:37,frmdispatch.scx,add record - dispatch #26-0344U,dispatch.dbf,14739,New record V0115 P001 T001-004 C0047 TB065 S008
+39555,2436,DESKTOP-TGAAI2Q,2026-07-02 13:53:01.999000,frmbilling.scx,edit record - billing #1914,billing.dbf,106,"Bill Amount P190,482.00"
+39556,2265,LAPTOP-4A5Q1T1B,2026-07-02 13:53:07.999000,frmdispatch.scx,edit record - dispatch #26-0344M,dispatch.dbf,14738,Update record V0115 P001 T001-004 C0047 TB065 S007
+39557,2436,DESKTOP-TGAAI2Q,2026-07-02 13:54:18,frmbilling.scx,printed - billing #1914,billing.dbf,106,"Print Bill Amount P190,482.00"
+39558,2436,DESKTOP-TGAAI2Q,2026-07-02 13:54:41,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39559,2436,DESKTOP-TGAAI2Q,2026-07-02 13:58:20.999000,frmmain.scx,Upload dispatch from Excel,dispatch.dbf,14740,# of entries = 3 up to recid: 14742
+39560,2265,LAPTOP-4A5Q1T1B,2026-07-02 14:05:14.999000,frmdispatch.scx,edit record - dispatch #26-0344M,dispatch.dbf,14738,Update record V0115 P001 T001-004 C0047 TB065 S007
+39561,2436,DESKTOP-TGAAI2Q,2026-07-02 14:07:14.999000,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39562,2436,DESKTOP-TGAAI2Q,2026-07-02 14:07:45.999000,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39563,2436,DESKTOP-TGAAI2Q,2026-07-02 14:10:42.999000,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39564,2265,LAPTOP-4A5Q1T1B,2026-07-02 14:13:46.999000,frmdispatch.scx,add record - dispatch #35619-A,dispatch.dbf,14743,New record V0663 P001 T001-013 C0007 TB118 S002
+39565,2436,DESKTOP-TGAAI2Q,2026-07-02 14:14:12,frmtariff.scx,edit record - dispatch #26-0344M,dispatch.dbf,14738,"Update record - DNA P8,000.00 BNA P0.00 Approved"
+39566,2436,DESKTOP-TGAAI2Q,2026-07-02 14:15:15.999000,frmtariff.scx,edit record - dispatch #26-0344U,dispatch.dbf,14739,"Update record - DNA P8,000.00 BNA P0.00 Approved"
+39567,2265,LAPTOP-4A5Q1T1B,2026-07-02 14:15:32.999000,frmdispatch.scx,add record - dispatch #35620-A,dispatch.dbf,14744,New record V0663 P001 T001-013 C0007 TB113 S002
+39568,2436,DESKTOP-TGAAI2Q,2026-07-02 14:16:30.999000,frmbilling.scx,edit record - billing #1915,billing.dbf,107,Bill Amount P0.00
+39569,2436,DESKTOP-TGAAI2Q,2026-07-02 14:18:54,frmbilling.scx,edit record - billing #1915,billing.dbf,107,"Bill Amount P160,287.89"
+39570,2436,DESKTOP-TGAAI2Q,2026-07-02 14:19:50.999000,frmbilling.scx,printed - billing #1915,billing.dbf,107,"Print Bill Amount P160,287.89"
+39571,2436,DESKTOP-TGAAI2Q,2026-07-02 14:20:32,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39572,2436,DESKTOP-TGAAI2Q,2026-07-02 14:27:57,frmtariff.scx,edit record - dispatch #0006333- M,dispatch.dbf,14725,"Update record - DNA P12,500.00 BNA P0.00 Approved"
+39573,2436,DESKTOP-TGAAI2Q,2026-07-02 14:29:23.999000,frmtariff.scx,edit record - dispatch #29818-a,dispatch.dbf,14741,"Update record - DNA P62,105.50 BNA P8,620.50 Approved"
+39574,2436,DESKTOP-TGAAI2Q,2026-07-02 14:30:05.999000,frmtariff.scx,edit record - dispatch #30154-a,dispatch.dbf,14740,"Update record - DNA P62,105.50 BNA P8,620.50 Approved"
+39575,2436,DESKTOP-TGAAI2Q,2026-07-02 14:30:27.999000,frmtariff.scx,edit record - dispatch #0006332- U,dispatch.dbf,14726,"Update record - DNA P12,500.00 BNA P0.00 Approved"
+39576,2436,DESKTOP-TGAAI2Q,2026-07-02 14:31:12.999000,frmtariff.scx,edit record - dispatch #28920-a,dispatch.dbf,14742,"Update record - DNA P62,105.50 BNA P8,620.50 Approved"
+39577,2436,DESKTOP-TGAAI2Q,2026-07-02 14:33:33.999000,frmbilling.scx,edit record - billing #1916,billing.dbf,108,Bill Amount P0.00
+39578,2436,DESKTOP-TGAAI2Q,2026-07-02 14:35:46,frmbilling.scx,edit record - billing #1916,billing.dbf,108,"Bill Amount P262,349.87"
+39579,2436,DESKTOP-TGAAI2Q,2026-07-02 14:40:28,frmbilling.scx,printed - billing #1916,billing.dbf,108,"Print Bill Amount P262,349.87"
+39580,2436,DESKTOP-TGAAI2Q,2026-07-02 14:42:19.999000,frmtariff.scx,edit record - dispatch #35618-A,dispatch.dbf,14682,"Update record - DNA P102,000.00 BNA P5,456.50 Approved"
+39581,2436,DESKTOP-TGAAI2Q,2026-07-02 14:42:43.999000,frmtariff.scx,edit record - dispatch #35617-A,dispatch.dbf,14683,"Update record - DNA P102,000.00 BNA P5,456.50 Approved"
+39582,2436,DESKTOP-TGAAI2Q,2026-07-02 14:43:16,frmtariff.scx,edit record - dispatch #35619-A,dispatch.dbf,14743,"Update record - DNA P102,000.00 BNA P5,456.50 Approved"
+39583,2436,DESKTOP-TGAAI2Q,2026-07-02 14:43:55,frmtariff.scx,edit record - dispatch #35620-A,dispatch.dbf,14744,"Update record - DNA P102,000.00 BNA P5,456.50 Approved"
+39584,2436,DESKTOP-TGAAI2Q,2026-07-02 14:45:32,frmbilling.scx,edit record - billing #1917,billing.dbf,109,Bill Amount P0.00
+39585,2436,DESKTOP-TGAAI2Q,2026-07-02 14:46:54.999000,frmbilling.scx,edit record - billing #1917,billing.dbf,109,"Bill Amount P440,739.00"
+39586,2436,DESKTOP-TGAAI2Q,2026-07-02 14:48:00.999000,frmbilling.scx,printed - billing #1917,billing.dbf,109,"Print Bill Amount P440,739.00"
+39587,2436,DESKTOP-TGAAI2Q,2026-07-02 14:48:31.999000,frmbilling.scx,printed - billing #1917,billing.dbf,109,"Print Bill Amount P440,739.00"
+39588,2436,DESKTOP-TGAAI2Q,2026-07-02 14:50:55,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39589,2436,DESKTOP-TGAAI2Q,2026-07-02 14:58:14,frmtariff.scx,edit record - dispatch #35694-A,dispatch.dbf,14580,"Update record - DNA P0.00 BNA P44,669.63 Approved"
+39590,2436,DESKTOP-TGAAI2Q,2026-07-02 15:01:31.999000,frmtariff.scx,edit record - dispatch #35696-A,dispatch.dbf,14581,"Update record - DNA P0.00 BNA P33,948.92 Approved"
+39591,2436,DESKTOP-TGAAI2Q,2026-07-02 15:03:32,frmtariff.scx,edit record - dispatch #35242-A,dispatch.dbf,14588,"Update record - DNA P0.00 BNA P36,113.00 Approved"
+39592,2436,DESKTOP-TGAAI2Q,2026-07-02 15:03:57.999000,frmtariff.scx,edit record - dispatch #35244-A,dispatch.dbf,14589,"Update record - DNA P0.00 BNA P20,518.75 Approved"
+39593,2436,DESKTOP-TGAAI2Q,2026-07-02 15:04:29.999000,frmtariff.scx,edit record - dispatch #35245-A,dispatch.dbf,14590,"Update record - DNA P0.00 BNA P30,696.05 Approved"
+39594,2436,DESKTOP-TGAAI2Q,2026-07-02 15:04:58.999000,frmtariff.scx,edit record - dispatch #35247-A,dispatch.dbf,14591,"Update record - DNA P0.00 BNA P27,413.05 Approved"
+39595,2436,DESKTOP-TGAAI2Q,2026-07-02 15:06:25.999000,frmtariff.scx,edit record - dispatch #35240-A,dispatch.dbf,14582,"Update record - DNA P0.00 BNA P48,276.48 Approved"
+39596,2436,DESKTOP-TGAAI2Q,2026-07-02 15:06:55.999000,frmtariff.scx,edit record - dispatch #35241-A,dispatch.dbf,14583,"Update record - DNA P0.00 BNA P25,144.00 Approved"
+39597,2436,DESKTOP-TGAAI2Q,2026-07-02 15:08:15,frmtariff.scx,edit record - dispatch #34725-A-A,dispatch.dbf,14575,"Update record - DNA P0.00 BNA P24,622.50 Approved"
+39598,2436,DESKTOP-TGAAI2Q,2026-07-02 15:08:37,frmtariff.scx,edit record - dispatch #34726-A-A,dispatch.dbf,14576,"Update record - DNA P0.00 BNA P24,622.50 Approved"
+39599,2436,DESKTOP-TGAAI2Q,2026-07-02 15:08:54.999000,frmtariff.scx,edit record - dispatch #34728-A-A,dispatch.dbf,14577,"Update record - DNA P0.00 BNA P11,886.00 Approved"
+39600,2436,DESKTOP-TGAAI2Q,2026-07-02 15:09:28,frmtariff.scx,edit record - dispatch #34727-A-A,dispatch.dbf,14579,"Update record - DNA P0.00 BNA P11,886.00 Approved"
+39601,2436,DESKTOP-TGAAI2Q,2026-07-02 15:11:45.999000,frmtariff.scx,edit record - dispatch #37172-A,dispatch.dbf,14571,"Update record - DNA P0.00 BNA P35,051.94 Approved"
+39602,2436,DESKTOP-TGAAI2Q,2026-07-02 15:12:06.999000,frmtariff.scx,edit record - dispatch #37385-A,dispatch.dbf,14572,"Update record - DNA P0.00 BNA P32,455.50 Approved"
+39603,2436,DESKTOP-TGAAI2Q,2026-07-02 15:12:28,frmtariff.scx,edit record - dispatch #37386-A,dispatch.dbf,14573,"Update record - DNA P0.00 BNA P32,455.50 Approved"
+39604,2436,DESKTOP-TGAAI2Q,2026-07-02 15:12:46.999000,frmtariff.scx,edit record - dispatch #34455-A,dispatch.dbf,14574,"Update record - DNA P0.00 BNA P32,455.50 Approved"
+39605,2436,DESKTOP-TGAAI2Q,2026-07-02 15:13:13,frmtariff.scx,edit record - dispatch #37194-A,dispatch.dbf,14584,"Update record - DNA P0.00 BNA P19,205.55 Approved"
+39606,2436,DESKTOP-TGAAI2Q,2026-07-02 15:13:35,frmtariff.scx,edit record - dispatch #37455-A,dispatch.dbf,14585,"Update record - DNA P0.00 BNA P19,205.55 Approved"
+39607,2436,DESKTOP-TGAAI2Q,2026-07-02 15:13:56,frmtariff.scx,edit record - dispatch #37417-A,dispatch.dbf,14586,"Update record - DNA P0.00 BNA P16,415.00 Approved"
+39608,2436,DESKTOP-TGAAI2Q,2026-07-02 15:14:15.999000,frmtariff.scx,edit record - dispatch #37262-A,dispatch.dbf,14587,"Update record - DNA P0.00 BNA P16,415.00 Approved"
+39609,2436,DESKTOP-TGAAI2Q,2026-07-02 15:16:19.999000,frmbilling.scx,edit record - billing #1918,billing.dbf,110,Bill Amount P0.00
+39610,2436,DESKTOP-TGAAI2Q,2026-07-02 15:17:18.999000,frmbilling.scx,edit record - billing #1918,billing.dbf,110,"Bill Amount P78,618.55"
+39611,2436,DESKTOP-TGAAI2Q,2026-07-02 15:18:05.999000,frmbilling.scx,printed - billing #1918,billing.dbf,110,"Print Bill Amount P78,618.55"
+39612,2436,DESKTOP-TGAAI2Q,2026-07-02 15:19:24.999000,frmbilling.scx,edit record - billing #1919,billing.dbf,111,Bill Amount P0.00
+39613,2436,DESKTOP-TGAAI2Q,2026-07-02 15:20:09,frmbilling.scx,edit record - billing #1919,billing.dbf,111,"Bill Amount P56,631.75"
+39614,2436,DESKTOP-TGAAI2Q,2026-07-02 15:21:17.999000,frmbilling.scx,edit record - billing #1920,billing.dbf,112,Bill Amount P0.00
+39615,2436,DESKTOP-TGAAI2Q,2026-07-02 15:22:08.999000,frmbilling.scx,edit record - billing #1920,billing.dbf,112,"Bill Amount P58,109.10"
+39616,2436,DESKTOP-TGAAI2Q,2026-07-02 15:23:52.999000,frmbilling.scx,edit record - billing #1921,billing.dbf,151,Bill Amount P0.00
+39617,2436,DESKTOP-TGAAI2Q,2026-07-02 15:24:56,frmbilling.scx,edit record - billing #1921,billing.dbf,151,"Bill Amount P73,420.48"
+39618,2436,DESKTOP-TGAAI2Q,2026-07-02 15:25:59.999000,frmbilling.scx,edit record - billing #1922,billing.dbf,114,Bill Amount P0.00
+39619,2436,DESKTOP-TGAAI2Q,2026-07-02 15:27:32,frmbilling.scx,edit record - billing #1922,billing.dbf,114,"Bill Amount P73,017.00"
+39620,2436,DESKTOP-TGAAI2Q,2026-07-02 15:28:45,frmbilling.scx,edit record - billing #1923,billing.dbf,116,Bill Amount P0.00
+39621,2436,DESKTOP-TGAAI2Q,2026-07-02 15:29:44,frmbilling.scx,edit record - billing #1923,billing.dbf,116,"Bill Amount P132,418.44"
+39622,2436,DESKTOP-TGAAI2Q,2026-07-02 15:30:41.999000,frmbilling.scx,edit record - billing #1924,billing.dbf,117,Bill Amount P0.00
+39623,2436,DESKTOP-TGAAI2Q,2026-07-02 15:31:56.999000,frmbilling.scx,edit record - billing #1924,billing.dbf,117,"Bill Amount P71,241.10"
+39624,2265,LAPTOP-4A5Q1T1B,2026-07-02 15:44:53.999000,frmdispatch.scx,add record - dispatch #35520-A,dispatch.dbf,14745,New record V0115 P001 T001-004 C0047 TB056 S001
+39625,2265,LAPTOP-4A5Q1T1B,2026-07-02 15:46:58,frmdispatch.scx,add record - dispatch #35704-A,dispatch.dbf,14746,New record V0115 P001 T001-004 C0047 TB101 S002
+39626,2265,LAPTOP-4A5Q1T1B,2026-07-02 15:50:19.999000,frmdispatch.scx,add record - dispatch #34749-A-A,dispatch.dbf,14747,New record V0115 P003 T003-004 C0047 TB016 S001
+39627,2265,LAPTOP-4A5Q1T1B,2026-07-02 15:52:11.999000,frmdispatch.scx,add record - dispatch #34750-A-A,dispatch.dbf,14748,New record V0115 P003 T003-004 C0047 TB035 S001
+39628,2436,DESKTOP-TGAAI2Q,2026-07-02 15:54:59,frmreports.scx,Printed Dispatch Ticket Summary March 2026,,0,Print report
+39629,2265,LAPTOP-4A5Q1T1B,2026-07-02 15:55:05,frmdispatch.scx,add record - dispatch #34801-A-A,dispatch.dbf,14749,New record V0115 P003 T003-004 C0047 TB016 S002
+39630,2265,LAPTOP-4A5Q1T1B,2026-07-02 15:57:14.999000,frmdispatch.scx,add record - dispatch #34736-A-A,dispatch.dbf,14750,New record V0115 P003 T003-004 C0047 TB035 S002
+39631,2436,DESKTOP-TGAAI2Q,2026-07-02 16:00:43.999000,frmreports.scx,Printed Dispatch Ticket Summary April 2026,,0,Print report
+39632,2436,DESKTOP-TGAAI2Q,2026-07-02 16:52:38.999000,frmtariff.scx,edit record - dispatch #00062,dispatch.dbf,14134,"Update record - DNA P85,000.00 BNA P8,487.50 Approved"
+39633,2436,DESKTOP-TGAAI2Q,2026-07-02 16:53:21,frmtariff.scx,edit record - dispatch #027437,dispatch.dbf,14135,"Update record - DNA P85,000.00 BNA P8,487.50 Approved"
+39634,2436,DESKTOP-TGAAI2Q,2026-07-02 16:54:09.999000,frmtariff.scx,edit record - dispatch #00063-A,dispatch.dbf,14363,"Update record - DNA P223,040.00 BNA P236,631.50 Approved"
+39635,2436,DESKTOP-TGAAI2Q,2026-07-02 16:54:58.999000,frmtariff.scx,edit record - dispatch #00064,dispatch.dbf,14137,"Update record - DNA P85,000.00 BNA P16,852.50 Approved"
+39636,2436,DESKTOP-TGAAI2Q,2026-07-02 16:55:42.999000,frmtariff.scx,edit record - dispatch #027441,dispatch.dbf,14136,"Update record - DNA P85,000.00 BNA P16,852.50 Approved"
+39637,2436,DESKTOP-TGAAI2Q,2026-07-02 16:56:37.999000,frmtariff.scx,edit record - dispatch #027032,dispatch.dbf,14131,"Update record - DNA P85,000.00 BNA P16,852.50 Approved"
+39638,2436,DESKTOP-TGAAI2Q,2026-07-02 16:57:21.999000,frmtariff.scx,edit record - dispatch #00401,dispatch.dbf,14130,"Update record - DNA P85,000.00 BNA P16,852.50 Approved"
+39639,2436,DESKTOP-TGAAI2Q,2026-07-02 16:58:01,frmtariff.scx,edit record - dispatch #027033,dispatch.dbf,14133,"Update record - DNA P85,000.00 BNA P21,010.50 Approved"
+39640,2436,DESKTOP-TGAAI2Q,2026-07-02 16:58:41.999000,frmtariff.scx,edit record - dispatch #00403,dispatch.dbf,14132,"Update record - DNA P85,000.00 BNA P21,010.50 Approved"
+39641,2436,DESKTOP-TGAAI2Q,2026-07-02 16:59:34.999000,frmtariff.scx,edit record - dispatch #00410,dispatch.dbf,14127,"Update record - DNA P85,000.00 BNA P25,525.50 Approved"
+39642,2436,DESKTOP-TGAAI2Q,2026-07-02 17:00:17,frmtariff.scx,edit record - dispatch #00153,dispatch.dbf,14126,"Update record - DNA P85,000.00 BNA P25,525.50 Approved"
+39643,2436,DESKTOP-TGAAI2Q,2026-07-02 17:00:48.999000,frmtariff.scx,edit record - dispatch #00155,dispatch.dbf,14128,"Update record - DNA P85,000.00 BNA P25,525.50 Approved"
+39644,2436,DESKTOP-TGAAI2Q,2026-07-02 17:01:19.999000,frmtariff.scx,edit record - dispatch #00411,dispatch.dbf,14129,"Update record - DNA P85,000.00 BNA P25,525.50 Approved"
+39645,2265,LAPTOP-4A5Q1T1B,2026-07-02 17:07:27.999000,frmdispatch.scx,add record - dispatch #6988M,dispatch.dbf,14751,New record V0008 P003 T003-003 C0007 TB066 S007
+39646,2265,LAPTOP-4A5Q1T1B,2026-07-02 17:08:49,frmdispatch.scx,add record - dispatch #6889U,dispatch.dbf,14752,New record V0008 P003 T003-003 C0007 TB066 S008
+39647,2436,DESKTOP-TGAAI2Q,2026-07-02 17:11:10.999000,frmtariff.scx,edit record - dispatch #35520-A,dispatch.dbf,14745,"Update record - DNA P0.00 BNA P21,404.39 Approved"
+39648,2436,DESKTOP-TGAAI2Q,2026-07-02 17:11:35.999000,frmtariff.scx,edit record - dispatch #35704-A,dispatch.dbf,14746,"Update record - DNA P0.00 BNA P12,817.00 Approved"
+39649,2436,DESKTOP-TGAAI2Q,2026-07-02 17:12:09.999000,frmtariff.scx,edit record - dispatch #34749-A-A,dispatch.dbf,14747,"Update record - DNA P0.00 BNA P14,201.25 Approved"
+39650,2436,DESKTOP-TGAAI2Q,2026-07-02 17:12:33.999000,frmtariff.scx,edit record - dispatch #34750-A-A,dispatch.dbf,14748,"Update record - DNA P0.00 BNA P14,201.25 Approved"
+39651,2436,DESKTOP-TGAAI2Q,2026-07-02 17:12:58,frmtariff.scx,edit record - dispatch #34801-A-A,dispatch.dbf,14749,"Update record - DNA P0.00 BNA P9,467.50 Approved"
+39652,2436,DESKTOP-TGAAI2Q,2026-07-02 17:13:26.999000,frmtariff.scx,edit record - dispatch #34736-A-A,dispatch.dbf,14750,"Update record - DNA P0.00 BNA P9,467.50 Approved"
+39653,2436,DESKTOP-TGAAI2Q,2026-07-02 17:15:14,frmbilling.scx,edit record - billing #1925,billing.dbf,118,Bill Amount P0.00
+39654,2436,DESKTOP-TGAAI2Q,2026-07-02 17:16:05,frmbilling.scx,edit record - billing #1925,billing.dbf,118,"Bill Amount P34,221.39"
+39655,2436,DESKTOP-TGAAI2Q,2026-07-02 17:18:59.999000,frmbilling.scx,edit record - billing #1926,billing.dbf,119,Bill Amount P0.00
+39656,2436,DESKTOP-TGAAI2Q,2026-07-02 17:20:18,frmbilling.scx,edit record - billing #1926,billing.dbf,119,"Bill Amount P47,337.50"
+39657,2436,DESKTOP-TGAAI2Q,2026-07-02 17:24:45,frmbilling.scx,edit record - billing #1927,billing.dbf,120,Bill Amount P0.00
+39658,2436,DESKTOP-TGAAI2Q,2026-07-02 17:27:29.999000,frmbilling.scx,edit record - billing #1927,billing.dbf,120,"Bill Amount P391,274.13"
+39659,2436,DESKTOP-TGAAI2Q,2026-07-02 17:28:27,frmbilling.scx,edit record - billing #1928,billing.dbf,126,Bill Amount P0.00
+39660,2436,DESKTOP-TGAAI2Q,2026-07-02 17:29:20,frmbilling.scx,edit record - billing #1928,billing.dbf,126,"Bill Amount P459,671.50"
+39661,2436,DESKTOP-TGAAI2Q,2026-07-02 17:31:03,frmbilling.scx,edit record - billing #1929,billing.dbf,121,Bill Amount P0.00
+39662,2436,DESKTOP-TGAAI2Q,2026-07-02 17:32:23,frmbilling.scx,edit record - billing #1929,billing.dbf,121,"Bill Amount P429,713.58"
+39663,2436,DESKTOP-TGAAI2Q,2026-07-02 17:34:03.999000,frmbilling.scx,edit record - billing #1930,billing.dbf,122,Bill Amount P0.00
+39664,2436,DESKTOP-TGAAI2Q,2026-07-02 17:36:00.999000,frmbilling.scx,edit record - billing #1930,billing.dbf,122,"Bill Amount P489,324.18"
+39665,2436,DESKTOP-TGAAI2Q,2026-07-02 17:37:00.999000,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39666,2436,DESKTOP-TGAAI2Q,2026-07-02 18:04:32,frmbilling.scx,add record - billing #B000607,billing.dbf,4427,Bill Amount P0.00
+39667,2436,DESKTOP-TGAAI2Q,2026-07-02 18:09:01.999000,frmbilling.scx,delete record - billing #B000600,billing.dbf,4396,"Bill Amount P1,873,022.86"
+39668,2436,DESKTOP-TGAAI2Q,2026-07-02 18:10:03.999000,frmtariff.scx,edit record - dispatch #37548,dispatch.dbf,14402,"Update record - DNA P96,820.91 BNA P0.00 Approved"
+39669,2436,DESKTOP-TGAAI2Q,2026-07-02 18:10:52.999000,frmtariff.scx,edit record - dispatch #34510,dispatch.dbf,14400,"Update record - DNA P96,820.91 BNA P0.00 Approved"
+39670,2436,DESKTOP-TGAAI2Q,2026-07-02 18:11:44,frmtariff.scx,edit record - dispatch #37709,dispatch.dbf,14405,"Update record - DNA P96,820.91 BNA P0.00 Approved"
+39671,2436,DESKTOP-TGAAI2Q,2026-07-02 18:12:22.999000,frmtariff.scx,edit record - dispatch #34511,dispatch.dbf,14547,"Update record - DNA P96,820.91 BNA P0.00 Approved"
+39672,2436,DESKTOP-TGAAI2Q,2026-07-02 18:12:58,frmtariff.scx,edit record - dispatch #37710,dispatch.dbf,14549,"Update record - DNA P96,820.91 BNA P0.00 Approved"
+39673,2436,DESKTOP-TGAAI2Q,2026-07-02 18:13:35,frmtariff.scx,edit record - dispatch #37549,dispatch.dbf,14550,"Update record - DNA P96,820.91 BNA P0.00 Approved"
+39674,2436,DESKTOP-TGAAI2Q,2026-07-02 18:16:04.999000,frmbilling.scx,edit record - billing #B000607,billing.dbf,4427,"Bill Amount P484,104.55"
+39675,2436,DESKTOP-TGAAI2Q,2026-07-02 18:16:36.999000,frmtariff.scx,edit record - dispatch #37709,dispatch.dbf,14405,"Update record - DNA P96,820.92 BNA P0.00 Approved"
+39676,2436,DESKTOP-TGAAI2Q,2026-07-02 18:18:19.999000,frmbilling.scx,edit record - billing #B000607,billing.dbf,4427,"Bill Amount P580,925.47"
+39677,2436,DESKTOP-TGAAI2Q,2026-07-02 18:19:41.999000,frmbilling.scx,printed - billing #B000607,billing.dbf,4427,"Print Bill Amount P580,925.47"
+39678,2436,DESKTOP-TGAAI2Q,2026-07-02 18:26:22.999000,frmbilling.scx,delete record - billing #B000602,billing.dbf,4398,"Bill Amount P1,867,902.61"
+39679,2436,DESKTOP-TGAAI2Q,2026-07-02 18:27:17,frmbilling.scx,edit record - billing #1931,billing.dbf,123,Bill Amount P0.00
+39680,2436,DESKTOP-TGAAI2Q,2026-07-02 18:27:51.999000,frmbilling.scx,edit record - billing #1931,billing.dbf,123,Bill Amount P0.00
+39681,2436,DESKTOP-TGAAI2Q,2026-07-02 18:28:39,frmtariff.scx,edit record - dispatch #37556,dispatch.dbf,14542,"Update record - DNA P807,250.00 BNA P0.00 Approved"
+39682,2436,DESKTOP-TGAAI2Q,2026-07-02 18:29:17,frmtariff.scx,edit record - dispatch #37715,dispatch.dbf,14543,"Update record - DNA P807,250.00 BNA P0.00 Approved"
+39683,2436,DESKTOP-TGAAI2Q,2026-07-02 18:29:48.999000,frmtariff.scx,edit record - dispatch #37557,dispatch.dbf,14544,"Update record - DNA P782,760.00 BNA P0.00 Approved"
+39684,2436,DESKTOP-TGAAI2Q,2026-07-02 18:30:23,frmtariff.scx,edit record - dispatch #37716,dispatch.dbf,14548,"Update record - DNA P762,740.00 BNA P0.00 Approved"
+39685,2436,DESKTOP-TGAAI2Q,2026-07-02 18:31:18.999000,frmbilling.scx,edit record - billing #1931,billing.dbf,123,Bill Amount P0.00
+39686,2436,DESKTOP-TGAAI2Q,2026-07-02 18:32:38.999000,frmbilling.scx,edit record - billing #1931,billing.dbf,123,Bill Amount P0.00
+39687,2436,DESKTOP-TGAAI2Q,2026-07-02 18:32:54.999000,frmtariff.scx,edit record - dispatch #37556,dispatch.dbf,14542,"Update record - DNA P807,250.00 BNA P0.00 Pending"
+39688,2436,DESKTOP-TGAAI2Q,2026-07-02 18:33:22,frmdispatch.scx,edit record - dispatch #37556,dispatch.dbf,14542,Update record V0820 P005 T005-020 C0073 TB125 S004
+39689,2436,DESKTOP-TGAAI2Q,2026-07-02 18:33:45.999000,frmtariff.scx,edit record - dispatch #37715,dispatch.dbf,14543,"Update record - DNA P807,250.00 BNA P0.00 Pending"
+39690,2436,DESKTOP-TGAAI2Q,2026-07-02 18:34:07.999000,frmdispatch.scx,edit record - dispatch #37715,dispatch.dbf,14543,Update record V0820 P005 T005-020 C0073 TB003 S004
+39691,2436,DESKTOP-TGAAI2Q,2026-07-02 18:34:22.999000,frmtariff.scx,edit record - dispatch #37557,dispatch.dbf,14544,"Update record - DNA P782,760.00 BNA P0.00 Pending"
+39692,2436,DESKTOP-TGAAI2Q,2026-07-02 18:34:41,frmdispatch.scx,edit record - dispatch #37557,dispatch.dbf,14544,Update record V0820 P005 T005-020 C0073 TB125 S010
+39693,2436,DESKTOP-TGAAI2Q,2026-07-02 18:34:59,frmtariff.scx,edit record - dispatch #37716,dispatch.dbf,14548,"Update record - DNA P762,740.00 BNA P0.00 Pending"
+39694,2436,DESKTOP-TGAAI2Q,2026-07-02 18:35:40,frmdispatch.scx,edit record - dispatch #37716,dispatch.dbf,14548,Update record V0820 P005 T005-020 C0073 TB003 S010
+39695,2436,DESKTOP-TGAAI2Q,2026-07-02 18:36:23.999000,frmtariff.scx,edit record - dispatch #37716,dispatch.dbf,14548,"Update record - DNA P762,740.00 BNA P0.00 Approved"
+39696,2436,DESKTOP-TGAAI2Q,2026-07-02 18:36:35.999000,frmtariff.scx,edit record - dispatch #37557,dispatch.dbf,14544,"Update record - DNA P782,760.00 BNA P0.00 Approved"
+39697,2436,DESKTOP-TGAAI2Q,2026-07-02 18:36:50.999000,frmtariff.scx,edit record - dispatch #37715,dispatch.dbf,14543,"Update record - DNA P807,250.00 BNA P0.00 Approved"
+39698,2436,DESKTOP-TGAAI2Q,2026-07-02 18:37:06.999000,frmtariff.scx,edit record - dispatch #37556,dispatch.dbf,14542,"Update record - DNA P807,250.00 BNA P0.00 Approved"
+39699,2436,DESKTOP-TGAAI2Q,2026-07-02 18:38:10,frmbilling.scx,edit record - billing #1931,billing.dbf,123,"Bill Amount P3,160,000.00"
+39700,2436,DESKTOP-TGAAI2Q,2026-07-02 18:39:14.999000,frmbilling.scx,printed - billing #1931,billing.dbf,123,"Print Bill Amount P3,160,000.00"
+39701,2436,DESKTOP-TGAAI2Q,2026-07-02 18:48:00.999000,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39702,9028,DESKTOP-DADG0PA,2026-07-02 21:24:43,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39703,2436,DESKTOP-TGAAI2Q,2026-07-03 13:54:00.999000,frmbilling.scx,printed - billing #1931,billing.dbf,123,"Print Bill Amount P3,160,000.00"
+39704,2436,DESKTOP-TGAAI2Q,2026-07-03 13:54:06.999000,frmbilling.scx,generated xls - billing #1931,billing.dbf,123," Amount P3,160,000.00"
+39705,2436,DESKTOP-TGAAI2Q,2026-07-03 14:15:24.999000,frmmain.scx,Upload dispatch from Excel,dispatch.dbf,14753,# of entries = 10 up to recid: 14762
+39706,2436,DESKTOP-TGAAI2Q,2026-07-03 14:37:16.999000,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39707,2436,DESKTOP-TGAAI2Q,2026-07-03 14:46:47.999000,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39708,2436,DESKTOP-TGAAI2Q,2026-07-03 14:51:49,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39709,2436,DESKTOP-TGAAI2Q,2026-07-03 14:54:46,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39710,2436,DESKTOP-TGAAI2Q,2026-07-03 15:08:51,frmbilling.scx,edit record - billing #1857,billing.dbf,45,"Bill Amount P592,908.76"
+39711,2265,LAPTOP-4A5Q1T1B,2026-07-03 15:12:51,frmvessel.scx,add record - vessel name: BINH NGUYEN STAR,vessel.dbf,891,New record
+39712,2436,DESKTOP-TGAAI2Q,2026-07-03 15:28:01,frmtariff.scx,edit record - dispatch #37721,dispatch.dbf,14759,"Update record - DNA P60,000.00 BNA P0.00 Approved"
+39713,2436,DESKTOP-TGAAI2Q,2026-07-03 16:29:55.999000,frmtariff.scx,edit record - dispatch #34523,dispatch.dbf,14760,"Update record - DNA P60,000.00 BNA P0.00 Approved"
+39714,2436,DESKTOP-TGAAI2Q,2026-07-03 16:30:54.999000,frmtariff.scx,edit record - dispatch #37788,dispatch.dbf,14757,"Update record - DNA P60,000.00 BNA P0.00 Approved"
+39715,2436,DESKTOP-TGAAI2Q,2026-07-03 16:31:45.999000,frmtariff.scx,edit record - dispatch #37567,dispatch.dbf,14758,"Update record - DNA P60,000.00 BNA P0.00 Approved"
+39716,2436,DESKTOP-TGAAI2Q,2026-07-03 16:34:58.999000,frmbilling.scx,add record - billing #B000608,billing.dbf,4428,"Bill Amount P240,000.00"
+39717,2436,DESKTOP-TGAAI2Q,2026-07-03 16:35:58.999000,frmbilling.scx,printed - billing #B000608,billing.dbf,4428,"Print Bill Amount P240,000.00"
+39718,2436,DESKTOP-TGAAI2Q,2026-07-03 16:54:20,frmtariff.scx,edit record - dispatch #37785,dispatch.dbf,14729,"Update record - DNA P30,000.00 BNA P27,996.10 Approved"
+39719,2265,LAPTOP-4A5Q1T1B,2026-07-03 16:54:28.999000,frmdispatch.scx,add record - dispatch #406021-A,dispatch.dbf,14763,New record V0283 P001 T001-002 C0046 TB130 S001
+39720,2436,DESKTOP-TGAAI2Q,2026-07-03 16:55:47,frmtariff.scx,edit record - dispatch #37821,dispatch.dbf,14730,"Update record - DNA P30,000.00 BNA P27,996.10 Approved"
+39721,2265,LAPTOP-4A5Q1T1B,2026-07-03 16:56:17,frmdispatch.scx,add record - dispatch #406025-A,dispatch.dbf,14764,New record V0283 P001 T001-002 C0046 TB130 S002
+39722,2436,DESKTOP-TGAAI2Q,2026-07-03 16:57:17,frmtariff.scx,edit record - dispatch #37822,dispatch.dbf,14733,"Update record - DNA P30,000.00 BNA P27,996.10 Approved"
+39723,2436,DESKTOP-TGAAI2Q,2026-07-03 16:58:26,frmtariff.scx,edit record - dispatch #34527,dispatch.dbf,14734,"Update record - DNA P30,000.00 BNA P27,996.10 Approved"
+39724,2265,LAPTOP-4A5Q1T1B,2026-07-03 16:58:19.999000,frmdispatch.scx,add record - dispatch #406030-A,dispatch.dbf,14765,New record V0824 P001 T001-017 C0051 TB130 S001
+39725,2265,LAPTOP-4A5Q1T1B,2026-07-03 16:59:44,frmdispatch.scx,add record - dispatch #406031-A,dispatch.dbf,14766,New record V0824 P001 T001-017 C0051 TB008 S001
+39726,2436,DESKTOP-TGAAI2Q,2026-07-03 17:00:12.999000,frmbilling.scx,edit record - billing #1932,billing.dbf,124,Bill Amount P0.00
+39727,2436,DESKTOP-TGAAI2Q,2026-07-03 17:04:14,frmbilling.scx,edit record - billing #1932,billing.dbf,124,"Bill Amount P278,457.92"
+39728,2436,DESKTOP-TGAAI2Q,2026-07-03 17:05:26,frmbilling.scx,printed - billing #1932,billing.dbf,124,"Print Bill Amount P278,457.92"
+39729,2436,DESKTOP-TGAAI2Q,2026-07-03 17:10:42.999000,frmbilling.scx,generated xls - billing #1932,billing.dbf,124," Amount P278,457.92"
+39730,2436,DESKTOP-TGAAI2Q,2026-07-03 17:43:18,frmbilling.scx,add record - billing #B000609,billing.dbf,4429,Bill Amount P0.00
+39731,2436,DESKTOP-TGAAI2Q,2026-07-03 17:44:32.999000,frmtariff.scx,edit record - dispatch #37784,dispatch.dbf,14724,"Update record - DNA P45,000.00 BNA P27,996.10 Approved"
+39732,2436,DESKTOP-TGAAI2Q,2026-07-03 17:45:46.999000,frmtariff.scx,edit record - dispatch #37725,dispatch.dbf,14723,"Update record - DNA P45,000.00 BNA P27,996.10 Approved"
+39733,2436,DESKTOP-TGAAI2Q,2026-07-03 17:46:40.999000,frmtariff.scx,edit record - dispatch #37726,dispatch.dbf,14731,"Update record - DNA P45,000.00 BNA P27,996.10 Approved"
+39734,2436,DESKTOP-TGAAI2Q,2026-07-03 17:47:30.999000,frmtariff.scx,edit record - dispatch #37783,dispatch.dbf,14732,"Update record - DNA P45,000.00 BNA P27,996.10 Approved"
+39735,2436,DESKTOP-TGAAI2Q,2026-07-03 17:50:06.999000,frmbilling.scx,edit record - billing #B000609,billing.dbf,4429,"Bill Amount P291,984.40"
+39736,2436,DESKTOP-TGAAI2Q,2026-07-03 17:51:06.999000,frmbilling.scx,printed - billing #B000609,billing.dbf,4429,"Print Bill Amount P291,984.40"
+39737,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:36:25.999000,frmdispatch.scx,add record - dispatch #36838,dispatch.dbf,14767,New record V0663 P007 T007-001 C0007 TB078 S002
+39738,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:38:00.999000,frmdispatch.scx,add record - dispatch #35475,dispatch.dbf,14768,New record V0501 P001 T001-003 C0046 TB056 S001
+39739,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:39:36.999000,frmdispatch.scx,add record - dispatch #35862,dispatch.dbf,14769,New record V0501 P001 T001-003 C0046 TB101 S002
+39740,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:43:33,frmdispatch.scx,add record - dispatch #00264-A,dispatch.dbf,14770,New record V0008 P003 T003-003 C0007 TB081 S001
+39741,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:44:45,frmdispatch.scx,add record - dispatch #00258-A,dispatch.dbf,14771,New record V0008 P003 T003-003 C0007 TB083 S001
+39742,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:46:09,frmdispatch.scx,add record - dispatch #00266-A,dispatch.dbf,14772,New record V0008 P003 T003-003 C0007 TB081 S002
+39743,2265,LAPTOP-4A5Q1T1B,2026-07-04 11:47:30.999000,frmdispatch.scx,add record - dispatch #00260-A,dispatch.dbf,14773,New record V0008 P003 T003-003 C0007 TB083 S002
+39744,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:11:28,frmdispatch.scx,add record - dispatch #35863,dispatch.dbf,14774,New record V0283 P001 T001-002 C0046 TB101 S001
+39745,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:12:53.999000,frmdispatch.scx,add record - dispatch #35864,dispatch.dbf,14775,New record V0283 P001 T001-002 C0046 TB101 S004
+39746,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:15:29.999000,frmdispatch.scx,add record - dispatch #35865,dispatch.dbf,14776,New record V0283 P001 T001-002 C0046 TB101 S002
+39747,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:16:39,frmvessel.scx,add record - vessel name: MT PHOENIX GAIA,vessel.dbf,892,New record
+39748,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:19:17.999000,frmterminal.scx,add record - terminal name: BATANGAS ANCHORAGE,terminal.dbf,72,New record terminal# 001-020
+39749,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:23:52.999000,frmdispatch.scx,add record - dispatch #35866,dispatch.dbf,14777,New record V0845 P001 T001-020 C0023 TB101 S003
+39750,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:28:23,frmdispatch.scx,add record - dispatch #35622,dispatch.dbf,14778,New record V0663 P001 T001-013 C0007 TB118 S001
+39751,2265,LAPTOP-4A5Q1T1B,2026-07-06 09:30:15,frmdispatch.scx,add record - dispatch #35621,dispatch.dbf,14779,New record V0663 P001 T001-013 C0007 TB113 S001
+39752,2436,DESKTOP-TGAAI2Q,2026-07-06 10:06:15,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39753,2436,DESKTOP-TGAAI2Q,2026-07-06 12:37:28.999000,frmreports.scx,Printed Sales Summary July 2026,,0,Print report
+39754,2436,DESKTOP-TGAAI2Q,2026-07-06 12:37:54,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39755,2436,DESKTOP-TGAAI2Q,2026-07-06 13:47:18,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39756,2436,DESKTOP-TGAAI2Q,2026-07-06 13:47:50.999000,frmreports.scx,Printed Dispatch Ticket Summary June 2026,,0,Print report
+39757,2265,LAPTOP-4A5Q1T1B,2026-07-06 14:04:07,frmdispatch.scx,add record - dispatch #35608-A,dispatch.dbf,14780,New record V0785 P001 T001-013 C0080 TB051 S001
+39758,2436,DESKTOP-TGAAI2Q,2026-07-06 14:11:17.999000,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39759,2436,DESKTOP-TGAAI2Q,2026-07-06 14:15:09.999000,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39760,2436,DESKTOP-TGAAI2Q,2026-07-06 14:27:28,frmbilling.scx,edit record - billing #1818,billing.dbf,4384,"Bill Amount P344,577.00"
+39761,2436,DESKTOP-TGAAI2Q,2026-07-06 14:30:33,frmbilling.scx,printed - billing #1818,billing.dbf,4384,"Print Bill Amount P344,577.00"
+39762,2436,DESKTOP-TGAAI2Q,2026-07-06 14:36:38,frmbilling.scx,generated xls - billing #1818,billing.dbf,4384," Amount P344,577.00"
+39763,2265,LAPTOP-4A5Q1T1B,2026-07-06 15:11:34,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39764,2436,DESKTOP-TGAAI2Q,2026-07-06 15:28:21.999000,frmtariff.scx,edit record - dispatch #35608-A,dispatch.dbf,14780,"Update record - DNA P102,000.00 BNA P26,848.50 Approved"
+39765,2436,DESKTOP-TGAAI2Q,2026-07-06 15:29:27.999000,frmbilling.scx,edit record - billing #1933,billing.dbf,125,Bill Amount P0.00
+39766,2265,LAPTOP-4A5Q1T1B,2026-07-06 15:29:04.999000,frmreports.scx,Printed Sales Summary January 2026,,0,Print report
+39767,2265,LAPTOP-4A5Q1T1B,2026-07-06 15:29:32.999000,frmreports.scx,Printed Sales Summary February 2026,,0,Print report
+39768,2436,DESKTOP-TGAAI2Q,2026-07-06 15:30:08,frmbilling.scx,edit record - billing #1933,billing.dbf,125,"Bill Amount P151,132.76"
+39769,2436,DESKTOP-TGAAI2Q,2026-07-06 15:30:38,frmbilling.scx,printed - billing #1933,billing.dbf,125,"Print Bill Amount P151,132.76"
+39770,2265,LAPTOP-4A5Q1T1B,2026-07-06 15:31:55.999000,frmreports.scx,Printed Sales Summary March 2026,,0,Print report
+39771,2265,LAPTOP-4A5Q1T1B,2026-07-06 15:35:19,frmreports.scx,Printed Sales Summary April 2026,,0,Print report
+39772,2436,DESKTOP-TGAAI2Q,2026-07-06 15:56:00.999000,frmbilling.scx,printed - billing #1820,billing.dbf,4386,"Print Bill Amount P413,276.00"
+39773,2436,DESKTOP-TGAAI2Q,2026-07-06 15:56:36,frmbilling.scx,printed - billing #1820,billing.dbf,4386,"Print Bill Amount P413,276.00"
+39774,2265,LAPTOP-4A5Q1T1B,2026-07-06 15:57:15.999000,frmreports.scx,Printed Sales Summary January 2026,,0,Print report
+39775,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:00:25,frmreports.scx,Printed Sales Summary February 2026,,0,Print report
+39776,2436,DESKTOP-TGAAI2Q,2026-07-06 16:02:40,frmbilling.scx,generated xls - billing #1820,billing.dbf,4386," Amount P413,276.00"
+39777,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:02:18,frmreports.scx,Printed Sales Summary March 2026,,0,Print report
+39778,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:04:39,frmreports.scx,Printed Sales Summary April 2026,,0,Print report
+39779,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:06:08,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39780,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:21:32,frmreports.scx,Printed Sales Summary August 2025,,0,Print report
+39781,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:23:14.999000,frmreports.scx,Printed Sales Summary December 2025,,0,Print report
+39782,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:23:59.999000,frmreports.scx,Printed Sales Summary November 2025,,0,Print report
+39783,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:24:56.999000,frmreports.scx,Printed Sales Summary October 2025,,0,Print report
+39784,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:26:27.999000,frmreports.scx,Printed Sales Summary September 2025,,0,Print report
+39785,2436,DESKTOP-TGAAI2Q,2026-07-06 16:27:55.999000,frmbilling.scx,printed - billing #1820,billing.dbf,4386,"Print Bill Amount P413,276.00"
+39786,2265,LAPTOP-4A5Q1T1B,2026-07-06 16:29:15,frmreports.scx,Printed Sales Summary July 2025,,0,Print report
+39787,2436,DESKTOP-TGAAI2Q,2026-07-06 16:30:14,frmbilling.scx,generated xls - billing #1903,billing.dbf,95," Amount P225,115.50"
+39788,2436,DESKTOP-TGAAI2Q,2026-07-06 16:58:55.999000,frmbilling.scx,printed - billing #1908,billing.dbf,100,"Print Bill Amount P330,554.25"
+39789,2436,DESKTOP-TGAAI2Q,2026-07-06 17:00:12.999000,frmbilling.scx,generated xls - billing #1908,billing.dbf,100," Amount P330,554.25"
+39790,2265,LAPTOP-4A5Q1T1B,2026-07-06 17:13:21,frmreports.scx,Printed Sales Summary March 2025,,0,Print report
+39791,2265,LAPTOP-4A5Q1T1B,2026-07-06 17:16:19,frmreports.scx,Printed Sales Summary March 2026,,0,Print report
+39792,2436,DESKTOP-TGAAI2Q,2026-07-06 17:32:05.999000,frmbilling.scx,generated xls - billing #1902,billing.dbf,94," Amount P522,119.33"
+39793,2265,LAPTOP-4A5Q1T1B,2026-07-06 18:12:27,frmreports.scx,Printed Sales Summary March 2026,,0,Print report
+39794,2436,DESKTOP-TGAAI2Q,2026-07-07 08:57:09,frmmain.scx,Upload dispatch from Excel,dispatch.dbf,14781,# of entries = 12 up to recid: 14792
+39795,2265,LAPTOP-4A5Q1T1B,2026-07-07 09:47:13.999000,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39796,2265,LAPTOP-4A5Q1T1B,2026-07-07 10:14:02,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39797,2436,DESKTOP-TGAAI2Q,2026-07-07 11:24:55.999000,frmreports.scx,Printed Sales Summary July 2026,,0,Print report
+39798,2436,DESKTOP-TGAAI2Q,2026-07-07 11:25:07,frmreports.scx,Printed Sales Summary July 2026,,0,Print report
+39799,2265,LAPTOP-4A5Q1T1B,2026-07-07 11:27:15.999000,frmvessel.scx,add record - vessel name: BAO YUE LING,vessel.dbf,893,New record
+39800,2265,LAPTOP-4A5Q1T1B,2026-07-07 11:30:34.999000,frmvessel.scx,add record - vessel name: STENA CONCEPT,vessel.dbf,894,New record
+39801,2265,LAPTOP-4A5Q1T1B,2026-07-07 11:31:24,frmvessel.scx,add record - vessel name: STR VIGOR,vessel.dbf,895,New record
+39802,2436,DESKTOP-TGAAI2Q,2026-07-07 11:36:21,frmmain.scx,Upload dispatch from Excel,dispatch.dbf,14793,# of entries = 4 up to recid: 14796
+39803,2436,DESKTOP-TGAAI2Q,2026-07-07 11:36:54.999000,frmbilling.scx,delete record - billing #1902,billing.dbf,94,"Bill Amount P522,119.33"
+39804,2436,DESKTOP-TGAAI2Q,2026-07-07 11:39:46.999000,frmbilling.scx,add record - billing #1846,billing.dbf,4430,"Bill Amount P140,000.00"
+39805,9028,DESKTOP-DADG0PA,2026-07-07 11:39:35,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39806,2436,DESKTOP-TGAAI2Q,2026-07-07 11:41:11,frmtariff.scx,edit record - dispatch #35602,dispatch.dbf,14632,"Update record - DNA P116,100.00 BNA P75,879.09 Approved"
+39807,2436,DESKTOP-TGAAI2Q,2026-07-07 11:41:36.999000,frmtariff.scx,edit record - dispatch #35601,dispatch.dbf,14633,"Update record - DNA P104,850.00 BNA P68,526.47 Approved"
+39808,2436,DESKTOP-TGAAI2Q,2026-07-07 11:42:04,frmtariff.scx,edit record - dispatch #35603,dispatch.dbf,14634,"Update record - DNA P71,100.00 BNA P46,468.59 Approved"
+39809,2436,DESKTOP-TGAAI2Q,2026-07-07 11:42:35.999000,frmtariff.scx,edit record - dispatch #35604,dispatch.dbf,14635,"Update record - DNA P63,900.00 BNA P41,762.91 Approved"
+39810,2436,DESKTOP-TGAAI2Q,2026-07-07 11:43:47,frmbilling.scx,edit record - billing #1846,billing.dbf,4430,"Bill Amount P588,587.06"
+39811,2436,DESKTOP-TGAAI2Q,2026-07-07 11:49:00.999000,frmbilling.scx,printed - billing #1846,billing.dbf,4430,"Print Bill Amount P588,587.06"
+39812,2436,DESKTOP-TGAAI2Q,2026-07-07 11:52:59.999000,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39813,2436,DESKTOP-TGAAI2Q,2026-07-07 12:16:16,frmtariff.scx,edit record - dispatch #37733,dispatch.dbf,14787,"Update record - DNA P50,000.00 BNA P5,750.50 Approved"
+39814,2436,DESKTOP-TGAAI2Q,2026-07-07 12:23:46.999000,frmmain.scx,Upload dispatch from Excel,dispatch.dbf,14797,# of entries = 1
+39815,2436,DESKTOP-TGAAI2Q,2026-07-07 12:24:29.999000,frmreports.scx,Printed Dispatch Ticket Summary July 2026,,0,Print report
+39816,2436,DESKTOP-TGAAI2Q,2026-07-07 12:27:41.999000,frmtariff.scx,edit record - dispatch #34535,dispatch.dbf,14797,"Update record - DNA P50,000.00 BNA P5,750.50 Approved"
+39817,2436,DESKTOP-TGAAI2Q,2026-07-07 12:28:25,frmtariff.scx,edit record - dispatch #34536,dispatch.dbf,14789,"Update record - DNA P50,000.00 BNA P5,750.50 Approved"
+39818,2436,DESKTOP-TGAAI2Q,2026-07-07 12:28:56.999000,frmtariff.scx,edit record - dispatch #37734,dispatch.dbf,14790,"Update record - DNA P50,000.00 BNA P5,750.50 Approved"
+39819,2436,DESKTOP-TGAAI2Q,2026-07-07 12:30:49.999000,frmbilling.scx,edit record - billing #1934,billing.dbf,127,Bill Amount P0.00
+39820,2436,DESKTOP-TGAAI2Q,2026-07-07 12:33:10.999000,frmbilling.scx,edit record - billing #1934,billing.dbf,127,"Bill Amount P225,877.26"
+39821,2436,DESKTOP-TGAAI2Q,2026-07-07 12:34:56,frmbilling.scx,printed - billing #1934,billing.dbf,127,"Print Bill Amount P225,877.26"
+39822,2436,DESKTOP-TGAAI2Q,2026-07-07 12:43:58,frmbilling.scx,generated xls - billing #1934,billing.dbf,127," Amount P225,877.26"
+39823,9028,DESKTOP-DADG0PA,2026-07-07 13:48:33.999000,frmreports.scx,Printed Sales Summary June 2026,,0,Print report
+39824,2265,LAPTOP-4A5Q1T1B,2026-07-07 14:15:54.999000,frmdispatch.scx,add record - dispatch #35624-A,dispatch.dbf,14798,New record V0663 P001 T001-013 C0007 TB113 S002
+39825,2265,LAPTOP-4A5Q1T1B,2026-07-07 14:17:28.999000,frmdispatch.scx,add record - dispatch #35623-A,dispatch.dbf,14799,New record V0663 P001 T001-013 C0007 TB118 S002
+39826,2265,LAPTOP-4A5Q1T1B,2026-07-07 14:18:55,frmdispatch.scx,add record - dispatch #35867,dispatch.dbf,14800,New record V0115 P001 T001-004 C0047 TB101 S001
+39827,2265,LAPTOP-4A5Q1T1B,2026-07-07 14:32:33,frmdispatch.scx,add record - dispatch #1270004855-A,dispatch.dbf,14801,New record V0010 P009 T009-001 C0007 TB027 S001
+39828,2265,LAPTOP-4A5Q1T1B,2026-07-07 14:34:59,frmdispatch.scx,add record - dispatch #1270004905-A,dispatch.dbf,14802,New record V0010 P009 T009-001 C0007 TB027 S002
+39829,2436,DESKTOP-TGAAI2Q,2026-07-07 15:10:30.999000,frmtariff.scx,edit record - dispatch #34534,dispatch.dbf,14791,"Update record - DNA P50,000.00 BNA P5,750.50 Approved"
+39830,2436,DESKTOP-TGAAI2Q,2026-07-07 15:11:16.999000,frmtariff.scx,edit record - dispatch #37565,dispatch.dbf,14792,"Update record - DNA P50,000.00 BNA P5,750.50 Approved"
+39831,2436,DESKTOP-TGAAI2Q,2026-07-07 15:12:02.999000,frmtariff.scx,edit record - dispatch #34531,dispatch.dbf,14796,"Update record - DNA P50,000.00 BNA P6,905.50 Approved"
+39832,2436,DESKTOP-TGAAI2Q,2026-07-07 15:12:35,frmtariff.scx,edit record - dispatch #37566,dispatch.dbf,14795,"Update record - DNA P50,000.00 BNA P6,905.50 Approved"
+39833,2436,DESKTOP-TGAAI2Q,2026-07-07 15:15:39,frmbilling.scx,edit record - billing #1935,billing.dbf,129,Bill Amount P0.00
+39834,2436,DESKTOP-TGAAI2Q,2026-07-07 15:20:37,frmbilling.scx,edit record - billing #1935,billing.dbf,129,Bill Amount P0.00
+39835,2436,DESKTOP-TGAAI2Q,2026-07-07 15:38:59.999000,frmcustomer.scx,edit record - customer #0024,customer.dbf,70,Update record
+39836,2436,DESKTOP-TGAAI2Q,2026-07-07 15:41:01,frmbilling.scx,edit record - billing #1935,billing.dbf,129,"Bill Amount P233,477.72"
+39837,2436,DESKTOP-TGAAI2Q,2026-07-07 15:42:24,frmbilling.scx,printed - billing #1935,billing.dbf,129,"Print Bill Amount P233,477.72"
+39838,2436,DESKTOP-TGAAI2Q,2026-07-07 15:48:14.999000,frmbilling.scx,generated xls - billing #1935,billing.dbf,129," Amount P233,477.72"
+39839,2436,DESKTOP-TGAAI2Q,2026-07-07 16:08:14.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39840,2436,DESKTOP-TGAAI2Q,2026-07-07 16:09:43.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39841,2436,DESKTOP-TGAAI2Q,2026-07-07 16:10:35.999000,frmprincipal.scx,edit record - agent/principal #0051/0009,principal.dbf,128,Update record
+39842,2436,DESKTOP-TGAAI2Q,2026-07-07 16:10:56,frmbilling.scx,edit record - billing #1778,billing.dbf,4333,"Bill Amount P980,008.70"
+39843,2436,DESKTOP-TGAAI2Q,2026-07-07 16:26:37,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39844,2436,DESKTOP-TGAAI2Q,2026-07-07 16:26:53,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39845,2436,DESKTOP-TGAAI2Q,2026-07-07 16:27:06,frmprincipal.scx,edit record - agent/principal #0051/0009,principal.dbf,128,Update record
+39846,1790,ROI-PC,2026-07-07 16:32:50,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39847,1790,ROI-PC,2026-07-07 16:33:02,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39848,1790,ROI-PC,2026-07-07 16:33:07.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39849,1790,ROI-PC,2026-07-07 16:33:33,frmbilling.scx,printed - billing #1776,billing.dbf,4328,"Print Bill Amount P187,347.13"
+39850,1790,ROI-PC,2026-07-07 16:33:57,frmbilling.scx,printed - billing #997,billing.dbf,3394,"Print Bill Amount P2,201,841.06"
+39851,2436,DESKTOP-TGAAI2Q,2026-07-07 16:36:37,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39852,1790,ROI-PC,2026-07-07 16:36:17,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39853,1790,ROI-PC,2026-07-07 16:38:01,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39854,1790,ROI-PC,2026-07-07 16:38:04.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39855,1790,ROI-PC,2026-07-07 16:38:09,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39856,1790,ROI-PC,2026-07-07 16:38:41.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39857,1790,ROI-PC,2026-07-07 16:38:46.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39858,1790,ROI-PC,2026-07-07 16:38:48.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39859,1790,ROI-PC,2026-07-07 16:39:10.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39860,1790,ROI-PC,2026-07-07 16:39:15,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39861,1790,ROI-PC,2026-07-07 16:42:50,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39862,1790,ROI-PC,2026-07-07 16:42:58.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39863,1790,ROI-PC,2026-07-07 16:43:05,frmbilling.scx,generated xls - billing #1778,billing.dbf,4333," Amount P980,008.70"
+39864,1790,ROI-PC,2026-07-07 16:43:13.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39865,1790,ROI-PC,2026-07-07 16:44:08.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39866,1790,ROI-PC,2026-07-07 16:44:14.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39867,1790,ROI-PC,2026-07-07 16:46:49.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39868,1790,ROI-PC,2026-07-07 16:46:51.999000,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39869,1790,ROI-PC,2026-07-07 16:47:46,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39870,1790,ROI-PC,2026-07-07 16:50:53,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39871,1790,ROI-PC,2026-07-07 16:50:58,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39872,1790,ROI-PC,2026-07-07 16:51:00,frmbilling.scx,printed - billing #1778,billing.dbf,4333,"Print Bill Amount P980,008.70"
+39873,1790,ROI-PC,2026-07-07 16:51:14,frmbilling.scx,printed - billing #3123,billing.dbf,1284,"Print Bill Amount P140,000.00"
