@@ -56,29 +56,16 @@
        Apply / remove modern nav state
     ══════════════════════════════════════════════════════ */
     function applyState(enabled) {
-        const classicEl = document.getElementById(CLASSIC_ID);
-        const modernEl  = document.getElementById(MODERN_ID);
-        if (!classicEl || !modernEl) return;
+        if (!document.getElementById(CLASSIC_ID) || !document.getElementById(MODERN_ID)) return;
 
         // The layout wrapper carries `style="padding-top:5rem !important"`.
         // Inline !important can't be overridden from a stylesheet — must use JS.
         const wrapper = document.querySelector('body > div[class*="container"]');
 
-        if (enabled) {
-            classicEl.style.display = 'none';
-            modernEl.classList.add('mnav-active');
-            document.body.classList.add('mnav-enabled');
-            if (wrapper) wrapper.style.setProperty('padding-top', '0', 'important');
-            setQuickAccessVisible(false);
-        } else {
-            classicEl.style.display = '';
-            modernEl.classList.remove('mnav-active');
-            document.body.classList.remove('mnav-enabled');
-            if (wrapper) wrapper.style.setProperty('padding-top', '5rem', 'important');
-            setQuickAccessVisible(true);
-        }
+        document.body.classList.toggle('mnav-enabled', enabled);
+        if (wrapper) wrapper.style.setProperty('padding-top', enabled ? '0' : '5rem', 'important');
+        setQuickAccessVisible(!enabled);
 
-        // Sync all toggle button labels/icons
         document.querySelectorAll('[data-mnav-toggle]').forEach(btn => {
             const icon  = btn.querySelector('.material-symbols-outlined');
             const label = btn.querySelector('.mnav-toggle-label');

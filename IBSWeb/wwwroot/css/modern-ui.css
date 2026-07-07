@@ -552,6 +552,10 @@ table.dataTable tbody tr:hover {
     white-space: nowrap;
 }
 
+.input-group {
+    flex-wrap: nowrap;
+}
+
 .modern-select-dropdown {
     display: none;
     background-color: #ffffff;
@@ -576,7 +580,8 @@ table.dataTable tbody tr:hover {
 }
 
 .modern-select-search input {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     font-size: 13px;

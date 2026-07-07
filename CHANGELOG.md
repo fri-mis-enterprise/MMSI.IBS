@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-07-07]
+### Changed
+- View Transition API: removed `view-transition-name` from nav elements (classic-header, modern-header, overlay, QA panel) whose content changes between pages — root cross-fade is smoother than morphing mismatched DOM. Added explicit `::view-transition-old/new(root)` animations with `prefers-reduced-motion` guard. (scope: `site.css`)
+- Navbar visibility switching: moved from JS-on-DOMContentLoaded to CSS driven by `body.mnav-enabled`, set inline before navbars render. Eliminates the flash from classic→modern swap during page load and view transitions. (scope: `modern-navbar.css`, `modern-navbar.js`)
+
 ## [2026-07-03]
 ### Added
 - Native Cross-Document View Transition API: enabled smooth, native MPA page transitions across full-page loads, keeping layout elements like the headers, overlay, sidebar, and footer persistent and visually static (scope: `site.css`)

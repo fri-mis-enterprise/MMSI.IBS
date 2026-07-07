@@ -30,7 +30,7 @@
 
 /* ── Wrapper ── */
 #modern-navbar {
-    display: none; /* hidden by default; JS enables on opt-in */
+    display: none; /* hidden by default; body.mnav-enabled shows it */
     position: fixed;
     top: 0;
     left: 0;
@@ -42,12 +42,17 @@
     font-family: var(--mnav-font);
 }
 
-#modern-navbar.mnav-active {
+/* Opt-in: body class set inline before navbars render — no JS delay */
+body.mnav-enabled #modern-navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 24px;
     gap: 16px;
+}
+
+body.mnav-enabled #classic-navbar-header {
+    display: none !important;
 }
 
 /* When classic nav is hidden, body carries the top offset via padding-top */

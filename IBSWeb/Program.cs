@@ -166,6 +166,16 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+var docsImagesPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "Docs", "manual", "images"));
+if (Directory.Exists(docsImagesPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(docsImagesPath),
+        RequestPath = "/docs-images"
+    });
+}
+
 app.UseMiddleware<MaintenanceMiddleware>();
 
 app.UseSession();

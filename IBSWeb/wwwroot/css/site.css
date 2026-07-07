@@ -720,23 +720,42 @@ body.loading {
     navigation: auto;
 }
 
-/* Maintain persistent elements without cross-fading or flashing */
-#classic-navbar-header {
-    view-transition-name: classic-header;
+/* Root (page content) — quick cross-fade with subtle slide */
+::view-transition-old(root) {
+    animation: 200ms ease-out both vt-fade-out;
+}
+::view-transition-new(root) {
+    animation: 300ms ease-out both vt-fade-in;
 }
 
-#modern-navbar {
+/* Modern navbar snaps instantly (content changes between pages) */
+body.mnav-enabled #modern-navbar {
     view-transition-name: modern-header;
 }
-
-#mnav-overlay {
-    view-transition-name: modern-navbar-overlay;
+::view-transition-old(modern-header),
+::view-transition-new(modern-header) {
+    animation: 0s ease-out both vt-fade-out;
+    mix-blend-mode: normal;
+}
+::view-transition-new(modern-header) {
+    animation-name: vt-fade-in;
 }
 
-#qa-panel {
-    view-transition-name: qa-sidebar-panel;
-}
-
+/* Footer is identical on every page — morph it smoothly */
 footer.footer {
     view-transition-name: site-footer;
+}
+
+@keyframes vt-fade-out {
+    to { opacity: 0; }
+}
+@keyframes vt-fade-in {
+    from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
 }
