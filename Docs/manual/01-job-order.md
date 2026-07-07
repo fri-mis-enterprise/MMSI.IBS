@@ -17,12 +17,16 @@ graph LR
 
 ### Job Orders List (Index)
 
+![Job Orders list](/docs-images/job-order/list.png)
+
 - **Path:** MSAP > Job Orders
 - **Table columns:** Date, Job Order #, Customer, Vessel, COS #, Voyage #, Tickets (count), Status, Actions
 - **Filters:** Date range filter in card header
 - **Actions:** Create, Edit, Details, Delete per row
 
 ### Create Job Order
+
+![Create Job Order form](/docs-images/job-order/create.png)
 
 - **Form layout:** Two-column grid
 - **Left column (col-8):**
@@ -45,6 +49,8 @@ graph LR
 - Tugboat assignment/unassignment available
 
 ### Job Order Details
+
+![Job Order details](/docs-images/job-order/details.png)
 
 - Displays full Job Order info
 - Lists associated Dispatch Tickets

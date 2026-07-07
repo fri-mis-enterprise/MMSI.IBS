@@ -27,11 +27,15 @@ graph LR
 
 ### Billing List (Index)
 
+![Billing list](/docs-images/billing/list.png)
+
 - **Path:** MSAP > Billing
 - **Filters:** Status buttons (ALL, FOR POSTING, FOR COLLECTION, COLLECTED) + Date range
 - **Table columns:** Date, Billing #, Amount, Customer, Port - Terminal, Vessel, Status, Actions
 
 ### Create Billing
+
+![Create Billing form](/docs-images/billing/create.png)
 
 - **Form layout:** Two-column grid with AJAX submission
 - **Left column:**
@@ -51,6 +55,8 @@ graph LR
 - Adjust amounts
 
 ### Preview
+
+![Billing preview](/docs-images/billing/preview.png)
 
 - Read-only view of billing with all associated tickets and tugboats
 - Shows computed VAT, withholding tax, and net amounts

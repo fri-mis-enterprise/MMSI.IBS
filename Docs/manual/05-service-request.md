@@ -37,11 +37,15 @@ graph LR
 
 ### Service Requests List (Index)
 
+![Service Requests list](/docs-images/service-request/list.png)
+
 - **Path:** MSAP > Service Requests
 - **Filters:** Status buttons (ALL, REQUESTED, DRAFT, CANCELLED) + Date range
 - **Table columns:** Date, COS #, Ticket #, Start, End, Activity/Service, Port - Terminal, Tugboat, Customer, Status, Actions
 
 ### Create Service Request
+
+![Create Service Request form](/docs-images/service-request/create.png)
 
 - **Form layout:** Two-column grid
 - **Left column (col-8):**

@@ -10,11 +10,15 @@ Billing moves to **Collected** when fully collected.
 
 ### Collections List (Index)
 
+![Collections list](/docs-images/collection/list.png)
+
 - **Path:** MSAP > Collections
 - **Filters:** Date range
 - **Table columns:** Date, Collection #, Check Date, Date Deposited, Amount, Customer, Actions
 
 ### Create Collection
+
+![Create Collection form](/docs-images/collection/create.png)
 
 - **Form layout:** Two-column grid with AJAX submission
 - **Left column (col-8):**

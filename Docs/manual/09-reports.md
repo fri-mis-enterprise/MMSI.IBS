@@ -5,6 +5,9 @@ Reports are generated as **Excel files** using EPPlus. Available under **MSAP > 
 ## Available Reports
 
 ### Dispatch for Billing
+
+![Dispatch for Billing report](/docs-images/reports/dispatch-billing.png)
+
 - **Purpose:** List of dispatch tickets ready for billing
 - **Parameters:** Date range (From — To)
 - **Output:** 22 columns covering dispatch and billing details
@@ -12,6 +15,9 @@ Reports are generated as **Excel files** using EPPlus. Available under **MSAP > 
 - Use: Pre-billing audit
 
 ### Dispatch Ticket Summary
+
+![Dispatch Ticket Summary report](/docs-images/reports/dispatch-summary.png)
+
 - **Purpose:** Comprehensive summary of dispatched services
 - **Parameters:** Date range (From — To)
 - **Output:** 35 columns with color-coded sections
@@ -20,6 +26,9 @@ Reports are generated as **Excel files** using EPPlus. Available under **MSAP > 
 - Use: Operational overview
 
 ### Sales Summary (AR Monitoring)
+
+![Sales Summary report](/docs-images/reports/sales-summary.png)
+
 - **Purpose:** Accounts Receivable monitoring report
 - **Parameters:** Month, Year
 - **Output:** Dynamic columns based on tugboats, owners, and customers

@@ -4,6 +4,8 @@
 
 **Path:** MSAP > Notifications
 
+![Notification Center](/docs-images/notifications-audit/notification-center.png)
+
 The Notification Center displays workflow alerts and action items for the current user.
 
 ### Features
@@ -29,6 +31,8 @@ The Notification Center displays workflow alerts and action items for the curren
 ## Audit Trail
 
 **Path:** MSAP > Audit Trail
+
+![Audit Trail](/docs-images/notifications-audit/audit-trail.png)
 
 Every create, edit, delete, and state transition is logged with full details.
 

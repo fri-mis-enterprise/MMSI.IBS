@@ -7,6 +7,9 @@ Master files are the reference data that powers all workflows. They must be set 
 These are managed under **MSAP** and require `ManageMaritimeMasterFile` access.
 
 ### Vessels
+
+![Vessels list](/docs-images/master-files/vessels.png)
+
 - Register seagoing vessels used in service operations
 - **Fields:** Vessel #, Vessel Name, Vessel Type
 - **Table columns:** Vessel #, Vessel Name, Vessel Type, Actions
@@ -75,6 +78,9 @@ These are managed under **MSAP** and require `ManageMaritimeMasterFile` access.
 - Used for attribution and reporting
 
 ### Tariff Rates
+
+![Tariff Rates list](/docs-images/master-files/tariff-rates.png)
+
 - Pre-defined rate cards: Dispatch Rate, BAF Rate per customer/port/terminal
 - **Upsert behavior:** Creates or updates matching records
 - Used by **Set Tariff** in Dispatch Tickets

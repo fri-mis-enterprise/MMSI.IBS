@@ -48,11 +48,15 @@ graph LR
 
 ### Dispatch Tickets List (Index)
 
+![Dispatch Ticket list](/docs-images/dispatch-ticket/list.png)
+
 - **Path:** MSAP > Dispatch Tickets
 - **Filters:** Status filter buttons (ALL, FOR TARIFF, FOR APPROVAL, DISAPPROVED, FOR BILLING, BILLED, DELETED) + Date range
 - **Table columns:** Date, COS #, Ticket #, Start, End, Activity/Service, Port - Terminal, Tugboat, Customer, Status, Actions
 
 ### Create Dispatch Ticket
+
+![Create Dispatch Ticket form](/docs-images/dispatch-ticket/create.png)
 
 - **Form layout:** Two-column grid
 - **Left column (col-8):**
@@ -62,6 +66,8 @@ graph LR
 - **Right column (col-4):** Status, COS #
 
 ### Set Tariff / Edit Tariff
+
+![Set Tariff form](/docs-images/dispatch-ticket/tariff.png)
 
 - For tickets in **For Tariff** status
 - Fields: Dispatch Rate, BAF Rate, discounts, charge types

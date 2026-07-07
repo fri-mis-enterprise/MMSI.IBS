@@ -56,7 +56,6 @@
     .docs-content {
         flex: 1;
         padding: 2rem 3rem;
-        max-width: 960px;
         overflow-x: auto;
     }
     .docs-content h1 { font-size: 2rem; margin-top: 0; margin-bottom: 1rem; font-weight: 700; }
@@ -77,6 +76,7 @@
     .docs-content a { color: #0d6efd; }
     .docs-content a:hover { text-decoration: underline; }
     .docs-content strong { font-weight: 600; }
+    .docs-content img { max-width: 100%; height: auto; display: block; margin: 1rem 0; border: 1px solid #dee2e6; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     @@media (max-width: 768px) {
         .docs-sidebar { display: none; }
         .docs-content { padding: 1.5rem; }
@@ -126,6 +126,7 @@
     static string GetIcon(string slug) => slug switch
     {
         "index" => "menu_book",
+        "user-login" => "login",
         "job-order" => "assignment",
         "dispatch-ticket" => "confirmation_number",
         "billing" => "receipt_long",

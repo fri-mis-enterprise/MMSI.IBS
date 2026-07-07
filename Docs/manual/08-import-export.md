@@ -4,6 +4,8 @@
 
 **Path:** MSAP > Import (requires `ManageMsapImport` access)
 
+![Import page](/docs-images/import-export/import-page.png)
+
 Imports data from CSV files into all MSAP tables. Used for initial data migration from legacy systems.
 
 ### Import Order

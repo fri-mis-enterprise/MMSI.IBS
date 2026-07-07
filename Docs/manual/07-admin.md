@@ -10,6 +10,8 @@ Managed via: **MSAP > User Access** (Admin role required)
 
 ## Role Management
 
+![Role Management list](/docs-images/admin/role-management.png)
+
 **Path:** GENERAL > Role
 
 - **Table columns:** Name
@@ -22,6 +24,8 @@ Managed via: **MSAP > User Access** (Admin role required)
 3. Submit
 
 ## User Management
+
+![User Management list](/docs-images/admin/user-management.png)
 
 **Path:** GENERAL > User
 
