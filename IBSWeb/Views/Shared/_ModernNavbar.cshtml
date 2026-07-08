@@ -366,7 +366,7 @@
             <!-- Notifications -->
             <a class="mnav-icon-btn"
                asp-area="User" asp-controller="Notification" asp-action="Index"
-               title="Notifications" aria-label="View notifications">
+               title="Notifications" aria-label="View notifications" data-search-ignore>
                 <span class="material-symbols-outlined">notifications</span>
                 <span id="mnav-notif-count" class="mnav-badge" style="display:none">0</span>
             </a>
@@ -381,9 +381,9 @@
             <div class="mnav-divider" aria-hidden="true"></div>
 
             <!-- Toggle back to classic (so user can switch from modern side) -->
-            <button class="mnav-toggle-btn" data-mnav-toggle title="Switch back to the classic navigation bar">
+            <button class="mnav-toggle-btn" data-mnav-toggle title="Switch back to the classic user interface">
                 <span class="material-symbols-outlined" aria-hidden="true">toggle_on</span>
-                <span class="mnav-toggle-label">Modern Nav</span>
+                <span class="mnav-toggle-label">Modern UI</span>
             </button>
 
             <div class="mnav-divider" aria-hidden="true"></div>

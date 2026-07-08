@@ -70,7 +70,8 @@
             const icon  = btn.querySelector('.material-symbols-outlined');
             const label = btn.querySelector('.mnav-toggle-label');
             if (icon)  icon.textContent  = enabled ? 'toggle_on'  : 'toggle_off';
-            if (label) label.textContent = enabled ? 'Modern Nav' : 'Try Modern Nav';
+            if (label) label.textContent = enabled ? 'Modern UI' : 'Try Modern UI';
+            btn.setAttribute('title', enabled ? 'Switch back to the classic user interface' : 'Try the new modern user interface');
         });
     }
 
@@ -194,7 +195,7 @@
         }
 
         // Modern navbar links
-        document.querySelectorAll('#modern-navbar a[href]:not([href="#"])').forEach(push);
+        document.querySelectorAll('#modern-navbar a[href]:not([href="#"]):not([data-search-ignore])').forEach(push);
 
         // Classic navbar links (still in DOM, just hidden)
         document.querySelectorAll(
