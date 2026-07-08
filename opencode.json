@@ -1,0 +1,17 @@
+﻿{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "msap-tools": {
+      "type": "local",
+      "command": [
+        "node",
+        "C:/Users/MIS2/Desktop/MMSI-IBS/mcp-server/build/index.js"
+      ],
+      "cwd": "C:/Users/MIS2/Desktop/MMSI-IBS/mcp-server",
+      "enabled": true,
+      "environment": {
+        "PROJECT_ROOT": "C:/Users/MIS2/Desktop/MMSI-IBS"
+      }
+    }
+  }
+}
