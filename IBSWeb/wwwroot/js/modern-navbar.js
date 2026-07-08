@@ -369,6 +369,34 @@
     }
 
     /* ══════════════════════════════════════════════════════
+        User dropdown
+    ══════════════════════════════════════════════════════ */
+    function setupUserDropdown() {
+        var trigger = document.getElementById('mnav-user-trigger');
+        var menu = document.getElementById('mnav-dropdown-menu');
+        if (!trigger || !menu) return;
+
+        function close() {
+            menu.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = menu.classList.contains('open');
+            if (isOpen) { close(); } else { menu.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!trigger.contains(e.target)) close();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') close();
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════
         Toggle buttons
     ══════════════════════════════════════════════════════ */
     function bindToggleButtons() {
@@ -390,5 +418,6 @@
         bindToggleButtons();
         setupSearch();
         setupMobileDrawer();
+        setupUserDropdown();
     });
 })();

@@ -1,6 +1,9 @@
 # Changelog
 
 ## [2026-07-08]
+### Changed
+- Modern navbar right zone: consolidated docs link, dark mode toggle, modern UI toggle, and logout into a single user dropdown triggered by the avatar chip. Removed standalone icon buttons and toggle chip from the right zone. (scope: `_ModernNavbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`)
+
 ### Removed
 - Notification feature: removed all notification-related code including models (Notification, UserNotification, HubConnection), services (INotificationService, NotificationService), repositories (INotificationRepository, NotificationRepository, IHubConnectionRepository, HubConnectionRepository), SignalR hub (NotificationHub), controller (NotificationController), views (Notification/Index.cshtml), JS (notification.js), CSS styles, and all references in layouts, services, tests, and docs. Kept the TempData flash message partial (_Notification.cshtml) as it's unrelated. (scope: ~45 files across IBS.Models, IBS.DataAccess, IBS.Services, IBSWeb, IBS.Tests, Docs)
 

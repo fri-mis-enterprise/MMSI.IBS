@@ -376,53 +376,55 @@
                 <input class="mnav-search" type="search" placeholder="Press / to search..." aria-label="Search IBS" />
             </div>
 
-            <!-- Docs / Manual -->
-            <a class="mnav-icon-btn"
-               asp-area="User" asp-controller="Docs" asp-action="Index"
-               title="User Manual" aria-label="User Manual">
-                <span class="material-symbols-outlined">help</span>
-            </a>
+            <!-- User dropdown -->
+            <div class="mnav-user-dropdown">
+                <button class="mnav-user-trigger" id="mnav-user-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="User menu">
+                    <span class="material-symbols-outlined mnav-avatar-icon">account_circle</span>
+                    <span class="mnav-user-name">@(userName ?? "User")</span>
+                    <span class="material-symbols-outlined mnav-chevron">arrow_drop_down</span>
+                </button>
+                <div class="mnav-dropdown-menu" id="mnav-dropdown-menu">
+                    <div class="mnav-dropdown-header">
+                        <span class="material-symbols-outlined" style="font-size:40px;">account_circle</span>
+                        <div>
+                            <div class="mnav-dropdown-name">@(userName ?? "User")</div>
+                            @if (!string.IsNullOrEmpty(company))
+                            {
+                                <div class="mnav-dropdown-role">@company.ToUpper() @stationCode?.ToUpper()</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mnav-dropdown-divider"></div>
 
-            <!-- Dark mode toggle -->
-            <button id="mnav-theme-toggle" class="mnav-icon-btn" title="Toggle dark/light mode" style="background:none;border:none;cursor:pointer;">
-                <span class="material-symbols-outlined" id="mnav-theme-icon">dark_mode</span>
-            </button>
-
-            <div class="mnav-divider" aria-hidden="true"></div>
-
-            <!-- Toggle back to classic (so user can switch from modern side) -->
-            <button class="mnav-toggle-btn" data-mnav-toggle title="Switch back to the classic user interface">
-                <span class="material-symbols-outlined" aria-hidden="true">toggle_on</span>
-                <span class="mnav-toggle-label">Modern UI</span>
-            </button>
-
-            <div class="mnav-divider" aria-hidden="true"></div>
-
-            <!-- User info -->
-            <div class="mnav-user">
-                <div class="mnav-user-text">
-                    <div class="mnav-user-name">@(userName ?? "User")</div>
-                    @if (!string.IsNullOrEmpty(company))
-                    {
-                        <div class="mnav-user-role">@company.ToUpper() @stationCode?.ToUpper()</div>
-                    }
-                </div>
-                <!-- Logout form trigger (avatar click) -->
-                <form id="mnav-logout-form"
-                      asp-area="Identity"
-                      asp-page="/Account/Logout"
-                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
-                      style="margin:0">
-                    <button type="submit"
-                            class="mnav-avatar-btn"
-                            style="background:none;border:none;padding:0;cursor:pointer;"
-                            title="Logout @userName">
-                        <span class="material-symbols-outlined"
-                              style="font-size:34px;color:rgba(255,255,255,.8);vertical-align:middle;">
-                            account_circle
-                        </span>
+                    <button class="mnav-dropdown-item" id="mnav-theme-toggle" type="button">
+                        <span class="material-symbols-outlined" id="mnav-theme-icon">dark_mode</span>
+                        <span>Dark mode</span>
+                        <span class="mnav-dropdown-check" id="mnav-theme-check" style="display:none">check</span>
                     </button>
-                </form>
+
+                    <button class="mnav-dropdown-item" data-mnav-toggle type="button">
+                        <span class="material-symbols-outlined">toggle_on</span>
+                        <span>Modern UI</span>
+                    </button>
+
+                    <a class="mnav-dropdown-item" asp-area="User" asp-controller="Docs" asp-action="Index">
+                        <span class="material-symbols-outlined">help</span>
+                        <span>User Manual</span>
+                    </a>
+
+                    <div class="mnav-dropdown-divider"></div>
+
+                    <form id="mnav-logout-form"
+                          asp-area="Identity"
+                          asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                          style="margin:0">
+                        <button type="submit" class="mnav-dropdown-item mnav-dropdown-danger">
+                            <span class="material-symbols-outlined">logout</span>
+                            <span>Sign out</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     }
