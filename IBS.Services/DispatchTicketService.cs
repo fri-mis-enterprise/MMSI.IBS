@@ -22,7 +22,7 @@ namespace IBS.Services
             return await unitOfWork.DispatchTicket.GetDispatchTicketWithDetailsAsync(id, cancellationToken);
         }
 
-        public async Task<ServiceRequestViewModel> PopulateServiceRequestViewModelAsync(ServiceRequestViewModel? viewModel, int? jobOrderId, CancellationToken cancellationToken)
+        public async Task<ServiceRequestViewModel> PopulateDispatchTicketViewModelAsync(ServiceRequestViewModel? viewModel, int? jobOrderId, CancellationToken cancellationToken)
         {
             viewModel ??= new ServiceRequestViewModel();
 
@@ -52,7 +52,12 @@ namespace IBS.Services
         {
             try
             {
-                if (viewModel.JobOrderId.HasValue && !await IsJobOrderEditableAsync(viewModel.JobOrderId, cancellationToken))
+                if (!viewModel.JobOrderId.HasValue)
+                {
+                    return ServiceResult<int>.Failure("Dispatch tickets must be created under a Job Order.");
+                }
+
+                if (!await IsJobOrderEditableAsync(viewModel.JobOrderId, cancellationToken))
                 {
                     return ServiceResult<int>.Failure("Cannot add ticket Ã¢â‚¬â€ parent Job Order is cancelled or closed.");
                 }
@@ -125,8 +130,8 @@ namespace IBS.Services
                 if (model.Status == SD.DispatchTicketStatus.ForTariff)
                 {
                     var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
-                    var targetUrl = model.JobOrderId.HasValue 
-                        ? $"/User/JobOrder/Details/{model.JobOrderId}" 
+                    var targetUrl = model.JobOrderId.HasValue
+                        ? $"/User/JobOrder/Details/{model.JobOrderId}"
                         : "/User/DispatchTicket/Index?filter=ForTariff";
 
                     await notificationService.NotifyByAccessAsync(
@@ -259,12 +264,12 @@ namespace IBS.Services
                 currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 // Smart Reset Logic: Only reset tariff if critical fields changed
-                var criticalFieldsChanged = changes.Any(c => 
-                    c.StartsWith("ServiceId:") || 
-                    c.StartsWith("TugBoatId:") || 
-                    c.StartsWith("DateLeft:") || 
-                    c.StartsWith("TimeLeft:") || 
-                    c.StartsWith("DateArrived:") || 
+                var criticalFieldsChanged = changes.Any(c =>
+                    c.StartsWith("ServiceId:") ||
+                    c.StartsWith("TugBoatId:") ||
+                    c.StartsWith("DateLeft:") ||
+                    c.StartsWith("TimeLeft:") ||
+                    c.StartsWith("DateArrived:") ||
                     c.StartsWith("TimeArrived:") ||
                     c.StartsWith("TotalHours:"));
 
@@ -413,8 +418,8 @@ namespace IBS.Services
                 {
                     // Notify Approvers
                     var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == currentModel.VesselId, cancellationToken);
-                    var targetUrl = currentModel.JobOrderId.HasValue 
-                        ? $"/User/JobOrder/Details/{currentModel.JobOrderId}" 
+                    var targetUrl = currentModel.JobOrderId.HasValue
+                        ? $"/User/JobOrder/Details/{currentModel.JobOrderId}"
                         : "/User/DispatchTicket/Index?filter=ForApproval";
 
                     await notificationService.NotifyByAccessAsync(
@@ -508,8 +513,8 @@ namespace IBS.Services
 
                 // Notify the person who set the tariff (or generally SetTariff access)
                 var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
-                var targetUrl = model.JobOrderId.HasValue 
-                    ? $"/User/JobOrder/Details/{model.JobOrderId}" 
+                var targetUrl = model.JobOrderId.HasValue
+                    ? $"/User/JobOrder/Details/{model.JobOrderId}"
                     : "/User/DispatchTicket/Index?filter=ForTariff";
 
                 await notificationService.NotifyByAccessAsync(

@@ -48,9 +48,9 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpGet]
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
-        public async Task<IActionResult> Create(int? jobOrderId, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(int jobOrderId, CancellationToken cancellationToken = default)
         {
-            var viewModel = await dispatchTicketService.PopulateServiceRequestViewModelAsync(null, jobOrderId, cancellationToken);
+            var viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, jobOrderId, cancellationToken);
             return View(viewModel);
         }
 
@@ -81,7 +81,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            await dispatchTicketService.PopulateServiceRequestViewModelAsync(viewModel, null, cancellationToken);
+            await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
             return View(viewModel);
         }
 

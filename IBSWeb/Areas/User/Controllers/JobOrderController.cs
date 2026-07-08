@@ -131,7 +131,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var ticketViewModel = await dispatchTicketService.PopulateServiceRequestViewModelAsync(null, id, cancellationToken);
+            var ticketViewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, id, cancellationToken);
             ViewData["TicketViewModel"] = ticketViewModel;
 
             foreach (var ticket in jobOrder.DispatchTickets)
