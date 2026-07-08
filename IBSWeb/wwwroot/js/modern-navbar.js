@@ -333,34 +333,42 @@
     }
 
     /* ══════════════════════════════════════════════════════
-        Mobile drawer
+        Mobile drawer — flat link list from collected nav links
     ══════════════════════════════════════════════════════ */
     function setupMobileDrawer() {
         var hamburger = document.getElementById('mnav-hamburger');
         var drawer = document.getElementById('mnav-drawer');
         var overlay = document.getElementById('mnav-drawer-overlay');
-        if (!hamburger || !drawer || !overlay) return;
+        var drawerList = drawer ? drawer.querySelector('.mnav-list') : null;
+        if (!hamburger || !drawer || !drawerList || !overlay) return;
 
-        // Clone desktop nav links into the drawer
-        var desktopList = document.querySelector('#modern-navbar .mnav-nav-area .mnav-list');
-        var drawerList = drawer.querySelector('.mnav-list');
-        if (desktopList && drawerList) {
-            drawerList.innerHTML = '';
-            desktopList.querySelectorAll('.mnav-item').forEach(function(item) {
-                drawerList.appendChild(item.cloneNode(true));
+        // Build flat link list grouped by section
+        var links = collectAllNavLinks();
+        var grouped = {};
+        links.forEach(function(l) {
+            var sec = l.section || 'Navigation';
+            if (!grouped[sec]) grouped[sec] = [];
+            grouped[sec].push(l);
+        });
+
+        drawerList.innerHTML = '';
+        Object.keys(grouped).forEach(function(sec) {
+            var header = document.createElement('div');
+            header.className = 'mnav-section-label';
+            header.textContent = sec;
+            header.style.padding = '12px 16px 4px';
+            header.style.margin = '0';
+            header.style.borderBottom = 'none';
+            drawerList.appendChild(header);
+
+            grouped[sec].forEach(function(l) {
+                var a = document.createElement('a');
+                a.href = l.url;
+                a.className = 'mnav-mega-link';
+                a.innerHTML = '<span class="material-symbols-outlined">chevron_right</span><span>' + escapeHtml(l.label) + '</span>';
+                drawerList.appendChild(a);
             });
-            // Re-bind mega-menu toggle on drawer items
-            drawerList.querySelectorAll('.mnav-item[data-mega]').forEach(function(item) {
-                var trigger = item.querySelector('.mnav-trigger');
-                if (!trigger) return;
-                trigger.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var wasOpen = item.classList.contains('mnav-open');
-                    drawerList.querySelectorAll('.mnav-item').forEach(function(i) { i.classList.remove('mnav-open'); });
-                    if (!wasOpen) item.classList.add('mnav-open');
-                });
-            });
-        }
+        });
 
         function open() { document.body.classList.add('mnav-drawer-open'); overlay.classList.add('active'); }
         function close() { document.body.classList.remove('mnav-drawer-open'); overlay.classList.remove('active'); }
@@ -369,11 +377,9 @@
             if (document.body.classList.contains('mnav-drawer-open')) { close(); } else { open(); }
         });
         overlay.addEventListener('click', close);
-        // Close on Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && document.body.classList.contains('mnav-drawer-open')) close();
         });
-        // Close drawer on link click
         drawer.addEventListener('click', function(e) {
             var link = e.target.closest('a[href]');
             if (link) close();
