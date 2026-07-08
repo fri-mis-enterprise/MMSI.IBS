@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-08]
+### Fixed
+- Icon and font flash on page load (FOUT): changed Google Fonts `display=swap` to `display=block` to hide text while fonts load instead of showing fallback text. Affects Material Symbols Outlined icons and Inter/Hanken Grotesk body fonts. (scope: `IBSWeb/Views/Shared/_Layout.cshtml`)
+
 ## [2026-07-07]
 ### Fixed
 - "Post Request" dropdown action in Job Order Details sent a GET to a `[HttpPost]` endpoint, silently failing. Replaced with a hidden form POST + confirmation dialog matching other dropdown actions. (scope: `IBSWeb/Areas/User/Views/JobOrder/Details.cshtml`)
