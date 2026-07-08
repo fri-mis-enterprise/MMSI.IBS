@@ -365,7 +365,7 @@
                 var a = document.createElement('a');
                 a.href = l.url;
                 a.className = 'mnav-mega-link';
-                a.innerHTML = '<span class="material-symbols-outlined">chevron_right</span><span>' + escapeHtml(l.label) + '</span>';
+                a.textContent = escapeHtml(l.label);
                 drawerList.appendChild(a);
             });
         });
