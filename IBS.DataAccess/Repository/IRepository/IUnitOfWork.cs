@@ -82,6 +82,5 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #endregion
 
-        INotificationRepository Notifications { get; }
     }
 }

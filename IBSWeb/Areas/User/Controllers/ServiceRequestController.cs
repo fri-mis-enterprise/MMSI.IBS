@@ -28,8 +28,7 @@ namespace IBSWeb.Areas.User.Controllers
         IUnitOfWork unitOfWork,
         UserManager<ApplicationUser> userManager,
         ICloudStorageService cloudStorageService,
-        ILogger<ServiceRequestController> logger,
-        INotificationService notificationService)
+        ILogger<ServiceRequestController> logger)
         : Controller
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -678,15 +677,6 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 await unitOfWork.SaveAsync(cancellationToken);
-
-                // Notify Port Coordinators/Dispatchers
-                if (postedTickets.Any())
-                {
-                    await notificationService.NotifyByAccessAsync(
-                        ProcedureEnum.CreateDispatchTicket,
-                        $"New Service Request(s) posted: <b>#{string.Join(", #", postedTickets)}</b>. Ready for Dispatch.",
-                        cancellationToken: cancellationToken);
-                }
 
                 #region -- Audit Trail
 

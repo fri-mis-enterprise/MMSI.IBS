@@ -106,24 +106,6 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       Notification badge sync
-    ══════════════════════════════════════════════════════ */
-    function syncNotificationBadge() {
-        const existing = document.getElementById('notificationCount');
-        const modern   = document.getElementById('mnav-notif-count');
-        if (!existing || !modern) return;
-
-        function sync() {
-            const n = existing.textContent.trim();
-            modern.textContent = n;
-            modern.style.display = (n === '0' || n === '') ? 'none' : '';
-        }
-
-        new MutationObserver(sync).observe(existing, { childList: true, characterData: true, subtree: true });
-        sync();
-    }
-
-    /* ══════════════════════════════════════════════════════
        Spotlight search
     ══════════════════════════════════════════════════════ */
 
@@ -406,7 +388,6 @@
         applyState(isEnabled());
         setupMegaMenus();
         bindToggleButtons();
-        syncNotificationBadge();
         setupSearch();
         setupMobileDrawer();
     });

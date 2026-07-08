@@ -6,8 +6,6 @@ using IBS.Models;
 using IBS.Services;
 using IBS.Services.AccessControl;
 using IBS.Utility;
-using IBSWeb.Hubs;
-using IBSWeb.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -77,9 +75,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IUserAccessService, UserAccessService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();
-builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 if (builder.Environment.IsDevelopment())
 {
@@ -107,9 +103,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
-
-// SignalR
-builder.Services.AddSignalR();
 
 builder.Services.AddMemoryCache(options =>
 {
@@ -187,10 +180,6 @@ app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=User}/{controller=Home}/{action=Index}/{id?}");
-
-// SignalR
-app.MapHub<NotificationHub>("/notificationHub");
-
 
 using (var scope = app.Services.CreateScope())
 {

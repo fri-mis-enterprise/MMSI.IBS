@@ -21,12 +21,6 @@ namespace IBS.DataAccess.Data
 
         public DbSet<AppSetting> AppSettings { get; set; }
 
-        public DbSet<Notification> Notifications { get; set; }
-
-        public DbSet<UserNotification> UserNotifications { get; set; }
-
-        public DbSet<HubConnection> HubConnections { get; set; }
-
         public DbSet<AuditTrail> AuditTrails { get; set; }
 
         #region--Master File

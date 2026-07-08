@@ -30,8 +30,8 @@ namespace IBS.Tests.Controllers
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockCloudStorageService = new Mock<ICloudStorageService>();
-            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, new Mock<ILogger<JobOrderService>>().Object, new Mock<INotificationService>().Object);
-            _mockDispatchTicketService = new Mock<DispatchTicketService>(_mockUnitOfWork.Object, _mockCloudStorageService.Object, new Mock<ILogger<DispatchTicketService>>().Object, new Mock<INotificationService>().Object);
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, new Mock<ILogger<JobOrderService>>().Object);
+            _mockDispatchTicketService = new Mock<DispatchTicketService>(_mockUnitOfWork.Object, _mockCloudStorageService.Object, new Mock<ILogger<DispatchTicketService>>().Object);
             _mockTerminalService = new Mock<ITerminalService>();
             _mockLogger = new Mock<ILogger<JobOrderController>>();
             _mockTempData = new Mock<ITempDataDictionary>();

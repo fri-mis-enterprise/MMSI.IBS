@@ -39,4 +39,4 @@ graph LR
 | 8  | Administration (Users & Roles) | [Administration](admin) |
 | 9  | Import & Export | [Import & Export](import-export) |
 | 10 | Reports | [Reports](reports) |
-| 11 | Notifications & Audit Trail | [Notifications & Audit](notifications-audit) |
+

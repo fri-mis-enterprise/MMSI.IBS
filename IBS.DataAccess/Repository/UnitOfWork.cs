@@ -18,8 +18,6 @@ namespace IBS.DataAccess.Repository
 
         public ICompanyRepository Company { get; }
 
-        public INotificationRepository Notifications { get; }
-
         public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
         {
             var strategy = _db.Database.CreateExecutionStrategy();
@@ -84,7 +82,6 @@ namespace IBS.DataAccess.Repository
             _db = db;
 
             Company = new CompanyRepository(_db);
-            Notifications = new NotificationRepository(_db);
 
             #region--Master Files
 

@@ -27,7 +27,6 @@ namespace IBS.Tests.Services
         private readonly Mock<ICustomerRepository> _mockCustomerRepo;
         private readonly Mock<IDispatchTicketRepository> _mockTicketRepo;
         private readonly Mock<IVesselRepository> _mockVesselRepo;
-        private readonly Mock<INotificationService> _mockNotification;
         private readonly Mock<JobOrderService> _mockJobOrderService;
         private readonly Mock<IAuditTrailRepository> _mockAuditTrail;
 
@@ -35,8 +34,7 @@ namespace IBS.Tests.Services
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger<BillingService>>();
-            _mockNotification = new Mock<INotificationService>();
-            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, new Mock<ILogger<JobOrderService>>().Object, _mockNotification.Object);
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, new Mock<ILogger<JobOrderService>>().Object);
             _mockBillingRepo = new Mock<IBillingRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockCustomerRepo = new Mock<ICustomerRepository>();
@@ -58,7 +56,7 @@ namespace IBS.Tests.Services
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);
 
-            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object, _mockNotification.Object);
+            _service = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockLogger.Object);
         }
 
         [Fact]

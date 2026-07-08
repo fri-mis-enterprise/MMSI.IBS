@@ -1,6 +1,9 @@
 # Changelog
 
 ## [2026-07-08]
+### Removed
+- Notification feature: removed all notification-related code including models (Notification, UserNotification, HubConnection), services (INotificationService, NotificationService), repositories (INotificationRepository, NotificationRepository, IHubConnectionRepository, HubConnectionRepository), SignalR hub (NotificationHub), controller (NotificationController), views (Notification/Index.cshtml), JS (notification.js), CSS styles, and all references in layouts, services, tests, and docs. Kept the TempData flash message partial (_Notification.cshtml) as it's unrelated. (scope: ~45 files across IBS.Models, IBS.DataAccess, IBS.Services, IBSWeb, IBS.Tests, Docs)
+
 ### Added
 - Dark mode: full dark/light theme toggle with `prefers-color-scheme` auto-detection and `localStorage` persistence. Uses Bootstrap 5.3's built-in `[data-bs-theme=dark]` system plus custom `--*` CSS variable overrides for the app's design tokens. Toggle button in both classic and modern navbars. Print output always forced to light theme. (scope: `_Layout.cshtml`, `_ModernNavbar.cshtml`, `modern-ui.css`, `modern-dashboard.css`, `modern-navbar.css`, `site.css`, `modern-dashboard.js`, `MaritimeReport/Index.cshtml`)
 - Modern MSAP Dashboard: A high-fidelity, interactive operational dashboard featuring a workload status breakdown, a 6-month financial billing/collection trend chart (via ApexCharts), a relative-time operations activity feed, and pending task alerts (scope: `Index.cshtml`, `modern-dashboard.css`, `modern-dashboard.js`, `HomeController.cs`)

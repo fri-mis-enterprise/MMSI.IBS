@@ -36,8 +36,7 @@ namespace IBS.Tests.Services
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
             _mockVesselRepo = new Mock<IVesselRepository>();
             var mockJobOrderLogger = new Mock<ILogger<JobOrderService>>();
-            var mockNotification = new Mock<INotificationService>();
-            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, mockJobOrderLogger.Object, mockNotification.Object);
+            _mockJobOrderService = new Mock<JobOrderService>(_mockUnitOfWork.Object, mockJobOrderLogger.Object);
             var mockBillingLogger = new Mock<ILogger<BillingService>>();
             var mockCollectionLogger = new Mock<ILogger<CollectionService>>();
 
@@ -53,8 +52,8 @@ namespace IBS.Tests.Services
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);
 
-            _billingService = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockBillingLogger.Object, mockNotification.Object);
-            _collectionService = new CollectionService(_mockUnitOfWork.Object, mockCollectionLogger.Object, mockNotification.Object);
+            _billingService = new BillingService(_mockUnitOfWork.Object, _mockJobOrderService.Object, mockBillingLogger.Object);
+            _collectionService = new CollectionService(_mockUnitOfWork.Object, mockCollectionLogger.Object);
         }
 
         [Theory]

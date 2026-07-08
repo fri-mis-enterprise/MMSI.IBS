@@ -29,7 +29,6 @@ public class DocsController(
         "07-admin",
         "08-import-export",
         "09-reports",
-        "10-notifications-audit"
     ];
 
     private readonly string _docsRoot = Path.GetFullPath(Path.Combine(env.ContentRootPath, "..", "Docs", "manual"));
@@ -114,8 +113,7 @@ public class DocsController(
             ("master-files", "Master Files", null),
             ("admin", "Administration", async uid => User.IsInRole("Admin")),
             ("import-export", "Import & Export", async uid => await accessControl.HasMsapImportAccessAsync(uid)),
-            ("reports", "Reports", async uid => await accessControl.HasMaritimeReportAccessAsync(uid)),
-            ("notifications-audit", "Notifications & Audit", null)
+            ("reports", "Reports", async uid => await accessControl.HasMaritimeReportAccessAsync(uid))
         };
 
         var result = new List<(string Slug, string Title)>();

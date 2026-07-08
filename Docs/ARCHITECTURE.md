@@ -11,7 +11,7 @@
     ↓  (form POST / AJAX)
 Controller  ←  DI: Services, IUnitOfWork, SignalR hubs, etc.
     ↓
-Service  ←  DI: IUnitOfWork, ILogger, INotificationService, etc.
+Service  ←  DI: IUnitOfWork, ILogger, etc.
     ↓
 Repository (typed, extends Repository<T>)  ←  DI: ApplicationDbContext
     ↓
@@ -72,7 +72,7 @@ public class JobOrderController(
 public class JobOrderService(
     IUnitOfWork unitOfWork,
     ILogger<JobOrderService> logger,
-    INotificationService notificationService) : IJobOrderService
+    ) : IJobOrderService
 ```
 
 - **Primary constructor** for DI
@@ -80,7 +80,7 @@ public class JobOrderService(
 - Mutations wrapped in try-catch → return `ServiceResult`
 - Read-only methods have no try-catch
 - Audit trail on every mutation via `unitOfWork.AuditTrail.AddAsync()`
-- Notifications on workflow transitions via `INotificationService`
+
 
 ### 4.3 Repository Pattern (reference: `Repository<T>`)
 

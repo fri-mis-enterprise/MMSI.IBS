@@ -12,8 +12,7 @@ namespace IBS.Services
 {
     public class CollectionService(
         IUnitOfWork unitOfWork,
-        ILogger<CollectionService> logger,
-        INotificationService notificationService)
+        ILogger<CollectionService> logger)
     {
 
         public async Task<Collection?> GetCollectionByIdAsync(int id, CancellationToken cancellationToken)
@@ -87,12 +86,6 @@ namespace IBS.Services
                     await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
                     await unitOfWork.SaveAsync(cancellationToken);
 
-                    // Notify Accounting/Audit
-                    await notificationService.NotifyByAccessAsync(
-                        ProcedureEnum.ViewGeneralLedger,
-                        $"New Collection <b>#{model.MsapCollectionNumber}</b> for <b>{model.Customer.CustomerName}</b> has been created.",
-                        targetUrl: "/User/Collection/Index",
-                        cancellationToken: cancellationToken);
                 }, cancellationToken);
 
                 return ServiceResult<int>.Success(collectionId, "Collection created successfully.");

@@ -16,7 +16,6 @@ namespace IBS.Tests.Services
     {
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<JobOrderService>> _mockLogger;
-        private readonly Mock<INotificationService> _mockNotification;
         private readonly JobOrderService _service;
         private readonly Mock<IAuditTrailRepository> _mockAuditTrail;
         private readonly Mock<IJobOrderRepository> _mockJobOrderRepo;
@@ -25,7 +24,6 @@ namespace IBS.Tests.Services
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<JobOrderService>>();
-            _mockNotification = new Mock<INotificationService>();
             _mockAuditTrail = new Mock<IAuditTrailRepository>();
             _mockJobOrderRepo = new Mock<IJobOrderRepository>();
 
@@ -33,7 +31,7 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(new Mock<IVesselRepository>().Object);
 
-            _service = new JobOrderService(_mockUnitOfWork.Object, _mockLogger.Object, _mockNotification.Object);
+            _service = new JobOrderService(_mockUnitOfWork.Object, _mockLogger.Object);
         }
 
         #region Create Tests

@@ -14,8 +14,7 @@ namespace IBS.Services
     public class BillingService(
         IUnitOfWork unitOfWork,
         JobOrderService jobOrderService,
-        ILogger<BillingService> logger,
-        INotificationService notificationService)
+        ILogger<BillingService> logger)
     {
         public async Task<Billing?> GetBillingByIdAsync(int id, CancellationToken cancellationToken)
         {
@@ -170,13 +169,6 @@ namespace IBS.Services
                 await unitOfWork.Billing.AddAsync(model, cancellationToken);
                 await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Created Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
-
-                // Notify Accounting for Posting
-                await notificationService.NotifyByAccessAsync(
-                    ProcedureEnum.ViewGeneralLedger,
-                    $"New Billing <b>#{model.MsapBillingNumber}</b> for <b>{customer.CustomerName}</b> has been created. Ready for Posting.",
-                    targetUrl: "/User/Billing/Index",
-                    cancellationToken: cancellationToken);
 
                 return ServiceResult<int>.Success(model.MsapBillingId, "Billing created successfully. Status: For Posting");
             }
@@ -333,13 +325,6 @@ namespace IBS.Services
 
                     await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Posted Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                     await unitOfWork.SaveAsync(cancellationToken);
-
-                    // Notify Collection
-                    await notificationService.NotifyByAccessAsync(
-                        ProcedureEnum.CreateCollection,
-                        $"Billing <b>#{model.MsapBillingNumber}</b> for <b>{customer.CustomerName}</b> has been posted. Ready for Collection.",
-                        targetUrl: "/User/Collection/Index",
-                        cancellationToken: cancellationToken);
 
                     if (model.JobOrderId.HasValue)
                     {

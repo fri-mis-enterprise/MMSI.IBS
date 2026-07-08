@@ -2,7 +2,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Models;
-using IBS.Models.Enums;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
 {
-    public class JobOrderService(IUnitOfWork unitOfWork, ILogger<JobOrderService> logger, INotificationService notificationService)
+    public class JobOrderService(IUnitOfWork unitOfWork, ILogger<JobOrderService> logger)
     {
         public async Task<IEnumerable<JobOrder>> GetAllJobOrdersAsync(CancellationToken cancellationToken)
         {
@@ -91,13 +90,6 @@ namespace IBS.Services
                 await unitOfWork.JobOrder.AddAsync(jobOrder, cancellationToken);
                 await RecordAuditAsync($"Created Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
                 await unitOfWork.SaveAsync(cancellationToken);
-
-                var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == jobOrder.VesselId, cancellationToken);
-                await notificationService.NotifyByAccessAsync(
-                    ProcedureEnum.CreateDispatchTicket,
-                    $"A new Job Order <b>#{jobOrder.JobOrderNumber}</b> for <b>{vessel?.VesselName ?? "a vessel"}</b> has been created and is ready for Dispatch.",
-                    targetUrl: $"/User/JobOrder/Details/{jobOrder.JobOrderId}",
-                    cancellationToken: cancellationToken);
 
                 return ServiceResult<int>.Success(jobOrder.JobOrderId, $"Job Order #{jobOrder.JobOrderNumber} created successfully.");
             }

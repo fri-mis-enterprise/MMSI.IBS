@@ -12,8 +12,6 @@ namespace IBS.Models
 
         public string? StationAccess { get; set; }
 
-        public ICollection<UserNotification> UserNotifications { get; set; } = null!;
-
         public string? Position { get; set; }
         // ⭐ USER MANAGEMENT PROPERTIES ⭐
         [Required]

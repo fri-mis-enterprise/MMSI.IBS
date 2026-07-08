@@ -41,7 +41,6 @@ The top navigation bar has these sections:
 | **Service Requests** | Create and manage service requests |
 | **Master File** | (Admin only) Users, Roles, Employees, User Access, Chart of Accounts, Payment Terms, Bank Accounts |
 | **MSAP References** | Master data: Activities, Ports, Principals, Tariff Rates, Terminals, Tugboats, Vessels, Customers, Suppliers |
-| **Notifications** | Bell icon top-right — shows unread alerts |
 | **Manual** | This user manual |
 | **User menu** | Top-right — shows your name, logout option |
 

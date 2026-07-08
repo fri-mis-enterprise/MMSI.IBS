@@ -220,13 +220,6 @@
                                 </li>
                             }
                         </ul>
-                        <!-- Notification Icon and Dropdown -->
-                        <div class="nav-item dropdown ms-auto">
-                            <a href="@Url.Action("Index", "Notification", new { area = "User" })" class="nav-link text-light position-relative">
-                                <i class="bi bi-bell-fill"></i>
-                                <span id="notificationCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle">0</span>
-                            </a>
-                        </div>
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <div class="nav-item ms-2">
@@ -276,8 +269,6 @@
     <script src="https://cdn.datatables.net/2.0.1/js/dataTables.js"></script><!--data tables scripts-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><!--sweet alert scripts-->
     <script src="~/js/modern-alert.js" asp-append-version="true"></script>
-    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
-    <script src="~/js/notification.js"></script>
     <script src="~/js/spinner.js"></script>
     <script src="~/js/modern-select.js" asp-append-version="true"></script>
     <script src="~/js/modern-table.js" asp-append-version="true"></script>
@@ -286,36 +277,10 @@
     <!-- Opt-in modern navbar controller -->
     <script src="~/js/modern-navbar.js" asp-append-version="true"></script>
 
-    <!-- Notification partial (must be after SweetAlert2) -->
+    <!-- TempData flash messages -->
     <partial name="_Notification" />
 
     @await RenderSectionAsync("Scripts", required: false)
-    <script>
-    $(document).ready(function () {
-        // Check if the user is logged in
-        if ($('#hfUsername').length && $('#hfUsername').val() !== "") {
-            // Function to fetch and update notification count
-            function updateNotificationCount() {
-                $.ajax({
-                    url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
-                    type: 'GET',
-                    success: function (count) {
-                        $('#notificationCount').text(count);
-                    },
-                    error: function () {
-                        console.error("Error fetching notification count");
-                    }
-                });
-            }
-
-            // Initial load
-            updateNotificationCount();
-
-            // Optional: Poll every 30 seconds to update count
-            setInterval(updateNotificationCount, 30000); // 30,000 ms = 30 seconds
-        }
-    });
-    </script>
     <script>
         (function() {
             var html = document.documentElement;
