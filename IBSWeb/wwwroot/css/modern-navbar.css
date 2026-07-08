@@ -425,6 +425,114 @@ body.mnav-enabled {
 }
 @media (min-width: 768px) { .mnav-hamburger { display: none; } }
 
+/* ── Mobile drawer ── */
+.mnav-drawer {
+    display: none;
+    position: fixed;
+    top: var(--mnav-height);
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background: var(--mnav-primary);
+    z-index: 1056;
+    flex-direction: column;
+    padding: 8px 0;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mnav-drawer.open {
+    transform: translateX(0);
+}
+
+.mnav-drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    top: var(--mnav-height);
+    background: rgba(0,0,0,0.4);
+    z-index: 1055;
+}
+
+.mnav-drawer-overlay.active {
+    display: block;
+}
+
+.mnav-drawer .mnav-list {
+    flex-direction: column;
+    height: auto;
+    gap: 0;
+}
+
+.mnav-drawer .mnav-item {
+    height: auto;
+    display: block;
+}
+
+.mnav-drawer .mnav-trigger {
+    width: 100%;
+    justify-content: space-between;
+    padding: 12px 16px;
+    height: auto;
+    font-size: 14px;
+}
+
+.mnav-drawer .mnav-mega {
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0 16px 8px;
+    min-width: auto;
+    background: transparent !important;
+}
+
+.mnav-drawer .mnav-mega-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+
+.mnav-drawer .mnav-section-label {
+    color: var(--mnav-on-primary-70);
+    font-size: 10px;
+    margin-top: 8px;
+    border-bottom-color: rgba(255,255,255,.15);
+}
+
+.mnav-drawer .mnav-mega-link {
+    color: var(--mnav-on-primary-70);
+    padding: 8px 8px;
+    border-radius: 6px;
+}
+
+.mnav-drawer .mnav-mega-link:hover {
+    background: var(--mnav-on-primary-20);
+    color: var(--mnav-on-primary);
+}
+
+.mnav-drawer .mnav-mega-link .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.mnav-drawer .mnav-mega-link .mnav-link-sub {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    body.mnav-enabled .mnav-nav-area {
+        display: none;
+    }
+
+    body.mnav-enabled.mnav-drawer-open .mnav-drawer {
+        display: flex;
+    }
+
+    body.mnav-enabled.mnav-drawer-open .mnav-drawer-overlay {
+        display: block;
+    }
+}
+
 /* ── Spotlight Search Results Dropdown ── */
 #mnav-search-results {
     position: absolute;

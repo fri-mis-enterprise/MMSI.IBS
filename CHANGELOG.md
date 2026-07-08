@@ -13,6 +13,9 @@
 ### Fixed
 - Modern navbar search showing notification badge "0" as a result — added `data-search-ignore` attribute and filter to skip it. (scope: `_ModernNavbar.cshtml`, `modern-navbar.js`)
 
+### Added
+- Mobile drawer for modern navbar: hamburger button on mobile (<768px) opens a slide-in drawer with cloned nav links, supporting mega-menu expand/collapse and overlay close (scope: `_ModernNavbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`)
+
 ### Changed
 - Modern UI Toggle Integration: Rebranded the navigation toggle from "Modern Nav" to "Modern UI" to orchestrate both the mega-menu navigation layout and the new modern dashboard (scope: `_Layout.cshtml`, `_ModernNavbar.cshtml`, `modern-navbar.js`).
 

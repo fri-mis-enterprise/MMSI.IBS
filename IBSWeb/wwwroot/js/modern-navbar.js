@@ -333,7 +333,55 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       Toggle buttons
+        Mobile drawer
+    ══════════════════════════════════════════════════════ */
+    function setupMobileDrawer() {
+        var hamburger = document.getElementById('mnav-hamburger');
+        var drawer = document.getElementById('mnav-drawer');
+        var overlay = document.getElementById('mnav-drawer-overlay');
+        if (!hamburger || !drawer || !overlay) return;
+
+        // Clone desktop nav links into the drawer
+        var desktopList = document.querySelector('#modern-navbar .mnav-nav-area .mnav-list');
+        var drawerList = drawer.querySelector('.mnav-list');
+        if (desktopList && drawerList) {
+            drawerList.innerHTML = '';
+            desktopList.querySelectorAll('.mnav-item').forEach(function(item) {
+                drawerList.appendChild(item.cloneNode(true));
+            });
+            // Re-bind mega-menu toggle on drawer items
+            drawerList.querySelectorAll('.mnav-item[data-mega]').forEach(function(item) {
+                var trigger = item.querySelector('.mnav-trigger');
+                if (!trigger) return;
+                trigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var wasOpen = item.classList.contains('mnav-open');
+                    drawerList.querySelectorAll('.mnav-item').forEach(function(i) { i.classList.remove('mnav-open'); });
+                    if (!wasOpen) item.classList.add('mnav-open');
+                });
+            });
+        }
+
+        function open() { document.body.classList.add('mnav-drawer-open'); overlay.classList.add('active'); }
+        function close() { document.body.classList.remove('mnav-drawer-open'); overlay.classList.remove('active'); }
+
+        hamburger.addEventListener('click', function() {
+            if (document.body.classList.contains('mnav-drawer-open')) { close(); } else { open(); }
+        });
+        overlay.addEventListener('click', close);
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.body.classList.contains('mnav-drawer-open')) close();
+        });
+        // Close drawer on link click
+        drawer.addEventListener('click', function(e) {
+            var link = e.target.closest('a[href]');
+            if (link) close();
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════
+        Toggle buttons
     ══════════════════════════════════════════════════════ */
     function bindToggleButtons() {
         document.querySelectorAll('[data-mnav-toggle]').forEach(btn => {
@@ -346,7 +394,7 @@
     }
 
     /* ══════════════════════════════════════════════════════
-       Init
+        Init
     ══════════════════════════════════════════════════════ */
     document.addEventListener('DOMContentLoaded', () => {
         applyState(isEnabled());
@@ -354,5 +402,6 @@
         bindToggleButtons();
         syncNotificationBadge();
         setupSearch();
+        setupMobileDrawer();
     });
 })();

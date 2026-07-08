@@ -51,6 +51,11 @@
 <div id="mnav-overlay"></div>
 <header id="modern-navbar" role="banner" aria-label="Modern navigation">
 
+    <!-- ── Hamburger (mobile) ── -->
+    <button class="mnav-hamburger" id="mnav-hamburger" aria-label="Toggle navigation menu">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+
     <!-- ── Brand ── -->
     <a class="mnav-brand" asp-area="" asp-controller="Home" asp-action="Index">
         <img src="~/svg/ibs-logo-white.svg" alt="IBS" />
@@ -58,6 +63,14 @@
 
     @if (SignInManager.IsSignedIn(User))
     {
+        <!-- ── Mobile drawer overlay ── -->
+        <div class="mnav-drawer-overlay" id="mnav-drawer-overlay"></div>
+
+        <!-- ── Mobile drawer ── -->
+        <nav class="mnav-drawer" id="mnav-drawer" aria-label="Mobile navigation">
+            <ul class="mnav-list"></ul>
+        </nav>
+
         <!-- ── Desktop navigation ── -->
         <nav class="mnav-nav-area" aria-label="Main menu">
             <ul class="mnav-list" role="menubar">
