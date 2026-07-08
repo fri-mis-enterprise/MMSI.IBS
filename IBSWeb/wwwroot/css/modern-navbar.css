@@ -442,7 +442,8 @@ body.mnav-enabled {
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.mnav-drawer.open {
+.mnav-drawer.open,
+body.mnav-drawer-open .mnav-drawer {
     transform: translateX(0);
 }
 
