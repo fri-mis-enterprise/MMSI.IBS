@@ -1,7 +1,8 @@
-:root {
+:root, [data-bs-theme="light"] {
     /* Color Palette */
     --primary: #051616;
     --on-primary: #ffffff;
+    --text-primary: #051616;
     --primary-container: #1a2b2b;
     --on-primary-container: #809392;
     --secondary: #406915;
@@ -28,6 +29,33 @@
     --radius-lg: 0.25rem;
     --radius-xl: 0.5rem;
     --radius-full: 9999px;
+}
+
+[data-bs-theme="dark"] {
+    --primary: #7ab0b0;
+    --on-primary: #1a1a1a;
+    --text-primary: #8cced4;
+    --primary-container: #4a6a6a;
+    --on-primary-container: #d0e0e0;
+    --secondary: #70a839;
+    --secondary-container: #3a5e12;
+    --on-secondary-container: #bdef8b;
+    --surface: #181b1e;
+    --surface-container: #1f2226;
+    --surface-container-low: #1b1e22;
+    --surface-container-high: #2a2d32;
+    --surface-container-lowest: #131518;
+    --outline-variant: #404448;
+    --on-surface: #f0ece4;
+    --on-surface-variant: #c0b8a8;
+    --error: #ff5449;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+    --status-open: #8bc34a;
+    --status-billing: #6b7280;
+    --status-tariff: #f59e0b;
+    --status-approval: #f97316;
+    --status-closed: #9ca3af;
 }
 
 /* Base Modern Layout */
@@ -95,12 +123,11 @@ h1, h2, h3, h4, p {
 }
 
 .modern-card-header-info {
-    padding: 0.75rem 1rem; /* Slightly tighter vertical padding */
-    background-color: var(--primary-container);
+    padding: 0.75rem 1rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem; /* Standardized gap */
-    color: var(--on-primary);
+    gap: 0.75rem;
+    color: var(--on-surface);
     flex-shrink: 0;
 }
 
@@ -110,7 +137,7 @@ h1, h2, h3, h4, p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #ffffff;
+    background-color: var(--surface-container-lowest);
     flex-shrink: 0;
 }
 
@@ -145,7 +172,7 @@ h1, h2, h3, h4, p {
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--outline-variant);
     border-radius: var(--radius-xl);
-    background-color: #ffffff;
+    background-color: var(--surface-container-lowest);
     font-size: 14px;
     color: var(--on-surface);
     outline: none;
@@ -490,7 +517,7 @@ table.dataTable tbody tr:hover {
     font-size: 13px;
     font-weight: 600;
     transition: all 0.2s;
-    background-color: #ffffff;
+    background-color: var(--surface-container-lowest);
     color: var(--on-surface-variant);
 }
 
@@ -530,7 +557,7 @@ table.dataTable tbody tr:hover {
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.75rem;
-    background-color: #ffffff;
+    background-color: var(--surface-container-lowest);
     border: 1px solid var(--outline-variant);
     border-radius: var(--radius-xl);
     cursor: pointer;
@@ -558,7 +585,7 @@ table.dataTable tbody tr:hover {
 
 .modern-select-dropdown {
     display: none;
-    background-color: #ffffff;
+    background-color: var(--surface-container-lowest);
     border: 1px solid var(--outline-variant);
     border-radius: var(--radius-xl);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -725,13 +752,13 @@ table.dataTable tbody tr:hover {
 .text-sm { font-size: 0.875rem; }
 .text-xs { font-size: 0.75rem; }
 .text-error { color: var(--error); }
-.text-primary { color: var(--primary); }
+.text-primary { color: var(--text-primary); }
 .relative { position: relative; }
 .absolute { position: absolute; }
 .right-0 { right: 0; }
 .z-50 { z-index: 50; }
 .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-.bg-white { background-color: #ffffff; }
+.bg-white { background-color: var(--surface-container-lowest); }
 .rounded-md { border-radius: var(--radius-xl); }
 
 /* Dropdown Menu */
@@ -740,7 +767,7 @@ table.dataTable tbody tr:hover {
     position: absolute;
     right: 0;
     width: 12rem;
-    background-color: #ffffff;
+    background-color: var(--surface-container-lowest);
     border: 1px solid var(--outline-variant);
     border-radius: var(--radius-xl);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -810,7 +837,7 @@ table.dataTable tbody tr:hover {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: #ffffff;
+    background-color: var(--surface-container);
     border: 3px solid var(--outline-variant);
     z-index: 2;
     margin-top: 4px;
@@ -865,7 +892,7 @@ table.dataTable tbody tr:hover {
     padding: 0.5rem 0.75rem 0.5rem 2.5rem !important;
     border: 1px solid var(--outline-variant) !important;
     border-radius: var(--radius-xl) !important;
-    background-color: #ffffff !important;
+    background-color: var(--surface-container-lowest) !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20' viewBox='0 -960 960 960' width='20' fill='%23727878'%3E%3Cpath d='M784-120 532-374q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-582q0-109 75.5-184.5T380-842q109 0 184.5 75.5T640-582q0 44-14 83t-38 69l254 252-56 58ZM380-400q75 0 127.5-52.5T560-582q0-75-52.5-127.5T380-762q-75 0-127.5 52.5T200-582q0 75 52.5 127.5T380-400Z'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: 10px center !important;
@@ -882,7 +909,7 @@ table.dataTable tbody tr:hover {
     padding: 0.25rem 2rem 0.25rem 0.75rem !important;
     border: 1px solid var(--outline-variant) !important;
     border-radius: var(--radius-xl) !important;
-    background-color: #ffffff !important;
+    background-color: var(--surface-container-lowest) !important;
     font-size: 14px !important;
     appearance: none !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20' viewBox='0 -960 960 960' width='20' fill='%23727878'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 245Z'/%3E%3C/svg%3E") !important;
@@ -905,7 +932,7 @@ table.dataTable tbody tr:hover {
 }
 
 .dt-paging-button {
-    background-color: #ffffff !important;
+    background-color: var(--surface-container-lowest) !important;
     border: 1px solid var(--outline-variant) !important;
     color: var(--on-surface) !important;
     padding: 0.375rem 0.75rem !important;
@@ -950,8 +977,8 @@ table.dataTable tbody tr:hover {
 .modern-swal-popup {
     border-radius: 0.75rem !important;
     padding: 2rem !important;
-    background-color: #ffffff !important;
-    border: 1px solid rgba(188, 203, 185, 0.2) !important;
+    background-color: var(--surface) !important;
+    border: 1px solid var(--outline-variant) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04), 0 10px 30px rgba(0, 0, 0, 0.08) !important;
     width: 384px;
     font-family: 'Hanken Grotesk', sans-serif;
@@ -960,7 +987,7 @@ table.dataTable tbody tr:hover {
 .modern-swal-title {
     font-size: 24px !important;
     font-weight: 600 !important;
-    color: #0b1c30 !important;
+    color: var(--on-surface) !important;
     margin-bottom: 0.5rem !important;
     padding: 0 !important;
 }
@@ -1005,12 +1032,12 @@ table.dataTable tbody tr:hover {
     width: 100% !important;
     margin-top: 0.5rem !important;
     padding: 0.75rem 1.5rem !important;
-    background-color: #ffffff !important;
-    color: #374151 !important;
+    background-color: var(--surface-container-high) !important;
+    color: var(--on-surface) !important;
     font-weight: 600 !important;
     font-size: 14px !important;
     border-radius: 0.5rem !important;
-    border: 1px solid #d1d5db !important;
+    border: 1px solid var(--outline-variant) !important;
     transition: all 0.2s !important;
     cursor: pointer !important;
     display: flex !important;
@@ -1019,7 +1046,7 @@ table.dataTable tbody tr:hover {
 }
 
 .modern-swal-cancel:hover {
-    background-color: #f9fafb !important;
+    background-color: var(--surface-container) !important;
 }
 
 /* Icon Container & Animations */
@@ -1127,4 +1154,71 @@ table.dataTable tbody tr:hover {
     .dt-paging {
         justify-content: center !important;
     }
+}
+
+[data-bs-theme="dark"] .icon-bg-success {
+    background: linear-gradient(135deg, #052e16 0%, #14532d 100%) !important;
+}
+[data-bs-theme="dark"] .icon-bg-error {
+    background-color: #450a0a !important;
+}
+[data-bs-theme="dark"] .icon-bg-warning {
+    background-color: #451a03 !important;
+}
+[data-bs-theme="dark"] .icon-bg-info {
+    background-color: #0c1f3f !important;
+}
+[data-bs-theme="dark"] .icon-bg-question {
+    background-color: #1e1b4b !important;
+}
+
+[data-bs-theme="dark"] .pulse-success {
+    background-color: rgba(34, 197, 94, 0.15) !important;
+}
+[data-bs-theme="dark"] .pulse-error {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+[data-bs-theme="dark"] .pulse-warning {
+    background-color: rgba(251, 191, 36, 0.15) !important;
+}
+[data-bs-theme="dark"] .pulse-info {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+}
+[data-bs-theme="dark"] .pulse-question {
+    background-color: rgba(139, 92, 246, 0.15) !important;
+}
+
+[data-bs-theme="dark"] .dataTables_filter input,
+[data-bs-theme="dark"] .dt-search input,
+[data-bs-theme="dark"] .dt-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20' viewBox='0 -960 960 960' width='20' fill='%23404448'%3E%3Cpath d='M784-120 532-374q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-582q0-109 75.5-184.5T380-842q109 0 184.5 75.5T640-582q0 44-14 83t-38 69l254 252-56 58ZM380-400q75 0 127.5-52.5T560-582q0-75-52.5-127.5T380-762q-75 0-127.5 52.5T200-582q0 75 52.5 127.5T380-400Z'/%3E%3C/svg%3E") !important;
+}
+
+[data-bs-theme="dark"] .dataTables_length select,
+[data-bs-theme="dark"] .dt-length select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20' viewBox='0 -960 960 960' width='20' fill='%23404448'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 245Z'/%3E%3C/svg%3E") !important;
+}
+
+/* Modern thin scrollbar */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--outline-variant) transparent;
+}
+
+html::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+}
+
+html::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+    background-color: var(--outline-variant);
+    border-radius: 2px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background-color: var(--on-surface-variant);
 }

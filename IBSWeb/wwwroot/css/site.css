@@ -125,7 +125,7 @@ html {
 }
 
 .text-primary {
-    color: #192E2F !important;
+    color: var(--text-primary) !important;
 }
 
 .text-success {
@@ -480,8 +480,31 @@ bg-success {
     }
 
 @media print {
+    html[data-bs-theme="dark"], [data-bs-theme="dark"] body {
+        --surface: #fcfcfc;
+        --surface-container: #f1f1f1;
+        --surface-container-low: #f7f7f7;
+        --surface-container-high: #e8e8e8;
+        --surface-container-lowest: #ffffff;
+        --on-surface: #121c2a;
+        --on-surface-variant: #424848;
+        --outline-variant: #c2c8c7;
+        color-scheme: light;
+    }
+
     body {
         -webkit-print-color-adjust: exact !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .modern-card, .modern-card-header-action, .modern-input,
+    .modern-select-trigger, .modern-select-dropdown,
+    .radio-tab-label, .modern-dropdown-menu,
+    .bg-white, .dt-paging-button,
+    .dataTables_filter input, .dt-search input, .dt-input,
+    .dataTables_length select, .dt-length select {
+        background-color: #ffffff !important;
     }
 
     .container {

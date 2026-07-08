@@ -1,13 +1,17 @@
 # Changelog
 
 ## [2026-07-08]
+### Added
+- Dark mode: full dark/light theme toggle with `prefers-color-scheme` auto-detection and `localStorage` persistence. Uses Bootstrap 5.3's built-in `[data-bs-theme=dark]` system plus custom `--*` CSS variable overrides for the app's design tokens. Toggle button in both classic and modern navbars. Print output always forced to light theme. (scope: `_Layout.cshtml`, `_ModernNavbar.cshtml`, `modern-ui.css`, `modern-dashboard.css`, `modern-navbar.css`, `site.css`, `modern-dashboard.js`, `MaritimeReport/Index.cshtml`)
+- Modern MSAP Dashboard: A high-fidelity, interactive operational dashboard featuring a workload status breakdown, a 6-month financial billing/collection trend chart (via ApexCharts), a relative-time operations activity feed, and pending task alerts (scope: `Index.cshtml`, `modern-dashboard.css`, `modern-dashboard.js`, `HomeController.cs`)
+- C# JSON Endpoint: Added a performant `GetDashboardData` AJAX action on `HomeController` utilizing optimized EF Core queries and a time-ago relative formatter (scope: `HomeController.cs`).
+
+### Changed
+- Renamed `PopulateServiceRequestViewModelAsync` to `PopulateDispatchTicketViewModelAsync` in `DispatchTicketService` and all callers (scope: `DispatchTicketService.cs`, `DispatchTicketController.cs`, `JobOrderController.cs`)
+- Dispatch ticket creation now requires a `jobOrderId` — returns failure if missing (scope: `DispatchTicketService.cs`, `DispatchTicketController.cs`)
+
 ### Fixed
 - Modern navbar search showing notification badge "0" as a result — added `data-search-ignore` attribute and filter to skip it. (scope: `_ModernNavbar.cshtml`, `modern-navbar.js`)
-
-### Added
-- Modern MSAP Dashboard: A high-fidelity, interactive operational dashboard featuring a workload status breakdown, a 6-month financial billing/collection trend chart (via ApexCharts), a relative-time operations activity feed, and pending task alerts (scope: `Index.cshtml`, `modern-dashboard.css`, `modern-dashboard.js`).
-- C# JSON Endpoint: Added a performant `GetDashboardData` AJAX action on `HomeController` utilizing optimized EF Core queries and a time-ago relative formatter (scope: `HomeController.cs`).
-- Styles Render Section: Added `@await RenderSectionAsync("Styles", required: false)` inside the head of `_Layout.cshtml` to enable view-specific stylesheets.
 
 ### Changed
 - Modern UI Toggle Integration: Rebranded the navigation toggle from "Modern Nav" to "Modern UI" to orchestrate both the mega-menu navigation layout and the new modern dashboard (scope: `_Layout.cshtml`, `_ModernNavbar.cshtml`, `modern-navbar.js`).

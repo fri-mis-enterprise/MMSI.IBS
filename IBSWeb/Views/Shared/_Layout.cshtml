@@ -53,8 +53,15 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
+<script>
+    (function() {
+        var t = localStorage.getItem('ibs_theme');
+        if (!t) { t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+        document.documentElement.setAttribute('data-bs-theme', t);
+    })();
+</script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - IBS</title>
@@ -87,9 +94,10 @@
 
     @if (SignInManager.IsSignedIn(User))
     {
-        <link rel="stylesheet" href="~/css/quick-access-sidebar.css" asp-append-version="true" />
+        <link class="qa-sidebar-style" rel="stylesheet" href="~/css/quick-access-sidebar.css" asp-append-version="true" />
         <script src="~/js/quick-access-sidebar.js" asp-append-version="true" defer></script>
     }
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body data-selected-company="@selectedCompany">
     <script>
@@ -226,11 +234,17 @@
                                     Manual
                                 </a>
                             </div>
+                            @* ── Dark mode toggle ── *@
+                            <div class="nav-item ms-3 d-flex align-items-center">
+                                <button id="theme-toggle" class="btn btn-sm btn-outline-light" title="Toggle dark/light mode" style="line-height:1;padding:4px 8px;">
+                                    <span class="material-symbols-outlined" id="theme-icon" style="font-size:16px;vertical-align:middle;">dark_mode</span>
+                                </button>
+                            </div>
                             @* ── Modern navbar opt-in toggle ── *@
                             <div class="nav-item ms-3 d-flex align-items-center">
-                                <button class="classic-nav-toggle" data-mnav-toggle title="Try the new modern navigation bar">
+                                <button class="classic-nav-toggle" data-mnav-toggle title="Try the new modern user interface">
                                     <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle;">toggle_off</span>
-                                    <span class="mnav-toggle-label">Try Modern Nav</span>
+                                    <span class="mnav-toggle-label">Try Modern UI</span>
                                 </button>
                             </div>
                         }
@@ -303,26 +317,49 @@
     });
     </script>
     <script>
-        const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        (function() {
+            var html = document.documentElement;
+            var favLight = document.getElementById('favicon-light');
+            var favDark = document.getElementById('favicon-dark');
 
-        function updateFavicon(e) {
-            const faviconLight = document.getElementById('favicon-light');
-            const faviconDark = document.getElementById('favicon-dark');
-
-            if (e.matches) {
-                faviconDark.rel = 'shortcut icon';
-                faviconLight.rel = '';
-            } else {
-                faviconDark.rel = '';
-                faviconLight.rel = 'shortcut icon';
+            function syncIcons(theme) {
+                var icons = document.querySelectorAll('[id$="theme-icon"]');
+                icons.forEach(function(el) {
+                    el.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+                });
             }
-        }
 
-        // Initial check
-        updateFavicon(darkModeMediaQuery);
+            function setTheme(theme) {
+                html.setAttribute('data-bs-theme', theme);
+                localStorage.setItem('ibs_theme', theme);
+                syncIcons(theme);
+                if (theme === 'dark') {
+                    if (favDark) favDark.rel = 'shortcut icon';
+                    if (favLight) favLight.rel = '';
+                } else {
+                    if (favDark) favDark.rel = '';
+                    if (favLight) favLight.rel = 'shortcut icon';
+                }
+            }
 
-        // Listen for changes
-        darkModeMediaQuery.addEventListener('change', updateFavicon);
+            function toggleTheme() {
+                var next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+                setTheme(next);
+            }
+
+            document.querySelectorAll('[id$="theme-toggle"]').forEach(function(btn) {
+                btn.addEventListener('click', toggleTheme);
+            });
+
+            setTheme(html.getAttribute('data-bs-theme'));
+
+            var mq = window.matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener('change', function(e) {
+                if (!localStorage.getItem('ibs_theme')) {
+                    setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        })();
     </script>
 </body>
 </html>
