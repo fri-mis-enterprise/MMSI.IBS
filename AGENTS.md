@@ -1,145 +1,69 @@
 # AGENTS.md — MMSI-IBS / MSAP
 
-## Identity
+MSAP = **Job Order → Dispatch Ticket → Billing → Collection**. .NET 10 ASP.NET Core MVC, active dev — inconsistencies exist, fix minimal.
 
-MSAP = maritime service workflow: **Job Order → Dispatch Ticket → Billing → Collection**.
-This is a .NET 10 ASP.NET Core MVC app under active development — inconsistencies exist. Fix minimal but standard.
+## Quick reference
 
-## Stack
+```powershell
+dotnet build                 # TreatWarningsAsErrors on 6/8 projects (not test projects)
+dotnet test IBS.Tests        # unit tests (xUnit + Moq + FluentAssertions + EF Core InMemory)
+dotnet test IBS.Tests.UI     # UI integration (Playwright)
+docker compose up            # app :5001, DB :5002
+```
 
-| What | How |
-|------|-----|
-| Runtime | .NET 10, ASP.NET Core MVC + Razor Pages |
-| ORM | EF Core 10 + Npgsql (PostgreSQL 18) |
-| DB | `localhost:5432`, `mmsi_ibs_dev`, user `postgres`/`mis123` |
-| Build | `TreatWarningsAsErrors=true`, `Nullable=enable` |
-| EF conventions | Snake-case naming, `Npgsql.EnableLegacyTimestampBehavior = true` |
-| JSON | Custom `DecimalJsonConverter` rounds decimals to 2 places |
-| Tests | xUnit + Moq + FluentAssertions + EF Core InMemory (unit); Playwright (UI) |
-| Auth | Cookie-based, 30-min sliding, `[Authorize(Roles = "Admin")]` on master files, `RequireAnyAccess` on MSAP |
-| Logging | Serilog (console / GCP) |
-| UI stack | jQuery, Bootstrap 5, DataTables 2.x, Select2, SweetAlert2, SignalR, Toastr |
+DB: `localhost:5432`, `mmsi_ibs_dev`, user `postgres`/`mis123`.
+
+## Stack extras (not obvious from csproj)
+
+- `Npgsql.EnableLegacyTimestampBehavior = true` in Program.cs
+- Snake-case naming via `EFCore.NamingConventions`
+- Custom `DecimalJsonConverter` rounds to 2 places
+- **Quartz** scheduling in `IBS.Services`
+- **QuestPDF** for report generation in `IBSWeb`
+- Auth: Cookie-based 30-min sliding. `[Authorize(Roles = "Admin")]` on Admin area controllers; `[RequireAnyAccess]` on MSAP controllers
+- Migrations in `IBS.DataAccess/Migrations/`, auto-applied on startup
+- Local file storage at `App_Data/LocalStorage` under `/local-storage`
 
 ## Architecture
 
 ```
 IBS.Models → IBS.DataAccess → IBS.Services → IBSWeb
-                                     ↑              ↓
-                                 IBS.Utility    IBS.DTOs
+                                    ↑              ↓
+                               IBS.Utility    IBS.DTOs
 ```
 
-- **Areas**: `User` (app), `Admin` (users/roles), `Identity` (login)
-- **DI**: Primary constructors, `IUnitOfWork` exposes all repos, typed Service classes
-- **Repos**: Generic `Repository<T>` + typed repos. UnitOfWork wraps them.
-- **Service layer**: Thin orchestration over `IUnitOfWork`. Some MSAP entities have service classes; Accounting master files use controllers + UoW directly.
-- **Models**: `IBS.Models.MasterFile.*` (Terms, BankAccount, Customer, etc.), `IBS.Models.MSAP.MasterFile.*` (Vessel, Port, Principal, etc.)
+- **Areas**: `User` (app — 28 controllers), `Admin` (users/roles), `Identity` (login — **Razor Pages**, not controllers)
+- DI: Primary constructors, `IUnitOfWork` + generic `Repository<T>` + typed repos
+- Service layer: thin orchestration over UoW. Some MSAP entities have service classes; accounting master files use controllers + UoW directly.
 
-## Custom tools
+## MCP tools (always available)
 
-| Tool | What it does | Example |
-|------|-------------|---------|
-| `search_code_context` | Deep-dive into a C# method + related DTOs/Models | `search_code_context(methodName: "CreateJobOrderAsync")` |
-| `trace_workflow` | Recursive trace of Controller → Service → Repository | `trace_workflow(methodName: "BillDispatchTickets", filePath: "IBSWeb/.../BillingController.cs")` |
-| `analyze_action` | Deep-dive into a controller action + its deps | `analyze_action(methodName: "Index", filePath: "IBSWeb/.../JobOrderController.cs")` |
-| `read_model` | Summarise a Model or DTO's properties | `read_model(modelName: "JobOrderViewModel")` |
-| `execute_sql` | Run SQL against the PostgreSQL DB. **Prompt on Write**. | `execute_sql(sql: "SELECT * FROM msap_job_orders LIMIT 10")` |
-| `check_build_status` | Run `dotnet build`, return structured errors | _(no params)_ |
+| Tool | Use |
+|------|-----|
+| `search_code_context(methodName)` | C# method body + related DTOs/Models |
+| `trace_workflow(methodName, filePath)` | Recursive Controller → Service → Repo trace |
+| `analyze_action(methodName, filePath)` | Controller action + all deps |
+| `read_model(modelName)` | Model/DTO properties summary |
+| `execute_sql(sql)` | Run SQL against PostgreSQL (prompts on write) |
+| `check_build_status` | `dotnet build` with structured errors |
+| `list_csv_files` | List CSVs in Exported/Imports dirs |
+| `query_csv(filePath, filter?)` | Filter CSV data |
 
-## Build & run
+## Conventions an agent would miss
 
-```powershell
-dotnet build          # warnings = errors
-dotnet test IBS.Tests # unit tests
-```
+- **Patterns first** (read before writing): standard Index → `Areas/User/Views/JobOrder/Index.cshtml`; standard Create/Edit → `JobOrder/Create.cshtml`; advanced (conditional dropdowns, uploads) → `DispatchTicket/Index.cshtml`, `Create.cshtml`
+- **Root-cause fixes**: grep all callers of the function you're touching, fix once at the shared path
+- **No unrequested abstractions**: no interface with one implementation, no factory for one product
+- **Audit trail** on every create/edit/delete
+- **Workflow state guards**: only "ForTariff" → price, only "Billed" → collect, etc.
+- **Time zone**: Philippine time via `DateTimeHelper.GetCurrentPhilippineTime()`
+- **Check build only for `.cs` changes** — `cshtml`/`js`/`css` changes just need browser refresh
+- **Modern UI**: `modern-ui.css`, `modern-table.js`, `modern-select.js` (Select2 wrapper), `modern-alert.js` (SweetAlert2 wrapper). Icons: Material Symbols Outlined (`<span class="material-symbols-outlined">icon_name</span>`). **Gotcha**: `ModernTable.ajax()` sends POST — if endpoint is `[HttpGet]`, inline `ajax: { url, type: "GET", data: d => d }`.
 
-- Docker: `docker compose up` (app `:5001`, DB `:5002`)
-- Migrations auto-apply on startup (`db.Database.MigrateAsync()`)
-- Local file storage at `App_Data/LocalStorage`, served under `/local-storage`
+## Housekeeping
 
-## Coding guardrails
-
-- **Architecture first** — `Docs/ARCHITECTURE.md` defines the data flow, state machine, and standard patterns (controller, service, repo, view). Read it before writing new code. The `code-review` agent checks against it.
-- **Patterns first**. Read reference implementations before writing new code:
-  - Standard Index: `Areas/User/Views/JobOrder/Index.cshtml`
-  - Standard Create/Edit: `Areas/User/Views/JobOrder/Create.cshtml`
-  - Advanced variant (conditional dropdowns, filter buttons, media uploads): `Areas/User/Views/DispatchTicket/Index.cshtml`, `Create.cshtml`
-- **Root-cause fixes**. Grep all callers of the function you're touching. Fix once at the shared path, not in every caller.
-- **No unrequested abstractions**. No interface with one implementation, no factory for one product.
-- **`TreatWarningsAsErrors`** — any warning = build fail. Fix warnings, don't suppress them.
-- **Audit trail** — every create/edit/delete records an `AuditTrail` entry.
-- **Workflow state validation** — guard transitions. Only "ForTariff" tickets can be priced, only "Billed" tickets can be collected, etc.
-- **Time zone** — Philippine time via `DateTimeHelper.GetCurrentPhilippineTime()`.
-- **Fixing inconsistencies** — the codebase has them (input class names, grid layouts, wrapper divs). Fix the specific issue matching the dominant pattern. Don't refactor everything.
-- **Ask when uncertain** — vague prompts, unclear intent, or ambiguity about approach → ask clarifying questions. A short diagnostic question saves a wrong implementation cycle.
-- **Check build only for C# changes** — `cshtml`, `js`, `css` changes don't need `dotnet build`; browser refresh is enough. Run `check_build_status` only when `.cs` files change.
-
-## Modern UI
-
-- **CSS**: `modern-ui.css` (custom properties)
-- **JS**: `modern-table.js`, `modern-select.js` (Select2 wrapper), `modern-alert.js` (SweetAlert2 wrapper)
-- **Icons**: Material Symbols Outlined (`<span class="material-symbols-outlined">icon_name</span>`)
-- **Gotcha**: `ModernTable.ajax()` sends **POST**. If the endpoint is `[HttpGet]`, inline `ajax: { url, type: "GET", data: d => d }`.
-
-## Tests & migrations
-
-```powershell
-dotnet test IBS.Tests      # unit tests
-dotnet test IBS.Tests.UI   # UI integration (Playwright)
-```
-
-- Migrations in `IBS.DataAccess/Migrations/`, auto-applied at startup.
-
-## Changelog
-
-Every significant change (new feature, refactor, bug fix, test) is auto-logged
-to `CHANGELOG.md` in reverse chronological order. Entries follow this format:
-
-```markdown
-## [2026-07-02]
-### Added
-- New feature description (scope: file/module)
-
-### Changed
-- Refactor or enhancement description (scope: file/module)
-
-### Fixed
-- Bug fix description (scope: file/module)
-```
-
-**Trigger rule**: When a task results in a user-visible or architecture-level
-change, append an entry before concluding. Skip trivial edits (whitespace,
-comment-only, rename-only).
-
-## Committing
-
-Never commit without asking. After completing a task, present a summary of
-what changed (files modified, diff highlights) and ask: *"Commit?"*. Only
-proceed if the user says yes.
-
-## Project layout
-
-```
-IBSWeb/
-  Areas/User/Views/{Feature}/   — Index.cshtml, Create.cshtml, Edit.cshtml
-  Areas/User/Controllers/        — {Feature}Controller.cs
-IBS.Models/
-  MasterFile/                     — Terms.cs, BankAccount.cs, etc.
-  MSAP/MasterFile/                — Vessel.cs, Port.cs, Principal.cs, etc.
-IBS.DataAccess/Repository/        — Repository.cs, UnitOfWork.cs
-IBS.Services/                     — typed service classes
-IBS.DTOs/                         — Data Transfer Objects
-IBS.Utility/                      — helpers, constants
-IBS.Tests/                        — xUnit unit tests
-IBS.Tests.UI/                     — Playwright integration tests
-```
-## Docs
-
-Update Docs and manual if there's any significant changes happen on the
-workflow or architectural changes
-
-## Versioning
-
-Increase app version, ask me if the feature needs increment by 1.
-Format: [0].[DeploymentVersion].[CommitCounts]
-Reset the commit counts base on deployment version, if it increment, reset to 0
-The version is at IBSWeb/Views/Shared/_Layout.cshtml Line 19: ViewBag.AppVersion
+- **Changelog**: append to `CHANGELOG.md` (reverse chronological) for user-visible or architecture-level changes. Format: `## [date]` / `### Added|Changed|Fixed`. Skip trivial edits.
+- **Version** at `IBSWeb/Views/Shared/_Layout.cshtml:19` (`ViewBag.AppVersion`). Format: `0.{DeploymentVersion}.{CommitCounts}`. Ask before incrementing.
+- **Commit**: never without asking. Present a summary and ask "Commit?".
+- **Docs**: update `Docs/` if workflow or architecture changes.
+- **Ask when uncertain** — vague prompt or ambiguity → ask instead of guessing.
