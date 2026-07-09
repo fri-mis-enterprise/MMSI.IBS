@@ -1,6 +1,10 @@
 # Changelog
 
 ## [2026-07-09]
+### Removed
+- Dead `BillAdjust`/`BillDispatch` entity models, their DbSet/Fluent config in `ApplicationDbContext`, and the `msap_bill_adjustments`/`msap_bill_dispatches` tables (new migration). These link tables from the legacy schema were unused by any business code — the dispatch-to-billing linkage and per-ticket pricing are fully covered by `DispatchTicket.BillingId` and the tariff fields on `DispatchTicket`. Also removed the unused `bill_adjust.csv`/`bill_dispatch.csv` from `Imports/` and the truncation statements from `MsapImportController.Reset()`.
+
+## [2026-07-09]
 ### Changed
 - Customer and Supplier area pages (12 CSHTML files) converted from old Bootstrap styling to modern-ui.css: Index pages use `modern-layout`, `modern-table`, `ModernTable.*` helpers with status badges and action dropdowns; Create/Edit pages use `modern-card`, `modern-grid`, breadcrumb headers, and `js-modern-select` for selects; Activate/Deactivate pages use styled modern cards; ExportIndex pages use `ModernTable.config/ajax` with `ModernAlert` warnings. (scope: `Areas/User/Views/{Customer,Supplier}/*.cshtml`)
 - `.modern-select-search input` gets `background-color: transparent` so it inherits the parent dropdown background instead of browser default — fixes gray bar in dark mode. (scope: `modern-ui.css`)

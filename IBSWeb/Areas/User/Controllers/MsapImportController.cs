@@ -48,8 +48,6 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 await dbContext.Database.ExecuteSqlRawAsync(@"
-                    TRUNCATE TABLE msap_bill_dispatches RESTART IDENTITY CASCADE;
-                    TRUNCATE TABLE msap_bill_adjustments RESTART IDENTITY CASCADE;
                     TRUNCATE TABLE msap_collection_bills RESTART IDENTITY CASCADE;
                     TRUNCATE TABLE msap_dispatch_tickets RESTART IDENTITY CASCADE;
                     TRUNCATE TABLE msap_billings RESTART IDENTITY CASCADE;

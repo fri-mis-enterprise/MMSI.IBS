@@ -41,8 +41,7 @@ namespace IBS.DataAccess.Data
         public DbSet<DispatchTicket> MsapDispatchTickets { get; set; }
         public DbSet<JobOrder> MsapJobOrders { get; set; }
         public DbSet<TariffRate> MsapTariffRates { get; set; }
-        public DbSet<BillDispatch> MsapBillDispatches { get; set; }
-        public DbSet<BillAdjust> MsapBillAdjustments { get; set; }
+        
         public DbSet<CollectionBill> MsapCollectionBills { get; set; }
 
         #endregion
@@ -219,17 +218,7 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            builder.Entity<BillDispatch>(bd =>
-            {
-                bd.HasOne(x => x.Billing).WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
-                bd.HasOne(x => x.DispatchTicket).WithMany().HasForeignKey(x => x.DispatchTicketId).OnDelete(DeleteBehavior.Restrict);
-            });
-
-            builder.Entity<BillAdjust>(ba =>
-            {
-                ba.HasOne(x => x.Billing).WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
-                ba.HasOne(x => x.DispatchTicket).WithMany().HasForeignKey(x => x.DispatchTicketId).OnDelete(DeleteBehavior.Restrict);
-            });
+            
 
             builder.Entity<CollectionBill>(cb =>
             {
