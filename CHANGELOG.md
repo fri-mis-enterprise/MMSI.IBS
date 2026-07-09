@@ -3,6 +3,9 @@
 ## [2026-07-09]
 ### Changed
 - Customer and Supplier area pages (12 CSHTML files) converted from old Bootstrap styling to modern-ui.css: Index pages use `modern-layout`, `modern-table`, `ModernTable.*` helpers with status badges and action dropdowns; Create/Edit pages use `modern-card`, `modern-grid`, breadcrumb headers, and `js-modern-select` for selects; Activate/Deactivate pages use styled modern cards; ExportIndex pages use `ModernTable.config/ajax` with `ModernAlert` warnings. (scope: `Areas/User/Views/{Customer,Supplier}/*.cshtml`)
+- `.modern-select-search input` gets `background-color: transparent` so it inherits the parent dropdown background instead of browser default — fixes gray bar in dark mode. (scope: `modern-ui.css`)
+- `.bg-white` override in modern-ui.css now uses `!important` so it respects `--surface-container-lowest` in dark mode instead of Bootstrap's `#fff`. (scope: `modern-ui.css`)
+- `.js-modern-select` hidden via CSS (`display: none`) to prevent native select flash before ModernSelect replaces it on page load. (scope: `modern-ui.css`)
 
 ## [2026-07-08]
 ### Changed

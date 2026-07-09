@@ -546,6 +546,9 @@ table.dataTable tbody tr:hover {
     }
 }
 
+/* Hide native select until ModernSelect replaces it */
+.js-modern-select { display: none; }
+
 /* Modern Select Component */
 .modern-select-container {
     position: relative;
@@ -613,6 +616,7 @@ table.dataTable tbody tr:hover {
     outline: none;
     font-size: 13px;
     padding: 0.25rem 0;
+    background-color: transparent;
 }
 
 .modern-select-options {
@@ -758,7 +762,7 @@ table.dataTable tbody tr:hover {
 .right-0 { right: 0; }
 .z-50 { z-index: 50; }
 .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-.bg-white { background-color: var(--surface-container-lowest); }
+.bg-white { background-color: var(--surface-container-lowest) !important; }
 .rounded-md { border-radius: var(--radius-xl); }
 
 /* Dropdown Menu */
