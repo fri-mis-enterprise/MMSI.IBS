@@ -1,73 +1,65 @@
 @model Supplier
 
 @{
-    ViewData["Title"] = "Supplier - Activate";
+    ViewData["Title"] = "Activate Supplier";
+    ViewData["IsFullWidth"] = true;
 }
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">@ViewData["Title"]</h2>
-            </div>
-        </div>
-    </div>
-    <div class="card-body p-4">
-        <form method="post" class="row" enctype="multipart/form-data">
-            <input asp-for="SupplierId" hidden />
-            <div class="border p-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="SupplierName" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="SupplierName" class="ms-2"></label>
-                    <span asp-validation-for="SupplierName" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="SupplierAddress" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="SupplierAddress" class="ms-2"></label>
-                    <span asp-validation-for="SupplierAddress" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="SupplierTin" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="SupplierTin" class="ms-2"></label>
-                    <span asp-validation-for="SupplierTin" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <select asp-for="SupplierTerms" asp-items="@Model.PaymentTerms" class="form-select js-select2" style="width:100%" disabled readonly>
-                    <option></option>
-                </select>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled readonly>
-                        <option value="" selected disabled>Select vat type</option>
-                        <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
-                        <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
-                        <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
-                    </select>
-                    <span asp-validation-for="VatType" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <select asp-for="TaxType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled readonly>
-                        <option value="" selected disabled>Select tax type</option>
-                        <option value="@SD.TaxType_WithTax">@SD.TaxType_WithTax</option>
-                        <option value="@SD.TaxType_Exempt">@SD.TaxType_Exempt</option>
-                    </select>
-                    <span asp-validation-for="VatType" class="text-danger"></span>
-                </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-success form-control">Activate</button>
+
+<div class="modern-layout">
+    <form method="post" enctype="multipart/form-data">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Suppliers</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Activate Supplier</span>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="User" asp-controller="Supplier" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" style="background-color: var(--success);">
+                        <span class="material-symbols-outlined">check_circle</span> Activate
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--success); color: white;">
+                            <span class="material-symbols-outlined">person_check</span>
+                            <h2 class="modern-headline-md" style="color: white;">Supplier Information</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            <input asp-for="SupplierId" hidden />
+
+                            <div class="flex flex-column gap-3">
+                                <div>
+                                    <label asp-for="SupplierName" class="modern-label">Supplier Name</label>
+                                    <input asp-for="SupplierName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled readonly />
+                                </div>
+                                <div>
+                                    <label asp-for="SupplierAddress" class="modern-label">Address</label>
+                                    <input asp-for="SupplierAddress" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled readonly />
+                                </div>
+                                <div>
+                                    <label asp-for="SupplierTin" class="modern-label">TIN</label>
+                                    <input asp-for="SupplierTin" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled readonly />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
 
 @section Scripts {

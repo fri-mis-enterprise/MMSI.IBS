@@ -2,84 +2,69 @@
 @using Enum = System.Enum
 
 @{
-    ViewData["Title"] = "Customer - Deactivate";
+    ViewData["Title"] = "Deactivate Customer";
+    ViewData["IsFullWidth"] = true;
 }
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">@ViewData["Title"]</h2>
-            </div>
-        </div>
-    </div>
-    <div class="card-body p-4">
-        <form method="post" class="row">
-            <input asp-for="CustomerId" hidden />
-            <div class="border p-3">
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerName" class="form-control border-0 shadow" placeholder="" disabled />
-                    <label asp-for="CustomerName" class="ms-2"></label>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" disabled />
-                    <label asp-for="CustomerAddress" class="ms-2"></label>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerTin" class="form-control border-0 shadow" placeholder="" disabled />
-                    <label asp-for="CustomerTin" class="ms-2"></label>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="BusinessStyle" class="form-control border-0 shadow" placeholder="" disabled />
-                    <label asp-for="BusinessStyle" class="ms-2"></label>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <select asp-for="CustomerType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled>
-                        <option value="" selected disabled>Select customer type</option>
-                        @foreach (CustomerType customerType in Enum.GetValues<CustomerType>())
-                        {
-                            <option value="@customerType">@customerType.ToString()</option>
-                        }
-                    </select>
-                </div>
-                <div class="form-group mb-3">
-                <select asp-for="CustomerTerms" asp-items="@Model.PaymentTerms" class="form-select js-select2" style="width:100%" disabled>
-                    <option></option>
-                </select>
-            </div>
-                <div class="form-group py-2 col-12">
-                    <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled>
-                        <option value="" selected disabled>Select vat type</option>
-                        <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
-                        <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
-                        <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
-                    </select>
-                    <span asp-validation-for="VatType" class="text-danger"></span>
-                </div>
-                <div class="form-check pt-2">
-                    <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingVat" disabled /> @Html.DisplayNameFor(model => model.WithHoldingVat)
-                    </label>
-                </div>
-                <div class="form-check pb-2">
-                    <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingTax" disabled /> @Html.DisplayNameFor(model => model.WithHoldingTax)
-                    </label>
-                </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-danger form-control">Deactivate</button>
+
+<div class="modern-layout">
+    <form method="post">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Customers</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">Deactivate Customer</span>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="User" asp-controller="Customer" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary" style="background-color: var(--error);">
+                        <span class="material-symbols-outlined">person_off</span> Deactivate
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-6">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info" style="background-color: var(--error); color: white;">
+                            <span class="material-symbols-outlined">person_off</span>
+                            <h2 class="modern-headline-md" style="color: white;">Customer Information</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+                            <input asp-for="CustomerId" hidden />
+
+                            <div class="flex flex-column gap-3">
+                                <div>
+                                    <label asp-for="CustomerName" class="modern-label">Customer Name</label>
+                                    <input asp-for="CustomerName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                                <div>
+                                    <label asp-for="CustomerAddress" class="modern-label">Address</label>
+                                    <input asp-for="CustomerAddress" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                                <div>
+                                    <label asp-for="CustomerTin" class="modern-label">TIN</label>
+                                    <input asp-for="CustomerTin" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                                <div>
+                                    <label asp-for="BusinessStyle" class="modern-label">Business Style</label>
+                                    <input asp-for="BusinessStyle" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" disabled />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
 
 @section Scripts {

@@ -2,151 +2,176 @@
 @model Customer
 
 @{
-    ViewData["Title"] = "Customer - Create";
+    ViewData["Title"] = "Create Customer";
+    ViewData["IsFullWidth"] = true;
 }
 
-<link rel="stylesheet" href="~/css/form-style.css">
-
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">@ViewData["Title"]</h2>
-            </div>
-        </div>
-    </div>
-    <div class="card-body p-4">
-        <form method="post" class="row">
-            @Html.AntiForgeryToken()
-            <div class="border p-3">
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerName" class="form-control border-0 shadow " placeholder="" />
-                    <label asp-for="CustomerName" class="ms-2">Customer Name<span class="required">*</span></label>
-                    <span asp-validation-for="CustomerName" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerAddress" class="form-control border-0 shadow " placeholder="" />
-                    <label asp-for="CustomerAddress" class="ms-2">Customer Address<span class="required">*</span></label>
-                    <span asp-validation-for="CustomerAddress" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="ZipCode" class="form-control border-0 shadow " placeholder="" maxlength="4" />
-                    <label asp-for="ZipCode" class="ms-2">Zip Code<span class="required">*</span></label>
-                    <span asp-validation-for="ZipCode" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerTin" class="form-control border-0 shadow formattedTinNumberInput" placeholder="" maxlength="17" />
-                    <label asp-for="CustomerTin" class="ms-2">Customer Tin<span class="required">*</span></label>
-                    <span asp-validation-for="CustomerTin" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CreditLimit" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="CreditLimit" class="ms-2">Credit Limit<span class="required">*</span></label>
-                    <span asp-validation-for="CreditLimit" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="CreditLimitAsOfToday" class="ms-2">Available Credit Limit As of Today<span class="required">*</span></label>
-                    <span asp-validation-for="CreditLimitAsOfToday" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="BusinessStyle" class="form-control border-0 shadow " placeholder="" />
-                    <label asp-for="BusinessStyle" class="ms-2">Business Style</label>
-                    <span asp-validation-for="BusinessStyle" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CommissionRate" class="form-control border-0 shadow " placeholder="" />
-                    <label asp-for="CommissionRate" class="ms-2">Commission Rate</label>
-                    <span asp-validation-for="CommissionRate" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label class="control-label">Commissionee</label>
-                    <select asp-for="CommissioneeId" asp-items="@Model.Commissionees" class="form-select js-select2" style="width:100%">
-                        <option></option>
-                    </select>
-                    <span asp-validation-for="CommissioneeId" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Customer Type<span class="required">*</span></label>
-                    <select asp-for="CustomerType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" id="customerTypeSelect">
-                        <option value="" selected disabled>Select customer type</option>
-                        @foreach (CustomerType customerType in Enum.GetValues<CustomerType>())
-                        {
-                            <option value="@customerType">@customerType.ToString()</option>
-                        }
-                    </select>
-                    <span asp-validation-for="CustomerType" class="text-danger"></span>
-                </div>
-
-                <!-- Station Code input (initially hidden) -->
-                <div id="station-div" class="form-floating py-2 col-12" style="display:none;">
-                    <input asp-for="StationCode" class="form-control border-0 shadow " placeholder="" />
-                    <label asp-for="StationCode" class="ms-2">Station Code<span class="required">*</span></label>
-                    <span asp-validation-for="StationCode" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                <label class="control-label">Customer Terms</label><span class="required">*</span>
-                <select asp-for="CustomerTerms" asp-items="@Model.PaymentTerms" class="form-select js-select2" style="width:100%">
-                    <option></option>
-                </select>
-                <span asp-validation-for="CustomerTerms" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label class="control-label">Retention Rate</label>
-                    <select asp-for="RetentionRate" class="form-select js-select2" style="width: 100%">
-                        <option value="" selected disabled>%</option>
-                        <option value="0.0000">0%</option>
-                        <option value="0.0100">1%</option>
-                        <option value="0.0200">2%</option>
-                        <option value="0.0500">5%</option>
-                        <option value="0.1000">10%</option>
-                    </select>
-                    <span asp-validation-for="RetentionRate" class="text-danger"></span>
-                </div>
-
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Vat Type<span class="required">*</span></label>
-                    <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
-                        <option value="" selected disabled>Select vat type</option>
-                        <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
-                        <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
-                        <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
-                    </select>
-                    <span asp-validation-for="VatType" class="text-danger"></span>
-                </div>
-                <div class="form-check pt-2">
-                    <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingVat" /> @Html.DisplayNameFor(model => model.WithHoldingVat)
-                    </label>
-                </div>
-                <div class="form-check pb-2">
-                    <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingTax" /> @Html.DisplayNameFor(model => model.WithHoldingTax)
-                    </label>
-                </div>
-                <div class="form-check pb-2">
-                    <label class="form-check-label">
-                        <input class="form-check-input" asp-for="RequiresPriceAdjustment" /> @Html.DisplayNameFor(model => model.RequiresPriceAdjustment)
-                    </label>
-                </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Create</button>
+<div class="modern-layout">
+    <form asp-action="Create" method="post" id="mainForm">
+        <main class="modern-container">
+            <div class="flex-stack">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="modern-label">MSAP</span>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <a class="modern-label" style="text-decoration:none;" asp-action="Index">Customers</a>
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="modern-label" style="color: var(--on-surface)">New Customer</span>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="User" asp-controller="Customer" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    </div>
+                    <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="modern-btn-primary">
+                        <span class="material-symbols-outlined">save</span> Save Changes
+                    </button>
+                    <a asp-action="Index" class="modern-btn-secondary">
+                        <span class="material-symbols-outlined">cancel</span> Cancel
+                    </a>
                 </div>
             </div>
-        </form>
-    </div>
+
+            <div class="modern-grid justify-center">
+                <section class="modern-col-8">
+                    <div class="modern-card">
+                        <div class="modern-card-header-info">
+                            <span class="material-symbols-outlined">person_add</span>
+                            <h2 class="modern-headline-md">Customer Details</h2>
+                        </div>
+                        <div class="modern-card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
+
+                            <div class="modern-grid">
+                                <div class="modern-col-6">
+                                    <label asp-for="CustomerName" class="modern-label">Customer Name <span class="text-error">*</span></label>
+                                    <input asp-for="CustomerName" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter customer name" />
+                                    <span asp-validation-for="CustomerName" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="CustomerAddress" class="modern-label">Customer Address <span class="text-error">*</span></label>
+                                    <input asp-for="CustomerAddress" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter customer address" />
+                                    <span asp-validation-for="CustomerAddress" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-4">
+                                    <label asp-for="ZipCode" class="modern-label">Zip Code <span class="text-error">*</span></label>
+                                    <input asp-for="ZipCode" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter zip code" maxlength="4" />
+                                    <span asp-validation-for="ZipCode" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="CustomerTin" class="modern-label">Customer Tin <span class="text-error">*</span></label>
+                                    <input asp-for="CustomerTin" class="form-control formattedTinNumberInput" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter TIN" maxlength="17" />
+                                    <span asp-validation-for="CustomerTin" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="BusinessStyle" class="modern-label">Business Style</label>
+                                    <input asp-for="BusinessStyle" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter business style" />
+                                    <span asp-validation-for="BusinessStyle" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-4">
+                                    <label asp-for="CreditLimit" class="modern-label">Credit Limit <span class="text-error">*</span></label>
+                                    <input asp-for="CreditLimit" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter credit limit" />
+                                    <span asp-validation-for="CreditLimit" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="CreditLimitAsOfToday" class="modern-label">Available Credit Limit As of Today <span class="text-error">*</span></label>
+                                    <input asp-for="CreditLimitAsOfToday" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter available credit" />
+                                    <span asp-validation-for="CreditLimitAsOfToday" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-4">
+                                    <label asp-for="CommissionRate" class="modern-label">Commission Rate</label>
+                                    <input asp-for="CommissionRate" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter commission rate" />
+                                    <span asp-validation-for="CommissionRate" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="CommissioneeId" class="modern-label">Commissionee</label>
+                                    <select asp-for="CommissioneeId" asp-items="@Model.Commissionees" class="js-modern-select" data-placeholder="-- Select Commissionee --">
+                                    </select>
+                                    <span asp-validation-for="CommissioneeId" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="CustomerType" class="modern-label">Customer Type <span class="text-error">*</span></label>
+                                    <select asp-for="CustomerType" class="js-modern-select" data-placeholder="Select customer type" id="customerTypeSelect">
+                                        <option value="" selected disabled></option>
+                                        @foreach (CustomerType customerType in Enum.GetValues<CustomerType>())
+                                        {
+                                            <option value="@customerType">@customerType.ToString()</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="CustomerType" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3" id="station-div" style="display:none;">
+                                <div class="modern-col-6">
+                                    <label asp-for="StationCode" class="modern-label">Station Code <span class="text-error">*</span></label>
+                                    <input asp-for="StationCode" class="form-control" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl);" placeholder="Enter station code" />
+                                    <span asp-validation-for="StationCode" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="CustomerTerms" class="modern-label">Customer Terms <span class="text-error">*</span></label>
+                                    <select asp-for="CustomerTerms" asp-items="@Model.PaymentTerms" class="js-modern-select" data-placeholder="-- Select Terms --">
+                                    </select>
+                                    <span asp-validation-for="CustomerTerms" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6">
+                                    <label asp-for="RetentionRate" class="modern-label">Retention Rate</label>
+                                    <select asp-for="RetentionRate" class="js-modern-select" data-placeholder="%">
+                                        <option value="" selected disabled></option>
+                                        <option value="0.0000">0%</option>
+                                        <option value="0.0100">1%</option>
+                                        <option value="0.0200">2%</option>
+                                        <option value="0.0500">5%</option>
+                                        <option value="0.1000">10%</option>
+                                    </select>
+                                    <span asp-validation-for="RetentionRate" class="text-error text-xs"></span>
+                                </div>
+                            </div>
+
+                            <div class="modern-grid mt-3">
+                                <div class="modern-col-6">
+                                    <label asp-for="VatType" class="modern-label">Vat Type <span class="text-error">*</span></label>
+                                    <select asp-for="VatType" class="js-modern-select" data-placeholder="Select vat type">
+                                        <option value="" selected disabled></option>
+                                        <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
+                                        <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
+                                        <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
+                                    </select>
+                                    <span asp-validation-for="VatType" class="text-error text-xs"></span>
+                                </div>
+                                <div class="modern-col-6 d-flex align-items-end pb-2">
+                                    <div class="flex flex-column gap-1 w-100">
+                                        <label class="modern-label">Options</label>
+                                        <div class="flex gap-3">
+                                            <label class="flex items-center gap-1">
+                                                <input class="form-check-input" asp-for="WithHoldingVat" /> <span class="text-sm">Withholding VAT</span>
+                                            </label>
+                                            <label class="flex items-center gap-1">
+                                                <input class="form-check-input" asp-for="WithHoldingTax" /> <span class="text-sm">Withholding Tax</span>
+                                            </label>
+                                            <label class="flex items-center gap-1">
+                                                <input class="form-check-input" asp-for="RequiresPriceAdjustment" /> <span class="text-sm">Price Adjustment</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </form>
 </div>
 
 @section Scripts {
@@ -158,20 +183,14 @@
             function toggleStationDiv() {
                 var selectedCompany = $('select[name="CustomerType"]').val();
                 var stationDiv = $('#station-div');
-
                 if (selectedCompany === 'Retail') {
                     stationDiv.show();
                 } else {
                     stationDiv.hide();
                 }
             }
-
-            // Attach the change event listener
             $('select[name="CustomerType"]').on('change', toggleStationDiv);
-
-            // Initial check on page load
             toggleStationDiv();
         });
-
     </script>
 }

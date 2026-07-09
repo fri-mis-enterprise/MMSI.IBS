@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-09]
+### Changed
+- Customer and Supplier area pages (12 CSHTML files) converted from old Bootstrap styling to modern-ui.css: Index pages use `modern-layout`, `modern-table`, `ModernTable.*` helpers with status badges and action dropdowns; Create/Edit pages use `modern-card`, `modern-grid`, breadcrumb headers, and `js-modern-select` for selects; Activate/Deactivate pages use styled modern cards; ExportIndex pages use `ModernTable.config/ajax` with `ModernAlert` warnings. (scope: `Areas/User/Views/{Customer,Supplier}/*.cshtml`)
+
 ## [2026-07-08]
 ### Changed
 - Modern navbar right zone: consolidated docs link, dark mode toggle, modern UI toggle, and logout into a single user dropdown triggered by the avatar chip. Removed standalone icon buttons and toggle chip from the right zone. (scope: `_ModernNavbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`)
