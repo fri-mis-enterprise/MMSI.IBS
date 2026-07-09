@@ -314,6 +314,26 @@
             const $ticketsTableBody = $("#ticketsTable tbody");
             const $ticketInputs = $("#DispatchTicketInputs");
 
+            // ponytail: Lock/unlock JO-derived ModernSelect triggers (keeps native select enabled for form POST)
+            function lockTrigger(id) {
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', 'none').removeAttr('tabindex').addClass('disabled');
+            }
+            function unlockTrigger(id) {
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', '').attr('tabindex', '0').removeClass('disabled');
+            }
+            // Server already rendered the selected values — no need to set them via JS
+            @if (hasJobOrder)
+            {
+                <text>
+                $('#VoyageNumber').prop('readonly', true);
+                lockTrigger('#PortSelect');
+                lockTrigger('#TerminalSelect');
+                lockTrigger('#VesselId');
+                </text>
+            }
+
             // ponytail: Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
             function lockToggle(toggleId, locked) {
                 const $toggle = $(toggleId);

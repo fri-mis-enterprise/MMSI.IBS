@@ -321,6 +321,40 @@
             setupEventListeners();
             handleCheckboxChange();
             
+            // ponytail: Lock/unlock JO-derived selects (ModernSelect trigger) while keeping native select enabled for form POST
+            function lockSelect(id, val) {
+                $(id).val(val).trigger('change');
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', 'none').removeAttr('tabindex').addClass('disabled');
+            }
+            function unlockSelect(id) {
+                $(id).val('').trigger('change');
+                $(id).next('.modern-select-container').find('.modern-select-trigger')
+                    .css('pointer-events', '').attr('tabindex', '0').removeClass('disabled');
+            }
+            function lockSelectWhenReady(id, val, tries) {
+                if ($(id).find('option[value="' + val + '"]').length) {
+                    lockSelect(id, val);
+                } else if (tries > 0) {
+                    setTimeout(function () { lockSelectWhenReady(id, val, tries - 1); }, 300);
+                }
+            }
+            function lockHeaderFields(data) {
+                if (!data) return;
+                $('#VoyageNumber').val(data.voyageNumber || '').prop('readonly', true);
+                $('#COSNumber').val(data.cosNumber || '').prop('readonly', true);
+                lockSelect('#PortSelect', data.portId);
+                if (data.terminalId) lockSelectWhenReady('#TerminalSelect', data.terminalId, 6);
+                lockSelect('#VesselId', data.vesselId);
+            }
+            function unlockHeaderFields() {
+                $('#VoyageNumber').val('').prop('readonly', false);
+                $('#COSNumber').val('').prop('readonly', false);
+                unlockSelect('#PortSelect');
+                unlockSelect('#TerminalSelect');
+                unlockSelect('#VesselId');
+            }
+
             // ponytail: Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
             function lockToggle(toggleId, locked) {
                 const $toggle = $(toggleId);
@@ -368,6 +402,7 @@
             async function handleLegacyToggleChange() {
                 const isChecked = $(this).is(":checked");
                 if (isChecked) {
+                    unlockHeaderFields();
                     $("#jobOrderSearchContainer").hide();
                     $("#legacyNotice").show();
                     $("#JobOrderId").val("");
@@ -567,6 +602,7 @@
                 $("#isUndocumentedCheckbox").prop("checked", customer.isUndoc === "Undocumented");
                 handleCheckboxChange();
 
+                unlockHeaderFields();
                 $("#JobOrderSearch").val('').prop('disabled', false);
                 $("#JobOrderId").val('');
                 $("#JobOrderSearchResults").empty().removeClass('show');
@@ -633,19 +669,7 @@
                     const response = await res.json();
 
                     if (response.success) {
-                        // Auto-populate header from JO
-                        if (response.header) {
-                            $("#VoyageNumber").val(response.header.voyageNumber || '');
-                            $("#COSNumber").val(response.header.cosNumber || '');
-                            $("#PortSelect").val(response.header.portId).trigger('change');
-
-                            setTimeout(() => {
-                                $("#TerminalSelect").val(response.header.terminalId).trigger('change');
-                            }, 500);
-
-                            $("#VesselId").val(response.header.vesselId).trigger('change');
-                        }
-
+                        if (response.header) lockHeaderFields(response.header);
                         renderTicketsTable(response.tickets, true);
                     } else {
                          $ticketsTableBody.html(`<tr><td colspan="6" class="text-center py-5 text-error">${response.message}</td></tr>`);
