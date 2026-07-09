@@ -22,6 +22,9 @@ namespace IBS.Models.MSAP.ViewModels
         [StringLength(100)]
         public string? VoyageNumber { get; set; }
 
+        [Display(Name = "Voyage Type")]
+        public string? VoyageType { get; set; }
+
         public int CustomerId { get; set; }
 
         public DateOnly? DateLeft { get; set; }

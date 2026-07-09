@@ -153,6 +153,8 @@
                                             <option value="">-- Select Vessel --</option>
                                         </select>
                                     </div>
+                                    <input type="hidden" asp-for="VoyageType" id="VoyageType" value="@Model.VoyageType" />
+                                    <span id="voyageTypeBadge" class="modern-badge-sm mt-1 @(Model.VoyageType == "Foreign" ? "bg-warning text-white" : "bg-info text-white")" style="@(string.IsNullOrEmpty(Model.VoyageType) ? "display:none" : "")">@Model.VoyageType</span>
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Activity/Service Type <span class="text-error">*</span></label>
@@ -349,6 +351,22 @@
             if (initialJoId) {
                 $('#JobOrderId').trigger('change');
             }
+
+            // --- Vessel → VoyageType auto-set ---
+            function updateVoyageType() {
+                const vesselId = $('#VesselId').val();
+                if (!vesselId) { $('#voyageTypeBadge').hide(); return; }
+                $.get('@Url.Action("GetVesselVoyageType", "ServiceRequest")', { vesselId: vesselId })
+                    .done(function (data) {
+                        $('#VoyageType').val(data);
+                        const $badge = $('#voyageTypeBadge');
+                        $badge.text(data).show();
+                        $badge.removeClass('bg-warning text-white bg-info text-white')
+                              .addClass(data === 'Foreign' ? 'bg-warning text-white' : 'bg-info text-white');
+                    });
+            }
+            $('#VesselId').on('change', updateVoyageType);
+            if ($('#VesselId').val()) { updateVoyageType(); }
 
             // --- Port/Terminal Cascading Dropdown ---
             $('#PortSelect').on('change', function () {

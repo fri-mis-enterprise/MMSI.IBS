@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Select(s => new SelectListItem
                 {
                     Value = s.VesselId.ToString(),
-                    Text = $"{s.VesselName} ({s.VesselType})"
+                    Text = s.VesselName
                 }).ToListAsync(cancellationToken);
 
             return vessels;

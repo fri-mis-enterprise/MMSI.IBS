@@ -1,6 +1,9 @@
 # Changelog
 
 ## [2026-07-09]
+### Added
+- Service Request create/edit form now shows a `VoyageType` badge (Local/Foreign) that auto-fills from the selected vessel's `VesselType` field via AJAX. No new DB columns or migration — reads the existing `Vessel.VesselType` ("LOCAL"/"FOREIGN" from legacy data). Removed the `(VesselType)` suffix from the vessel dropdown since the badge now handles that.
+
 ### Removed
 - Dead `BillAdjust`/`BillDispatch` entity models, their DbSet/Fluent config in `ApplicationDbContext`, and the `msap_bill_adjustments`/`msap_bill_dispatches` tables (new migration). These link tables from the legacy schema were unused by any business code — the dispatch-to-billing linkage and per-ticket pricing are fully covered by `DispatchTicket.BillingId` and the tariff fields on `DispatchTicket`. Also removed the unused `bill_adjust.csv`/`bill_dispatch.csv` from `Imports/` and the truncation statements from `MsapImportController.Reset()`.
 

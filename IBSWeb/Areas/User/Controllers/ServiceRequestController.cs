@@ -408,6 +408,17 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetVesselVoyageType(int vesselId)
+        {
+            var vesselType = await dbContext.MsapVessels
+                .Where(v => v.VesselId == vesselId)
+                .Select(v => v.VesselType)
+                .FirstOrDefaultAsync();
+            var voyageType = vesselType == "FOREIGN" ? "Foreign" : "Local";
+            return Json(voyageType);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken = default)
         {
             var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId,
