@@ -569,6 +569,12 @@ table.dataTable tbody tr:hover {
     min-height: 38px;
 }
 
+.modern-select-trigger.disabled {
+    opacity: 0.6;
+    cursor: default;
+    background-color: var(--surface-container-low);
+}
+
 .modern-select-trigger:focus,
 .modern-select-trigger.active {
     outline: none;

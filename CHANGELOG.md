@@ -1,6 +1,9 @@
 # Changelog
 
 ## [2026-07-09]
+### Changed
+- Service Request form locking: when a Job Order is selected, JO-derived fields (Customer, Vessel, Port, Terminal, COS#, Voyage#) are locked to read-only via ModernSelect trigger manipulation (`pointer-events: none`, `tabindex` removal, `.disabled` class) instead of HTML `disabled` — avoids the disabled-field-not-submitted problem. Layout regrouped so locked fields (Customer, Port, Terminal) sit together at the top of Service Details. Terminal uses retry-based locking to wait for the port cascade AJAX. (scope: `Create.cshtml`, `Edit.cshtml`, `modern-ui.css`)
+
 ### Added
 - Service Request create/edit form now shows a `VoyageType` badge (Local/Foreign) that auto-fills from the selected vessel's `VesselType` field via AJAX. No new DB columns or migration — reads the existing `Vessel.VesselType` ("LOCAL"/"FOREIGN" from legacy data). Removed the `(VesselType)` suffix from the vessel dropdown since the badge now handles that.
 
