@@ -51,7 +51,6 @@
                                         <input type="text" id="CustomerSearch" class="modern-input border-0" placeholder="Type to search customers..." autocomplete="off">
                                         <input type="hidden" asp-for="CustomerId" id="CustomerId" />
                                     </div>
-                                    <span id="customerError" class="text-error text-xs" style="display:none">Please select a customer</span>
                                     <div id="CustomerSearchResults" class="modern-dropdown-menu w-full shadow-lg"></div>
                                     <span asp-validation-for="CustomerId" class="text-error text-xs"></span>
                                 </div>
@@ -202,6 +201,7 @@
 
             $customerSearch.on('input', function () {
                 clearTimeout(customerSearchTimeout);
+                ModernFormValidator.clearCustomValidity('CustomerSearch');
                 const searchTerm = $(this).val().trim();
                 if (searchTerm.length === 0) {
                     $customerId.val('');
@@ -224,7 +224,7 @@
                 $customerSearch.val(customer.name);
                 $customerId.val(customer.value);
                 $customerResults.removeClass('show');
-                $("#customerError").hide();
+                ModernFormValidator.clearCustomValidity('CustomerSearch');
             });
 
             $(document).on('click', function (e) {
@@ -285,15 +285,12 @@
         });
 
         function confirmCreate() {
-            const form = document.getElementById("jobOrderForm");
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+            if (!ModernFormValidator.validate('jobOrderForm')) return;
 
             var customerId = $("#CustomerId").val();
             if (!customerId || customerId === "0") {
-                $("#customerError").show();
+                ModernFormValidator.setCustomValidity('CustomerSearch', 'Please select a customer from the list');
+                document.getElementById('CustomerSearch').reportValidity();
                 return;
             }
 
@@ -305,12 +302,9 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     ModernAlert.showLoading("Creating job order...");
-                    form.submit();
+                    document.getElementById("jobOrderForm").submit();
                 }
             });
         }
     </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
 }

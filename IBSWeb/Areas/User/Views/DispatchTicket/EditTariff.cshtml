@@ -295,7 +295,6 @@
 </div>
 
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         const PageConfig = {
             messages: {
@@ -373,16 +372,13 @@
 
             $('#submitButton').on('click', function (e) {
                 e.preventDefault();
+
+                if (!ModernFormValidator.validate('myForm')) return;
+
                 const dispatchRate = parseNumber(dispatchRateInput.val());
                 const bafRate = parseNumber(bafRateInput.val());
-
                 if (dispatchRate === 0 && bafRate === 0) {
                     ModernAlert.error("Dispatch or BAF rate must be set.", "Validation Error");
-                    return;
-                }
-
-                const form = document.getElementById("myForm");
-                if ($(form).valid && !$(form).valid()) {
                     return;
                 }
 
@@ -393,7 +389,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         ModernAlert.showLoading("Updating tariff...");
-                        form.submit();
+                        document.getElementById("myForm").submit();
                     }
                 });
             });

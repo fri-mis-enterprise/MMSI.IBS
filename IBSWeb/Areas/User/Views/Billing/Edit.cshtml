@@ -721,8 +721,7 @@
             // ── Submit ───────────────────────────────────────────────────────
             function areYouSureToBill(event) {
                 event.preventDefault();
-                const form = document.getElementById("myForm");
-                if (!form.checkValidity()) { form.reportValidity(); return; }
+                if (!ModernFormValidator.validate('myForm')) return;
                 // Check for at least one checked ticket, including disabled ones (JO-linked).
                 const checkedCount = $('#ticketsTable .ticket-checkbox').filter(function () {
                     return $(this).prop('checked');

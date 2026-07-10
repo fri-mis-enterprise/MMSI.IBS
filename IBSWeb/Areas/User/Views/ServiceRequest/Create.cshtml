@@ -206,7 +206,7 @@
                                         <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
                                     </button>
                                 </div>
-                                <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;" required>
+                                <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;" required oninvalid="this.setCustomValidity('A Dispatch Ticket image is required')" oninput="this.setCustomValidity('')">
                                 <span class="text-error text-xs">An image of the Dispatch/Mooring Ticket is required.</span>
                             </div>
                             <div>

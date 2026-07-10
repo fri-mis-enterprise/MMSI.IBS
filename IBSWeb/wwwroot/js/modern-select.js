@@ -237,6 +237,8 @@ const ModernSelect = {
                 $trigger.find('.selected-text').text(placeholder);
                 $optionsContainer.find('.modern-select-option').removeClass('selected');
             }
+            // sync validation state to trigger element
+            $trigger.toggleClass('is-invalid', $select.prop('required') && !val);
         });
 
         // Close on scroll to avoid disconnected dropdown

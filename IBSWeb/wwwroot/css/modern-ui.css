@@ -189,6 +189,15 @@ h1, h2, h3, h4, p {
     background-color: var(--surface-container-low);
 }
 
+.modern-input:user-invalid,
+.modern-select-trigger:user-invalid {
+    border-color: var(--error);
+}
+
+.modern-input:user-valid {
+    border-color: var(--outline-variant);
+}
+
 textarea.modern-input {
     resize: vertical;
     min-height: 80px;

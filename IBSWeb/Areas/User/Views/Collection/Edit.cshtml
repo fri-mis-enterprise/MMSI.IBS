@@ -542,8 +542,7 @@
 
             function areYouSureToUpdate(event) {
                 event.preventDefault();
-                const form = document.getElementById("myForm");
-                if (!form.checkValidity()) { form.reportValidity(); return; }
+                if (!ModernFormValidator.validate('myForm')) return;
 
                 // Clear any existing hidden billing payments
                 $('input[name^="BillingPayments"]').remove();

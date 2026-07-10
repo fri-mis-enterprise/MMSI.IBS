@@ -408,6 +408,7 @@
 
                 $customerSearch.on('input', function () {
                     clearTimeout(customerSearchTimeout);
+                    ModernFormValidator.clearCustomValidity('CustomerSearch');
                     const searchTerm = $(this).val().trim();
                     if (searchTerm.length === 0) {
                         $customerId.val('');
@@ -430,6 +431,7 @@
 
                     $customerSearch.val(customer.name);
                     $customerId.val(customer.value);
+                    ModernFormValidator.clearCustomValidity('CustomerSearch');
                     $customerResults.empty().removeClass('show').hide();
                     currentCustomerId = customer.value;
 
@@ -647,8 +649,12 @@
 
             function areYouSureToSave(event) {
                 event.preventDefault();
-                const form = document.getElementById("myForm");
-                if (!form.checkValidity()) { form.reportValidity(); return; }
+                if (!ModernFormValidator.validate('myForm')) return;
+                if (!$('#customerId').val()) {
+                    ModernFormValidator.setCustomValidity('CustomerSearch', 'Please select a customer from the list');
+                    document.getElementById('CustomerSearch').reportValidity();
+                    return;
+                }
 
                 // Clear any existing hidden billing payments
                 $('input[name^="BillingPayments"]').remove();

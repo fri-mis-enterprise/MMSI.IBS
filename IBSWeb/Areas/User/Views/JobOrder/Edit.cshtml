@@ -299,11 +299,7 @@
         });
 
         function confirmEdit() {
-            const form = document.getElementById("jobOrderForm");
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+            if (!ModernFormValidator.validate('jobOrderForm')) return;
 
             ModernAlert.confirm({
                 title: 'Save Changes?',
@@ -313,12 +309,9 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     ModernAlert.showLoading("Saving changes...");
-                    form.submit();
+                    document.getElementById("jobOrderForm").submit();
                 }
             });
         }
     </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
 }

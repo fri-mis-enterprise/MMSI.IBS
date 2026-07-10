@@ -539,6 +539,7 @@
 
             $customerSearch.on('input', function () {
                 clearTimeout(customerSearchTimeout);
+                ModernFormValidator.clearCustomValidity('CustomerSearch');
                 const searchTerm = $(this).val().trim();
                 if (searchTerm.length === 0) $customerId.val('');
                 customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
@@ -555,6 +556,7 @@
 
                 $customerSearch.val(customer.name);
                 $customerId.val(customer.value);
+                ModernFormValidator.clearCustomValidity('CustomerSearch');
                 $customerResults.empty().removeClass('show');
                 currentCustomerId = customer.value;
 
@@ -833,8 +835,12 @@
             // ── Submit ───────────────────────────────────────────────────────
             function areYouSureToBill(event) {
                 event.preventDefault();
-                const form = document.getElementById("myForm");
-                if (!form.checkValidity()) { form.reportValidity(); return; }
+                if (!ModernFormValidator.validate('myForm')) return;
+                if (!$("#CustomerId").val()) {
+                    ModernFormValidator.setCustomValidity('CustomerSearch', 'Please select a customer from the list');
+                    document.getElementById('CustomerSearch').reportValidity();
+                    return;
+                }
                 if (!$("#DispatchTicketSelect").val()?.length) {
                     ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
                     return;

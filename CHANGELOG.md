@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-07-10]
+### Changed
+- Form validation overhaul: replaced scattered `checkValidity()` + `reportValidity()` calls with shared `ModernFormValidator` utility; removed 51 redundant `_ValidationScriptsPartial` includes (scripts already in `_Layout.cshtml`); added `:user-invalid`/`:user-valid` CSS for instant visual feedback (red borders) on invalid fields after user interaction; fixed ModernSelect to sync validation state to the visible trigger (`is-invalid` class on `change`); replaced vague `customerError` span with native `setCustomValidity()` on customer search inputs across JobOrder, Billing, Collection. (scope: `modern-ui.css`, `modern-select.js`, `modern-form-validator.js` (new), `_Layout.cshtml`, 51+ `.cshtml` files)
+- DispatchTicket tariff forms now use `ModernFormValidator.validate()` instead of jQuery `.valid()`. (scope: `SetTariff.cshtml`, `EditTariff.cshtml`)
+- ServiceRequest image upload now has a clearer custom validation message via `oninvalid`. (scope: `Create.cshtml`)
+
 ## [2026-07-09]
 ### Changed
 - Service Request form locking: when a Job Order is selected, JO-derived fields (Customer, Vessel, Port, Terminal, COS#, Voyage#) are locked to read-only via ModernSelect trigger manipulation (`pointer-events: none`, `tabindex` removal, `.disabled` class) instead of HTML `disabled` — avoids the disabled-field-not-submitted problem. Layout regrouped so locked fields (Customer, Port, Terminal) sit together at the top of Service Details. Terminal uses retry-based locking to wait for the port cascade AJAX. (scope: `Create.cshtml`, `Edit.cshtml`, `modern-ui.css`)
