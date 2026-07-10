@@ -95,7 +95,7 @@ namespace IBS.Tests.Services
                 Amount = 1120m,
                 IsVatable = true,
                 IsVatInclusive = true,
-                BilledTo = SD.BilledTo_Local
+                BilledTo = SD.BilledToLocal
             };
 
             _mockCustomerRepo.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
@@ -128,7 +128,7 @@ namespace IBS.Tests.Services
                 Amount = 1120m,
                 IsVatable = true,
                 IsVatInclusive = false,
-                BilledTo = SD.BilledTo_Local
+                BilledTo = SD.BilledToLocal
             };
 
             _mockCustomerRepo.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
@@ -158,7 +158,7 @@ namespace IBS.Tests.Services
                 MsapBillingId = 1,
                 Amount = 1000m,
                 IsVatable = false,
-                BilledTo = SD.BilledTo_Local
+                BilledTo = SD.BilledToLocal
             };
 
             _mockCustomerRepo.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
@@ -192,7 +192,7 @@ namespace IBS.Tests.Services
                 Amount = 1120m,
                 IsVatable = true,
                 IsVatInclusive = true,
-                BilledTo = SD.BilledTo_Local
+                BilledTo = SD.BilledToLocal
             };
 
             _mockCustomerRepo.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);

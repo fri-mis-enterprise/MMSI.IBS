@@ -67,7 +67,7 @@ namespace IBS.Tests.Services
                 {
                     MsapBillingId = 100,
                     Amount = 1120m,
-                    BilledTo = SD.BilledTo_Local,
+                    BilledTo = SD.BilledToLocal,
                     IsVatable = true
                 }
             };
@@ -112,7 +112,7 @@ namespace IBS.Tests.Services
                 {
                     MsapBillingId = 100,
                     Amount = 1000m,
-                    BilledTo = SD.BilledTo_Local,
+                    BilledTo = SD.BilledToLocal,
                     IsVatable = false
                 }
             };
@@ -157,7 +157,7 @@ namespace IBS.Tests.Services
                 {
                     MsapBillingId = 100,
                     Amount = 1120m,
-                    BilledTo = SD.BilledTo_Local,
+                    BilledTo = SD.BilledToLocal,
                     IsVatable = true
                 }
             };

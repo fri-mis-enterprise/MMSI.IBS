@@ -261,13 +261,13 @@ namespace IBS.Services
                     .Select(b =>
                     {
                         decimal ewt = 0;
-                        if (customer.WithHoldingTax && b.BilledTo == SD.BilledTo_Local)
+                        if (customer.WithHoldingTax && b.BilledTo == SD.BilledToLocal)
                         {
                             ewt = b.IsVatable ? (b.Amount / 1.12m) * 0.02m : b.Amount * 0.02m;
                         }
 
                         decimal wvat = 0;
-                        if (customer.WithHoldingVat && b.BilledTo == SD.BilledTo_Local)
+                        if (customer.WithHoldingVat && b.BilledTo == SD.BilledToLocal)
                         {
                             wvat = b.IsVatable ? (b.Amount / 1.12m) * 0.05m : 0;
                         }
