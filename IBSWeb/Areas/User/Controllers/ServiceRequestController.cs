@@ -450,7 +450,8 @@ namespace IBSWeb.Areas.User.Controllers
                     .Include(dt => dt.Customer)
                     .Where(dt => dt.Status == SD.DispatchTicketStatus.Draft ||
                                  dt.Status == SD.DispatchTicketStatus.Requested ||
-                                 dt.Status == SD.DispatchTicketStatus.Cancelled);
+                                 dt.Status == SD.DispatchTicketStatus.Cancelled ||
+                                 dt.Status == SD.DispatchTicketStatus.ServiceRequestDeleted);
 
                 // Port Coordinators can only see their own requests
                 if (User.IsInRole("PortCoordinator"))
@@ -782,6 +783,71 @@ namespace IBSWeb.Areas.User.Controllers
                     "Failed to cancel selected entries.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to delete Service Requests.")]
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                if (model == null)
+                    return Json(new { success = false, message = "Service request not found." });
+
+                if (model.Status != SD.DispatchTicketStatus.Draft &&
+                    model.Status != SD.DispatchTicketStatus.Requested)
+                    return Json(new { success = false, message = $"Cannot delete — status is '{model.Status}'. Only Draft and Requested can be deleted." });
+
+                model.Status = SD.DispatchTicketStatus.ServiceRequestDeleted;
+                model.EditedBy = User.Identity?.Name ?? "System";
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                await unitOfWork.AuditTrail.AddAsync(
+                    new AuditTrail(model.EditedBy, $"Deleted service request #{model.DispatchNumber}", "Service Request", model.DispatchTicketId, model.DispatchNumber),
+                    cancellationToken);
+
+                await unitOfWork.SaveAsync(cancellationToken);
+                return Json(new { success = true, message = $"Service request #{model.DispatchNumber} deleted." });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to delete service request.");
+                return Json(new { success = false, message = $"Failed to delete: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to restore Service Requests.")]
+        public async Task<IActionResult> Restore(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                if (model == null)
+                    return Json(new { success = false, message = "Service request not found." });
+
+                if (model.Status != SD.DispatchTicketStatus.ServiceRequestDeleted)
+                    return Json(new { success = false, message = $"Cannot restore — status is '{model.Status}'. Only deleted requests can be restored." });
+
+                model.Status = SD.DispatchTicketStatus.Requested;
+                model.EditedBy = User.Identity?.Name ?? "System";
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                await unitOfWork.AuditTrail.AddAsync(
+                    new AuditTrail(model.EditedBy, $"Restored service request #{model.DispatchNumber}", "Service Request", model.DispatchTicketId, model.DispatchNumber),
+                    cancellationToken);
+
+                await unitOfWork.SaveAsync(cancellationToken);
+                return Json(new { success = true, message = $"Service request #{model.DispatchNumber} restored." });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to restore service request.");
+                return Json(new { success = false, message = $"Failed to restore: {ex.Message}" });
             }
         }
 

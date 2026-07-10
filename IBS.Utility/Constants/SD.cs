@@ -110,6 +110,7 @@ namespace IBS.Utility.Constants
             public const string Billed = "Billed";
             public const string Cancelled = "Cancelled";
             public const string Deleted = "Deleted";
+            public const string ServiceRequestDeleted = "Service Request Deleted";
         }
 
         public static class BillingStatus
@@ -119,8 +120,8 @@ namespace IBS.Utility.Constants
             public const string Collected = "Collected";
         }
 
-        public const string BilledTo_Local = "LOCAL";
-        public const string BilledTo_Foreign = "FOREIGN";
+        public const string BilledToLocal = "LOCAL";
+        public const string BilledToForeign = "FOREIGN";
 
         #region MSAP Accounting Accounts
 

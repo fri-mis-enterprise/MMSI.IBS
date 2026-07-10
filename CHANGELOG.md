@@ -1,6 +1,15 @@
 # Changelog
 
 ## [2026-07-10]
+### Added
+- ServiceRequest delete/restore feature: new `ServiceRequestDeleted` status constant; `[HttpPost] Delete` action in `ServiceRequestController` with inline soft-delete (status → "Service Request Deleted" + audit); "Delete" dropdown item for Draft/Requested statuses with "DELETED" filter button on SR index; `[HttpPost] Restore` action (ServiceRequestDeleted → Requested) with "Restore" dropdown item. (scope: `SD.cs`, `ServiceRequestController.cs`, `Index.cshtml`)
+
+### Changed
+- `SearchBillableJobOrdersAsync` now excludes `Deleted`/`ServiceRequestDeleted` tickets from the `.All()` check so deleted tickets don't block Job Orders from appearing in billing dropdown. (scope: `JobOrderRepository.cs`)
+- `JobOrderRepository.cs`: All `.Include(DispatchTickets.Where(...))` filters exclude `ServiceRequestDeleted` alongside `Deleted`. (scope: `JobOrderRepository.cs`)
+- `JobOrderService.cs`: `SyncRelatedRecordsAsync` and `TryAutoCloseAsync` queries also exclude `ServiceRequestDeleted`. (scope: `JobOrderService.cs`)
+- `DispatchTicketRepository.cs`: `GetPagedDispatchTicketsAsync` excludes `ServiceRequestDeleted` from DT listing and total count. (scope: `DispatchTicketRepository.cs`)
+
 ### Changed
 - Form validation overhaul: replaced scattered `checkValidity()` + `reportValidity()` calls with shared `ModernFormValidator` utility; removed 51 redundant `_ValidationScriptsPartial` includes (scripts already in `_Layout.cshtml`); added `:user-invalid`/`:user-valid` CSS for instant visual feedback (red borders) on invalid fields after user interaction; fixed ModernSelect to sync validation state to the visible trigger (`is-invalid` class on `change`); replaced vague `customerError` span with native `setCustomValidity()` on customer search inputs across JobOrder, Billing, Collection. (scope: `modern-ui.css`, `modern-select.js`, `modern-form-validator.js` (new), `_Layout.cshtml`, 51+ `.cshtml` files)
 - DispatchTicket tariff forms now use `ModernFormValidator.validate()` instead of jQuery `.valid()`. (scope: `SetTariff.cshtml`, `EditTariff.cshtml`)
