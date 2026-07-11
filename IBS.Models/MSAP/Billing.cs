@@ -170,6 +170,15 @@ namespace IBS.Models.MSAP
 
         public string? CollectionNumber { get; set; }
 
+        [Column("unposted_by")]
+        public string? UnpostedBy { get; set; }
+
+        [Column("unposted_date")]
+        public DateTime? UnpostedDate { get; set; }
+
+        [Column("unpost_remarks")]
+        public string? UnpostRemarks { get; set; }
+
         [NotMapped]
         public List<SelectListItem>? CustomerPrincipal { get; set; }
 

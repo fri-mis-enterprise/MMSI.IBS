@@ -1,5 +1,14 @@
 # Changelog
 
+## [2026-07-11]
+### Added
+- Billing reversal (unpost) feature: new `ReverseBilling` procedure enum + `CanReverseBilling` permission; `ReverseBillingAsync` in `BillingService` resets status → `ForPosting`, reverts dispatch tickets → `ForBilling`, records `UnpostedBy/Date/Remarks`; blocked if billing is linked to a collection; `Reverse` action in `BillingController` + "Reverse (Unpost)" dropdown on Index with remarks prompt. (scope: `Enum.cs`, `UserAccess.cs`, `Billing.cs`, `UserAccessService.cs`, `UserAccessRepository.cs`, `BillingService.cs`, `BillingController.cs`, `Index.cshtml`, `Edit.cshtml`)
+### Fixed
+- Billing reversal now reopens auto-closed Job Orders when tickets are reverted to `ForBilling`
+- Billing reversal success message shows billing number instead of ID
+- Edit POST action returns JSON (matching JS expectation) instead of 302 redirect, fixing "An error occurred" alert on every edit
+- Edit form auto-fetches tickets when JobOrder is pre-filled but server rendered none (e.g. after reversal)
+
 ## [2026-07-10]
 ### Added
 - ServiceRequest delete/restore feature: new `ServiceRequestDeleted` status constant; `[HttpPost] Delete` action in `ServiceRequestController` with inline soft-delete (status → "Service Request Deleted" + audit); "Delete" dropdown item for Draft/Requested statuses with "DELETED" filter button on SR index; `[HttpPost] Restore` action (ServiceRequestDeleted → Requested) with "Restore" dropdown item. (scope: `SD.cs`, `ServiceRequestController.cs`, `Index.cshtml`)

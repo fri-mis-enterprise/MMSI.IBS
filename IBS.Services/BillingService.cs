@@ -465,6 +465,67 @@ namespace IBS.Services
             }
         }
 
+        public async Task<ServiceResult> ReverseBillingAsync(int id, string username, string? remarks, CancellationToken cancellationToken)
+        {
+            try
+            {
+                string? billingNumber = null;
+
+                await unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
+                    if (billing == null)
+                        throw new InvalidOperationException("Billing not found.");
+
+                    billingNumber = billing.MsapBillingNumber;
+
+                    if (billing.Status != SD.BillingStatus.ForCollection)
+                        throw new InvalidOperationException($"Only billings with '{SD.BillingStatus.ForCollection}' status can be reversed.");
+
+                    if (billing.CollectionId.HasValue)
+                        throw new InvalidOperationException($"Billing #{billingNumber} cannot be reversed because it is linked to a Collection (CR#{billing.CollectionNumber}).");
+
+                    var linkedTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == billing.MsapBillingId, cancellationToken);
+                    foreach (var dt in linkedTickets)
+                    {
+                        dt.Status = SD.DispatchTicketStatus.ForBilling;
+                        dt.BillingId = null;
+                    }
+
+                    billing.Status = SD.BillingStatus.ForPosting;
+                    billing.UnpostedBy = username;
+                    billing.UnpostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    billing.UnpostRemarks = remarks;
+
+                    // ponytail: GL contra entries skipped — GL module is still TODO
+                    // When GL posting is fixed, create reverse entries here:
+                    // Debit Credit (original) → Credit Debit (contra) with reference "REV-#{number}"
+
+                    await unitOfWork.AuditTrail.AddAsync(
+                        new AuditTrail(username, $"Reversed (unposted) Billing #{billingNumber}", "Billing", billing.MsapBillingId, billingNumber),
+                        cancellationToken);
+
+                    if (billing.JobOrderId.HasValue)
+                    {
+                        var jobOrder = await unitOfWork.JobOrder.GetAsync(jo => jo.JobOrderId == billing.JobOrderId, cancellationToken);
+                        if (jobOrder != null && jobOrder.Status == SD.JobOrderStatus.Closed)
+                        {
+                            jobOrder.Status = SD.JobOrderStatus.Open;
+                        }
+                    }
+
+                    await unitOfWork.SaveAsync(cancellationToken);
+                }, cancellationToken);
+
+                return ServiceResult.Success($"Billing #{billingNumber} reversed successfully and is back to '{SD.BillingStatus.ForPosting}'.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to reverse billing {BillingId}", id);
+                return ServiceResult.Failure($"Failed to reverse billing: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
         public async Task<(IEnumerable<Billing> Data, int RecordsFiltered, int TotalRecords)> GetPagedBillingsAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             return await unitOfWork.Billing.GetPagedBillingsAsync(parameters, cancellationToken);

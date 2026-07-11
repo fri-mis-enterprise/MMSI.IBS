@@ -45,6 +45,7 @@ namespace IBS.Services
                 ProcedureEnum.CreateBilling => userAccess.CanCreateBilling,
                 ProcedureEnum.EditBilling => userAccess.CanEditBilling,
                 ProcedureEnum.DeleteBilling => userAccess.CanDeleteBilling,
+                ProcedureEnum.ReverseBilling => userAccess.CanReverseBilling,
                 ProcedureEnum.CreateCollection => userAccess.CanCreateCollection,
                 ProcedureEnum.CreateJobOrder => userAccess.CanCreateJobOrder,
                 ProcedureEnum.EditJobOrder => userAccess.CanEditJobOrder,
@@ -132,6 +133,7 @@ namespace IBS.Services
                 if (existing.CanCreateBilling != model.CanCreateBilling) changes.Add($"Create Billing: {existing.CanCreateBilling} → {model.CanCreateBilling}");
                 if (existing.CanEditBilling != model.CanEditBilling) changes.Add($"Edit Billing: {existing.CanEditBilling} → {model.CanEditBilling}");
                 if (existing.CanDeleteBilling != model.CanDeleteBilling) changes.Add($"Delete Billing: {existing.CanDeleteBilling} → {model.CanDeleteBilling}");
+                if (existing.CanReverseBilling != model.CanReverseBilling) changes.Add($"Reverse Billing: {existing.CanReverseBilling} → {model.CanReverseBilling}");
                 if (existing.CanCreateCollection != model.CanCreateCollection) changes.Add($"Create Collection: {existing.CanCreateCollection} → {model.CanCreateCollection}");
                 if (existing.CanCreateJobOrder != model.CanCreateJobOrder) changes.Add($"Create JO: {existing.CanCreateJobOrder} → {model.CanCreateJobOrder}");
                 if (existing.CanEditJobOrder != model.CanEditJobOrder) changes.Add($"Edit JO: {existing.CanEditJobOrder} → {model.CanEditJobOrder}");
@@ -163,6 +165,7 @@ namespace IBS.Services
                     existing.CanCreateBilling = model.CanCreateBilling;
                     existing.CanEditBilling = model.CanEditBilling;
                     existing.CanDeleteBilling = model.CanDeleteBilling;
+                    existing.CanReverseBilling = model.CanReverseBilling;
                     existing.CanCreateCollection = model.CanCreateCollection;
                     existing.CanCreateJobOrder = model.CanCreateJobOrder;
                     existing.CanEditJobOrder = model.CanEditJobOrder;

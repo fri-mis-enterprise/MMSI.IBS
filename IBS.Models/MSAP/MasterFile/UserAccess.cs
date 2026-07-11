@@ -37,6 +37,8 @@ namespace IBS.Models.MSAP.MasterFile
 
         public bool CanDeleteBilling { get; set; }
 
+        public bool CanReverseBilling { get; set; }
+
         public bool CanCreateCollection { get; set; }
 
         public bool CanCreateJobOrder { get; set; }

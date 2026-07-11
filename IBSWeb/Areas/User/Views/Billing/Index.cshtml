@@ -133,6 +133,11 @@
                                     { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}` },
                                     { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})` }
                                 ]);
+                            } else if (row.status === "@SD.BillingStatus.ForCollection") {
+                                return ModernTable.render.dropdown([
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
+                                    { label: 'Reverse (Unpost)', icon: 'undo', onclick: `confirmReverse(${row.msapBillingId})` }
+                                ]);
                             } else {
                                 return `<a class="modern-btn-secondary" style="padding: 4px 12px; font-size: 11px;" href="${previewUrl}?id=${row.msapBillingId}">
                                             <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> VIEW
@@ -207,6 +212,22 @@
                 if (result.isConfirmed) {
                     ModernAlert.showLoading("Deleting billing...");
                     window.location.href = '@Url.Action("Delete", "Billing")?id=' + id;
+                }
+            });
+        }
+
+        function confirmReverse(id) {
+            ModernAlert.prompt({
+                title: 'Reverse Billing?',
+                text: "This will unpost the billing and return all dispatch tickets to 'For Billing' status.",
+                icon: 'warning',
+                placeholder: 'Enter reason for reversal...',
+                confirmText: 'Yes, reverse it!',
+                validator: (value) => value ? null : 'Please enter a reason for the reversal.'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    ModernAlert.showLoading("Reversing billing...");
+                    window.location.href = '@Url.Action("Reverse", "Billing")?id=' + id + '&remarks=' + encodeURIComponent(result.value);
                 }
             });
         }

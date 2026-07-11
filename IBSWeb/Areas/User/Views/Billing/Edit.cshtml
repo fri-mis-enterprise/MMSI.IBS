@@ -453,6 +453,11 @@
                     $("#JobOrderId").val(initialJobOrderId);
                 }
 
+                // Auto-fetch tickets if JobOrder is set but server rendered none (e.g. after reversal)
+                if (initialJobOrderId && initialJobOrderId !== '' && !$ticketsTableBody.find('tr[data-ticket-id]').length) {
+                    fetchTicketsByJobOrderId(initialJobOrderId);
+                }
+
                 // Initialize hidden inputs for server-rendered tickets.
                 // NOTE: We must NOT use ':checked' selector here because jQuery excludes
                 // disabled inputs from that filter. JO-linked tickets are checked+disabled,
@@ -607,22 +612,25 @@
                 if (currentCustomerId) performJobOrderSearch($(this).val().trim());
             });
 
-            $jobOrderResults.on('click', '.modern-dropdown-item', async function (e) {
-                e.preventDefault();
-                const jobOrder = $(this).data('jobOrder');
-                $jobOrderSearch.val(jobOrder.name);
-                $jobOrderId.val(jobOrder.value);
-                $jobOrderResults.empty().removeClass('show');
+            async function fetchTicketsByJobOrderId(jobOrderId) {
                 try {
-                    const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrder.value)}`);
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrderId)}`);
                     const response = await res.json();
-
                     if (response.success) {
                         renderTicketsTable(response.tickets, true);
                     }
                 } catch {
                     ModernAlert.error('Failed to load tickets');
                 }
+            }
+
+            $jobOrderResults.on('click', '.modern-dropdown-item', async function (e) {
+                e.preventDefault();
+                const jobOrder = $(this).data('jobOrder');
+                $jobOrderSearch.val(jobOrder.name);
+                $jobOrderId.val(jobOrder.value);
+                $jobOrderResults.empty().removeClass('show');
+                await fetchTicketsByJobOrderId(jobOrder.value);
             });
 
             function renderTicketsTable(tickets, isReadOnly) {

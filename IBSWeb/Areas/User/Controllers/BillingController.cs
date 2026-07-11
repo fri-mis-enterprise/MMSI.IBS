@@ -31,7 +31,8 @@ namespace IBSWeb.Areas.User.Controllers
             "Access denied. You don't have permission to access Billings.",
             ProcedureEnum.CreateBilling,
             ProcedureEnum.EditBilling,
-            ProcedureEnum.DeleteBilling)]
+            ProcedureEnum.DeleteBilling,
+            ProcedureEnum.ReverseBilling)]
         public Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
             try
@@ -150,23 +151,20 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (result.IsSuccess)
                 {
-                    TempData["success"] = result.Message ?? "Entry edited successfully!";
-                    return RedirectToAction(nameof(Index));
+                    return Json(new { success = true, message = result.Message ?? "Entry edited successfully!", redirectUrl = Url.Action(nameof(Index)) });
                 }
 
                 if (result.Status == ServiceResultStatus.NotFound)
                 {
-                    return NotFound();
+                    return Json(new { success = false, message = "Billing not found." });
                 }
 
-                TempData["error"] = result.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = result.Message });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to edit billing.");
-                TempData["error"] = ExceptionHelper.GetErrorMessage(ex);
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = ExceptionHelper.GetErrorMessage(ex) });
             }
         }
 
@@ -205,6 +203,30 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var result = await billingService.PostBillingAsync(id, User.Identity?.Name ?? "Unknown", cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+            }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        #endregion
+
+        #region Reverse (Unpost)
+
+        /// <summary>
+        /// Reverses a posted billing back to 'For Posting' status.
+        /// </summary>
+        [RequireAccess(ProcedureEnum.ReverseBilling, "Access denied. You don't have permission to reverse Billings.")]
+        public async Task<IActionResult> Reverse(int id, string? remarks, CancellationToken cancellationToken)
+        {
+            var result = await billingService.ReverseBillingAsync(id, User.Identity?.Name ?? "Unknown", remarks, cancellationToken);
 
             if (result.IsSuccess)
             {

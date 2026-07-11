@@ -45,6 +45,7 @@ namespace IBS.DataAccess.Repository.Msap
                 ProcedureEnum.CreateBilling => query.Where(u => u.CanCreateBilling),
                 ProcedureEnum.EditBilling => query.Where(u => u.CanEditBilling),
                 ProcedureEnum.DeleteBilling => query.Where(u => u.CanDeleteBilling),
+                ProcedureEnum.ReverseBilling => query.Where(u => u.CanReverseBilling),
                 ProcedureEnum.CreateCollection => query.Where(u => u.CanCreateCollection),
                 ProcedureEnum.CreateJobOrder => query.Where(u => u.CanCreateJobOrder),
                 ProcedureEnum.EditJobOrder => query.Where(u => u.CanEditJobOrder),

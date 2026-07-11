@@ -23,6 +23,7 @@ namespace IBS.Models.Enums
         CreateBilling,
         EditBilling,
         DeleteBilling,
+        ReverseBilling,
         CreateCollection,
         CreateJobOrder,
         EditJobOrder,
