@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-07-11]
+### Fixed
+- Sales Summary (AR Monitoring) report now filters by **billing date** instead of dispatch ticket date — billings posted in the target month are no longer excluded just because the dispatch happened earlier. Column 1 ("BILLING STATEMENT DATE/DISPATCH DATE") shows the **billing date** when available. Sort order also uses billing date when the billing-date filter is active. (`ReportRepository.cs`, `IReportRepository.cs`, `MaritimeReportController.cs`)
+### Added
+- Total row at the bottom of Sales Summary with SUM formulas for GROSS SALES, BALANCE, NET SALES, and all columns from FOR PNL USE onwards (except text-only DOC/UNDOC/PRINCIPAL). Light cyan background (`#CCFFFF`), dark bold text, thin borders. Freeze pane at row 7 so headers stay visible during scroll. (`MaritimeReportController.cs`)
+
+## [2026-07-11]
 ### Added
 - Billing reversal (unpost) feature: new `ReverseBilling` procedure enum + `CanReverseBilling` permission; `ReverseBillingAsync` in `BillingService` resets status → `ForPosting`, reverts dispatch tickets → `ForBilling`, records `UnpostedBy/Date/Remarks`; blocked if billing is linked to a collection; `Reverse` action in `BillingController` + "Reverse (Unpost)" dropdown on Index with remarks prompt. (scope: `Enum.cs`, `UserAccess.cs`, `Billing.cs`, `UserAccessService.cs`, `UserAccessRepository.cs`, `BillingService.cs`, `BillingController.cs`, `Index.cshtml`, `Edit.cshtml`)
 ### Fixed

@@ -7,26 +7,50 @@ namespace IBS.DataAccess.Repository.Msap
 {
     public class ReportRepository(ApplicationDbContext db): IReportRepository
     {
-        public async Task<List<DispatchTicket>> GetDispatchReportData(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
+        public async Task<List<DispatchTicket>> GetDispatchReportData(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default, bool filterByBillingDate = false)
         {
             if (dateFrom > dateTo)
             {
                 throw new ArgumentException("Date From must not be earlier than Date To.");
             }
 
-            var tickets = await db.MsapDispatchTickets
-                .Where(dt => dt.Date >= dateFrom && dt.Date <= dateTo)
-                .Include(dt => dt.Customer)
-                .Include(dt => dt.Vessel)
-                .Include(dt => dt.Tugboat)
-                .ThenInclude(t => t.TugboatOwner)
-                .Include(dt => dt.TugMaster)
-                .Include(dt => dt.Terminal)
-                .ThenInclude(t => t.Port)
-                .Include(dt => dt.Service)
-                .OrderBy(dt => dt.Date)
-                .ThenBy(dt => dt.DispatchNumber)
-                .ToListAsync(cancellationToken);
+            var query = db.MsapDispatchTickets.AsQueryable();
+
+            if (filterByBillingDate)
+            {
+                query = query.Where(dt => dt.BillingId != null
+                    && db.MsapBillings.Any(b => b.MsapBillingId == dt.BillingId && b.Date >= dateFrom && b.Date <= dateTo));
+            }
+            else
+            {
+                query = query.Where(dt => dt.Date >= dateFrom && dt.Date <= dateTo);
+            }
+
+            var tickets = filterByBillingDate
+                ? await query
+                    .Include(dt => dt.Customer)
+                    .Include(dt => dt.Vessel)
+                    .Include(dt => dt.Tugboat)
+                    .ThenInclude(t => t.TugboatOwner)
+                    .Include(dt => dt.TugMaster)
+                    .Include(dt => dt.Terminal)
+                    .ThenInclude(t => t.Port)
+                    .Include(dt => dt.Service)
+                    .OrderBy(dt => dt.Billing!.Date)
+                    .ThenBy(dt => dt.DispatchNumber)
+                    .ToListAsync(cancellationToken)
+                : await query
+                    .Include(dt => dt.Customer)
+                    .Include(dt => dt.Vessel)
+                    .Include(dt => dt.Tugboat)
+                    .ThenInclude(t => t.TugboatOwner)
+                    .Include(dt => dt.TugMaster)
+                    .Include(dt => dt.Terminal)
+                    .ThenInclude(t => t.Port)
+                    .Include(dt => dt.Service)
+                    .OrderBy(dt => dt.Date)
+                    .ThenBy(dt => dt.DispatchNumber)
+                    .ToListAsync(cancellationToken);
 
             var billingIds = tickets.Where(t => t.BillingId.HasValue).Select(t => t.BillingId!.Value).Distinct().ToList();
             if (billingIds.Count != 0)

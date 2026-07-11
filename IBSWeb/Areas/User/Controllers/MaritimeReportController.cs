@@ -214,7 +214,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var dateFrom = new DateOnly(year, month, 1);
             var dateTo = dateFrom.AddMonths(1).AddDays(-1);
-            var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
+            var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct, filterByBillingDate: true);
 
             var tugboatsInData = data.Select(t => t.Tugboat?.TugboatName).Where(n => n != null).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
             var ownersInData = data.Select(t => t.Tugboat?.TugboatOwner?.TugboatOwnerName).Where(n => n != null).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
@@ -304,6 +304,8 @@ namespace IBSWeb.Areas.User.Controllers
                 rng.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
             }
 
+            ws.View.FreezePanes(7, 1);
+
             // One lookup per tugboat instead of nine parallel dictionaries.
             var tugboatCols = new Dictionary<string, TugboatCols>(StringComparer.OrdinalIgnoreCase);
             TugboatCols ColsFor(string name) =>
@@ -353,7 +355,7 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var t in data)
             {
                 ws.Cells[row, 1, row, totalCols].Style.Font.Size = 11;
-                ws.Cells[row, 1].Value = t.Date.ToString("MM/dd/yyyy");
+                ws.Cells[row, 1].Value = (t.Billing?.Date ?? t.Date).ToString("MM/dd/yyyy");
                 ws.Cells[row, 2].Value = t.DispatchNumber?.Trim();
                 ws.Cells[row, 3].Value = t.Billing?.MsapBillingNumber;
                 ws.Cells[row, 4].Value = t.Customer?.CustomerName;
@@ -422,7 +424,37 @@ namespace IBSWeb.Areas.User.Controllers
                 row++;
             }
 
-            FinalizeColumns(ws, 7, row - 1, totalCols);
+            int dataStartRow = 7, lastDataRow = row - 1, totalRow = row;
+            ws.Cells[totalRow, 1].Value = "TOTAL";
+            for (int c = 0; c < totalCols; c++)
+            {
+                var label = colInfo[c].label;
+                bool showTotal = colInfo[c].section switch
+                {
+                    0 => label is "GROSS SALES" or "BALANCE" or "NET SALES",
+                    >= 1 => label is not ("" or "DOC/UNDOC" or "PRINCIPAL"),
+                    _ => false
+                };
+                if (showTotal)
+                {
+                    ws.Cells[totalRow, c + 1].FormulaR1C1 = $"SUM(R{dataStartRow}C:R{lastDataRow}C)";
+                    ws.Cells[totalRow, c + 1].Style.Numberformat.Format = "#,##0.00";
+                }
+            }
+            using (var rng = ws.Cells[totalRow, 1, totalRow, totalCols])
+            {
+                rng.Style.Font.Size = 11;
+                rng.Style.Font.Bold = true;
+                rng.Style.Font.Color.SetColor(Color.FromArgb(0x33, 0x33, 0x33));
+                rng.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                rng.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(0xCC, 0xFF, 0xFF));
+                rng.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                rng.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                rng.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                rng.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            FinalizeColumns(ws, dataStartRow, lastDataRow, totalCols);
             return File(pkg.GetAsByteArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 $"Sales_Summary_{year}{month:D2}.xlsx");
         }
