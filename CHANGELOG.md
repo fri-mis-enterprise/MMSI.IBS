@@ -8,6 +8,8 @@
 - Billing reversal success message shows billing number instead of ID
 - Edit POST action returns JSON (matching JS expectation) instead of 302 redirect, fixing "An error occurred" alert on every edit
 - Edit form auto-fetches tickets when JobOrder is pre-filled but server rendered none (e.g. after reversal)
+### Changed
+- Restructured User Access pages (Create/Edit) to follow MSAP workflow order: Service Request → Job Order → Dispatch Ticket → Tariff → Billing → Collection; added `- For Port Coordinators` label on SR section; moved Reverse Billing into Billing column with red text + tooltip; removed Treasury/Disbursement stubs; relabeled Maritime Master File section as `References`; fixed `gap-6` to valid `gap-4` for spacing
 
 ## [2026-07-10]
 ### Added

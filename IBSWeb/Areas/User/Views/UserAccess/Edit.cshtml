@@ -39,25 +39,9 @@
                     <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
 
                     <div class="modern-grid">
-                        @* -- Dispatch & Billing -- *@
+                        @* -- Service Request (For Port Coordinators) -- *@
                         <div class="modern-col-4">
-                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Dispatch Ticket</h3>
-                            <div class="flex flex-col gap-2">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanCreateDispatchTicket" class="form-check-input" />
-                                    <span class="text-sm">Create Dispatch Ticket</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanEditDispatchTicket" class="form-check-input" />
-                                    <span class="text-sm">Edit Dispatch Ticket</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanDeleteDispatchTicket" class="form-check-input" />
-                                    <span class="text-sm">Delete Dispatch Ticket</span>
-                                </label>
-                            </div>
-
-                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3 mt-4" style="color: var(--primary)">Legacy (SR)</h3>
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Service Request <span class="text-xs opacity-60">- For Port Coordinators</span></h3>
                             <div class="flex flex-col gap-2">
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input asp-for="CanCreateServiceRequest" class="form-check-input" />
@@ -70,46 +54,7 @@
                             </div>
                         </div>
 
-                        @* -- Tariff & Billing -- *@
-                        <div class="modern-col-4">
-                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Tariff & Billing</h3>
-                            <div class="flex flex-col gap-2">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanSetTariff" class="form-check-input" />
-                                    <span class="text-sm">Set Tariff</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanApproveTariff" class="form-check-input" />
-                                    <span class="text-sm">Approve Tariff</span>
-                                </label>
-                                <div class="mt-2 flex flex-col gap-2">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input asp-for="CanCreateBilling" class="form-check-input" />
-                                        <span class="text-sm">Create Billing</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input asp-for="CanEditBilling" class="form-check-input" />
-                                        <span class="text-sm">Edit Billing</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input asp-for="CanDeleteBilling" class="form-check-input" />
-                                        <span class="text-sm">Delete Billing</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input asp-for="CanReverseBilling" class="form-check-input" />
-                                        <span class="text-sm">Reverse Billing</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3 mt-4" style="color: var(--primary)">Collection</h3>
-                            <div class="flex items-center gap-2 cursor-pointer">
-                                <input asp-for="CanCreateCollection" class="form-check-input" />
-                                <span class="text-sm">Create Collection</span>
-                            </div>
-                        </div>
-
-                        @* -- JO & Treasury -- *@
+                        @* -- Job Order -- *@
                         <div class="modern-col-4">
                             <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Job Order</h3>
                             <div class="flex flex-col gap-2">
@@ -130,24 +75,90 @@
                                     <span class="text-sm">Close Job Order</span>
                                 </label>
                             </div>
+                        </div>
 
-                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3 mt-4" style="color: var(--primary)">Treasury & Import</h3>
+                        @* -- Dispatch Ticket -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Dispatch Ticket</h3>
                             <div class="flex flex-col gap-2">
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanAccessTreasury" class="form-check-input" />
-                                    <span class="text-sm">Access Treasury Module</span>
+                                    <input asp-for="CanCreateDispatchTicket" class="form-check-input" />
+                                    <span class="text-sm">Create Dispatch Ticket</span>
                                 </label>
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input asp-for="CanCreateDisbursement" class="form-check-input" />
-                                    <span class="text-sm">Disbursement</span>
+                                    <input asp-for="CanEditDispatchTicket" class="form-check-input" />
+                                    <span class="text-sm">Edit Dispatch Ticket</span>
                                 </label>
-                                <label class="flex items-center gap-2 cursor-pointer mt-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanDeleteDispatchTicket" class="form-check-input" />
+                                    <span class="text-sm">Delete Dispatch Ticket</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-grid border-t border-outline-variant pt-4">
+                        @* -- Tariff -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Tariff</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanSetTariff" class="form-check-input" />
+                                    <span class="text-sm">Set Tariff</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanApproveTariff" class="form-check-input" />
+                                    <span class="text-sm">Approve Tariff</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @* -- Billing -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Billing</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateBilling" class="form-check-input" />
+                                    <span class="text-sm">Create Billing</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanEditBilling" class="form-check-input" />
+                                    <span class="text-sm">Edit Billing</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanDeleteBilling" class="form-check-input" />
+                                    <span class="text-sm">Delete Billing</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanReverseBilling" class="form-check-input" />
+                                    <span class="text-sm" style="color: #dc2626; cursor: help;" title="Unpost a For Collection billing back to For Posting">Reverse Billing</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @* -- Collection -- *@
+                        <div class="modern-col-4">
+                            <h3 class="modern-label border-b border-outline-variant pb-2 mb-3" style="color: var(--primary)">Collection</h3>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input asp-for="CanCreateCollection" class="form-check-input" />
+                                    <span class="text-sm">Create Collection</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-grid border-t border-outline-variant pt-4">
+                        <div class="modern-col-12">
+                            <h3 class="modern-label mb-3" style="color: var(--primary)">References</h3>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
                                     <input asp-for="CanManageMsapImport" class="form-check-input" />
-                                    <span class="text-sm font-bold">Manage MSAP Import</span>
+                                    <span class="text-sm">Manage MSAP Import</span>
                                 </label>
-                                <label class="flex items-center gap-2 cursor-pointer mt-1">
+                                <label class="flex items-center gap-2 cursor-pointer">
                                     <input asp-for="CanManageMaritimeMasterFile" class="form-check-input" />
-                                    <span class="text-sm font-bold">Manage Maritime Master File</span>
+                                    <span class="text-sm">Manage Maritime Master File</span>
                                 </label>
                             </div>
                         </div>
@@ -156,7 +167,7 @@
                     <div class="modern-grid border-t border-outline-variant pt-4">
                         <div class="modern-col-12">
                             <h3 class="modern-label mb-3" style="color: var(--primary)">Reporting Access</h3>
-                            <div class="flex flex-wrap gap-6">
+                            <div class="flex flex-wrap gap-4">
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input asp-for="CanViewGeneralLedger" class="form-check-input" />
                                     <span class="text-sm">General Ledger</span>
