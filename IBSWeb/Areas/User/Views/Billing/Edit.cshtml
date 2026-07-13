@@ -65,14 +65,11 @@
 
                                     <!-- Principal Selection -->
                                     <div id="PrincipalSection" class="relative border-t border-outline-variant pt-2 mt-2" style="display: @(Model.PrincipalId.HasValue ? "block" : "none")">
-                                        <label class="modern-label mt-2">Principal Search</label>
-                                        <div class="relative">
-                                            <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">corporate_fare</span>
-                                            <input type="text" id="PrincipalSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search principals..." value="@(Model.CustomerPrincipal?.FirstOrDefault(p => p.Value == Model.PrincipalId?.ToString())?.Text ?? "")" autocomplete="off">
-                                        </div>
-                                        <input type="hidden" asp-for="PrincipalId" id="PrincipalId" value="@Model.PrincipalId" />
+                                        <label class="modern-label">Principal</label>
+                                        <select asp-for="PrincipalId" asp-items="@Model.CustomerPrincipal" class="js-modern-select" id="PrincipalSelect" data-placeholder="-- Select Principal --">
+                                            <option value="">-- Select Principal --</option>
+                                        </select>
                                         <input type="hidden" asp-for="BilledTo" id="BilledTo" value="@Model.BilledTo" />
-                                        <div id="PrincipalSearchResults" class="modern-dropdown-menu w-full" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -489,87 +486,39 @@
                 if (isChecked) {
                     $("#PrincipalSection").show();
                     $("#BilledTo").val("PRINCIPAL");
-                    
-                    if (currentPrincipal) {
-                        $("#CustomerAddress").text(currentPrincipal.address || '-');
-                        $("#CustomerTIN").text(currentPrincipal.tinNo || '-');
-                        $("#CustomerTerms").text(currentPrincipal.terms || '-');
-                        $("#PrincipalSearch").val(currentPrincipal.name);
-                        $("#PrincipalId").val(currentPrincipal.value);
-                    } else {
-                        $("#CustomerAddress").text('-');
-                        $("#CustomerTIN").text('-');
-                        $("#CustomerTerms").text('-');
-                        $("#PrincipalSearch").val('');
-                        $("#PrincipalId").val('');
-                    }
-                    setTimeout(() => $("#PrincipalSearch").focus(), 100);
+                    setTimeout(() => $("#PrincipalSelect").next('.modern-select-container').find('.modern-select-trigger').focus(), 100);
                 } else {
                     $("#PrincipalSection").hide();
-                    $("#PrincipalSearch").val("");
-                    $("#PrincipalId").val("");
+                    $("#PrincipalSelect").val('').trigger('change');
                     $("#BilledTo").val("LOCAL");
-
                     $("#CustomerAddress").text(currentCustomer.address || '-');
                     $("#CustomerTIN").text(currentCustomer.tinNo || '-');
                     $("#CustomerTerms").text(currentCustomer.terms || '-');
                 }
             }
 
-            // ── Principal search ─────────────────────────────────────────────
-            let principalSearchTimeout;
-            const $principalSearch = $("#PrincipalSearch");
-            const $principalResults = $("#PrincipalSearchResults");
-            const $principalId = $("#PrincipalId");
-
-            async function performPrincipalSearch(searchTerm) {
-                if (!currentCustomerId) return;
-                try {
-                    const params = new URLSearchParams({ customerId: currentCustomerId });
-                    params.set('term', searchTerm);
-                    const res = await fetch(`@Url.Action("SearchPrincipals", "Billing", new { area = "User" })?${params}`);
-                    const data = await res.json();
-                    $principalResults.empty();
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(item => {
-                            $principalResults.append(
-                                $('<a href="#" class="modern-dropdown-item">')
-                                    .data('principal', item)
-                                    .html(`<span class="material-symbols-outlined">corporate_fare</span> ${item.name}`)
-                            );
-                        });
-                    } else {
-                        $principalResults.append($('<div class="p-3 text-center italic opacity-60 text-xs">No principals found</div>'));
-                    }
-                    positionDropdown($principalSearch, $principalResults);
-                    $principalResults.addClass('show');
-                } catch {
-                    $principalResults.empty().removeClass('show');
+            // ── Principal select ────────────────────────────────────────────
+            let principalsCache = null;
+            $('#PrincipalSelect').on('change', async function () {
+                const val = $(this).val();
+                if (!val) {
+                    currentPrincipal = null;
+                    $("#CustomerAddress").text(currentCustomer.address || '-');
+                    $("#CustomerTIN").text(currentCustomer.tinNo || '-');
+                    $("#CustomerTerms").text(currentCustomer.terms || '-');
+                    return;
                 }
-            }
-
-            $principalSearch.on('input', function () {
-                clearTimeout(principalSearchTimeout);
-                const searchTerm = $(this).val().trim();
-                if (searchTerm.length === 0) $principalId.val('');
-                principalSearchTimeout = setTimeout(() => performPrincipalSearch(searchTerm), 150);
-            });
-
-            $principalSearch.on('focus', function () {
-                if (currentCustomerId) performPrincipalSearch($(this).val().trim());
-            });
-
-            $principalResults.on('click', '.modern-dropdown-item', function (e) {
-                e.preventDefault();
-                const principal = $(this).data('principal');
-                currentPrincipal = principal;
-                $principalSearch.val(principal.name);
-                $principalId.val(principal.value);
-                $principalResults.empty().removeClass('show');
-
-                $("#CustomerAddress").text(principal.address || '-');
-                $("#CustomerTIN").text(principal.tinNo || '-');
-                $("#CustomerTerms").text(principal.terms || '-');
+                if (!principalsCache) {
+                    const res = await fetch(`@Url.Action("GetPrincipalsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
+                    principalsCache = await res.json();
+                }
+                const p = principalsCache.find(x => x.value == val);
+                if (p) {
+                    currentPrincipal = p;
+                    $("#CustomerAddress").text(p.address || '-');
+                    $("#CustomerTIN").text(p.tinNo || '-');
+                    $("#CustomerTerms").text(p.terms || '-');
+                }
             });
 
             // ── Job Order search ─────────────────────────────────────────────
@@ -707,7 +656,7 @@
 
             // ── Global click ────────────────────────────────────────────────
             $(document).on('click', function (e) {
-                if (!$(e.target).closest('#PrincipalSearch, #PrincipalSearchResults, #JobOrderSearch, #JobOrderSearchResults').length) {
+                if (!$(e.target).closest('#JobOrderSearch, #JobOrderSearchResults').length) {
                     $('.modern-dropdown-menu').removeClass('show');
                 }
             });

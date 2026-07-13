@@ -468,6 +468,31 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
+        /// Gets full customer details by ID (used after SSR modern-select selection).
+        /// </summary>
+        [HttpGet]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
+        public async Task<JsonResult> GetCustomerDetail(int customerId, CancellationToken cancellationToken)
+        {
+            var result = await billingService.GetCustomerDetailsAsync(customerId, cancellationToken);
+            if (!result.IsSuccess)
+                return Json(new { success = false, message = result.Message });
+
+            return Json(result.Data);
+        }
+
+        /// <summary>
+        /// Gets all principals for a customer (used to populate principal modern-select).
+        /// </summary>
+        [HttpGet]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
+        public async Task<JsonResult> GetPrincipalsByCustomer(int customerId, CancellationToken cancellationToken)
+        {
+            var result = await billingService.GetPrincipalsByCustomerAsync(customerId, cancellationToken);
+            return Json(result);
+        }
+
+        /// <summary>
         /// Searches for principals associated with a specific customer.
         /// </summary>
         [HttpGet]

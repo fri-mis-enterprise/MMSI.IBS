@@ -66,15 +66,12 @@
                             <h2 class="modern-headline-md">1. Customer Selection</h2>
                         </div>
                         <div class="modern-card-body" style="gap: 1.25rem;">
-                            <!-- Customer Search -->
-                            <div class="relative" id="CustomerContainer">
-                                <label class="modern-label">Customer Search</label>
-                                <div class="relative">
-                                    <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">search</span>
-                                    <input type="text" id="CustomerSearch" class="modern-input" style="padding-left: 40px;" placeholder="Type to search..." autocomplete="off">
-                                </div>
-                                <input type="hidden" asp-for="CustomerId" id="CustomerId" />
-                                <div id="CustomerSearchResults" class="modern-dropdown-menu w-full" style="max-height: 250px; overflow-y: auto;"></div>
+                            <!-- Customer Select -->
+                            <div id="CustomerContainer">
+                                <label asp-for="CustomerId" class="modern-label">Customer <span class="text-error">*</span></label>
+                                <select asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" id="CustomerId" data-placeholder="-- Select Customer --">
+                                    <option value="">-- Select Customer --</option>
+                                </select>
                             </div>
 
                             <!-- Principal Related (Conditional Rendering) -->
@@ -88,14 +85,11 @@
 
                                     <!-- Principal Selection -->
                                     <div id="PrincipalSection" class="relative border-t border-outline-variant pt-2 mt-2" style="display: none;">
-                                        <label class="modern-label mt-2">Principal Search</label>
-                                        <div class="relative">
-                                            <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">corporate_fare</span>
-                                            <input type="text" id="PrincipalSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search principals..." autocomplete="off">
-                                        </div>
-                                        <input type="hidden" asp-for="PrincipalId" id="PrincipalId" />
+                                        <label class="modern-label">Principal</label>
+                                        <select asp-for="PrincipalId" class="js-modern-select" id="PrincipalSelect" data-placeholder="-- Select Principal --">
+                                            <option value="">-- Select Principal --</option>
+                                        </select>
                                         <input type="hidden" asp-for="BilledTo" id="BilledTo" value="LOCAL" />
-                                        <div id="PrincipalSearchResults" class="modern-dropdown-menu w-full" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -475,25 +469,10 @@
                 if (isChecked) {
                     $("#PrincipalSection").show();
                     $("#BilledTo").val("PRINCIPAL");
-                    
-                    if (currentPrincipal) {
-                        $("#CustomerAddress").text(currentPrincipal.address || '-');
-                        $("#CustomerTIN").text(currentPrincipal.tinNo || '-');
-                        $("#CustomerTerms").text(currentPrincipal.terms || '-');
-                        $("#PrincipalSearch").val(currentPrincipal.name);
-                        $("#PrincipalId").val(currentPrincipal.value);
-                    } else {
-                        $("#CustomerAddress").text('-');
-                        $("#CustomerTIN").text('-');
-                        $("#CustomerTerms").text('-');
-                        $("#PrincipalSearch").val('');
-                        $("#PrincipalId").val('');
-                    }
-                    setTimeout(() => $("#PrincipalSearch").focus(), 100);
+                    populatePrincipalSelect();
                 } else {
                     $("#PrincipalSection").hide();
-                    $("#PrincipalSearch").val("");
-                    $("#PrincipalId").val("");
+                    $("#PrincipalSelect").val('').trigger('change');
                     $("#BilledTo").val("LOCAL");
 
                     if (currentCustomer) {
@@ -508,59 +487,39 @@
                 }
             }
 
-            // ── Customer search ──────────────────────────────────────────────
-            let customerSearchTimeout;
-            const $customerSearch = $("#CustomerSearch");
-            const $customerResults = $("#CustomerSearchResults");
-            const $customerId = $("#CustomerId");
-
-            async function performCustomerSearch(searchTerm) {
+            async function populatePrincipalSelect() {
+                if (!currentCustomerId) return;
+                const $select = $("#PrincipalSelect");
+                $select.empty().append('<option value="">-- Select Principal --</option>');
                 try {
-                    const res = await fetch(`@Url.Action("SearchCustomers", "Billing", new { area = "User" })?term=${encodeURIComponent(searchTerm)}`);
+                    const res = await fetch(`@Url.Action("GetPrincipalsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
                     const data = await res.json();
-                    $customerResults.empty();
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(item => {
-                            $customerResults.append(
-                                $('<a href="#" class="modern-dropdown-item">')
-                                    .data('customer', item)
-                                    .html(`<span class="material-symbols-outlined">person</span> ${item.name}`)
-                            );
-                        });
-                    } else {
-                        $customerResults.append($('<div class="p-3 text-center italic opacity-60 text-xs">No customers found</div>'));
+                    if (Array.isArray(data)) {
+                        data.forEach(p => $select.append($('<option>').val(p.value).text(p.name).data('principal', p)));
                     }
-                    positionDropdown($customerSearch, $customerResults);
-                    $customerResults.addClass('show');
+                    $select.trigger('change');
+                    // ponytail: Open the principal dropdown after populating
+                    setTimeout(() => $select.next('.modern-select-container').find('.modern-select-trigger').focus(), 100);
                 } catch {
-                    $customerResults.empty().removeClass('show');
+                    console.error('Failed to load principals');
                 }
             }
 
-            $customerSearch.on('input', function () {
-                clearTimeout(customerSearchTimeout);
-                ModernFormValidator.clearCustomValidity('CustomerSearch');
-                const searchTerm = $(this).val().trim();
-                if (searchTerm.length === 0) $customerId.val('');
-                customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 150);
-            });
+            // ── Customer select → load details ──────────────────────────────
+            $('#CustomerId').on('change', async function () {
+                const customerId = $(this).val();
+                if (!customerId) return;
 
-            $customerSearch.on('focus', function () {
-                if ($(this).val().trim().length > 0) performCustomerSearch($(this).val().trim());
-            });
-
-            $customerResults.on('click', '.modern-dropdown-item', async function (e) {
-                e.preventDefault();
-                const customer = $(this).data('customer');
-                if (!customer) return;
-
-                $customerSearch.val(customer.name);
-                $customerId.val(customer.value);
-                ModernFormValidator.clearCustomValidity('CustomerSearch');
-                $customerResults.empty().removeClass('show');
-                currentCustomerId = customer.value;
-
-                handleCustomerSelected(customer);
+                currentCustomerId = customerId;
+                try {
+                    const res = await fetch(`@Url.Action("GetCustomerDetail", "Billing", new { area = "User" })?customerId=${encodeURIComponent(customerId)}`);
+                    const customer = await res.json();
+                    if (customer && customer.name) {
+                        handleCustomerSelected(customer);
+                    }
+                } catch {
+                    console.error('Failed to load customer details');
+                }
             });
 
             function handleCustomerSelected(customer) {
@@ -568,8 +527,7 @@
                 currentPrincipal = null;
                 $("#UsePrincipalCheckbox").prop("checked", false);
                 $("#PrincipalSection, #BilledToContainer").hide();
-                $("#PrincipalSearch").val("");
-                $("#PrincipalId").val("");
+                $("#PrincipalSelect").val('').trigger('change');
 
                 $("#CustomerDetailsSection").show().css('display', 'flex');
                 $("#CustomerAddress").text(customer.address || '-');
@@ -755,65 +713,32 @@
                 $('#selectedTicketCount').text(`${count} selected`);
             }
 
-            // ── Principal search ─────────────────────────────────────────────
-            let principalSearchTimeout;
-            const $principalSearch = $("#PrincipalSearch");
-            const $principalResults = $("#PrincipalSearchResults");
-            const $principalId = $("#PrincipalId");
-
-            async function performPrincipalSearch(searchTerm) {
-                if (!currentCustomerId) return;
-                try {
-                    const params = new URLSearchParams({ customerId: currentCustomerId });
-                    params.set('term', searchTerm);
-                    const res = await fetch(`@Url.Action("SearchPrincipals", "Billing", new { area = "User" })?${params}`);
-                    const data = await res.json();
-                    $principalResults.empty();
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(item => {
-                            $principalResults.append(
-                                $('<a href="#" class="modern-dropdown-item">')
-                                    .data('principal', item)
-                                    .html(`<span class="material-symbols-outlined">corporate_fare</span> ${item.name}`)
-                            );
-                        });
-                    } else {
-                        $principalResults.append($('<div class="p-3 text-center italic opacity-60 text-xs">No principals found</div>'));
+            // ── Principal select → update details ──────────────────────────
+            $('#PrincipalSelect').on('change', function () {
+                const $option = $(this).find('option:selected');
+                const val = $option.val();
+                if (!val) {
+                    currentPrincipal = null;
+                    if (currentCustomer) {
+                        $("#CustomerAddress").text(currentCustomer.address || '-');
+                        $("#CustomerTIN").text(currentCustomer.tinNo || '-');
+                        $("#CustomerTerms").text(currentCustomer.terms || '-');
                     }
-                    positionDropdown($principalSearch, $principalResults);
-                    $principalResults.addClass('show');
-                } catch {
-                    $principalResults.empty().removeClass('show');
+                    return;
                 }
-            }
-
-            $principalSearch.on('input', function () {
-                clearTimeout(principalSearchTimeout);
-                const searchTerm = $(this).val().trim();
-                if (searchTerm.length === 0) $principalId.val('');
-                principalSearchTimeout = setTimeout(() => performPrincipalSearch(searchTerm), 150);
-            });
-
-            $principalSearch.on('focus', function () {
-                if (currentCustomerId) performPrincipalSearch($(this).val().trim());
-            });
-
-            $principalResults.on('click', '.modern-dropdown-item', function (e) {
-                e.preventDefault();
-                const principal = $(this).data('principal');
-                currentPrincipal = principal;
-                $principalSearch.val(principal.name);
-                $principalId.val(principal.value);
-                $principalResults.empty().removeClass('show');
-
-                $("#CustomerAddress").text(principal.address || '-');
-                $("#CustomerTIN").text(principal.tinNo || '-');
-                $("#CustomerTerms").text(principal.terms || '-');
+                // ponytail: store principal data as data-principal on the option
+                const principal = $option.data('principal');
+                if (principal) {
+                    currentPrincipal = principal;
+                    $("#CustomerAddress").text(principal.address || '-');
+                    $("#CustomerTIN").text(principal.tinNo || '-');
+                    $("#CustomerTerms").text(principal.terms || '-');
+                }
             });
 
             // ── Global click ────────────────────────────────────────────────
             $(document).on('click', function (e) {
-                if (!$(e.target).closest('#CustomerSearch, #CustomerSearchResults, #PrincipalSearch, #PrincipalSearchResults, #JobOrderSearch, #JobOrderSearchResults').length) {
+                if (!$(e.target).closest('#JobOrderSearch, #JobOrderSearchResults').length) {
                     $('.modern-dropdown-menu').removeClass('show');
                 }
             });
@@ -836,11 +761,7 @@
             function areYouSureToBill(event) {
                 event.preventDefault();
                 if (!ModernFormValidator.validate('myForm')) return;
-                if (!$("#CustomerId").val()) {
-                    ModernFormValidator.setCustomValidity('CustomerSearch', 'Please select a customer from the list');
-                    document.getElementById('CustomerSearch').reportValidity();
-                    return;
-                }
+                if (!$("#CustomerId").val()) return;
                 if (!$("#DispatchTicketSelect").val()?.length) {
                     ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
                     return;

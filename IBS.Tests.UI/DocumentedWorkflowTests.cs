@@ -110,8 +110,7 @@ namespace IBS.Tests.UI
             await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
-            await Page.FillAsync("#CustomerSearch", "FOUR DRAGONS");
-            await Page.ClickAsync("#CustomerSearchResults .modern-dropdown-item:has-text('FOUR DRAGONS SHIPPING SERVICES')");
+            await SelectModernOptionAsync("Customer", "FOUR DRAGONS SHIPPING SERVICES");
 
             await Page.FillAsync("#JobOrderSearch", jobOrderNumber);
             await Page.WaitForSelectorAsync("#JobOrderSearchResults .modern-dropdown-item", new() { State = WaitForSelectorState.Visible });

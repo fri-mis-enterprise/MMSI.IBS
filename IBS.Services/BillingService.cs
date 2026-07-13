@@ -689,12 +689,36 @@ namespace IBS.Services
                 return ServiceResult<object>.Failure("Customer not found.", ServiceResultStatus.NotFound);
             }
 
+            var hasPrincipal = await unitOfWork.Principal.GetAllAsync(p => p.CustomerId == customerId, cancellationToken).ContinueWith(t => t.Result.Any(), cancellationToken);
+
             return ServiceResult<object>.Success(new
             {
+                value = customer.CustomerId,
+                name = customer.CustomerName,
                 address = customer.CustomerAddress,
-                tin = customer.CustomerTin,
-                isUndoc = customer.Type
+                tinNo = customer.CustomerTin,
+                terms = customer.CustomerTerms,
+                vatType = customer.VatType,
+                isUndoc = customer.Type,
+                businessStyle = customer.BusinessStyle ?? "-",
+                withholdingTax = customer.WithHoldingTax,
+                withholdingVat = customer.WithHoldingVat,
+                hasPrincipal
             });
+        }
+
+        public async Task<List<object>> GetPrincipalsByCustomerAsync(int customerId, CancellationToken cancellationToken)
+        {
+            var principals = await unitOfWork.Principal.GetAllAsync(p => p.CustomerId == customerId, cancellationToken);
+            return principals.Select(p => (object)new
+            {
+                value = p.PrincipalId,
+                name = p.PrincipalName,
+                address = p.Address1,
+                tinNo = p.TIN,
+                businessStyle = p.BusinessType,
+                terms = p.Terms
+            }).ToList();
         }
     }
 }
