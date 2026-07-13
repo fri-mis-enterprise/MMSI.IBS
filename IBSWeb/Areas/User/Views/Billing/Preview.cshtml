@@ -28,18 +28,19 @@
     .border-top-dark { border-top: 1px solid black; }
     .border-dark { border: 1px solid black; }
 
-    @@media print {
-        @@page {
-            margin: 0.3in 0.4in;
+        @@media print {
+            @@page {
+                margin: 0 0.4in;
+            }
+            .modern-layout { background: white !important; }
+            .modern-container { padding: 0 !important; margin: 0 !important; }
+            .flex-stack, .buttons-row { display: none !important; }
+            .modern-card { border: none !important; box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; }
+            .billing-statement { padding: 0 !important; margin: 0 !important; }
+            .billing-statement * { margin-top: 0; }
+            body { margin: 0; padding: 0 !important; }
+            .no-print { display: none !important; }
         }
-        .modern-layout { background: white !important; }
-        .modern-container { padding: 0 !important; margin: 0 !important; }
-        .flex-stack, .buttons-row { display: none !important; }
-        .modern-card { border: none !important; box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; }
-        .billing-statement { padding: 0 !important; margin: 0 !important; }
-        body { margin: 0; padding: 0; }
-        .no-print { display: none !important; }
-    }
 </style>
 
 <div class="modern-layout">
