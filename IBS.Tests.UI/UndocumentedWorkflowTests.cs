@@ -18,8 +18,7 @@ namespace IBS.Tests.UI
             await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
-            await Page.FillAsync("#CustomerSearch", "INSULAR OIL");
-            await Page.ClickAsync(".modern-dropdown-item:has-text('INSULAR OIL CORPORATION')");
+            await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
             await Page.FillAsync("input[name='Date']", "2026-06-10");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
             await SelectModernOptionAsync("Port", "SUBIC");

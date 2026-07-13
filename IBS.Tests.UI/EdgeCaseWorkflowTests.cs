@@ -19,8 +19,7 @@ namespace IBS.Tests.UI
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
-            await Page.FillAsync("#CustomerSearch", "INSULAR OIL");
-            await Page.ClickAsync("#CustomerSearchResults .modern-dropdown-item:has-text('INSULAR OIL CORPORATION')");
+            await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
 
             await SelectModernOptionAsync("Port", "SUBIC");
             await SelectModernOptionAsync("Terminal", "COASTAL");
@@ -78,8 +77,7 @@ namespace IBS.Tests.UI
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
-            await Page.FillAsync("#CustomerSearch", "INSULAR OIL");
-            await Page.ClickAsync("#CustomerSearchResults .modern-dropdown-item:has-text('INSULAR OIL CORPORATION')");
+            await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
 
             await SelectModernOptionAsync("Port", "SUBIC");
             await SelectModernOptionAsync("Terminal", "COASTAL");

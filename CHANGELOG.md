@@ -3,6 +3,7 @@
 ## [2026-07-13]
 ### Added
 - ModernSelect search auto-select now auto-focuses the next `.js-modern-select` in DOM order, so cascading dropdowns flow naturally (e.g. Port → Terminal on Job Order Create). (`modern-select.js`)
+- Job Order Create/Edit customer field converted from client-side AJAX search to SSR modern-select dropdown, matching Vessel/Port/Terminal UX. (`Create.cshtml`, `Edit.cshtml`, UI tests)
 
 ## [2026-07-11]
 ### Fixed

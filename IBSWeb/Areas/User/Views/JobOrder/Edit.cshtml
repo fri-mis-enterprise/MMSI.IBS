@@ -61,15 +61,12 @@
                             
                             <div class="modern-grid">
                                 <div class="modern-col-8">
-                                    <label class="modern-label">Customer <span class="text-error">*</span></label>
-                                    <div class="input-group" style="border: 1px solid var(--outline-variant); border-radius: var(--radius-xl); overflow: hidden;">
-                                        <span class="input-group-text bg-white border-0">
-                                            <span class="material-symbols-outlined text-sm">search</span>
-                                        </span>
-                                        <input type="text" id="CustomerSearch" class="modern-input border-0" placeholder="Search customer..." autocomplete="off">
-                                        <input type="hidden" asp-for="CustomerId" id="CustomerId" />
+                                    <label asp-for="CustomerId" class="modern-label">Customer <span class="text-error">*</span></label>
+                                    <div id="CustomerContainer">
+                                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" id="CustomerId" data-placeholder="-- Select Customer --">
+                                            <option value="">-- Select Customer --</option>
+                                        </select>
                                     </div>
-                                    <div id="CustomerSearchResults" class="modern-dropdown-menu w-full shadow-lg"></div>
                                     <span asp-validation-for="CustomerId" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-4">
@@ -170,82 +167,6 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // ── Customer Live Search ───────────────────────────────────────
-            let customerSearchTimeout;
-            const $customerSearch = $("#CustomerSearch");
-            const $customerResults = $("#CustomerSearchResults");
-            const $customerId = $("#CustomerId");
-
-            // Set initial customer name
-            const initialCustomerName = "@Html.Raw(Model.Customers.FirstOrDefault(c => c.Value == Model.CustomerId.ToString())?.Text)";
-            $customerSearch.val(initialCustomerName);
-
-            async function performCustomerSearch(searchTerm) {
-                try {
-                    const res = await fetch(`@Url.Action("SearchCustomers", "JobOrder", new { area = "User" })?term=${encodeURIComponent(searchTerm)}`);
-                    const data = await res.json();
-                    $customerResults.empty();
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(item => {
-                            $customerResults.append(
-                                $('<a href="#" class="modern-dropdown-item">')
-                                    .data('customer', item)
-                                    .html(`<span class="material-symbols-outlined">person</span> ${item.name}`)
-                            );
-                        });
-                        $customerResults.addClass('show');
-                        
-                        const rect = $customerSearch[0].getBoundingClientRect();
-                        $customerResults.css({
-                            'position': 'fixed',
-                            'top': (rect.bottom + 4) + 'px',
-                            'left': rect.left + 'px',
-                            'width': rect.width + 'px',
-                            'z-index': '9999'
-                        });
-                    } else if (searchTerm.length > 0) {
-                        $customerResults.append('<div class="modern-dropdown-item text-muted italic">No customers found</div>');
-                        $customerResults.addClass('show');
-                    } else {
-                        $customerResults.removeClass('show');
-                    }
-                } catch {
-                    $customerResults.empty().removeClass('show');
-                }
-            }
-
-            $customerSearch.on('input', function () {
-                clearTimeout(customerSearchTimeout);
-                const searchTerm = $(this).val().trim();
-                if (searchTerm.length === 0) {
-                    $customerId.val('');
-                    $customerResults.removeClass('show');
-                    return;
-                }
-                customerSearchTimeout = setTimeout(() => performCustomerSearch(searchTerm), 200);
-            });
-
-            $customerSearch.on('focus', function () {
-                const searchTerm = $(this).val().trim();
-                if (searchTerm.length > 0) performCustomerSearch(searchTerm);
-            });
-
-            $customerResults.on('click', 'a', function (e) {
-                e.preventDefault();
-                const customer = $(this).data('customer');
-                if (!customer) return;
-
-                $customerSearch.val(customer.name);
-                $customerId.val(customer.value);
-                $customerResults.removeClass('show');
-            });
-
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('#CustomerSearch, #CustomerSearchResults').length) {
-                    $customerResults.removeClass('show');
-                }
-            });
-
             // ── Planned Duration Validation ────────────────────────────────
             function validatePlannedTimes() {
                 const startVal = $("#PlannedStartTime").val();
