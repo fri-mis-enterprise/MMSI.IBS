@@ -14,7 +14,6 @@ namespace IBSWeb.Areas.User.Controllers
     /// </summary>
     [Area("User")]
     public class CollectionController(
-        IUnitOfWork unitOfWork,
         CollectionService collectionService,
         ILogger<CollectionController> logger)
         : Controller
@@ -212,17 +211,6 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var result = await collectionService.GetUncollectedBillingsForTableAsync(customerId, collectionId, cancellationToken);
             return Json(new { success = result.IsSuccess, data = result.Data, message = result.Message });
-        }
-
-        /// <summary>
-        /// Searches for customers matching a search term.
-        /// </summary>
-        [HttpGet]
-        [RequireAnyAccess(ProcedureEnum.CreateCollection)]
-        public async Task<JsonResult> SearchCustomers(string? term, CancellationToken cancellationToken)
-        {
-            var result = await unitOfWork.Customer.SearchCustomersDtoAsync(term ?? string.Empty, 10, cancellationToken);
-            return Json(result);
         }
 
         #endregion

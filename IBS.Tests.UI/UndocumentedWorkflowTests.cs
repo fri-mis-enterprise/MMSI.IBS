@@ -120,11 +120,8 @@ namespace IBS.Tests.UI
             await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
-            await Page.FillAsync("#CustomerSearch", "INSULAR OIL");
-            await Page.RunAndWaitForResponseAsync(async () =>
-            {
-                await Page.ClickAsync("#CustomerSearchResults .modern-dropdown-item:has-text('INSULAR OIL CORPORATION')");
-            }, r => r.Url.Contains("GetUncollectedBillingsForTable") && r.Status == 200);
+            await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
+            await Page.WaitForResponseAsync(r => r.Url.Contains("GetUncollectedBillingsForTable") && r.Status == 200);
 
             await Page.WaitForTimeoutAsync(1500);
 

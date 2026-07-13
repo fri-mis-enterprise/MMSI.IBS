@@ -201,13 +201,11 @@
                                         <label for="legacyToggle" class="text-xs font-bold opacity-70 cursor-pointer">LEGACY (NO JO)</label>
                                     </div>
                                 </div>
-                                <div class="relative" id="jobOrderSearchContainer">
-                                    <div class="relative">
-                                        <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">tag</span>
-                                        <input type="text" id="JobOrderSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search job order number..." autocomplete="off">
-                                    </div>
-                                    <input type="hidden" asp-for="JobOrderId" id="JobOrderId" />
-                                    <div id="JobOrderSearchResults" class="modern-dropdown-menu w-full" style="max-height: 250px; overflow-y: auto;"></div>
+                                <div id="jobOrderSearchContainer">
+                                    <select asp-for="JobOrderId" class="js-modern-select" id="JobOrderSelect" data-placeholder="-- Select Job Order --">
+                                        <option value="">-- Select Job Order --</option>
+                                    </select>
+                                    <p class="text-xs opacity-60 mt-1">Select a Job Order to replace the available tickets above.</p>
                                 </div>
                                 <div id="legacyNotice" class="p-3 bg-surface-container-low rounded-md border border-outline-variant flex items-center gap-2" style="display: none;">
                                     <span class="material-symbols-outlined text-warning">info</span>
@@ -328,6 +326,7 @@
                 lockTrigger('#PortSelect');
                 lockTrigger('#TerminalSelect');
                 lockTrigger('#VesselId');
+                lockTrigger('#JobOrderSelect');
                 </text>
             }
 
@@ -377,9 +376,13 @@
                 if (isChecked) {
                     $("#jobOrderSearchContainer").hide();
                     $("#legacyNotice").show();
+                    $jobOrderSelect.val('').trigger('change');
                 } else {
                     $("#jobOrderSearchContainer").show();
                     $("#legacyNotice").hide();
+                    if ($jobOrderSelect.val()) {
+                        fetchTicketsByJobOrderId($jobOrderSelect.val());
+                    }
                 }
             }
 
@@ -428,30 +431,18 @@
                 }
             }
 
-            function positionDropdown($input, $results) {
-                const rect = $input[0].getBoundingClientRect();
-                $results.css({
-                    'position': 'fixed',
-                    'top': (rect.bottom + 4) + 'px',
-                    'left': rect.left + 'px',
-                    'width': rect.width + 'px',
-                    'z-index': '9999'
-                });
-            }
-
+            
             function fillDataOnStartup() {
-
-
-                // Initialize Job Order if available
-                const initialJobOrderName = '@(Model.JobOrder?.JobOrderNumber ?? "")';
                 const initialJobOrderId = '@Model.JobOrderId';
-                if (initialJobOrderName) {
-                    $("#JobOrderSearch").val(initialJobOrderName);
-                    $("#JobOrderId").val(initialJobOrderId);
-                }
+
+                populateJobOrderSelect().then(() => {
+                    if (initialJobOrderId) {
+                        $jobOrderSelect.val(initialJobOrderId).trigger('change');
+                    }
+                });
 
                 // Auto-fetch tickets if JobOrder is set but server rendered none (e.g. after reversal)
-                if (initialJobOrderId && initialJobOrderId !== '' && !$ticketsTableBody.find('tr[data-ticket-id]').length) {
+                if (initialJobOrderId && !$ticketsTableBody.find('tr[data-ticket-id]').length) {
                     fetchTicketsByJobOrderId(initialJobOrderId);
                 }
 
@@ -521,45 +512,23 @@
                 }
             });
 
-            // ── Job Order search ─────────────────────────────────────────────
-            let jobOrderSearchTimeout;
-            const $jobOrderSearch = $("#JobOrderSearch");
-            const $jobOrderResults = $("#JobOrderSearchResults");
-            const $jobOrderId = $("#JobOrderId");
+            // ── Job Order select → load tickets ─────────────────────────────
+            const $jobOrderSelect = $("#JobOrderSelect");
 
-            async function performJobOrderSearch(searchTerm) {
+            async function populateJobOrderSelect() {
                 if (!currentCustomerId) return;
+                $jobOrderSelect.empty().append('<option value="">-- Select Job Order --</option>').prop('disabled', false);
                 try {
-                    const res = await fetch(`@Url.Action("SearchJobOrders", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}&term=${encodeURIComponent(searchTerm)}`);
+                    const res = await fetch(`@Url.Action("GetBillableJobOrders", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
                     const data = await res.json();
-                    $jobOrderResults.empty();
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(item => {
-                            $jobOrderResults.append(
-                                $('<a href="#" class="modern-dropdown-item">')
-                                    .data('jobOrder', item)
-                                    .html(`<div><p class="font-bold">${item.name}</p><p class="text-xs opacity-60">${item.description || ''}</p></div>`)
-                            );
-                        });
-                    } else {
-                        $jobOrderResults.append($('<div class="p-3 text-center italic opacity-60 text-xs">No job orders found</div>'));
+                    if (Array.isArray(data)) {
+                        data.forEach(jo => $jobOrderSelect.append($('<option>').val(jo.value).text(jo.name)));
                     }
-                    positionDropdown($jobOrderSearch, $jobOrderResults);
-                    $jobOrderResults.addClass('show');
+                    $jobOrderSelect.trigger('change');
                 } catch {
-                    $jobOrderResults.empty().removeClass('show');
+                    console.error('Failed to load job orders');
                 }
             }
-
-            $jobOrderSearch.on('input', function () {
-                clearTimeout(jobOrderSearchTimeout);
-                const searchTerm = $(this).val().trim();
-                jobOrderSearchTimeout = setTimeout(() => performJobOrderSearch(searchTerm), 150);
-            });
-
-            $jobOrderSearch.on('focus click', function () {
-                if (currentCustomerId) performJobOrderSearch($(this).val().trim());
-            });
 
             async function fetchTicketsByJobOrderId(jobOrderId) {
                 try {
@@ -573,13 +542,11 @@
                 }
             }
 
-            $jobOrderResults.on('click', '.modern-dropdown-item', async function (e) {
-                e.preventDefault();
-                const jobOrder = $(this).data('jobOrder');
-                $jobOrderSearch.val(jobOrder.name);
-                $jobOrderId.val(jobOrder.value);
-                $jobOrderResults.empty().removeClass('show');
-                await fetchTicketsByJobOrderId(jobOrder.value);
+            $jobOrderSelect.on('change', function () {
+                const val = $(this).val();
+                if (val) {
+                    fetchTicketsByJobOrderId(val);
+                }
             });
 
             function renderTicketsTable(tickets, isReadOnly) {
@@ -656,7 +623,7 @@
 
             // ── Global click ────────────────────────────────────────────────
             $(document).on('click', function (e) {
-                if (!$(e.target).closest('#JobOrderSearch, #JobOrderSearchResults').length) {
+                if (!$(e.target).closest('.modern-select-dropdown.show').length) {
                     $('.modern-dropdown-menu').removeClass('show');
                 }
             });

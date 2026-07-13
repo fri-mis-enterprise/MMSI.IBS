@@ -236,13 +236,10 @@
                                         <label for="legacyToggle" class="text-xs font-bold opacity-70 cursor-pointer">LEGACY (NO JO)</label>
                                     </div>
                                 </div>
-                                <div class="relative" id="jobOrderSearchContainer">
-                                    <div class="relative">
-                                        <span class="material-symbols-outlined absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--on-surface-variant); font-size: 20px;">tag</span>
-                                        <input type="text" id="JobOrderSearch" class="modern-input" style="padding-left: 40px;" placeholder="Search job order number..." autocomplete="off" disabled>
-                                    </div>
-                                    <input type="hidden" asp-for="JobOrderId" id="JobOrderId" />
-                                    <div id="JobOrderSearchResults" class="modern-dropdown-menu w-full" style="max-height: 250px; overflow-y: auto;"></div>
+                                <div id="jobOrderSearchContainer">
+                                    <select asp-for="JobOrderId" class="js-modern-select" id="JobOrderSelect" data-placeholder="-- Select Job Order --" disabled>
+                                        <option value="">-- Select Job Order --</option>
+                                    </select>
                                     <p class="text-xs opacity-60 mt-1">Available tickets will be filtered based on the selected Job Order above.</p>
                                 </div>
                                 <div id="legacyNotice" class="p-3 bg-surface-container-low rounded-md border border-outline-variant flex items-center gap-2" style="display: none;">
@@ -399,8 +396,7 @@
                     unlockHeaderFields();
                     $("#jobOrderSearchContainer").hide();
                     $("#legacyNotice").show();
-                    $("#JobOrderId").val("");
-                    $("#JobOrderSearch").val("");
+                    $jobOrderSelect.val('').trigger('change');
                     $("#selectAllTickets").prop("disabled", false);
 
                     if (currentCustomerId) {
@@ -430,17 +426,6 @@
                 } catch {
                     $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 text-error">Error loading tickets</td></tr>');
                 }
-            }
-
-            function positionDropdown($input, $results) {
-                const rect = $input[0].getBoundingClientRect();
-                $results.css({
-                    'position': 'fixed',
-                    'top': (rect.bottom + 4) + 'px',
-                    'left': rect.left + 'px',
-                    'width': rect.width + 'px',
-                    'z-index': '9999'
-                });
             }
 
             function handleCheckboxChange() {
@@ -563,76 +548,46 @@
                 handleCheckboxChange();
 
                 unlockHeaderFields();
-                $("#JobOrderSearch").val('').prop('disabled', false);
-                $("#JobOrderId").val('');
-                $("#JobOrderSearchResults").empty().removeClass('show');
-
-                if ($("#legacyToggle").is(":checked")) {
-                    fetchTicketsByCustomer();
-                } else {
-                    $("#ticketsTable tbody").html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
-                    $("#DispatchTicketSelect").empty();
-                    updateTotals();
-                }
+                $jobOrderSelect.val('').prop('disabled', false);
+                populateJobOrderSelect();
             }
 
-            // ── Job Order search ─────────────────────────────────────────────
-            let jobOrderSearchTimeout;
-            const $jobOrderSearch = $("#JobOrderSearch");
-            const $jobOrderResults = $("#JobOrderSearchResults");
-            const $jobOrderId = $("#JobOrderId");
+            // ── Job Order select → load tickets ─────────────────────────────
             const $ticketsTableBody = $("#ticketsTable tbody");
             const $dispatchSelect = $("#DispatchTicketSelect");
+            const $jobOrderSelect = $("#JobOrderSelect");
 
-            async function performJobOrderSearch(searchTerm) {
+            async function populateJobOrderSelect() {
                 if (!currentCustomerId) return;
+                $jobOrderSelect.empty().append('<option value="">-- Select Job Order --</option>').prop('disabled', false);
                 try {
-                    const res = await fetch(`@Url.Action("SearchJobOrders", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}&term=${encodeURIComponent(searchTerm)}`);
+                    const res = await fetch(`@Url.Action("GetBillableJobOrders", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
                     const data = await res.json();
-                    $jobOrderResults.empty();
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(item => {
-                            $jobOrderResults.append(
-                                $('<a href="#" class="modern-dropdown-item">')
-                                    .data('jobOrder', item)
-                                    .html(`<div><p class="font-bold">${item.name}</p><p class="text-xs opacity-60">${item.description || ''}</p></div>`)
-                            );
-                        });
-                    } else {
-                        $jobOrderResults.append($('<div class="p-3 text-center italic opacity-60 text-xs">No job orders found</div>'));
+                    if (Array.isArray(data)) {
+                        data.forEach(jo => $jobOrderSelect.append($('<option>').val(jo.value).text(jo.name)));
                     }
-                    positionDropdown($jobOrderSearch, $jobOrderResults);
-                    $jobOrderResults.addClass('show');
+                    $jobOrderSelect.trigger('change');
                 } catch {
-                    $jobOrderResults.empty().removeClass('show');
+                    console.error('Failed to load job orders');
                 }
             }
 
-            $jobOrderSearch.on('input', function () {
-                clearTimeout(jobOrderSearchTimeout);
-                const searchTerm = $(this).val().trim();
-                jobOrderSearchTimeout = setTimeout(() => performJobOrderSearch(searchTerm), 150);
-            });
-
-            $jobOrderSearch.on('focus click', function () {
-                if (currentCustomerId) performJobOrderSearch($(this).val().trim());
-            });
-
-            $jobOrderResults.on('click', '.modern-dropdown-item', async function (e) {
-                e.preventDefault();
-                const jobOrder = $(this).data('jobOrder');
-                $jobOrderSearch.val(jobOrder.name);
-                $jobOrderId.val(jobOrder.value);
-                $jobOrderResults.empty().removeClass('show');
+            $jobOrderSelect.on('change', async function () {
+                const joId = $(this).val();
+                if (!joId) {
+                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
+                    $dispatchSelect.empty();
+                    updateTotals();
+                    return;
+                }
                 try {
-                    const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(jobOrder.value)}`);
+                    const res = await fetch(`@Url.Action("GetDispatchTicketsByJobOrder", "Billing", new { area = "User" })?jobOrderId=${encodeURIComponent(joId)}`);
                     const response = await res.json();
-
                     if (response.success) {
                         if (response.header) lockHeaderFields(response.header);
                         renderTicketsTable(response.tickets, true);
                     } else {
-                         $ticketsTableBody.html(`<tr><td colspan="6" class="text-center py-5 text-error">${response.message}</td></tr>`);
+                        $ticketsTableBody.html(`<tr><td colspan="6" class="text-center py-5 text-error">${response.message}</td></tr>`);
                     }
                 } catch {
                     $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 text-error">Error loading tickets</td></tr>');
@@ -738,7 +693,7 @@
 
             // ── Global click ────────────────────────────────────────────────
             $(document).on('click', function (e) {
-                if (!$(e.target).closest('#JobOrderSearch, #JobOrderSearchResults').length) {
+                if (!$(e.target).closest('.modern-select-dropdown.show').length) {
                     $('.modern-dropdown-menu').removeClass('show');
                 }
             });

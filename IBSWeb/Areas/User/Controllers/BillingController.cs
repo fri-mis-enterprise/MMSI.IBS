@@ -504,13 +504,13 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
-        /// Searches for Job Orders for a customer that have unbilled tickets and are ready for billing.
+        /// Gets all billable Job Orders for a customer (used to populate JO modern-select).
         /// </summary>
         [HttpGet]
         [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
-        public async Task<JsonResult> SearchJobOrders(string? term, int customerId, CancellationToken cancellationToken)
+        public async Task<JsonResult> GetBillableJobOrders(int customerId, CancellationToken cancellationToken)
         {
-            var result = await billingService.SearchJobOrdersAsync(term, customerId, cancellationToken);
+            var result = await billingService.GetBillableJobOrdersAsync(customerId, cancellationToken);
             return Json(result);
         }
 

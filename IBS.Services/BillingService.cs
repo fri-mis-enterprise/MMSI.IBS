@@ -546,9 +546,9 @@ namespace IBS.Services
             }).ToList();
         }
 
-        public async Task<List<object>> SearchJobOrdersAsync(string? term, int customerId, CancellationToken cancellationToken)
+        public async Task<List<object>> GetBillableJobOrdersAsync(int customerId, CancellationToken cancellationToken)
         {
-            var result = await unitOfWork.JobOrder.SearchBillableJobOrdersAsync(term ?? string.Empty, customerId, 10, cancellationToken);
+            var result = await unitOfWork.JobOrder.SearchBillableJobOrdersAsync("", customerId, 999, cancellationToken);
 
             return result.Select(j => (object)new
             {

@@ -5,6 +5,8 @@
 - ModernSelect search auto-select now auto-focuses the next `.js-modern-select` in DOM order, so cascading dropdowns flow naturally (e.g. Port → Terminal on Job Order Create). (`modern-select.js`)
 - Job Order Create/Edit customer field converted from client-side AJAX search to SSR modern-select dropdown, matching Vessel/Port/Terminal UX. (`Create.cshtml`, `Edit.cshtml`, UI tests)
 - Billing Create/Edit customer and principal fields converted to SSR/dynamic modern-select dropdowns. Customer uses SSR with AJAX detail fetch; principal uses dynamic modern-select populated via `GetPrincipalsByCustomer`. (`BillingController.cs`, `BillingService.cs`, `Create.cshtml`, `Edit.cshtml`, UI tests)
+- Billing Create/Edit Job Order search converted from AJAX text-input search to dynamic modern-select populated via `GetBillableJobOrders`. Added `GetBillableJobOrdersAsync` to service; removed dead `SearchJobOrdersAsync`. (`BillingController.cs`, `BillingService.cs`, `Create.cshtml`, `Edit.cshtml`)
+- Collection Create customer search converted from AJAX text-input search to SSR modern-select. Removed `SearchCustomers` action and now-unused `IUnitOfWork` dependency from `CollectionController`. (`CollectionController.cs`, `Create.cshtml`, UI tests)
 
 ## [2026-07-11]
 ### Fixed
