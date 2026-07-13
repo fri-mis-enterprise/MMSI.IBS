@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-13]
+### Added
+- ModernSelect search auto-select now auto-focuses the next `.js-modern-select` in DOM order, so cascading dropdowns flow naturally (e.g. Port → Terminal on Job Order Create). (`modern-select.js`)
+
 ## [2026-07-11]
 ### Fixed
 - Sales Summary (AR Monitoring) report now filters by **billing date** instead of dispatch ticket date — billings posted in the target month are no longer excluded just because the dispatch happened earlier. Column 1 ("BILLING STATEMENT DATE/DISPATCH DATE") shows the **billing date** when available. Sort order also uses billing date when the billing-date filter is active. (`ReportRepository.cs`, `IReportRepository.cs`, `MaritimeReportController.cs`)

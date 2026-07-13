@@ -163,6 +163,13 @@ const ModernSelect = {
                     const $visibleOptions = $optionsContainer.find('.modern-select-option:not(.hidden)');
                     if ($visibleOptions.length === 1) {
                         selectOption($visibleOptions.first());
+                        // ponytail: auto-focus next modern-select in DOM order
+                        setTimeout(function() {
+                            var $next = $('.js-modern-select').eq($('.js-modern-select').index($select) + 1);
+                            if ($next.length) {
+                                $next.next('.modern-select-container').find('.modern-select-trigger').focus();
+                            }
+                        }, 0);
                     }
                 }
             });
