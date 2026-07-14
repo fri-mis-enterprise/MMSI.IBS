@@ -112,7 +112,8 @@ namespace IBS.DataAccess.Repository.Msap
 
             return await _db.Customers
                 .Where(c => listOfCustomerWithBillableTickets.Contains(c.CustomerId) &&
-                            (string.IsNullOrEmpty(type) || c.Type == type))
+                            (string.IsNullOrEmpty(type) || c.Type == type) &&
+                            c.IsActive)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
                 {
