@@ -23,7 +23,7 @@
                 </div>
             </div>
             <div class="flex gap-2" style="flex-wrap: wrap;">
-                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary">
+                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary" data-hotkey="e">
                     <span class="material-symbols-outlined">edit</span> Edit Details
                 </a>
 
@@ -116,7 +116,7 @@
                         </div>
                         @if (Model.Status == SD.JobOrderStatus.Open && !Model.DispatchTickets.Any(t => t.Status == SD.DispatchTicketStatus.Billed))
                         {
-                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm">
+                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
                                 <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
                                 ADD TICKET
                             </a>
