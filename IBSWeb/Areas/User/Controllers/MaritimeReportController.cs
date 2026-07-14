@@ -551,6 +551,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static void WriteCompanyHeader(ExcelWorksheet ws)
         {
+            ws.Cells.Style.Font.Name = "Calibri";
             ws.Cells["A1"].Value = "MALAYAN MARITIME SERVICES INC.";
             ws.Cells["A1"].Style.Font.Size = 16;
             ws.Cells["A1"].Style.Font.Bold = true;
@@ -561,6 +562,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             for (int c = 1; c <= totalCols; c++)
             {
+                if (c == 1) continue;
                 bool allEmpty = true;
                 for (int r = dataStart; r <= lastRow; r++)
                     if (ws.Cells[r, c].Value != null) { allEmpty = false; break; }

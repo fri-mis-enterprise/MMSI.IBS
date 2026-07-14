@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-07-14]
+### Changed
+- Maritime Excel reports now use Calibri as the default font across all worksheets. (`MaritimeReportController.cs`)
+### Fixed
+- Column A (COS#) no longer gets hidden by `FinalizeColumns` when all data rows are empty — keeps the company header visible. (`MaritimeReportController.cs`)
+
+## [2026-07-14]
 ### Added
 - Declarative keyboard shortcuts via `modern-hotkeys.js`: add `data-hotkey="c"` to any element for a 'c' keybinding with auto-underlined hotkey letter; `Esc` globally navigates back via `history.back()` (skips when a modal/overlay is open). Applied to Create buttons on JobOrder, Billing, Collection index pages. (`modern-hotkeys.js`, `Index.cshtml` x3, `_Layout.cshtml`)
 
