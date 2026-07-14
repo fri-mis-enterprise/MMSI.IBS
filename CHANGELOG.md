@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-14]
+### Added
+- Declarative keyboard shortcuts via `modern-hotkeys.js`: add `data-hotkey="c"` to any element for a 'c' keybinding with auto-underlined hotkey letter; `Esc` globally navigates back via `history.back()` (skips when a modal/overlay is open). Applied to Create buttons on JobOrder, Billing, Collection index pages. (`modern-hotkeys.js`, `Index.cshtml` x3, `_Layout.cshtml`)
+
 ## [2026-07-13]
 ### Added
 - ModernSelect search auto-select now auto-focuses the next `.js-modern-select` in DOM order, so cascading dropdowns flow naturally (e.g. Port → Terminal on Job Order Create). (`modern-select.js`)
