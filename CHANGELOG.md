@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-07-15]
+### Added
+- Conflict detection on VesselSchedule Create/Edit — checks terminal and tugboat overlap via AJAX before submit, shows inline warnings, user can still save with conflicts. (`IVesselScheduleService.cs`, `VesselScheduleService.cs`, `VesselScheduleController.cs`, `Create.cshtml`, `Edit.cshtml`)
+- Tugboat Availability DataTable view on Vessel Schedule Index — lists all tugboats with Available/Busy status, searchable and sortable. Replaces the Berth Occupancy tab. (`VesselScheduleController.cs`, `Index.cshtml`)
+- Vessel Schedule Board — new scheduling module separate from existing job-order workflow. `VesselSchedule` entity, Frappe Gantt timeline view, conflict guard, status flow (Tentative → Confirmed → In Progress → Completed / Cancelled), and tugboat assignment via JSON array. No changes to JobOrder/DispatchTicket/Billing flow.
+### Fixed
+- Conflict alerts on Create/Edit now use inline styled elements (orange background, icon, dismiss button) instead of `.modern-alert` CSS class that had no definition — conflicts are now visible. Also shows a SweetAlert2 warning modal before the inline alert and confirm dialog, so conflicts can't be missed. (`Create.cshtml`, `Edit.cshtml`)
+### Changed
+- Removed `CustomerId` from VesselSchedule — vessel scheduling is about arrivals and tugboats, not billing. Dropped FK, index, and column via migration; removed Customer field from Create/Edit/Details views, `Customers` list from ViewModel, and `.Include(s => s.Customer)` from repository. (`VesselSchedule.cs`, `VesselScheduleViewModel.cs`, `VesselScheduleController.cs`, `VesselScheduleService.cs`, `VesselScheduleRepository.cs`, `ApplicationDbContext.cs`, `Create.cshtml`, `Edit.cshtml`, `Details.cshtml`, `Index.cshtml`)
+- Schedule Entries DataTable now client-side (`serverSide: false`) — `GetScheduleList` returns all data, DataTable handles sorting/paging. (`Index.cshtml`)
+- Date filters on Schedule Entries and Tugboat Availability now reactive — pick a date, table reloads without clicking refresh. (`Index.cshtml`, `VesselScheduleController.cs`)
+### Fixed
+- DataTable `sClass` error caused by `<th>CUSTOMER</th>` lingering in HTML after column was removed — 8 `<th>` vs 7 JS columns. (`Index.cshtml`)
+
 ## [2026-07-14]
 ### Changed
 - Maritime Excel reports now use Calibri as the default font across all worksheets. (`MaritimeReportController.cs`)

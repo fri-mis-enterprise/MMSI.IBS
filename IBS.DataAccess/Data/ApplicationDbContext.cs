@@ -40,6 +40,7 @@ namespace IBS.DataAccess.Data
         public DbSet<Collection> MsapCollections { get; set; }
         public DbSet<DispatchTicket> MsapDispatchTickets { get; set; }
         public DbSet<JobOrder> MsapJobOrders { get; set; }
+        public DbSet<VesselSchedule> MsapVesselSchedules { get; set; }
         public DbSet<TariffRate> MsapTariffRates { get; set; }
         
         public DbSet<CollectionBill> MsapCollectionBills { get; set; }
@@ -190,6 +191,18 @@ namespace IBS.DataAccess.Data
 
                 jo.Property(j => j.PlannedStartTime).HasColumnType("timestamp without time zone");
                 jo.Property(j => j.PlannedEndTime).HasColumnType("timestamp without time zone");
+            });
+
+            builder.Entity<VesselSchedule>(vs =>
+            {
+                vs.HasIndex(x => x.Status);
+                vs.HasIndex(x => x.PlannedStart);
+                vs.HasIndex(x => new { x.PortId, x.TerminalId });
+
+                vs.HasOne(x => x.Vessel).WithMany().HasForeignKey(x => x.VesselId).OnDelete(DeleteBehavior.Restrict);
+                vs.HasOne(x => x.Port).WithMany().HasForeignKey(x => x.PortId).OnDelete(DeleteBehavior.Restrict);
+                vs.HasOne(x => x.Terminal).WithMany().HasForeignKey(x => x.TerminalId).OnDelete(DeleteBehavior.Restrict);
+                vs.HasOne(x => x.JobOrder).WithMany().HasForeignKey(x => x.JobOrderId).OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<DispatchTicket>(dt =>

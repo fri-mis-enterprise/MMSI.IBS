@@ -120,6 +120,15 @@ namespace IBS.Utility.Constants
             public const string Collected = "Collected";
         }
 
+        public static class VesselScheduleStatus
+        {
+            public const string Tentative = "Tentative";
+            public const string Confirmed = "Confirmed";
+            public const string InProgress = "In Progress";
+            public const string Completed = "Completed";
+            public const string Cancelled = "Cancelled";
+        }
+
         public const string BilledToLocal = "LOCAL";
         public const string BilledToForeign = "FOREIGN";
 

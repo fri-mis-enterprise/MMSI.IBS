@@ -1,0 +1,426 @@
+@using IBS.Utility.Constants
+@model IEnumerable<VesselSchedule>
+
+@{
+    ViewData["Title"] = "Vessel Schedule";
+    ViewData["IsFullWidth"] = true;
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css" />
+
+<style>
+    #gantt-container {
+        width: 100%;
+        overflow-x: auto;
+        background: #fff;
+        border-radius: 8px;
+    }
+    #gantt-container svg {
+        display: block;
+        margin: 0 auto;
+    }
+
+    .bar-wrapper.gantt-status-Tentative .bar { fill: #9e9e9e; }
+    .bar-wrapper.gantt-status-Tentative .bar-progress { fill: #757575; }
+
+    .bar-wrapper.gantt-status-Confirmed .bar { fill: #1976d2; }
+    .bar-wrapper.gantt-status-Confirmed .bar-progress { fill: #1565c0; }
+
+    .bar-wrapper.gantt-status-InProgress .bar { fill: #388e3c; }
+    .bar-wrapper.gantt-status-InProgress .bar-progress { fill: #2e7d32; }
+
+    .bar-wrapper.gantt-status-Completed .bar { fill: #2e7d32; }
+    .bar-wrapper.gantt-status-Completed .bar-progress { fill: #1b5e20; }
+
+    .bar-wrapper.gantt-status-Cancelled .bar { fill: #d32f2f; }
+    .bar-wrapper.gantt-status-Cancelled .bar-progress { fill: #b71c1c; }
+
+    .view-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 1rem;
+    }
+    .view-tab {
+        padding: 0.5rem 1.25rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border: none;
+        background: none;
+        color: #666;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .view-tab.active {
+        color: #1976d2;
+        border-bottom-color: #1976d2;
+    }
+    .view-tab:hover { color: #1976d2; }
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    .schedule-legend {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        background: #f5f5f5;
+        border-radius: 6px;
+    }
+    .schedule-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+    }
+    .schedule-legend-swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+    }
+</style>
+
+<div class="modern-layout">
+    <main class="modern-container">
+        <div class="flex-stack">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="modern-label" style="color: var(--on-surface-variant)">Vessel Schedule</span>
+                    <span class="material-symbols-outlined text-xs">chevron_right</span>
+                    <span class="modern-label" style="color: var(--on-surface)">Board</span>
+                </div>
+                <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
+            </div>
+            <div class="flex gap-2">
+                <form method="get" class="flex items-center gap-2" id="schedule-filter">
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">From</label>
+                    <input type="date" name="from" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;" value="@ViewBag.From" />
+                    <label class="modern-label mb-0" style="color: var(--on-surface-variant)">To</label>
+                    <input type="date" name="to" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;" value="@ViewBag.To" />
+                    <button type="submit" class="modern-btn-primary" style="height: 32px; font-size: 0.8rem; padding: 0 12px;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">search</span>
+                    </button>
+                </form>
+                <a asp-action="Create" class="modern-btn-primary" data-hotkey="c">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    SCHEDULE
+                </a>
+            </div>
+        </div>
+
+        <!-- View Tabs -->
+        <div class="view-tabs">
+            <button class="view-tab active" data-tab="timeline">
+                <span class="material-symbols-outlined" style="font-size:18px">schedule</span>
+                Timeline
+            </button>
+            <button class="view-tab" data-tab="tugboats">
+                <span class="material-symbols-outlined" style="font-size:18px">directions_boat</span>
+                Tugboat Availability
+            </button>
+        </div>
+
+        <!-- Timeline Panel -->
+        <div class="view-panel active" id="panel-timeline">
+            <div class="modern-card">
+                <div class="modern-card-header-action flex justify-between items-center w-full">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">schedule</span>
+                        <h2 class="modern-headline-md">Timeline</h2>
+                    </div>
+                </div>
+                <div class="modern-card-body">
+                    <div class="schedule-legend">
+                        <div class="schedule-legend-item">
+                            <span class="schedule-legend-swatch" style="background:#9e9e9e"></span> Tentative
+                        </div>
+                        <div class="schedule-legend-item">
+                            <span class="schedule-legend-swatch" style="background:#1976d2"></span> Confirmed
+                        </div>
+                        <div class="schedule-legend-item">
+                            <span class="schedule-legend-swatch" style="background:#388e3c"></span> In Progress
+                        </div>
+                        <div class="schedule-legend-item">
+                            <span class="schedule-legend-swatch" style="background:#2e7d32"></span> Completed
+                        </div>
+                        <div class="schedule-legend-item">
+                            <span class="schedule-legend-swatch" style="background:#d32f2f"></span> Cancelled
+                        </div>
+                    </div>
+                    <div id="gantt-container"></div>
+                </div>
+            </div>
+
+            <div class="modern-card">
+                <div class="modern-card-header-action flex justify-between items-center w-full">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">list</span>
+                        <h2 class="modern-headline-md">Schedule Entries</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Filter by Date:</label>
+                        <input type="date" id="dateFilter" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                    </div>
+                </div>
+                <div class="modern-card-body">
+                    <table class="modern-table" id="paginatedTable">
+                        <thead>
+                            <tr>
+                                <th>VESSEL</th>
+                                <th>PORT / TERMINAL</th>
+                                <th>START</th>
+                                <th>END</th>
+                                <th class="text-center">TUGS</th>
+                                <th class="text-center">STATUS</th>
+                                <th class="text-center">ACTIONS</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tugboat Availability Panel -->
+        <div class="view-panel" id="panel-tugboats">
+            <div class="modern-card">
+                <div class="modern-card-header-action flex justify-between items-center w-full">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">directions_boat</span>
+                        <h2 class="modern-headline-md">Tugboat Availability</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="modern-label mb-0" style="color: var(--on-surface-variant)">Date:</label>
+                        <input type="date" id="tugDate" class="modern-input" style="height: 32px; padding: 0 12px; font-size: 0.875rem; border-radius: 6px;">
+                        <button type="button" id="tugLoadBtn" class="modern-btn-primary" style="height: 32px; font-size: 0.8rem; padding: 0 12px;">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">refresh</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modern-card-body">
+                    <div id="tugboat-summary" class="flex items-center gap-3 mb-3"></div>
+                    <table class="modern-table" id="tugboatTable">
+                        <thead>
+                            <tr>
+                                <th>TUG</th>
+                                <th>STATUS</th>
+                                <th>ASSIGNMENTS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="3" class="text-center text-muted py-4">Select a date and click refresh.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.umd.js"></script>
+    <script>
+        $(document).ready(function () {
+            // --- Tab switching ---
+            $('.view-tab').on('click', function () {
+                const tab = $(this).data('tab');
+                $('.view-tab').removeClass('active');
+                $(this).addClass('active');
+                $('.view-panel').removeClass('active');
+                $('#panel-' + tab).addClass('active');
+            });
+
+            // Set default date
+            const today = new Date().toISOString().split('T')[0];
+            $('#tugDate').val(today);
+
+            // --- Tugboat Availability ---
+            let tugTable = null;
+
+            function loadTugboatAvailability(date) {
+                const $summary = $('#tugboat-summary');
+                $summary.html('<span class="text-muted">Loading...</span>');
+
+                if (tugTable) {
+                    tugTable.clear().draw();
+                    tugTable.destroy();
+                    tugTable = null;
+                }
+
+                $.get('@Url.Action("GetTugboatOccupancy", "VesselSchedule")', { date: date })
+                    .done(function (data) {
+                        if (!data.tugboats || data.tugboats.length === 0) {
+                            $summary.html('<span class="text-muted">No tugboats registered.</span>');
+                            return;
+                        }
+
+                        let availCount = 0, busyCount = 0;
+                        const statusColors = {
+                            'Tentative': '#9e9e9e',
+                            'Confirmed': '#1976d2',
+                            'In Progress': '#388e3c',
+                            'Completed': '#2e7d32',
+                            'Cancelled': '#d32f2f'
+                        };
+
+                        const rows = [];
+                        data.tugboats.forEach(function (t) {
+                            if (t.available) { availCount++; }
+                            else { busyCount++; }
+
+                            const statusHtml = t.available
+                                ? ModernTable.render.badge('Available', 'bg-success text-white')
+                                : ModernTable.render.badge('Busy', 'bg-danger text-white');
+
+                            let assignHtml = '';
+                            if (t.assignments && t.assignments.length > 0) {
+                                t.assignments.forEach(function (a) {
+                                    const dot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + (statusColors[a.status] || '#666') + ';margin-right:6px"></span>';
+                                    assignHtml += '<div style="line-height:1.6">' + dot + '<strong>' + a.start + '-' + a.end + '</strong> ' + a.vesselName + ' <small>(' + a.status + ')</small></div>';
+                                });
+                            } else {
+                                assignHtml = '<span class="text-muted">—</span>';
+                            }
+
+                            rows.push([ t.tugboatName, statusHtml, assignHtml ]);
+                        });
+
+                        $summary.html(
+                            '<span class="modern-badge-sm" style="background:#4caf50;color:white">' + availCount + ' Available</span>' +
+                            '<span class="modern-badge-sm" style="background:#e53935;color:white">' + busyCount + ' Busy</span>'
+                        );
+
+                        tugTable = $('#tugboatTable').DataTable(ModernTable.config({
+                            serverSide: false,
+                            data: rows,
+                            order: [[0, 'asc']],
+                            columnDefs: [{ orderable: false, targets: [2], searchable: false }],
+                            columns: [
+                                { title: 'TUG' },
+                                { title: 'STATUS', orderable: false },
+                                { title: 'ASSIGNMENTS', orderable: false }
+                            ]
+                        }));
+                    })
+                    .fail(function () {
+                        $('#tugboat-summary').html('<span class="text-danger">Failed to load tugboat data.</span>');
+                    });
+            }
+
+            $('#tugDate').on('change', function () {
+                const date = $(this).val();
+                if (date) loadTugboatAvailability(date);
+            });
+
+            if ($('#tugDate').val()) loadTugboatAvailability($('#tugDate').val());
+
+            // --- Gantt ---
+            const from = '@ViewBag.From';
+            const to = '@ViewBag.To';
+            const ganttContainer = document.getElementById('gantt-container');
+
+            fetch(`@Url.Action("GetScheduleData")?from=${from}&to=${to}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.tasks || data.tasks.length === 0) {
+                        ganttContainer.innerHTML =
+                            '<div class="text-center text-muted py-5">No schedules to display on the Gantt chart.</div>';
+                        return;
+                    }
+
+                    const tasks = data.tasks.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        start: t.start,
+                        end: t.end,
+                        progress: t.progress,
+                        custom_class: 'gantt-status-' + t.status.replace(/\s+/g, '')
+                    }));
+
+                    new Gantt('#gantt-container', tasks, {
+                        view_mode: 'Day',
+                        date_format: 'MMM DD, HH:mm',
+                        bar_height: 30,
+                        container_height: Math.max(tasks.length * 50 + 100, 420),
+                        readonly: true,
+                        popup_on: 'click'
+                    });
+
+                    ganttContainer.querySelector('svg')?.setAttribute('style', 'min-height: 420px; display: block; margin: 0 auto;');
+                })
+                .catch(err => {
+                    ganttContainer.innerHTML =
+                        '<div class="text-center text-danger py-5">Failed to load schedule data.</div>';
+                    console.error(err);
+                });
+
+            // --- DataTable ---
+            const previewUrl = '@Url.Action("Details", "VesselSchedule")';
+            const editUrl = '@Url.Action("Edit", "VesselSchedule")';
+
+            let table = $('#paginatedTable').DataTable(ModernTable.config({
+                serverSide: false,
+                order: [[3, 'asc']],
+                columnDefs: [{ orderable: false, targets: [6] }],
+                ajax: {
+                    url: "@Url.Action("GetScheduleList", "VesselSchedule", new { area = "User" })",
+                    type: "POST",
+                    data: function(d) {
+                        d.__RequestVerificationToken = $('input[name="__RequestVerificationToken"]').val();
+                        d.dateFilter = $('#dateFilter').val();
+                    }
+                },
+                columns: [
+                    { data: "vessel", defaultContent: "" },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
+                            const p = row.port ?? "";
+                            const t = row.terminal ?? "";
+                            return p || t ? `${p} / ${t}` : "";
+                        }
+                    },
+
+                    { data: "start", defaultContent: "" },
+                    { data: "end", defaultContent: "" },
+                    {
+                        data: "tugCount",
+                        className: "text-center",
+                        defaultContent: "0"
+                    },
+                    {
+                        data: "status",
+                        className: "text-center",
+                        render: (data) => {
+                            let cls = "status-open";
+                            if (data === "Tentative") cls = "";
+                            else if (data === "Confirmed") cls = "status-tariff";
+                            else if (data === "In Progress") cls = "status-approval";
+                            else if (data === "Completed") cls = "status-closed";
+                            else if (data === "Cancelled") cls = "status-error";
+                            return ModernTable.render.badge(data, cls);
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: (data, type, row) => ModernTable.render.dropdown([
+                            { label: 'View Details', icon: 'visibility', url: `${previewUrl}/${row.vesselScheduleId}` },
+                            { label: 'Edit Schedule', icon: 'edit', url: `${editUrl}/${row.vesselScheduleId}` }
+                        ])
+                    }
+                ]
+            }));
+
+            $('#dateFilter').on('change', function () {
+                table.ajax.reload();
+            });
+        });
+    </script>
+}

@@ -79,6 +79,7 @@ namespace IBS.DataAccess.Repository.IRepository
         ITugboatOwnerRepository TugboatOwner { get; }
         IUserAccessRepository UserAccess { get; }
         IVesselRepository Vessel { get; }
+        IVesselScheduleRepository VesselSchedule { get; }
 
         #endregion
 

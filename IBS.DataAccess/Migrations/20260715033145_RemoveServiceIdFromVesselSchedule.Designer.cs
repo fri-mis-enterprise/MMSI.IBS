@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260715033145_RemoveServiceIdFromVesselSchedule")]
+    partial class RemoveServiceIdFromVesselSchedule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1837,6 +1840,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("edited_by");
@@ -1892,6 +1899,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("VesselScheduleId")
                         .HasName("pk_msap_vessel_schedules");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_msap_vessel_schedules_customer_id");
 
                     b.HasIndex("JobOrderId")
                         .HasDatabaseName("ix_msap_vessel_schedules_job_order_id");
@@ -3153,6 +3163,13 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.MSAP.VesselSchedule", b =>
                 {
+                    b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_msap_vessel_schedules_customers_customer_id");
+
                     b.HasOne("IBS.Models.MSAP.JobOrder", "JobOrder")
                         .WithMany()
                         .HasForeignKey("JobOrderId")
@@ -3179,6 +3196,8 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_msap_vessel_schedules_msap_vessels_vessel_id");
+
+                    b.Navigation("Customer");
 
                     b.Navigation("JobOrder");
 
