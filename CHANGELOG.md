@@ -2,6 +2,10 @@
 
 ## [2026-07-16]
 ### Changed
+- Updated all NuGet packages to latest versions across 7 projects: Microsoft.AspNetCore.*/EntityFrameworkCore 10.0.9→10.0.10, EPPlus 8.6.0→8.6.1, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.2→10.0.3, QuestPDF 2026.6.0→2026.7.1, System.Linq.Dynamic.Core 1.7.2→1.7.3, Google.Apis.Drive.v3 1.74.0.4135→1.75.0.4192, Quartz 3.18.1→3.18.2, Serilog.Settings.Configuration 10.0.0→10.0.1, Microsoft.NET.Test.Sdk 18.6.0→18.8.1, coverlet.collector 10.0.1→10.0.2, Microsoft.Playwright.Xunit 1.60.0→1.61.0. Also updated `dotnet-ef` global tool 10.0.3→10.0.10. (`.csproj` files across solution)
+
+## [2026-07-16]
+### Changed
 - DispatchTicket Create/EditTicket synced with ServiceRequest Create — Port, Terminal, COS#, Voyage# are now read-only when derived from a Job Order; input order reordered to Port|Terminal before Vessel|Service to match ServiceRequest layout; added VoyageType auto-set badge for Vessel. (`DispatchTicketController.cs`, `Create.cshtml`, `EditTicket.cshtml`)
 
 ## [2026-07-15]
