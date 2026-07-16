@@ -564,6 +564,17 @@ namespace IBSWeb.Areas.User.Controllers
         #region AJAX Endpoints
 
         /// <summary>
+        /// Returns the voyage type (Foreign/Local) for a given vessel.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetVesselVoyageType(int vesselId, CancellationToken cancellationToken)
+        {
+            var vessel = await unitOfWork.Vessel.GetAsync(v => v.VesselId == vesselId, cancellationToken);
+            var voyageType = vessel?.VesselType == "FOREIGN" ? "Foreign" : "Local";
+            return Json(voyageType);
+        }
+
+        /// <summary>
         /// Retrieves terminals for a specific port for cascading dropdowns.
         /// </summary>
         [HttpGet]

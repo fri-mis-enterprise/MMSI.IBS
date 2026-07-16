@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-16]
+### Changed
+- DispatchTicket Create/EditTicket synced with ServiceRequest Create — Port, Terminal, COS#, Voyage# are now read-only when derived from a Job Order; input order reordered to Port|Terminal before Vessel|Service to match ServiceRequest layout; added VoyageType auto-set badge for Vessel. (`DispatchTicketController.cs`, `Create.cshtml`, `EditTicket.cshtml`)
+
 ## [2026-07-15]
 ### Added
 - Conflict detection on VesselSchedule Create/Edit — checks terminal and tugboat overlap via AJAX before submit, shows inline warnings, user can still save with conflicts. (`IVesselScheduleService.cs`, `VesselScheduleService.cs`, `VesselScheduleController.cs`, `Create.cshtml`, `Edit.cshtml`)

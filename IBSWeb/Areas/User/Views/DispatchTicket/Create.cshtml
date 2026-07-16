@@ -64,12 +64,28 @@
                                     <span asp-validation-for="DispatchNumber" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-6">
-                                    <label class="modern-label">COS # (Optional)</label>
-                                    <input asp-for="COSNumber" class="modern-input" placeholder="Optional" maxlength="10">
+                                    <label class="modern-label">COS #</label>
+                                    @if (Model.JobOrderId.HasValue)
+                                    {
+                                        <input type="text" class="modern-input" style="background-color: var(--surface-container-low)" value="@(Model.COSNumber ?? "-")" readonly>
+                                        <input type="hidden" asp-for="COSNumber" />
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="COSNumber" class="modern-input" placeholder="Optional" maxlength="10">
+                                    }
                                 </div>
                                 <div class="modern-col-6">
-                                    <label class="modern-label">Voyage # (Optional)</label>
-                                    <input asp-for="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="20">
+                                    <label class="modern-label">Voyage #</label>
+                                    @if (Model.JobOrderId.HasValue)
+                                    {
+                                        <input type="text" class="modern-input" style="background-color: var(--surface-container-low)" value="@(Model.VoyageNumber ?? "-")" readonly>
+                                        <input type="hidden" asp-for="VoyageNumber" />
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="VoyageNumber" class="modern-input" placeholder="Optional" maxlength="20">
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -100,6 +116,38 @@
                             </div>
                             <div class="modern-grid-compact mt-2">
                                 <div class="modern-col-6">
+                                    <label class="modern-label">Port <span class="text-error">*</span></label>
+                                    @if (Model.JobOrderId.HasValue)
+                                    {
+                                        <input type="text" class="modern-input" style="background-color: var(--surface-container-low)" value="@(Model.Ports?.FirstOrDefault(p => p.Value == Model.PortId.ToString())?.Text ?? "Selected Port")" readonly>
+                                        <input type="hidden" asp-for="PortId" />
+                                    }
+                                    else
+                                    {
+                                        <div id="PortContainer">
+                                            <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --" required>
+                                                <option value="">-- Select Port --</option>
+                                            </select>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="modern-col-6">
+                                    <label class="modern-label">Terminal <span class="text-error">*</span> <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
+                                    @if (Model.JobOrderId.HasValue)
+                                    {
+                                        <input type="text" class="modern-input" style="background-color: var(--surface-container-low)" value="@(Model.Terminals?.FirstOrDefault(t => t.Value == Model.TerminalId.ToString())?.Text ?? "Selected Terminal")" readonly>
+                                        <input type="hidden" asp-for="TerminalId" />
+                                    }
+                                    else
+                                    {
+                                        <div id="TerminalContainer">
+                                            <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="js-modern-select" data-placeholder="-- Select Terminal --" required>
+                                                <option value="">-- Select Terminal --</option>
+                                            </select>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="modern-col-6">
                                     <label class="modern-label">Vessel <span class="text-error">*</span></label>
                                     @if (Model.JobOrderId.HasValue)
                                     {
@@ -114,28 +162,14 @@
                                             </select>
                                         </div>
                                     }
+                                    <input type="hidden" asp-for="VoyageType" id="VoyageType" />
+                                    <span id="voyageTypeBadge" class="modern-badge-sm mt-1" style="display:none"></span>
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Activity/Service Type <span class="text-error">*</span></label>
                                     <div id="ServiceContainer">
                                         <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" data-placeholder="-- Select Service --" required>
                                             <option value="">-- Select Service --</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modern-col-6">
-                                    <label class="modern-label">Port <span class="text-error">*</span></label>
-                                    <div id="PortContainer">
-                                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --" required>
-                                            <option value="">-- Select Port --</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modern-col-6">
-                                    <label class="modern-label">Terminal <span class="text-error">*</span> <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
-                                    <div id="TerminalContainer">
-                                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="js-modern-select" data-placeholder="-- Select Terminal --" required>
-                                            <option value="">-- Select Terminal --</option>
                                         </select>
                                     </div>
                                 </div>
@@ -236,24 +270,42 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Port/Terminal Cascading Dropdown
-            $('#PortSelect').on('change', function () {
-                const portId = $(this).val();
-                if (!portId) return;
-
-                $('#terminalLoading').show();
-                $.get('@Url.Action("ChangeTerminal", "DispatchTicket")', { portId: portId }, function (data) {
-                    const $select = $('#TerminalSelect');
-                    $select.empty().append('<option value="">-- Select Terminal --</option>');
-                    $.each(data, function (i, item) {
-                        $select.append($('<option>', { value: item.value, text: item.text }));
+            // --- Vessel → VoyageType auto-set ---
+            function updateVoyageType() {
+                const vesselId = $('#VesselId').val();
+                if (!vesselId) { $('#voyageTypeBadge').hide(); return; }
+                $.get('@Url.Action("GetVesselVoyageType", "DispatchTicket")', { vesselId: vesselId })
+                    .done(function (data) {
+                        $('#VoyageType').val(data);
+                        const $badge = $('#voyageTypeBadge');
+                        $badge.text(data).show();
+                        $badge.removeClass('bg-warning text-white bg-info text-white')
+                              .addClass(data === 'Foreign' ? 'bg-warning text-white' : 'bg-info text-white');
                     });
+            }
+            $('#VesselId').on('change', updateVoyageType);
+            if ($('#VesselId').val()) { updateVoyageType(); }
 
-                    if (typeof refreshModernSelect === 'function') {
-                        refreshModernSelect($select);
-                    }
-                }).always(() => $('#terminalLoading').hide());
-            });
+            // Port/Terminal Cascading Dropdown (only binds if PortSelect exists — absent when JO locks it)
+            if ($('#PortSelect').length) {
+                $('#PortSelect').on('change', function () {
+                    const portId = $(this).val();
+                    if (!portId) return;
+
+                    $('#terminalLoading').show();
+                    $.get('@Url.Action("ChangeTerminal", "DispatchTicket")', { portId: portId }, function (data) {
+                        const $select = $('#TerminalSelect');
+                        $select.empty().append('<option value="">-- Select Terminal --</option>');
+                        $.each(data, function (i, item) {
+                            $select.append($('<option>', { value: item.value, text: item.text }));
+                        });
+
+                        if (typeof refreshModernSelect === 'function') {
+                            refreshModernSelect($select);
+                        }
+                    }).always(() => $('#terminalLoading').hide());
+                });
+            }
 
             // Duration Calculation
             function calculateDuration() {
