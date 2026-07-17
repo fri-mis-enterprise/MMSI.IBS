@@ -72,15 +72,15 @@ const ModernSelect = {
         };
 
         // Event Listeners
-        let focusTime = 0;
+        let focusOpened = false;
 
         $trigger.on('focus', function() {
             if (!$dropdown.hasClass('show')) {
-                focusTime = Date.now();
                 $('.modern-select-dropdown').not($dropdown).removeClass('show');
                 $('.modern-select-trigger').not($trigger).removeClass('active');
                 $trigger.addClass('active');
                 $dropdown.addClass('show');
+                focusOpened = true; // ponytail: flag, not time — mobile focus fires before click with variable delay
                 positionDropdown();
                 
                 if (isSearchable) {
@@ -93,8 +93,9 @@ const ModernSelect = {
             e.preventDefault();
             e.stopPropagation();
 
-            // If focus event just fired (e.g. within 300ms), don't immediately toggle closed
-            if (Date.now() - focusTime < 300) {
+            // If focus just opened the dropdown (mobile: focus fires before click), don't toggle closed
+            if (focusOpened) {
+                focusOpened = false;
                 return;
             }
 
