@@ -8,11 +8,9 @@
 ### Added
 - **SuperAdmin module** — new `Areas/SuperAdmin` with direct table editing for JobOrder, DispatchTicket, Billing, Collection. Seed-only role, field-level audit trail, remarks required, no hard deletes. (`SuperAdminService.cs`, `HomeController.cs`, `DataController.cs`, `Data/Index.cshtml`, `Home/Index.cshtml`, `Program.cs`, `DbSeeder.cs`, `UserAccessService.cs`, `_Layout.cshtml`)
 
-## [2026-07-16]
 ### Changed
 - Updated all NuGet packages to latest versions across 7 projects: Microsoft.AspNetCore.*/EntityFrameworkCore 10.0.9→10.0.10, EPPlus 8.6.0→8.6.1, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.2→10.0.3, QuestPDF 2026.6.0→2026.7.1, System.Linq.Dynamic.Core 1.7.2→1.7.3, Google.Apis.Drive.v3 1.74.0.4135→1.75.0.4192, Quartz 3.18.1→3.18.2, Serilog.Settings.Configuration 10.0.0→10.0.1, Microsoft.NET.Test.Sdk 18.6.0→18.8.1, coverlet.collector 10.0.1→10.0.2, Microsoft.Playwright.Xunit 1.60.0→1.61.0. Also updated `dotnet-ef` global tool 10.0.3→10.0.10. (`.csproj` files across solution)
 
-## [2026-07-16]
 ### Changed
 - DispatchTicket Create/EditTicket synced with ServiceRequest Create — Port, Terminal, COS#, Voyage# are now read-only when derived from a Job Order; input order reordered to Port|Terminal before Vessel|Service to match ServiceRequest layout; added VoyageType auto-set badge for Vessel. (`DispatchTicketController.cs`, `Create.cshtml`, `EditTicket.cshtml`)
 
@@ -36,7 +34,6 @@
 ### Fixed
 - Column A (COS#) no longer gets hidden by `FinalizeColumns` when all data rows are empty — keeps the company header visible. (`MaritimeReportController.cs`)
 
-## [2026-07-14]
 ### Added
 - Declarative keyboard shortcuts via `modern-hotkeys.js`: add `data-hotkey="c"` to any element for a 'c' keybinding with auto-underlined hotkey letter; `Esc` globally navigates back via `history.back()` (skips when a modal/overlay is open). Applied to Create buttons on JobOrder, Billing, Collection index pages. (`modern-hotkeys.js`, `Index.cshtml` x3, `_Layout.cshtml`)
 
@@ -54,7 +51,6 @@
 ### Added
 - Total row at the bottom of Sales Summary with SUM formulas for GROSS SALES, BALANCE, NET SALES, and all columns from FOR PNL USE onwards (except text-only DOC/UNDOC/PRINCIPAL). Light cyan background (`#CCFFFF`), dark bold text, thin borders. Freeze pane at row 7 so headers stay visible during scroll. (`MaritimeReportController.cs`)
 
-## [2026-07-11]
 ### Added
 - Billing reversal (unpost) feature: new `ReverseBilling` procedure enum + `CanReverseBilling` permission; `ReverseBillingAsync` in `BillingService` resets status → `ForPosting`, reverts dispatch tickets → `ForBilling`, records `UnpostedBy/Date/Remarks`; blocked if billing is linked to a collection; `Reverse` action in `BillingController` + "Reverse (Unpost)" dropdown on Index with remarks prompt. (scope: `Enum.cs`, `UserAccess.cs`, `Billing.cs`, `UserAccessService.cs`, `UserAccessRepository.cs`, `BillingService.cs`, `BillingController.cs`, `Index.cshtml`, `Edit.cshtml`)
 ### Fixed
@@ -91,7 +87,6 @@
 ### Removed
 - Dead `BillAdjust`/`BillDispatch` entity models, their DbSet/Fluent config in `ApplicationDbContext`, and the `msap_bill_adjustments`/`msap_bill_dispatches` tables (new migration). These link tables from the legacy schema were unused by any business code — the dispatch-to-billing linkage and per-ticket pricing are fully covered by `DispatchTicket.BillingId` and the tariff fields on `DispatchTicket`. Also removed the unused `bill_adjust.csv`/`bill_dispatch.csv` from `Imports/` and the truncation statements from `MsapImportController.Reset()`.
 
-## [2026-07-09]
 ### Changed
 - Customer and Supplier area pages (12 CSHTML files) converted from old Bootstrap styling to modern-ui.css: Index pages use `modern-layout`, `modern-table`, `ModernTable.*` helpers with status badges and action dropdowns; Create/Edit pages use `modern-card`, `modern-grid`, breadcrumb headers, and `js-modern-select` for selects; Activate/Deactivate pages use styled modern cards; ExportIndex pages use `ModernTable.config/ajax` with `ModernAlert` warnings. (scope: `Areas/User/Views/{Customer,Supplier}/*.cshtml`)
 - `.modern-select-search input` gets `background-color: transparent` so it inherits the parent dropdown background instead of browser default — fixes gray bar in dark mode. (scope: `modern-ui.css`)
@@ -168,7 +163,6 @@
 - Experimental Tugboat Monitoring module (Timeline/Scheduling) — removed controller, service, view, JS, CSS, SignalR hub, nav entry
 - Cleared TugboatHub and PlanningHub dependencies from JobOrderController, DispatchTicketController, Program.cs, and tests
 
-## [2026-07-02]
 ### Added
 - Test cases with audit trail verification (scope: IBS.Tests)
 - Agent code-review to enforce standard controller patterns (scope: .opencode/)
