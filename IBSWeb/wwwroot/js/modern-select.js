@@ -80,11 +80,11 @@ const ModernSelect = {
                 $('.modern-select-trigger').not($trigger).removeClass('active');
                 $trigger.addClass('active');
                 $dropdown.addClass('show');
-                focusOpened = true; // ponytail: flag, not time — mobile focus fires before click with variable delay
+                focusOpened = true;
                 positionDropdown();
                 
                 if (isSearchable) {
-                    setTimeout(() => $dropdown.find('input').val('').trigger('input').focus(), 10);
+                    setTimeout(() => $dropdown.find('input').val('').trigger('input'), 10);
                 }
             }
         });
@@ -110,7 +110,7 @@ const ModernSelect = {
                 positionDropdown();
                 
                 if (isSearchable) {
-                    setTimeout(() => $dropdown.find('input').val('').trigger('input').focus(), 10);
+                    setTimeout(() => $dropdown.find('input').val('').trigger('input'), 10);
                 }
             } else {
                 $trigger.removeClass('active');
@@ -136,6 +136,8 @@ const ModernSelect = {
             e.stopPropagation();
             selectOption($(this));
         });
+
+        $dropdown.on('click', function(e) { e.stopPropagation(); });
         
         if (isSearchable) {
             const $input = $dropdown.find('input');
@@ -160,7 +162,7 @@ const ModernSelect = {
                 $optionsContainer.find('.modern-select-option.highlighted').removeClass('highlighted');
 
                 // Auto-select if there is exactly 1 matching option and term is at least 2 characters long
-                if (term.length >= 2) {
+                if (term.length >= 5) {
                     const $visibleOptions = $optionsContainer.find('.modern-select-option:not(.hidden)');
                     if ($visibleOptions.length === 1) {
                         selectOption($visibleOptions.first());
@@ -250,7 +252,7 @@ const ModernSelect = {
         });
 
         // Close on scroll to avoid disconnected dropdown
-        $(window).on('scroll.modernSelect resize.modernSelect', function() {
+        $(window).on('scroll.modernSelect', function() {
             $('.modern-select-dropdown').removeClass('show');
             $('.modern-select-trigger').removeClass('active');
         });

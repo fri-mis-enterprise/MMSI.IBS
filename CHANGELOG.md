@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-17]
+### Fixed
+- **ModernSelect mobile issues** — replaced time-based focus/click guard with flag to prevent dropdown toggling closed on mobile tap; removed `resize` handler that killed dropdown when mobile keyboard opened; added `stopPropagation` on dropdown click so clicking search/scrollbar doesn't bubble to document close handler; removed auto-focus on search input on open (keyboard no longer pops). Increased auto-pick threshold from 2 to 5 characters. (`modern-select.js`, `modern-ui.css`)
+
 ## [2026-07-16]
 ### Added
 - **SuperAdmin module** — new `Areas/SuperAdmin` with direct table editing for JobOrder, DispatchTicket, Billing, Collection. Seed-only role, field-level audit trail, remarks required, no hard deletes. (`SuperAdminService.cs`, `HomeController.cs`, `DataController.cs`, `Data/Index.cshtml`, `Home/Index.cshtml`, `Program.cs`, `DbSeeder.cs`, `UserAccessService.cs`, `_Layout.cshtml`)

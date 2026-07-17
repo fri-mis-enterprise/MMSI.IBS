@@ -637,6 +637,8 @@ table.dataTable tbody tr:hover {
 .modern-select-options {
     max-height: 250px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .modern-select-option {
