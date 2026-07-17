@@ -277,6 +277,60 @@
                     </li>
                 }
 
+                @if (User.IsInRole("SuperAdmin"))
+                {
+                    <!-- SuperAdmin mega menu -->
+                    <li class="mnav-item" data-mega role="none">
+                        <button class="mnav-trigger text-warning" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                            <span class="material-symbols-outlined text-warning">admin_panel_settings</span>
+                            SuperAdmin
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="mnav-mega" style="--mnav-cols:1; min-width:300px;" role="menu">
+                            <div class="mnav-mega-grid">
+                                <div>
+                                    <div class="mnav-section-label text-warning">⚠️ Red Zone</div>
+                                    <div class="mnav-link-list">
+                                        <a class="mnav-mega-link"
+                                           asp-area="SuperAdmin" asp-controller="Home" asp-action="Index"
+                                           role="menuitem">
+                                            <span class="material-symbols-outlined">dashboard</span>
+                                            <div>
+                                                <div class="mnav-link-title">Dashboard</div>
+                                                <div class="mnav-link-sub">SuperAdmin overview</div>
+                                            </div>
+                                        </a>
+                                        <a class="mnav-mega-link"
+                                           asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="JobOrder"
+                                           role="menuitem">
+                                            <span class="material-symbols-outlined">assignment</span>
+                                            <div><div class="mnav-link-title">Job Orders</div></div>
+                                        </a>
+                                        <a class="mnav-mega-link"
+                                           asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="DispatchTicket"
+                                           role="menuitem">
+                                            <span class="material-symbols-outlined">confirmation_number</span>
+                                            <div><div class="mnav-link-title">Dispatch Tickets</div></div>
+                                        </a>
+                                        <a class="mnav-mega-link"
+                                           asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="Billing"
+                                           role="menuitem">
+                                            <span class="material-symbols-outlined">receipt_long</span>
+                                            <div><div class="mnav-link-title">Billings</div></div>
+                                        </a>
+                                        <a class="mnav-mega-link"
+                                           asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="Collection"
+                                           role="menuitem">
+                                            <span class="material-symbols-outlined">payments</span>
+                                            <div><div class="mnav-link-title">Collections</div></div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                }
+
                 @if (await ModernHasMsapAccess())
                 {
                     <!-- MSAP References mega menu -->

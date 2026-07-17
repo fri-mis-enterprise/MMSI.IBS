@@ -104,6 +104,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
 builder.Services.AddScoped<IVesselScheduleService, VesselScheduleService>();
+builder.Services.AddScoped<SuperAdminService>();
 
 builder.Services.AddMemoryCache(options =>
 {

@@ -20,7 +20,7 @@ namespace IBS.Services
         public async Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default)
         {
             var user = await userManager.FindByIdAsync(id);
-            if (user != null && await userManager.IsInRoleAsync(user, "Admin"))
+            if (user != null && (await userManager.IsInRoleAsync(user, "Admin") || await userManager.IsInRoleAsync(user, "SuperAdmin")))
             {
                 return true;
             }

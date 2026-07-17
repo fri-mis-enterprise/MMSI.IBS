@@ -1,6 +1,10 @@
 # Changelog
 
 ## [2026-07-16]
+### Added
+- **SuperAdmin module** — new `Areas/SuperAdmin` with direct table editing for JobOrder, DispatchTicket, Billing, Collection. Seed-only role, field-level audit trail, remarks required, no hard deletes. (`SuperAdminService.cs`, `HomeController.cs`, `DataController.cs`, `Data/Index.cshtml`, `Home/Index.cshtml`, `Program.cs`, `DbSeeder.cs`, `UserAccessService.cs`, `_Layout.cshtml`)
+
+## [2026-07-16]
 ### Changed
 - Updated all NuGet packages to latest versions across 7 projects: Microsoft.AspNetCore.*/EntityFrameworkCore 10.0.9→10.0.10, EPPlus 8.6.0→8.6.1, Npgsql.EntityFrameworkCore.PostgreSQL 10.0.2→10.0.3, QuestPDF 2026.6.0→2026.7.1, System.Linq.Dynamic.Core 1.7.2→1.7.3, Google.Apis.Drive.v3 1.74.0.4135→1.75.0.4192, Quartz 3.18.1→3.18.2, Serilog.Settings.Configuration 10.0.0→10.0.1, Microsoft.NET.Test.Sdk 18.6.0→18.8.1, coverlet.collector 10.0.1→10.0.2, Microsoft.Playwright.Xunit 1.60.0→1.61.0. Also updated `dotnet-ef` global tool 10.0.3→10.0.10. (`.csproj` files across solution)
 

@@ -199,6 +199,23 @@
                                     </li>
                                 }
 
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">SuperAdmin</a>
+                                        <ul class="dropdown-menu">
+                                            <li><h6 class="dropdown-header text-warning">⚠️ Red Zone</h6></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="SuperAdmin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="JobOrder">Job Orders</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="DispatchTicket">Dispatch Tickets</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="Billing">Billings</a></li>
+                                            <li><a class="dropdown-item text-dark" asp-area="SuperAdmin" asp-controller="Data" asp-action="Index" asp-route-table="Collection">Collections</a></li>
+                                        </ul>
+                                    </li>
+                                }
+
+
                             @if (await HasMsapAccess())
                             {
                                 <li class="nav-item dropdown">

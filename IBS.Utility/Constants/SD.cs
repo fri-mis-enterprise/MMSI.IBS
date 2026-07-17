@@ -111,6 +111,8 @@ namespace IBS.Utility.Constants
             public const string Cancelled = "Cancelled";
             public const string Deleted = "Deleted";
             public const string ServiceRequestDeleted = "Service Request Deleted";
+
+            public static readonly string[] All = [Draft, Requested, Pending, ForTariff, ForApproval, Disapproved, ForBilling, Billed, Cancelled, Deleted, ServiceRequestDeleted];
         }
 
         public static class BillingStatus

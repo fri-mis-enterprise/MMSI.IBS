@@ -33,7 +33,7 @@ namespace IBS.DataAccess.Data
             }
 
             // 2. Seed Roles
-            string[] roleNames = { "Admin", "User" };
+            string[] roleNames = { "Admin", "User", "SuperAdmin" };
             foreach (var roleName in roleNames)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))
@@ -63,6 +63,7 @@ namespace IBS.DataAccess.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(adminUser, "Admin");
+                    await userManager.AddToRoleAsync(adminUser, "SuperAdmin");
                     await userManager.AddClaimAsync(adminUser, new System.Security.Claims.Claim("Company", "MMSI"));
                 }
             }
