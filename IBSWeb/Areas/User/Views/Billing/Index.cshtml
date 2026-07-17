@@ -129,14 +129,14 @@
                             if (row.status === "@SD.BillingStatus.ForPosting") {
                                 return ModernTable.render.dropdown([
                                     { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Post to Books', icon: 'send', onclick: `confirmPost(${row.msapBillingId})` },
-                                    { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})` }
+                                    { label: 'Post to Books', icon: 'send', onclick: `confirmPost(${row.msapBillingId})`, condition: !row.isMonthClosed },
+                                    { label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.msapBillingId}`, condition: !row.isMonthClosed },
+                                    { label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDelete(${row.msapBillingId})`, condition: !row.isMonthClosed }
                                 ]);
                             } else if (row.status === "@SD.BillingStatus.ForCollection") {
                                 return ModernTable.render.dropdown([
                                     { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Reverse (Unpost)', icon: 'undo', onclick: `confirmReverse(${row.msapBillingId})` }
+                                    { label: 'Reverse (Unpost)', icon: 'undo', onclick: `confirmReverse(${row.msapBillingId})`, condition: !row.isMonthClosed }
                                 ]);
                             } else {
                                 return `<a class="modern-btn-secondary" style="padding: 4px 12px; font-size: 11px;" href="${previewUrl}?id=${row.msapBillingId}">

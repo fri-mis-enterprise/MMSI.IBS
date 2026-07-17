@@ -102,7 +102,7 @@
                         className: "text-center",
                         render: (data, type, row) => ModernTable.render.dropdown([
                             { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapCollectionId}` },
-                            { label: 'Edit Record', icon: 'edit', url: `${editUrl}?id=${row.msapCollectionId}` }
+                            { label: 'Edit Record', icon: 'edit', url: `${editUrl}?id=${row.msapCollectionId}`, condition: !row.isMonthClosed }
                         ])
                     }
                 ]

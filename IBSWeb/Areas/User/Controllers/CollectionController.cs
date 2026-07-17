@@ -14,6 +14,7 @@ namespace IBSWeb.Areas.User.Controllers
     /// </summary>
     [Area("User")]
     public class CollectionController(
+        IUnitOfWork unitOfWork,
         CollectionService collectionService,
         ILogger<CollectionController> logger)
         : Controller
@@ -148,6 +149,13 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 var (data, filtered, total) = await collectionService.GetPagedCollectionsAsync(parameters, cancellationToken);
+
+                var closedMonths = (await unitOfWork.PostedPeriod.GetAllAsync(cancellationToken))
+                    .Where(p => p.IsClosed)
+                    .Select(p => (p.Year, p.Month))
+                    .ToHashSet();
+                foreach (var item in data)
+                    item.IsMonthClosed = closedMonths.Contains((item.Date.Year, item.Date.Month));
 
                 return Json(new
                 {

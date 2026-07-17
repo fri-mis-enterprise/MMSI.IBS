@@ -103,6 +103,9 @@ namespace IBS.Services
                     }
                 }
 
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+
                 if (model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
                 {
                     var start = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
@@ -149,6 +152,9 @@ namespace IBS.Services
                 {
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
+
+                var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
+                if (guard != null) return guard;
 
                 if (currentModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == currentModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
                 {
@@ -310,6 +316,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 string auditMessage;
                 string documentType = "Tariff";
                 if (isEdit)
@@ -423,6 +432,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 model.Status = SD.DispatchTicketStatus.ForBilling;
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -459,6 +471,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 model.Status = SD.DispatchTicketStatus.Disapproved;
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -486,6 +501,12 @@ namespace IBS.Services
             {
                 var tickets = (await unitOfWork.DispatchTicket.GetAllAsync(
                     dt => ids.Contains(dt.DispatchTicketId), cancellationToken)).ToList();
+
+                foreach (var ticket in tickets)
+                {
+                    var guard = await GuardClosedPeriodAsync(ticket.Date, cancellationToken);
+                    if (guard != null) return guard;
+                }
 
                 var toApprove = tickets.Where(t => t.Status == SD.DispatchTicketStatus.ForApproval).ToList();
                 if (toApprove.Count == 0)
@@ -535,6 +556,12 @@ namespace IBS.Services
             {
                 var tickets = (await unitOfWork.DispatchTicket.GetAllAsync(
                     dt => ids.Contains(dt.DispatchTicketId), cancellationToken)).ToList();
+
+                foreach (var ticket in tickets)
+                {
+                    var guard = await GuardClosedPeriodAsync(ticket.Date, cancellationToken);
+                    if (guard != null) return guard;
+                }
 
                 var toSet = tickets.Where(t => t.Status is SD.DispatchTicketStatus.ForTariff or SD.DispatchTicketStatus.Pending).ToList();
                 if (toSet.Count == 0)
@@ -623,6 +650,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 if (model.Status != SD.DispatchTicketStatus.ForTariff &&
                     model.Status != SD.DispatchTicketStatus.Pending &&
                     model.Status != SD.DispatchTicketStatus.Disapproved)
@@ -660,6 +690,9 @@ namespace IBS.Services
                 {
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
+
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
 
                 if (model.Status != SD.DispatchTicketStatus.Deleted)
                 {
@@ -699,6 +732,9 @@ namespace IBS.Services
                 {
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
                 }
+
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
 
                 if (!string.IsNullOrEmpty(model.ImageName))
                 {
@@ -840,6 +876,13 @@ namespace IBS.Services
                 totalBilling = ticket.TotalBilling.ToString("N2"),
                 totalNetRevenue = ticket.TotalNetRevenue.ToString("N2")
             };
+        }
+
+        private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
+        {
+            if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+                return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            return null;
         }
     }
 }

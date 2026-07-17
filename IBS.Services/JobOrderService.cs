@@ -76,6 +76,9 @@ namespace IBS.Services
         {
             try
             {
+                var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
+                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+
                 var timeError = ValidateTimeRange(jobOrder.PlannedStartTime, jobOrder.PlannedEndTime);
                 if (timeError != null)
                 {
@@ -109,6 +112,9 @@ namespace IBS.Services
                 {
                     return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
                 }
+
+                var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
+                if (guard != null) return guard;
 
                 if (jobOrder.Status == SD.JobOrderStatus.Closed)
                 {
@@ -266,6 +272,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 var tugboat = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
                 if (tugboat == null)
                 {
@@ -335,6 +344,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Job Order not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
                 string? tugboatName = tug?.TugboatName;
 
@@ -385,6 +397,13 @@ namespace IBS.Services
             {
                 return "Planned End Time must be strictly after Planned Start Time.";
             }
+            return null;
+        }
+
+        private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
+        {
+            if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+                return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
             return null;
         }
     }

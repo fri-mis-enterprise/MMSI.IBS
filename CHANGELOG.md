@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-07-17]
+### Added
+- **Posting Periods (Monthly Lock)** — new `MsapPostedPeriod` entity tracks monthly close/open state. Admin UI at `/Admin/PostedPeriod` to close/open months manually. All MSAP write operations (create, edit, delete, post, reverse) are guarded: if the transaction's month is closed, the service returns a failure message. Action buttons in index views are hidden when `isMonthClosed` is true, passed via `[NotMapped]` flag on all 4 core entities (JobOrder, DispatchTicket, Billing, Collection). (`MsapPostedPeriod.cs`, `PostedPeriodController.cs`, `PostedPeriodRepository.cs`, `ApplicationDbContext.cs`, `IUnitOfWork.cs`, `Enum.cs`, 4 service files, 4 controllers, 4 Index views)
+### Fixed
+- **PostedPeriod audit trail** — Close and Open actions now write to `AuditTrail` table. Added `using IBS.Models;` import. Extracted `username` variable to avoid repeating `User.Identity?.Name` inline. (`PostedPeriodController.cs`)
+
+## [2026-07-17]
 ### Fixed
 - **ModernSelect mobile issues** — replaced time-based focus/click guard with flag to prevent dropdown toggling closed on mobile tap; removed `resize` handler that killed dropdown when mobile keyboard opened; added `stopPropagation` on dropdown click so clicking search/scrollbar doesn't bubble to document close handler; removed auto-focus on search input on open (keyboard no longer pops). Increased auto-pick threshold from 2 to 5 characters. (`modern-select.js`, `modern-ui.css`)
 

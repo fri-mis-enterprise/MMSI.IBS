@@ -72,6 +72,9 @@ namespace IBS.Models.MSAP
         public Tugboat? PreferredTugboat { get; set; }
 
         public virtual ICollection<DispatchTicket> DispatchTickets { get; set; } = new List<DispatchTicket>();
+
+        [NotMapped]
+        public bool IsMonthClosed { get; set; }
     }
 }
 

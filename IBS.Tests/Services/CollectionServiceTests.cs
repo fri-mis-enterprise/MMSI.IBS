@@ -46,6 +46,10 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
                 .Returns((Func<Task> action, CancellationToken ct) => action());
 
+            var mockPostedPeriod = new Mock<IPostedPeriodRepository>();
+            mockPostedPeriod.Setup(p => p.IsMonthClosedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _mockUnitOfWork.Setup(u => u.PostedPeriod).Returns(mockPostedPeriod.Object);
+
             _service = new CollectionService(_mockUnitOfWork.Object, _mockLogger.Object);
         }
 

@@ -159,38 +159,38 @@
                                 label: 'Set Tariff',
                                 icon: 'payments',
                                 url: `${setTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
-                                condition: row.status === "@SD.DispatchTicketStatus.ForTariff" && row.customerId !== null
+                                condition: row.status === "@SD.DispatchTicketStatus.ForTariff" && row.customerId !== null && !row.isMonthClosed
                             },
                             {
                                 label: 'Edit Tariff',
                                 icon: 'edit_note',
                                 url: `${editTariffUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
-                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval" && row.customerId !== null
+                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval" && row.customerId !== null && !row.isMonthClosed
                             },
                             {
                                 label: 'Edit Ticket',
                                 icon: 'edit',
                                 url: `${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
-                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status)
+                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status) && !row.isMonthClosed
                             },
                             {
                                 label: 'Approve Tariff',
                                 icon: 'check_circle',
                                 onclick: `confirmApprove(${row.dispatchTicketId})`,
-                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval"
+                                condition: row.status === "@SD.DispatchTicketStatus.ForApproval" && !row.isMonthClosed
                             },
                             {
                                 label: 'Delete Ticket',
                                 icon: 'delete',
                                 isError: true,
                                 onclick: `confirmDeleteTicket(${row.dispatchTicketId})`,
-                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.Disapproved"].includes(row.status)
+                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.Disapproved"].includes(row.status) && !row.isMonthClosed
                             },
                             {
                                 label: 'Restore Ticket',
                                 icon: 'restore',
                                 onclick: `confirmRestoreTicket(${row.dispatchTicketId})`,
-                                condition: row.status === "Deleted"
+                                condition: row.status === "Deleted" && !row.isMonthClosed
                             }
                         ])
                     }

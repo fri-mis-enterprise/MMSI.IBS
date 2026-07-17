@@ -30,6 +30,9 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(_mockAuditTrail.Object);
             _mockUnitOfWork.Setup(u => u.JobOrder).Returns(_mockJobOrderRepo.Object);
             _mockUnitOfWork.Setup(u => u.Vessel).Returns(new Mock<IVesselRepository>().Object);
+            var mockPostedPeriod = new Mock<IPostedPeriodRepository>();
+            mockPostedPeriod.Setup(p => p.IsMonthClosedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _mockUnitOfWork.Setup(u => u.PostedPeriod).Returns(mockPostedPeriod.Object);
 
             _service = new JobOrderService(_mockUnitOfWork.Object, _mockLogger.Object);
         }

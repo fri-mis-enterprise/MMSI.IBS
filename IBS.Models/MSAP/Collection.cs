@@ -102,6 +102,8 @@ namespace IBS.Models.MSAP
 
         #endregion
 
+        [NotMapped]
+        public bool IsMonthClosed { get; set; }
     }
 }
 

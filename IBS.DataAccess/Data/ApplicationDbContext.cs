@@ -68,6 +68,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<BankAccount> BankAccounts { get; set; }
 
+        public DbSet<MsapPostedPeriod> MsapPostedPeriods { get; set; }
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
@@ -246,6 +248,11 @@ namespace IBS.DataAccess.Data
                 a.HasIndex(x => x.RecordId);
                 a.HasIndex(x => x.ReferenceNumber);
                 a.HasIndex(x => x.Date);
+            });
+
+            builder.Entity<MsapPostedPeriod>(p =>
+            {
+                p.HasIndex(x => new { x.Year, x.Month }).IsUnique();
             });
 
             #endregion

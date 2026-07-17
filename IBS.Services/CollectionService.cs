@@ -29,6 +29,9 @@ namespace IBS.Services
         {
             try
             {
+                var guard = await GuardClosedPeriodAsync(viewModel.Date, cancellationToken);
+                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+
                 int collectionId = 0;
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
@@ -108,6 +111,9 @@ namespace IBS.Services
                     {
                         throw new InvalidOperationException("Collection not found.");
                     }
+
+                    var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
+                    if (guard != null) throw new InvalidOperationException(guard.Message);
 
                     if (currentModel.CustomerId != viewModel.CustomerId)
                     {
@@ -410,6 +416,13 @@ namespace IBS.Services
                 }
             }
             return list;
+        }
+
+        private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
+        {
+            if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+                return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            return null;
         }
     }
 }

@@ -183,6 +183,9 @@ namespace IBS.Models.MSAP
         public List<SelectListItem>? CustomerPrincipal { get; set; }
 
         #endregion ---Select Lists---
+
+        [NotMapped]
+        public bool IsMonthClosed { get; set; }
     }
 }
 

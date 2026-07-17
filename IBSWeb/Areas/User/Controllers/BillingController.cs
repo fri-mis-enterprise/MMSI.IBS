@@ -440,6 +440,13 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var (data, filtered, total) = await billingService.GetPagedBillingsAsync(parameters, cancellationToken);
 
+                var closedMonths = (await unitOfWork.PostedPeriod.GetAllAsync(cancellationToken))
+                    .Where(p => p.IsClosed)
+                    .Select(p => (p.Year, p.Month))
+                    .ToHashSet();
+                foreach (var item in data)
+                    item.IsMonthClosed = closedMonths.Contains((item.Date.Year, item.Date.Month));
+
                 return Json(new
                 {
                     draw = parameters.Draw,

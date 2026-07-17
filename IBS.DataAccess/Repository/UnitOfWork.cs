@@ -78,6 +78,12 @@ namespace IBS.DataAccess.Repository
 
         #endregion
 
+        #region -- Posting Period --
+
+        public IPostedPeriodRepository PostedPeriod { get; }
+
+        #endregion
+
         public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
@@ -121,6 +127,12 @@ namespace IBS.DataAccess.Repository
             UserAccess = new UserAccessRepository(_db);
             Vessel = new VesselRepository(_db);
             VesselSchedule = new VesselScheduleRepository(_db);
+
+            #endregion
+
+            #region -- Posting Period --
+
+            PostedPeriod = new PostedPeriodRepository(_db);
 
             #endregion
         }

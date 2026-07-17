@@ -197,6 +197,9 @@ namespace IBS.Models.MSAP
         public Service Service { get; set; } = null!; //carries the columns of one record
 
         #endregion ---Columns with Table relations---
+
+        [NotMapped]
+        public bool IsMonthClosed { get; set; }
     }
 }
 

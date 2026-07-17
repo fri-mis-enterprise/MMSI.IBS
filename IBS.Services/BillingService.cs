@@ -25,6 +25,9 @@ namespace IBS.Services
         {
             try
             {
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+
                 if (model.JobOrderId is 0)
                 {
                     model.JobOrderId = null;
@@ -183,13 +186,18 @@ namespace IBS.Services
         {
             try
             {
+                var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
+                if (billing == null)
+                {
+                    return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
+                }
+
+                var guard = await GuardClosedPeriodAsync(billing.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
-                    var model = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
-                    if (model == null)
-                    {
-                        throw new InvalidOperationException("Billing not found.");
-                    }
+                    var model = billing;
 
                     if (model.Status != SD.BillingStatus.ForPosting)
                     {
@@ -351,6 +359,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 if (currentModel.Status != SD.BillingStatus.ForPosting)
                 {
                     return ServiceResult.Failure("Only billings with 'For Posting' status can be edited.");
@@ -434,6 +445,9 @@ namespace IBS.Services
                     return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
                 }
 
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
+
                 var linkedTickets = await unitOfWork.DispatchTicket
                     .GetAllAsync(dt => dt.BillingId == id, cancellationToken);
                 foreach (var dt in linkedTickets)
@@ -464,20 +478,25 @@ namespace IBS.Services
                 return ServiceResult.Failure($"Failed to delete billing: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
-
         public async Task<ServiceResult> ReverseBillingAsync(int id, string username, string? remarks, CancellationToken cancellationToken)
         {
             try
             {
-                string? billingNumber = null;
+                var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
+                if (billing == null)
+                {
+                    return ServiceResult.Failure("Billing not found.", ServiceResultStatus.NotFound);
+                }
+
+                var guard = await GuardClosedPeriodAsync(billing.Date, cancellationToken);
+                if (guard != null) return guard;
+
+                string? billingNumber = billing.MsapBillingNumber;
 
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
-                    var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
-                    if (billing == null)
-                        throw new InvalidOperationException("Billing not found.");
-
-                    billingNumber = billing.MsapBillingNumber;
+                    billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, cancellationToken);
+                    billingNumber = billing!.MsapBillingNumber;
 
                     if (billing.Status != SD.BillingStatus.ForCollection)
                         throw new InvalidOperationException($"Only billings with '{SD.BillingStatus.ForCollection}' status can be reversed.");
@@ -719,6 +738,13 @@ namespace IBS.Services
                 businessStyle = p.BusinessType,
                 terms = p.Terms
             }).ToList();
+        }
+
+        private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
+        {
+            if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+                return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            return null;
         }
     }
 }

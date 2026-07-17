@@ -48,6 +48,10 @@ namespace IBS.Tests.Services
             _mockUnitOfWork.Setup(u => u.AuditTrail).Returns(new Mock<IAuditTrailRepository>().Object);
             _mockUnitOfWork.Setup(u => u.BankAccount).Returns(new Mock<IBankAccountRepository>().Object);
 
+            var mockPostedPeriod = new Mock<IPostedPeriodRepository>();
+            mockPostedPeriod.Setup(p => p.IsMonthClosedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _mockUnitOfWork.Setup(u => u.PostedPeriod).Returns(mockPostedPeriod.Object);
+
             _mockUnitOfWork.Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
                 .Callback<Func<Task>, CancellationToken>(async (action, _) => await action())
                 .Returns(Task.CompletedTask);

@@ -618,6 +618,13 @@ namespace IBSWeb.Areas.User.Controllers
                     dt.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(dt.VideoName!);
                 }
 
+                var closedMonths = (await unitOfWork.PostedPeriod.GetAllAsync(cancellationToken))
+                    .Where(p => p.IsClosed)
+                    .Select(p => (p.Year, p.Month))
+                    .ToHashSet();
+                foreach (var dt in data)
+                    dt.IsMonthClosed = closedMonths.Contains((dt.Date.Year, dt.Date.Month));
+
                 return Json(new
                 {
                     draw = parameters.Draw,

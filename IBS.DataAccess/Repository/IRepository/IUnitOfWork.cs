@@ -83,5 +83,11 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #endregion
 
+        #region -- Posting Period --
+
+        IPostedPeriodRepository PostedPeriod { get; }
+
+        #endregion
+
     }
 }

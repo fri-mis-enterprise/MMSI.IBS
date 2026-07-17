@@ -39,6 +39,12 @@ namespace IBS.Models.Enums
 
         #endregion -- Treasury --
 
+        #region -- Posting Period --
+
+        ManagePostedPeriod,
+
+        #endregion -- Posting Period --
+
         #region -- MSAP Import --
 
         ManageMsapImport,
