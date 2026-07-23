@@ -59,16 +59,6 @@ namespace IBS.Services
                     .ToList()
                 : new List<SelectListItem>();
 
-            var tugboats = await unitOfWork.Tugboat.GetAllAsync(cancellationToken: cancellationToken);
-            viewModel.Tugboats = tugboats
-                .OrderBy(t => t.TugboatName)
-                .Select(t => new SelectListItem
-                {
-                    Value = t.TugboatId.ToString(),
-                    Text = t.TugboatName
-                })
-                .ToList();
-
             return viewModel;
         }
 

@@ -367,8 +367,31 @@
                 $('#TotalNetRevenue').val(formatNumber(totalRevenue));
             }
 
+            // Apply default rates from customer
+            function fetchDefaultRates() {
+                const customerId = $('#CustomerId').val();
+                const dispatchTicketId = $('#DispatchTicketId').val();
+                if (!customerId) return;
+
+                $.post('@Url.Action("CheckForTariffRate", "DispatchTicket", new { area = "User" })', 
+                    { customerId: customerId, dispatchTicketId: dispatchTicketId }, 
+                    function(result) {
+                        if (result.exists) {
+                            dispatchRateInput.val(result.dispatch);
+                            bafRateInput.val(result.baf);
+                            dispatchDiscountInput.val(result.dispatchDiscount);
+                            bafDiscountInput.val(result.bafDiscount);
+                            
+                            ModernAlert.success('Default Rates Applied');
+                            ValueChange();
+                        }
+                    }
+                );
+            }
+
             $('input').on('input change', ValueChange);
             ValueChange();
+            fetchDefaultRates();
 
             $('#submitButton').on('click', function (e) {
                 e.preventDefault();

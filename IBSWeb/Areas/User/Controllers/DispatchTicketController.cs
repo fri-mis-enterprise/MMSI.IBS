@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.DTOs;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
@@ -66,6 +67,12 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? videoFile,
             CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
+                return View(viewModel);
+            }
+
             var result = await dispatchTicketService.CreateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
@@ -81,7 +88,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             TempData["error"] = result.Message;
-            await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
+            viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
             return View(viewModel);
         }
 
@@ -97,7 +104,7 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.CreateDispatchTicket,
             ProcedureEnum.EditDispatchTicket,
             ProcedureEnum.DeleteDispatchTicket)]
-        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken = default)
         {
             var model = await dispatchTicketService.GetDispatchTicketByIdAsync(id, cancellationToken);
             if (model == null)
@@ -194,11 +201,24 @@ namespace IBSWeb.Areas.User.Controllers
             TariffViewModel viewModel,
             string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
         {
+            if (viewModel.CustomerId is null or 0)
+            {
+                TempData["error"] = "Customer is required before setting tariff.";
+                return RedirectToAction(nameof(SetTariff), new { id = viewModel.DispatchTicketId, filterType });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                TempData["error"] = errors;
+                return RedirectToAction(nameof(SetTariff), new { id = viewModel.DispatchTicketId, filterType });
+            }
+
             var model = new DispatchTicket
             {
                 DispatchTicketId = viewModel.DispatchTicketId,
                 JobOrderId = viewModel.JobOrderId,
-                CustomerId = viewModel.CustomerId ?? 0,
+                CustomerId = viewModel.CustomerId.Value,
                 DispatchRate = viewModel.DispatchRate ?? 0,
                 DispatchDiscount = viewModel.DispatchDiscount ?? 0,
                 DispatchBillingAmount = viewModel.DispatchBillingAmount,
@@ -308,11 +328,24 @@ namespace IBSWeb.Areas.User.Controllers
             TariffViewModel viewModel,
             string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
         {
+            if (viewModel.CustomerId is null or 0)
+            {
+                TempData["error"] = "Customer is required before editing tariff.";
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId, filterType });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                TempData["error"] = errors;
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId, filterType });
+            }
+
             var model = new DispatchTicket
             {
                 DispatchTicketId = viewModel.DispatchTicketId,
                 JobOrderId = viewModel.JobOrderId,
-                CustomerId = viewModel.CustomerId ?? 0,
+                CustomerId = viewModel.CustomerId.Value,
                 DispatchRate = viewModel.DispatchRate ?? 0,
                 DispatchDiscount = viewModel.DispatchDiscount ?? 0,
                 DispatchBillingAmount = viewModel.DispatchBillingAmount,
@@ -385,7 +418,6 @@ namespace IBSWeb.Areas.User.Controllers
             viewModel = await dispatchTicketService.PopulateSelectListsAsync(viewModel, cancellationToken);
 
             ViewData["PortId"] = model.Terminal.Port.PortId;
-            ViewData["JobOrderId"] = viewModel.JobOrderId;
             return View(viewModel);
         }
 
@@ -393,6 +425,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Processes the update of basic information for a Dispatch Ticket.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.", "DispatchTicket")]
         public async Task<IActionResult> EditTicket(
             ServiceRequestViewModel viewModel,
@@ -401,6 +434,12 @@ namespace IBSWeb.Areas.User.Controllers
             string? filterType,
             CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                viewModel = await dispatchTicketService.PopulateSelectListsAsync(viewModel, cancellationToken);
+                return View(viewModel);
+            }
+
             var result = await dispatchTicketService.UpdateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
@@ -494,6 +533,7 @@ namespace IBSWeb.Areas.User.Controllers
                 SD.DispatchTicketStatus.ForApproval,
                 SD.DispatchTicketStatus.ForBilling,
                 SD.DispatchTicketStatus.Billed,
+                SD.DispatchTicketStatus.Cancelled,
                 SD.DispatchTicketStatus.Disapproved,
                 SD.DispatchTicketStatus.Deleted
             };
@@ -636,14 +676,14 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get dispatch tickets.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { error = ex.Message, draw = parameters.Draw, recordsTotal = 0, recordsFiltered = 0, data = Array.Empty<DispatchTicket>() });
             }
         }
 
         /// <summary>
         /// Checks if a tariff rate exists for a given customer and Dispatch Ticket criteria.
         /// </summary>
+        [HttpPost]
         public async Task<IActionResult> CheckForTariffRate(
             int customerId, int dispatchTicketId, CancellationToken cancellationToken)
         {
@@ -686,6 +726,25 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         /// <summary>
+        /// Deletes the associated video from a Dispatch Ticket and cloud storage.
+        /// </summary>
+        public async Task<IActionResult> DeleteVideo(int id, string filterType, CancellationToken cancellationToken)
+        {
+            var result = await dispatchTicketService.DeleteVideoAsync(id, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+            }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+
+            return RedirectToAction(nameof(Index), new { filterType });
+        }
+
+        /// <summary>
         /// Searches for customers matching a search term.
         /// </summary>
         [HttpGet]
@@ -696,15 +755,6 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         #endregion
-    }
-
-    public class BatchTariffRequest
-    {
-        public List<int> Ids { get; set; } = [];
-        public decimal DispatchRate { get; set; }
-        public decimal BafRate { get; set; }
-        public string ChargeType { get; set; } = "Per hour";
-        public string ChargeType2 { get; set; } = "Per hour";
     }
 
 }

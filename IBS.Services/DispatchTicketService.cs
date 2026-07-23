@@ -754,6 +754,37 @@ namespace IBS.Services
             }
         }
 
+        public async Task<ServiceResult> DeleteVideoAsync(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
+                if (model == null)
+                {
+                    return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
+                }
+
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null) return guard;
+
+                if (!string.IsNullOrEmpty(model.VideoName))
+                {
+                    await cloudStorageService.DeleteFileAsync(model.VideoName);
+                }
+
+                model.VideoName = null;
+                model.VideoSavedUrl = null;
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult.Success("Video Deleted Successfully!");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to delete video.");
+                return ServiceResult.Failure($"Failed to delete video: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
         public async Task<(IEnumerable<DispatchTicket> Data, int RecordsFiltered, int TotalRecords)> GetPagedDispatchTicketsAsync(DataTablesParameters parameters, string filterType, CancellationToken cancellationToken)
         {
             return await unitOfWork.DispatchTicket.GetPagedDispatchTicketsAsync(parameters, filterType, cancellationToken);

@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-07-23]
+### Changed
+- **JobOrder ViewModel cleanup** — Removed deprecated `RequiredTugCount`, `PreferredTugboatId`, `Tugboats` select list from `JobOrderViewModel` and its population in `JobOrderService.PopulateJobOrderViewModelAsync`. These fields were never rendered in the Create/Edit views. (`JobOrderViewModel.cs`, `JobOrderService.cs`)
+### Added
+- **DispatchTicket DeleteVideo** — Added `DeleteVideo` service method and controller action (mirrors `DeleteImage`), fixing 404 when clicking delete video on EditTicket page. (`DispatchTicketService.cs`, `DispatchTicketController.cs`)
+- **DispatchTicket BatchTariffRequest DTO** — Moved inline class to `IBS.DTOs`. (`BatchTariffRequest.cs`)
+### Fixed
+- **Edit POST data loss** — On validation or business rule failure, the Edit POST action now re-renders the form with ModelState instead of redirecting to Details (which lost all user input). Also correctly provides `ViewData["HasTickets"]` and `ViewData["JobOrderNumber"]` on re-render. (`JobOrderController.cs`)
+- **MapToEntity includes JobOrderId** — `MapToEntity` now maps `JobOrderId` from the ViewModel, eliminating the redundant post-map assignment in the Edit POST action. (`JobOrderController.cs`)
+- **Details Edit button hidden when Closed** — The "Edit Details" button on the Details page is now only shown when `Status == Open`, matching the server-side guard on the Edit GET action. (`Details.cshtml`)
+- **DispatchTicket DeleteVideo 404** — `EditTicket.cshtml` called `DeleteVideo` action that didn't exist on `DispatchTicketController`; added action and service method. (`DispatchTicketController.cs`, `DispatchTicketService.cs`)
+- **DispatchTicket DataTables error response** — `GetDispatchTicketLists` catch block returned a redirect (broken JSON expectation); now returns valid JSON error envelope. (`DispatchTicketController.cs`)
+- **DispatchTicket missing `[ValidateAntiForgeryToken]`** — `EditTicket` POST action was missing the attribute; added. (`DispatchTicketController.cs`)
+- **DispatchTicket missing `[HttpPost]` on `CheckForTariffRate`** — Action accepted both verbs; narrowed to POST to match caller. (`DispatchTicketController.cs`)
+- **DispatchTicket `ChangeStatus` excluded `Cancelled`** — Added `Cancelled` to valid target statuses HashSet. (`DispatchTicketController.cs`)
+- **DispatchTicket `CustomerId` zero guard** — SetTariff/EditTariff POST now rejects null/zero `CustomerId` before mapping (was silently passing 0 as FK). (`DispatchTicketController.cs`)
+- **DispatchTicket `ModelState.IsValid` checks** — All 4 data POST actions now validate ModelState before calling service; Create/EditTicket return View with validation summary, SetTariff/EditTariff collect errors into TempData. (`DispatchTicketController.cs`)
+- **DispatchTicket `Preview` CancellationToken default** — Added `= default` for consistency. (`DispatchTicketController.cs`)
+- **DispatchTicket Index filter used bare string** — `Index.cshtml` used `'Deleted'` literal instead of `@SD.DispatchTicketStatus.Deleted` constant. (`Index.cshtml`)
+- **DispatchTicket EditTariff missing default rates** — `fetchDefaultRates()` was not called on page load (SetTariff had it, EditTariff didn't). (`EditTariff.cshtml`)
+- **DispatchTicket dead ViewData** — Removed unused `ViewData["JobOrderId"]` from EditTicket GET. (`DispatchTicketController.cs`)
+- **DispatchTicket `PopulateDispatchTicketViewModelAsync` result unassigned** — Create POST error path wasn't using the returned ViewModel (select lists not populated on re-render). (`DispatchTicketController.cs`)
+
 ## [2026-07-17]
 ### Added
 - **Posting Periods (Monthly Lock)** — new `MsapPostedPeriod` entity tracks monthly close/open state. Admin UI at `/Admin/PostedPeriod` to close/open months manually. All MSAP write operations (create, edit, delete, post, reverse) are guarded: if the transaction's month is closed, the service returns a failure message. Action buttons in index views are hidden when `isMonthClosed` is true, passed via `[NotMapped]` flag on all 4 core entities (JobOrder, DispatchTicket, Billing, Collection). (`MsapPostedPeriod.cs`, `PostedPeriodController.cs`, `PostedPeriodRepository.cs`, `ApplicationDbContext.cs`, `IUnitOfWork.cs`, `Enum.cs`, 4 service files, 4 controllers, 4 Index views)

@@ -23,9 +23,12 @@
                 </div>
             </div>
             <div class="flex gap-2" style="flex-wrap: wrap;">
-                <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary" data-hotkey="e">
-                    <span class="material-symbols-outlined">edit</span> Edit Details
-                </a>
+                @if (Model.Status == SD.JobOrderStatus.Open)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary" data-hotkey="e">
+                        <span class="material-symbols-outlined">edit</span> Edit Details
+                    </a>
+                }
 
                 <a asp-action="Index" class="modern-btn-secondary">
                     <span class="material-symbols-outlined">arrow_back</span> Back

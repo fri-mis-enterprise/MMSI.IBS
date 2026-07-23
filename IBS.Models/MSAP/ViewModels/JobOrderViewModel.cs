@@ -45,13 +45,6 @@ namespace IBS.Models.MSAP.ViewModels
         [Display(Name = "Planned End Time")]
         public DateTime? PlannedEndTime { get; set; }
 
-        [Display(Name = "Preferred Tugboat")]
-        public int? PreferredTugboatId { get; set; }
-
-        [Display(Name = "Required Tug Count")]
-        [Range(1, 10, ErrorMessage = "Tug count must be between 1 and 10")]
-        public int RequiredTugCount { get; set; } = 1;
-
         public string? Remarks { get; set; }
 
         #region ---Select Lists---
@@ -63,8 +56,6 @@ namespace IBS.Models.MSAP.ViewModels
         public List<SelectListItem> Ports { get; set; } = new();
 
         public List<SelectListItem> Terminals { get; set; } = new();
-
-        public List<SelectListItem> Tugboats { get; set; } = new();
 
         #endregion
     }

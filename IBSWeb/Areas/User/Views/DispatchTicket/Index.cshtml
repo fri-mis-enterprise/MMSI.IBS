@@ -217,9 +217,9 @@
                 else if (id === 'filterDisapproved') status = '@SD.DispatchTicketStatus.Disapproved';
                 else if (id === 'filterForBilling') status = '@SD.DispatchTicketStatus.ForBilling';
                 else if (id === 'filterBilled') status = '@SD.DispatchTicketStatus.Billed';
-                else if (id === 'filterDeleted') status = 'Deleted';
+                else if (id === 'filterDeleted') status = '@SD.DispatchTicketStatus.Deleted';
 
-                filterType = status === 'Deleted' ? 'deleted' : status ? '' : '';
+                filterType = status === '@SD.DispatchTicketStatus.Deleted' ? 'deleted' : status ? '' : '';
                 table.column(10).search(status).draw();
                 updateUrl(status);
                 updateFilterButtons(status);
@@ -240,7 +240,7 @@
                 else if (status === "@SD.DispatchTicketStatus.Disapproved") $('#filterDisapproved').addClass('active');
                 else if (status === "@SD.DispatchTicketStatus.ForBilling") $('#filterForBilling').addClass('active');
                 else if (status === "@SD.DispatchTicketStatus.Billed") $('#filterBilled').addClass('active');
-                else if (status === "Deleted") $('#filterDeleted').addClass('active');
+                else if (status === "@SD.DispatchTicketStatus.Deleted") $('#filterDeleted').addClass('active');
             }
         });
 

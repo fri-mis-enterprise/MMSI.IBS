@@ -196,8 +196,6 @@ namespace IBSWeb.Areas.User.Controllers
                 VoyageNumber = jobOrder.VoyageNumber,
                 PlannedStartTime = jobOrder.PlannedStartTime,
                 PlannedEndTime = jobOrder.PlannedEndTime,
-                PreferredTugboatId = jobOrder.PreferredTugboatId,
-                RequiredTugCount = jobOrder.RequiredTugCount,
                 Remarks = jobOrder.Remarks
             };
 
@@ -216,7 +214,6 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(JobOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var jobOrder = MapToEntity(viewModel);
-            jobOrder.JobOrderId = viewModel.JobOrderId;
 
             var result = await jobOrderService.UpdateJobOrderAsync(jobOrder, User.Identity?.Name ?? "Unknown", cancellationToken);
 
@@ -231,8 +228,12 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            TempData["error"] = result.Message;
-            return RedirectToAction(nameof(Details), new { id = jobOrder.JobOrderId });
+            var jo = await jobOrderService.GetJobOrderByIdAsync(viewModel.JobOrderId, cancellationToken);
+            ViewData["JobOrderNumber"] = jo?.JobOrderNumber ?? "";
+            ViewData["HasTickets"] = jo?.DispatchTickets.Any() ?? false;
+            await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
+            ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
+            return View(viewModel);
         }
 
         #endregion
@@ -305,6 +306,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             return new JobOrder
             {
+                JobOrderId = viewModel.JobOrderId,
                 Date = viewModel.Date,
                 CustomerId = viewModel.CustomerId,
                 VesselId = viewModel.VesselId,
@@ -314,8 +316,6 @@ namespace IBSWeb.Areas.User.Controllers
                 VoyageNumber = viewModel.VoyageNumber,
                 PlannedStartTime = viewModel.PlannedStartTime,
                 PlannedEndTime = viewModel.PlannedEndTime,
-                PreferredTugboatId = viewModel.PreferredTugboatId,
-                RequiredTugCount = viewModel.RequiredTugCount,
                 Remarks = viewModel.Remarks
             };
         }
