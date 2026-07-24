@@ -215,13 +215,14 @@
                     </div>
                     <div class="flex-grow">
                         @{
-                            // ponytail: Correct VAT and WHT math where Model.Amount is already the gross/VAT-inclusive amount
+                            // ponytail: Correct VAT, WHT, and WVAT math where Model.Amount is already the gross/VAT-inclusive amount
                             var grossAmount = Model.Amount;
                             var vatAmount = Model.IsVatable ? Math.Round(grossAmount * 0.12m / 1.12m, 2) : 0m;
                             var netOfVat = grossAmount - vatAmount;
                             var whtRate = 0.02m;
                             var whtAmount = Model.PrintWht ? Math.Round(netOfVat * whtRate, 2) : 0m;
-                            var amountDue = netOfVat - whtAmount;
+                            var wvatAmount = Model.PrintWht && Model.Customer?.WithHoldingVat == true ? Math.Round(netOfVat * 0.05m, 2) : 0m;
+                            var amountDue = netOfVat - whtAmount - wvatAmount;
                             var totalDue = amountDue + vatAmount;
                         }
                         <table class="statement-table" style="font-size: 12px; margin-left: 0;">
@@ -241,6 +242,13 @@
                                 <td>LESS: WITHHOLDING TAX</td>
                                 <td class="text-right border-bottom-dark"><b>@whtAmount.ToString("N2")</b></td>
                             </tr>
+                            @if (wvatAmount > 0)
+                            {
+                                <tr>
+                                    <td>LESS: 5% WVAT</td>
+                                    <td class="text-right border-bottom-dark"><b>@wvatAmount.ToString("N2")</b></td>
+                                </tr>
+                            }
                             <tr>
                                 <td>AMOUNT DUE</td>
                                 <td class="text-right border-bottom-dark"><b>@amountDue.ToString("N2")</b></td>

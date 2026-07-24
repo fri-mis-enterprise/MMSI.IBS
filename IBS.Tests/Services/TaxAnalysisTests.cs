@@ -70,6 +70,7 @@ namespace IBS.Tests.Services
             var billing = new Billing
             {
                 CustomerId = 1,
+                IsVatable = true,
                 IsVatInclusive = isInclusive,
                 ToBillDispatchTickets = new List<string> { "101" },
                 MsapBillingNumber = "B-TEST"

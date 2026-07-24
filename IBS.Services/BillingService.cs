@@ -102,7 +102,6 @@ namespace IBS.Services
                 }
 
                 model.Customer = customer;
-                model.IsVatable = customer.VatType == SD.VatType_Vatable;
                 model.Year = model.Date.Year;
                 model.Status = SD.BillingStatus.ForPosting; // Changed from ForCollection
                 model.CreatedBy = username;
@@ -398,6 +397,7 @@ namespace IBS.Services
                 currentModel.JobOrderId = model.JobOrderId;
                 currentModel.IsVatInclusive = model.IsVatInclusive;
                 currentModel.PrintWht = model.PrintWht;
+                currentModel.ApOtherTug = model.ApOtherTug;
 
                 if (model.ToBillDispatchTickets != null)
                 {

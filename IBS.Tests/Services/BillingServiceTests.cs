@@ -274,6 +274,7 @@ namespace IBS.Tests.Services
                 Company = "MMSI",
                 Date = new DateOnly(2025, 1, 7),
                 CustomerId = 10,
+                IsVatable = true,
                 IsVatInclusive = false, // TEST EXCLUSIVE
                 MsapBillingNumber = "BL-Legacy-Exc",
                 ToBillDispatchTickets = new List<string> { "500" }

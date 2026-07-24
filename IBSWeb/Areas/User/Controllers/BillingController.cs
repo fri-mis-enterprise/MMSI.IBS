@@ -67,10 +67,15 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateBilling, "Access denied. You don't have permission to create Billings.")]
-        public async Task<IActionResult> Create(Billing model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create([Bind("CustomerId,PrincipalId,BilledTo,MsapBillingNumber,IsUndocumented,Date,VoyageNumber,COSNumber,PortId,TerminalId,VesselId,ApOtherTug,IsVatable,IsVatInclusive,PrintWht,JobOrderId,ToBillDispatchTickets")] Billing model, CancellationToken cancellationToken)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { success = false, message = "Invalid form data." });
+                }
+
                 var username = User.Identity?.Name ?? "System";
                 var company = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? SD.Company_MMSI;
 
@@ -143,10 +148,15 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.EditBilling, "Access denied. You don't have permission to edit Billings.")]
-        public async Task<IActionResult> Edit([Bind("MsapBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,Amount,IsPrincipal,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId,IsVatable,IsVatInclusive,PrintWht")] Billing model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit([Bind("MsapBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId,IsVatable,IsVatInclusive,PrintWht")] Billing model, IFormFile? file, CancellationToken cancellationToken)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { success = false, message = "Invalid form data." });
+                }
+
                 var result = await billingService.UpdateBillingAsync(model, User.Identity?.Name ?? "System", cancellationToken);
 
                 if (result.IsSuccess)
@@ -413,12 +423,12 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
-        public async Task<IActionResult> GetDispatchTickets(List<string> dispatchTicketIds)
+        public async Task<IActionResult> GetDispatchTickets(List<string> dispatchTicketIds, CancellationToken cancellationToken)
         {
             try
             {
                 var intDispatchTicketIds = dispatchTicketIds.Select(int.Parse).ToList();
-                var dispatchTickets = await billingService.GetDispatchTicketsByIdsAsync(intDispatchTicketIds, cancellationToken: default);
+                var dispatchTickets = await billingService.GetDispatchTicketsByIdsAsync(intDispatchTicketIds, cancellationToken);
 
                 return Json(new { success = true, data = dispatchTickets });
             }
@@ -458,8 +468,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get billings.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { draw = parameters.Draw, recordsTotal = 0, recordsFiltered = 0, data = Array.Empty<object>(), error = "An error occurred while loading the billing list." });
             }
         }
 

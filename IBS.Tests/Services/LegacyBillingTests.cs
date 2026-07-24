@@ -80,6 +80,7 @@ namespace IBS.Tests.Services
                 Date = new DateOnly(2025, 12, 2),
                 CustomerId = 7,
                 MsapBillingNumber = "1224", // Replicating RECID 3666
+                IsVatable = true,
                 IsVatInclusive = false, // Matches DB value; new system applies VAT for Vatable + Exclusive
                 ToBillDispatchTickets = new List<string> { "11889", "11890" }
             };

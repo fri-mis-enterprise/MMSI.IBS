@@ -2,6 +2,12 @@
 
 ## [2026-07-24]
 ### Fixed
+- **Billing over-posting & missing guardrails** — Added `[Bind]` to Create POST (was binding all properties including Status/Balance), added `ModelState.IsValid` checks to Create & Edit POST, added `CancellationToken` to `GetDispatchTickets` AJAX endpoint, fixed `GetBillingList` exception path returning redirect instead of JSON for DataTables. (`BillingController.cs`)
+- **Billing Edit COSNumber data loss** — `Edit.cshtml` was missing the `COSNumber` input field (bound in `[Bind]` but not rendered), causing silent null overwrite on save. Added field alongside VoyageNumber. (`Edit.cshtml`)
+- **Billing Create IsVatable override** — `CreateBillingAsync` was overriding the user's checkbox choice with the customer profile default; now respects user input, matching Edit behavior. (`BillingService.cs`)
+- **Billing Update ApOtherTug not persisted** — `UpdateBillingAsync` never copied `ApOtherTug` from the form model to the entity; added. (`BillingService.cs`)
+- **Billing Preview missing WVAT** — Preview totals section only showed WHT, not 5% WVAT (Print controller had it). Added WVAT row. (`Preview.cshtml`)
+### Fixed
 - **ModernSelect search auto-focus on desktop** — Search input now auto-focuses when dropdown opens on non-touch devices. Touch/mobile still skips focus to avoid on-screen keyboard. (`modern-select.js`)
 
 ## [2026-07-23]
