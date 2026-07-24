@@ -9,6 +9,7 @@
 - **Billing Preview missing WVAT** — Preview totals section only showed WHT, not 5% WVAT (Print controller had it). Added WVAT row. (`Preview.cshtml`)
 ### Fixed
 - **ModernSelect search auto-focus on desktop** — Search input now auto-focuses when dropdown opens on non-touch devices. Touch/mobile still skips focus to avoid on-screen keyboard. (`modern-select.js`)
+- **Billing Preview print top gap** — `body.mnav-enabled` 64px padding from modern navbar leaked into print, creating blank space above the statement. Added `body.mnav-enabled { padding-top: 0 !important; }` to print CSS. (`Preview.cshtml`)
 
 ## [2026-07-23]
 ### Changed
