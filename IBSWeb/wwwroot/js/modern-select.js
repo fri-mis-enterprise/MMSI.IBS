@@ -84,7 +84,11 @@ const ModernSelect = {
                 positionDropdown();
                 
                 if (isSearchable) {
-                    setTimeout(() => $dropdown.find('input').val('').trigger('input'), 10);
+                    setTimeout(() => {
+                        const $input = $dropdown.find('input');
+                        $input.val('').trigger('input');
+                        if (!('ontouchstart' in window)) $input.focus();
+                    }, 10);
                 }
             }
         });
@@ -93,7 +97,6 @@ const ModernSelect = {
             e.preventDefault();
             e.stopPropagation();
 
-            // If focus just opened the dropdown (mobile: focus fires before click), don't toggle closed
             if (focusOpened) {
                 focusOpened = false;
                 return;
@@ -110,7 +113,11 @@ const ModernSelect = {
                 positionDropdown();
                 
                 if (isSearchable) {
-                    setTimeout(() => $dropdown.find('input').val('').trigger('input'), 10);
+                    setTimeout(() => {
+                        const $input = $dropdown.find('input');
+                        $input.val('').trigger('input');
+                        if (!('ontouchstart' in window)) $input.focus();
+                    }, 10);
                 }
             } else {
                 $trigger.removeClass('active');

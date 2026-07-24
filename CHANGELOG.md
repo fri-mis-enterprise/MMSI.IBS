@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-24]
+### Fixed
+- **ModernSelect search auto-focus on desktop** — Search input now auto-focuses when dropdown opens on non-touch devices. Touch/mobile still skips focus to avoid on-screen keyboard. (`modern-select.js`)
+
 ## [2026-07-23]
 ### Changed
 - **JobOrder ViewModel cleanup** — Removed deprecated `RequiredTugCount`, `PreferredTugboatId`, `Tugboats` select list from `JobOrderViewModel` and its population in `JobOrderService.PopulateJobOrderViewModelAsync`. These fields were never rendered in the Create/Edit views. (`JobOrderViewModel.cs`, `JobOrderService.cs`)
