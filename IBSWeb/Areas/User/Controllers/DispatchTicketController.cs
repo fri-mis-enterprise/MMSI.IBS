@@ -67,12 +67,6 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? videoFile,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
-                return View(viewModel);
-            }
-
             var result = await dispatchTicketService.CreateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
@@ -207,13 +201,6 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(SetTariff), new { id = viewModel.DispatchTicketId, filterType });
             }
 
-            if (!ModelState.IsValid)
-            {
-                var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-                TempData["error"] = errors;
-                return RedirectToAction(nameof(SetTariff), new { id = viewModel.DispatchTicketId, filterType });
-            }
-
             var model = new DispatchTicket
             {
                 DispatchTicketId = viewModel.DispatchTicketId,
@@ -334,13 +321,6 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId, filterType });
             }
 
-            if (!ModelState.IsValid)
-            {
-                var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-                TempData["error"] = errors;
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId, filterType });
-            }
-
             var model = new DispatchTicket
             {
                 DispatchTicketId = viewModel.DispatchTicketId,
@@ -434,12 +414,6 @@ namespace IBSWeb.Areas.User.Controllers
             string? filterType,
             CancellationToken cancellationToken = default)
         {
-            if (!ModelState.IsValid)
-            {
-                viewModel = await dispatchTicketService.PopulateSelectListsAsync(viewModel, cancellationToken);
-                return View(viewModel);
-            }
-
             var result = await dispatchTicketService.UpdateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)

@@ -78,7 +78,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (result.IsSuccess)
                 {
-                    var msg = model.IsUndocumented ? $"Created. Control No: {model.MsapBillingNumber}" : "Billing created successfully.";
+                    var msg = model.IsUndocumented ? $"Created. Billing No: {model.MsapBillingNumber}" : "Billing created successfully.";
                     return Json(new { success = true, message = msg, redirectUrl = Url.Action(nameof(Index)) });
                 }
 
