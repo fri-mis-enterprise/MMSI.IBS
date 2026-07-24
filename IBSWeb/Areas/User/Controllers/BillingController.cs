@@ -412,6 +412,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves detailed information for a list of Dispatch Tickets.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetDispatchTickets(List<string> dispatchTicketIds, CancellationToken cancellationToken)
         {
@@ -433,6 +434,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves a paged and filtered list of Billings for DataTables.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateBilling, "Access denied. You don't have permission to access Billings.")]
         public async Task<IActionResult> GetBillingList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
@@ -579,6 +581,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves detailed information for a specific customer.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
         public async Task<IActionResult> GetCustomerDetails(int customerId, CancellationToken cancellationToken)
         {

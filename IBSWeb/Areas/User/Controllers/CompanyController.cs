@@ -53,6 +53,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Company model, CancellationToken cancellationToken)
         {
             bool companyExist = await unitOfWork
@@ -109,6 +110,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetCompanyList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -184,6 +186,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Company model, CancellationToken cancellationToken)
         {
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -236,6 +239,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Activate")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ActivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
@@ -301,6 +305,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Deactivate")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeactivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)

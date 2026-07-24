@@ -18,6 +18,7 @@ namespace IBSWeb.Areas.User.Controllers
         public IActionResult Index() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DispatchForBilling(DateOnly dateFrom, DateOnly dateTo, CancellationToken ct)
         {
             var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
@@ -85,6 +86,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DispatchTicketSummary(DateOnly dateFrom, DateOnly dateTo, CancellationToken ct)
         {
             var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
@@ -210,6 +212,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalesSummary(int month, int year, CancellationToken ct)
         {
             var dateFrom = new DateOnly(year, month, 1);

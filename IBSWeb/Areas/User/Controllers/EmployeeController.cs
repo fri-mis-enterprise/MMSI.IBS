@@ -59,6 +59,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetEmployeesList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try

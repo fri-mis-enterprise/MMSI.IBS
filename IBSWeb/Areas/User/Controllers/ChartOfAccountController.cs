@@ -42,6 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
         {
             var result = await chartOfAccountService.CreateAsync(parentId, accountName, GetUserFullName(), await GetCompanyClaimAsync(), cancellationToken);
@@ -56,6 +57,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
             var result = await chartOfAccountService.UpdateAsync(accountId, accountName, GetUserFullName(), await GetCompanyClaimAsync(), cancellationToken);
@@ -98,6 +100,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Export(string selectedRecord, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(selectedRecord)) return RedirectToAction(nameof(Index));

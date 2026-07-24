@@ -2,6 +2,7 @@
 
 ## [2026-07-24]
 ### Fixed
+- **Missing `[ValidateAntiForgeryToken]` on all `[HttpPost]` actions** — Added the antiforgery token attribute to 52 POST endpoints across 25 controllers that were missing it, preventing CSRF vulnerabilities on data-mutating and AJAX endpoints. (`AppRoleController.cs`, `UserController.cs`, `DataController.cs`, `AuditTrailController.cs`, `BillingController.cs`, `ChartOfAccountController.cs`, `CollectionController.cs`, `CompanyController.cs`, `CustomerController.cs`, `DispatchTicketController.cs`, `EmployeeController.cs`, `MaritimeReportController.cs`, `MaritimeServiceController.cs`, `PaymentTermsController.cs`, `PortController.cs`, `PrincipalController.cs`, `ServiceRequestController.cs`, `SupplierController.cs`, `TariffRateController.cs`, `TerminalController.cs`, `TugboatController.cs`, `TugboatOwnerController.cs`, `TugMasterController.cs`, `UserAccessController.cs`, `VesselScheduleController.cs`)
 - **Billing over-posting fix** — Added `[Bind]` to Create POST (was binding all properties including Status/Balance). (`BillingController.cs`)
 - **Billing Edit COSNumber data loss** — `Edit.cshtml` was missing the `COSNumber` input field (bound in `[Bind]` but not rendered), causing silent null overwrite on save. Added field alongside VoyageNumber. (`Edit.cshtml`)
 - **Billing Create IsVatable override** — `CreateBillingAsync` was overriding the user's checkbox choice with the customer profile default; now respects user input, matching Edit behavior. (`BillingService.cs`)

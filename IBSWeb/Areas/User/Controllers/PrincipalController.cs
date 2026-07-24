@@ -36,6 +36,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Principal model, CancellationToken cancellationToken = default)
         {
             var result = await principalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
@@ -65,6 +66,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Principal model, CancellationToken cancellationToken)
         {
             var result = await principalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);

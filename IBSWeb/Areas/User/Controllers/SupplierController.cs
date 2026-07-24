@@ -182,6 +182,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetSuppliersList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -365,6 +366,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Activate")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ActivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
@@ -432,6 +434,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Deactivate")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeactivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
@@ -612,6 +615,7 @@ namespace IBSWeb.Areas.User.Controllers
         #region -- export xlsx record --
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Export(string selectedRecord)
         {
             if (string.IsNullOrEmpty(selectedRecord))

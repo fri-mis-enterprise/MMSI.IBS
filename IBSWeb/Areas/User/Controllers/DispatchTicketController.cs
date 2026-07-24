@@ -613,6 +613,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Includes signed URLs for media attachments.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetDispatchTicketLists(
             [FromForm] DataTablesParameters parameters,
             string filterType,
@@ -658,6 +659,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Checks if a tariff rate exists for a given customer and Dispatch Ticket criteria.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CheckForTariffRate(
             int customerId, int dispatchTicketId, CancellationToken cancellationToken)
         {

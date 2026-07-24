@@ -181,6 +181,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Retrieves detailed information for a list of selected billings.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequireAnyAccess(ProcedureEnum.CreateCollection)]
         public async Task<IActionResult> GetSelectedBillings(List<string> billingIds, CancellationToken cancellationToken = default)
         {

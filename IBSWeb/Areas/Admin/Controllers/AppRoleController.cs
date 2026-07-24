@@ -18,6 +18,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upsert([FromBody] IdentityRole model, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(model.Name))
@@ -30,6 +31,7 @@ namespace IBSWeb.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetRolesList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try

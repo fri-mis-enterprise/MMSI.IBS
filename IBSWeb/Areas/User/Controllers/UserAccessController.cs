@@ -20,6 +20,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetUserAccessList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -64,6 +65,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserAccess model, CancellationToken cancellationToken = default)
         {
             var result = await userAccessService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
@@ -94,6 +96,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UserAccess model, CancellationToken cancellationToken = default)
         {
             var result = await userAccessService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);

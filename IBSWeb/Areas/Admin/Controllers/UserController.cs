@@ -21,6 +21,7 @@ namespace IBSWeb.Areas.Admin.Controllers
 
         [HttpGet]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
             var userList = await userService.GetAllUsersAsync(cancellationToken);

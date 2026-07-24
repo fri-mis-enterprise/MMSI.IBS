@@ -36,6 +36,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Tugboat model, CancellationToken cancellationToken = default)
         {
             var result = await tugboatService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
@@ -65,6 +66,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Tugboat model, CancellationToken cancellationToken)
         {
             var result = await tugboatService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);

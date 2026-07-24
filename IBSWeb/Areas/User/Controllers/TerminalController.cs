@@ -36,6 +36,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Terminal model, CancellationToken cancellationToken = default)
         {
             var result = await terminalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
@@ -65,6 +66,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Terminal model, CancellationToken cancellationToken)
         {
             var result = await terminalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);

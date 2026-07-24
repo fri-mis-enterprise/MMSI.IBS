@@ -33,6 +33,7 @@ namespace IBSWeb.Areas.SuperAdmin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetData(string table, [FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -77,6 +78,7 @@ namespace IBSWeb.Areas.SuperAdmin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(string table, int id,
             [FromForm] Dictionary<string, string> changes,
             [FromForm] string remarks,

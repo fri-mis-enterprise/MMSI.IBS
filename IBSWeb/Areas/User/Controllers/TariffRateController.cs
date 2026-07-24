@@ -33,6 +33,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TariffRate model, CancellationToken cancellationToken = default)
         {
             await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
@@ -71,6 +72,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(TariffRate model, CancellationToken cancellationToken)
         {
             await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
