@@ -71,11 +71,6 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return Json(new { success = false, message = "Invalid form data." });
-                }
-
                 var username = User.Identity?.Name ?? "System";
                 var company = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? SD.Company_MMSI;
 
@@ -152,11 +147,6 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return Json(new { success = false, message = "Invalid form data." });
-                }
-
                 var result = await billingService.UpdateBillingAsync(model, User.Identity?.Name ?? "System", cancellationToken);
 
                 if (result.IsSuccess)
@@ -606,5 +596,3 @@ namespace IBSWeb.Areas.User.Controllers
 
     }
 }
-
-
