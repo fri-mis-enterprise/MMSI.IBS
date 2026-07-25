@@ -142,10 +142,7 @@
             let table = $('#auditTable').DataTable(ModernTable.config({
                 serverSide: true,
                 processing: true,
-                ajax: {
-                    url: '@Url.Action("GetPagedAuditTrails", "AuditTrail", new { area = "User" })',
-                    type: 'POST'
-                },
+                ajax: ModernTable.ajax('@Url.Action("GetPagedAuditTrails", "AuditTrail", new { area = "User" })'),
                 columns: [
                     { 
                         data: 'date', 

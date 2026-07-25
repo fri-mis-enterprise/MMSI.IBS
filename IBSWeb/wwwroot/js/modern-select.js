@@ -271,6 +271,9 @@ const ModernSelect = {
         observer.observe($select[0], { childList: true });
         
         $select.data('modern-select-initialized', true);
+        $select.data('modern-select-trigger', $trigger);
+        $select.data('modern-select-options', $optionsContainer);
+        $select.data('modern-select-placeholder', placeholder);
     },
 
     populate: function($select, $optionsContainer, $trigger, placeholder) {
@@ -296,6 +299,15 @@ const ModernSelect = {
         if (!foundSelected) {
             $trigger.find('.selected-text').text(placeholder);
         }
+    }
+};
+
+window.refreshModernSelect = function ($select) {
+    var $options = $select.data('modern-select-options');
+    var $trigger = $select.data('modern-select-trigger');
+    var placeholder = $select.data('modern-select-placeholder');
+    if ($options && $trigger) {
+        ModernSelect.populate($select, $options, $trigger, placeholder);
     }
 };
 
