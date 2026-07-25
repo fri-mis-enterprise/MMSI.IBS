@@ -92,25 +92,21 @@ namespace IBS.Services
 
         public async Task<(IEnumerable<Employee> Data, int TotalRecords)> GetPagedEmployeesAsync(DataTablesParameters parameters, CancellationToken cancellationToken)
         {
-            var queried = await unitOfWork.Employee.GetAllAsync(null, cancellationToken);
-
-            // Global search
+            System.Linq.Expressions.Expression<Func<Employee, bool>>? filter = null;
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {
                 var searchValue = parameters.Search.Value.ToLower();
-
-                queried = queried
-                    .Where(e =>
-                        e.EmployeeNumber.ToLower().Contains(searchValue) ||
-                        (e.Initial != null && e.Initial.ToLower().Contains(searchValue)) ||
-                        e.FirstName.ToLower().Contains(searchValue) ||
-                        e.LastName.ToLower().Contains(searchValue) ||
-                        (e.BirthDate != null && e.BirthDate.ToString()!.Contains(searchValue)) ||
-                        (e.TelNo != null && e.TelNo.ToLower().Contains(searchValue)) ||
-                        (e.Department != null && e.Department.ToLower().Contains(searchValue)) ||
-                        e.Position.ToLower().Contains(searchValue)
-                    ).ToList();
+                filter = e =>
+                    e.EmployeeNumber.ToLower().Contains(searchValue) ||
+                    (e.Initial != null && e.Initial.ToLower().Contains(searchValue)) ||
+                    e.FirstName.ToLower().Contains(searchValue) ||
+                    e.LastName.ToLower().Contains(searchValue) ||
+                    (e.TelNo != null && e.TelNo.ToLower().Contains(searchValue)) ||
+                    (e.Department != null && e.Department.ToLower().Contains(searchValue)) ||
+                    e.Position.ToLower().Contains(searchValue);
             }
+
+            var queried = await unitOfWork.Employee.GetAllAsync(filter, cancellationToken);
 
             // Sorting
             if (parameters.Order?.Count > 0)

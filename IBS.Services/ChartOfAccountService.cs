@@ -21,18 +21,15 @@ namespace IBS.Services
 
         public async Task<(IEnumerable<object> Data, int TotalRecords)> GetPagedListAsync(DataTablesParameters parameters, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken = default)
         {
-            var chartOfAccounts = await unitOfWork.ChartOfAccount.GetAllAsync(null, cancellationToken);
-
-            if (dateFrom.HasValue)
+            System.Linq.Expressions.Expression<Func<ChartOfAccount, bool>>? filter = null;
+            if (dateFrom.HasValue || dateTo.HasValue)
             {
-                chartOfAccounts = chartOfAccounts.Where(s => s.CreatedDate >= dateFrom.Value).ToList();
+                var dateToInclusive = dateTo?.AddDays(1);
+                filter = s => (!dateFrom.HasValue || s.CreatedDate >= dateFrom.Value) &&
+                              (!dateTo.HasValue || s.CreatedDate < dateToInclusive!.Value);
             }
 
-            if (dateTo.HasValue)
-            {
-                var dateToInclusive = dateTo.Value.AddDays(1);
-                chartOfAccounts = chartOfAccounts.Where(s => s.CreatedDate < dateToInclusive).ToList();
-            }
+            var chartOfAccounts = await unitOfWork.ChartOfAccount.GetAllAsync(filter, cancellationToken);
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {

@@ -17,7 +17,7 @@
                 <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
             </div>
             <div class="flex gap-2">
-                <button type="button" class="modern-btn-primary" onclick="exportToExcel()">
+                <button type="button" class="modern-btn-primary" id="exportToExcelBtn">
                     <span class="material-symbols-outlined">file_download</span>
                     EXPORT TO EXCEL
                 </button>
@@ -118,6 +118,8 @@
                 localStorage.setItem('exportCustomerDateTo', $('#dateTo').val());
                 table.ajax.reload();
             });
+
+            $('#exportToExcelBtn').on('click', exportToExcel);
         });
 
         function exportToExcel() {

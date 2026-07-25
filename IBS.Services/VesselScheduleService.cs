@@ -134,7 +134,7 @@ namespace IBS.Services
 
             if (tugboatIds.Count > 0)
             {
-                var allTugboats = await unitOfWork.Tugboat.GetAllAsync(null, ct);
+                var allTugboats = await unitOfWork.Tugboat.GetAllAsync(t => tugboatIds.Contains(t.TugboatId), ct);
                 var tugboatNames = allTugboats.ToDictionary(t => t.TugboatId, t => t.TugboatName);
 
                 foreach (var s in others)

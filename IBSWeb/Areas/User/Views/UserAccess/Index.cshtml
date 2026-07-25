@@ -25,6 +25,7 @@
 
         <!-- Table Card -->
         <div class="modern-card">
+            @Html.AntiForgeryToken()
             <div class="modern-card-header-action flex justify-between items-center w-full">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
@@ -50,10 +51,7 @@
         // ponytail: simple AJAX DataTable — no modal needed, Edit navigates to its own page
         $(document).ready(function () {
             $('#userAccessTable').DataTable(ModernTable.config({
-                ajax: {
-                    url: '/User/UserAccess/GetUserAccessList',
-                    type: 'POST'
-                },
+                ajax: ModernTable.ajax('/User/UserAccess/GetUserAccessList'),
                 columns: [
                     { data: 'userName', render: data => `<span class="font-bold">${escapeHtml(data ?? '')}</span>` },
                     {

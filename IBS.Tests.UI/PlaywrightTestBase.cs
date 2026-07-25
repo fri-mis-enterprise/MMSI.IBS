@@ -239,7 +239,7 @@ namespace IBS.Tests.UI
             {
                 await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 3000 });
             }
-            catch { }
+            catch (TimeoutException) { }
         }
 
         protected async Task ClickSweetAlertOkAsync()
@@ -260,13 +260,14 @@ namespace IBS.Tests.UI
                         if (await okButton.CountAsync() > 0)
                         {
                             await okButton.ClickAsync(new() { Force = true });
-                            try { await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 1000 }); } catch { }
+                            try { await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 1000 }); }
+                            catch (TimeoutException) { }
                         }
                     }
                     await Page.WaitForTimeoutAsync(300);
                 }
             }
-            catch { }
+            catch (TimeoutException) { }
         }
     }
 }

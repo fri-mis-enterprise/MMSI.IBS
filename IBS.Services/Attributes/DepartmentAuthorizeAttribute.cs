@@ -7,18 +7,17 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace IBS.Services.Attributes
 {
-    public class DepartmentAuthorizeAttribute(params string[] departments): AuthorizeAttribute, IAuthorizationFilter
+    public class DepartmentAuthorizeAttribute(params string[] departments): AuthorizeAttribute, IAsyncAuthorizationFilter
     {
-        public void OnAuthorization(AuthorizationFilterContext context)
+        public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             var userManager = context.HttpContext.RequestServices.GetService(typeof(UserManager<ApplicationUser>)) as UserManager<ApplicationUser>;
             var dbContext = context.HttpContext.RequestServices.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
 
             if (userManager != null && dbContext != null)
             {
-                var user = userManager.GetUserAsync(context.HttpContext.User).Result;
+                var user = await userManager.GetUserAsync(context.HttpContext.User);
 
-                // Assuming "Department" is a property in your ApplicationUser model
                 var userDepartment = dbContext.ApplicationUsers
                     .Where(u => u.Id == user!.Id)
                     .Select(u => u.Department)

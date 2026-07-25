@@ -8,6 +8,7 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using IBS.DTOs;
+using static IBS.Utility.Constants.TaxConstants;
 
 namespace IBS.Services
 {
@@ -163,7 +164,7 @@ namespace IBS.Services
                     dt.Billing = model;
                 }
 
-                model.Amount = model.Balance = model.IsVatable && !model.IsVatInclusive ? total * 1.12m : total;
+                    model.Amount = model.Balance = model.IsVatable && !model.IsVatInclusive ? total * VatMultiplier : total;
                 model.DispatchAmount = dispatch;
                 model.BAFAmount = baf;
                 model.IsPaid = false;
@@ -418,7 +419,7 @@ namespace IBS.Services
                         dt.Billing = currentModel;
                     }
 
-                    currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * 1.12m : total;
+                    currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * VatMultiplier : total;
                     currentModel.DispatchAmount = dispatch;
                     currentModel.BAFAmount = baf;
                 }
@@ -708,7 +709,8 @@ namespace IBS.Services
                 return ServiceResult<object>.Failure("Customer not found.", ServiceResultStatus.NotFound);
             }
 
-            var hasPrincipal = await unitOfWork.Principal.GetAllAsync(p => p.CustomerId == customerId, cancellationToken).ContinueWith(t => t.Result.Any(), cancellationToken);
+            var principals = await unitOfWork.Principal.GetAllAsync(p => p.CustomerId == customerId, cancellationToken);
+            var hasPrincipal = principals.Any();
 
             return ServiceResult<object>.Success(new
             {

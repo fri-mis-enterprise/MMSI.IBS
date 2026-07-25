@@ -76,7 +76,7 @@
                 <h1 class="modern-headline-lg">Billing Statement Preview</h1>
             </div>
             <div class="flex gap-2">
-                <button onclick="window.print()" class="modern-btn-primary">
+                <button type="button" class="modern-btn-primary js-print-btn">
                     <span class="material-symbols-outlined">print</span> PRINT / SAVE AS PDF
                 </button>
                 <a asp-action="Print" asp-route-id="@Model.MsapBillingId" class="modern-btn-secondary">
@@ -312,7 +312,7 @@
             <a asp-action="Index" class="modern-btn-secondary px-5">
                 <span class="material-symbols-outlined">arrow_back</span> BACK TO LIST
             </a>
-            <button onclick="window.print()" class="modern-btn-primary px-5">
+            <button type="button" class="modern-btn-primary px-5 js-print-btn">
                 <span class="material-symbols-outlined">print</span> PRINT / SAVE AS PDF
             </button>
         </div>
@@ -322,7 +322,9 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // No specific JS needed for preview currently
+            $('.js-print-btn').on('click', function () {
+                window.print();
+            });
         });
     </script>
 }

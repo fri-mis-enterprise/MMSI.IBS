@@ -44,7 +44,7 @@
                                     <strong style="color:#bf360c;font-size:0.95rem">Schedule Conflicts Detected</strong>
                                     <ul id="conflictList" class="mb-0 mt-2" style="list-style:none;padding:0"></ul>
                                 </div>
-                                <button type="button" onclick="$('#conflictAlert').hide()" style="background:none;border:none;color:#999;cursor:pointer;font-size:18px">&times;</button>
+                                <button type="button" class="dismiss-conflict-btn" style="background:none;border:none;color:#999;cursor:pointer;font-size:18px">&times;</button>
                             </div>
                             <div class="modern-grid-compact">
                                 <div class="modern-col-6">
@@ -321,6 +321,8 @@
                     showUpdateConfirm(false);
                 });
             });
+
+            $('.dismiss-conflict-btn').on('click', function() { $('#conflictAlert').hide(); });
         });
     </script>
 }

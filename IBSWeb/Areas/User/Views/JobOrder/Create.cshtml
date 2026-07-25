@@ -21,7 +21,7 @@
                     <h1 class="modern-headline-lg">Create Job Order</h1>
                 </div>
                 <div class="flex gap-2">
-                    <button type="button" class="modern-btn-primary" onclick="confirmCreate()">
+                    <button type="button" class="modern-btn-primary" id="confirmCreateBtn">
                         <span class="material-symbols-outlined">save</span> Create Job Order
                     </button>
                     <a asp-action="Index" class="modern-btn-secondary">
@@ -204,6 +204,8 @@
                     }
                 });
             });
+
+            $('#confirmCreateBtn').on('click', confirmCreate);
         });
 
         function confirmCreate() {

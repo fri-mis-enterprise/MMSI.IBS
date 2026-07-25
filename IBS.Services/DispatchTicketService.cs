@@ -578,16 +578,14 @@ namespace IBS.Services
                         var hours = Math.Round(ticket.TotalHours, 2);
 
                         decimal dispatchBilling = chargeType == "Per hour" ? dispatchRate * hours : dispatchRate;
-                        decimal dispatchDiscountAmount = dispatchRate * (0 / 100m);
                         decimal dispatchRevenue = chargeType == "Per hour"
-                            ? (dispatchRate - dispatchDiscountAmount) * hours
-                            : dispatchRate - dispatchDiscountAmount;
+                            ? dispatchRate * hours
+                            : dispatchRate;
 
                         decimal bafBilling = chargeType2 == "Per hour" ? bafRate * hours : bafRate;
-                        decimal bafDiscountAmount = bafRate * (0 / 100m);
                         decimal bafRevenue = chargeType2 == "Per hour"
-                            ? (bafRate - bafDiscountAmount) * hours
-                            : bafRate - bafDiscountAmount;
+                            ? bafRate * hours
+                            : bafRate;
 
                         ticket.Status = SD.DispatchTicketStatus.ForApproval;
                         ticket.DispatchChargeType = chargeType;

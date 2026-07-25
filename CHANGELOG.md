@@ -2,6 +2,15 @@
 
 ## [2026-07-25]
 ### Changed
+- **Code Quality Debt audit cleanup** — Resolved technical debt and non-standard coding patterns across the solution:
+  - Replaced `dynamic` ExpandoObject parsing with type-safe CSV reader processing in `MsapImportController`.
+  - Converted `.Result` sync-over-async in `DepartmentAuthorizeAttribute` to `IAsyncAuthorizationFilter` using `await`.
+  - Replaced in-memory filtering of full table loads (`GetAllAsync(null)`) with paginated/projected service calls in `ChartOfAccountService`, `EmployeeService`, `SuperAdminService`, and `VesselScheduleService`.
+  - Replaced hardcoded tax rates with `TaxConstants` (`VatRate`, `VatMultiplier`, `EwtRate`, `WvatRate`).
+  - Removed dead discount calculation code (`0 / 100m`) in `DispatchTicketService`.
+  - Removed obsolete dev-tools blocking script `disable-dev-tools-in-print.js`.
+  - Refactored `spinner.js` to rely on local form submission state instead of session storage.
+  - Added anti-forgery token and `ModernTable.ajax` integration to `UserAccess` view.
 - **Ponytail audit cleanup** — Deleted dead code: `LogMessage.cs`, `Rate.cs`, `Module.cs` models + DbSets, `ChartOfAccountDto.cs`, `SupplierDto.cs`, `GoogleDriveService.cs` + `IGoogleDriveService`, `GoogleDriveFileViewModel.cs`. Removed `Enum` empty enum, kept `ProcedureEnum`. Removed 10 unused NuGet packages (`Humanizer`, `QuickGrid` x4, `Quartz`, `Serilog.GoogleCloudLogging`, `Azure.Containers.Tools`, `CsvHelper` from IBSWeb, EPPlus from IBSWeb/DataAccess). Removed `_ContentIncludedByDefault` and `.editorconfig` link from csproj. Removed unused `using IBS.DTOs` from DateTimeHelper. Cleaned up IBS.Utility project references. (`18 files, -517 net lines, -14 dependencies`)
 
 ## [2026-07-24]

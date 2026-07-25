@@ -16,7 +16,7 @@
                 <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
             </div>
             <div class="flex gap-2">
-                <button type="button" class="modern-btn-primary" onclick="openCreateModal()">
+                <button type="button" class="modern-btn-primary" id="openCreateCoaBtn">
                     <span class="material-symbols-outlined">add_circle</span>
                     CREATE ACCOUNT
                 </button>
@@ -75,7 +75,7 @@
             </div>
             <div class="modern-sticky-footer mt-0">
                 <div class="flex gap-2">
-                    <button type="button" class="modern-btn-primary" id="saveCreateBtn" onclick="saveCreate()">
+                    <button type="button" class="modern-btn-primary" id="saveCreateBtn">
                         <span class="material-symbols-outlined">save</span>
                         CREATE ACCOUNT
                     </button>
@@ -110,7 +110,7 @@
             </div>
             <div class="modern-sticky-footer mt-0">
                 <div class="flex gap-2">
-                    <button type="button" class="modern-btn-primary" id="saveEditBtn" onclick="saveEdit()">
+                    <button type="button" class="modern-btn-primary" id="saveEditBtn">
                         <span class="material-symbols-outlined">save</span>
                         SAVE CHANGES
                     </button>
@@ -130,6 +130,9 @@
         $(document).ready(function() {
             createModal = new bootstrap.Modal(document.getElementById('createModal'));
             editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            $('#openCreateCoaBtn').on('click', openCreateModal);
+            $('#saveCreateBtn').on('click', saveCreate);
+            $('#saveEditBtn').on('click', saveEdit);
 
             coaTable = $('#coaTable').DataTable(ModernTable.config({
                 ajax: ModernTable.ajax("@Url.Action("GetChartOfAccountList", "ChartOfAccount", new { area = "User" })"),

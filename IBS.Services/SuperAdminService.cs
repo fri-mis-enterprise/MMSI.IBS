@@ -258,22 +258,30 @@ namespace IBS.Services
             {
                 case "JobOrder":
                 {
-                    var items = await unitOfWork.JobOrder.GetAllAsync(null, ct);
+                    System.Linq.Expressions.Expression<Func<JobOrder, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : j =>
+                        j.JobOrderNumber.Contains(search) || (j.Remarks != null && j.Remarks.Contains(search));
+                    var items = await unitOfWork.JobOrder.GetAllAsync(filter, ct);
                     return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapJobOrder);
                 }
                 case "DispatchTicket":
                 {
-                    var items = await unitOfWork.DispatchTicket.GetAllAsync(null, ct);
+                    System.Linq.Expressions.Expression<Func<DispatchTicket, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : d =>
+                        d.DispatchNumber.Contains(search) || (d.Remarks != null && d.Remarks.Contains(search));
+                    var items = await unitOfWork.DispatchTicket.GetAllAsync(filter, ct);
                     return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapDispatchTicket);
                 }
                 case "Billing":
                 {
-                    var items = await unitOfWork.Billing.GetAllAsync(null, ct);
+                    System.Linq.Expressions.Expression<Func<Billing, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : b =>
+                        b.MsapBillingNumber.Contains(search);
+                    var items = await unitOfWork.Billing.GetAllAsync(filter, ct);
                     return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapBilling);
                 }
                 case "Collection":
                 {
-                    var items = await unitOfWork.Collection.GetAllAsync(null, ct);
+                    System.Linq.Expressions.Expression<Func<Collection, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : c =>
+                        c.MsapCollectionNumber.Contains(search) || (c.Remarks != null && c.Remarks.Contains(search));
+                    var items = await unitOfWork.Collection.GetAllAsync(filter, ct);
                     return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapCollection);
                 }
                 default:

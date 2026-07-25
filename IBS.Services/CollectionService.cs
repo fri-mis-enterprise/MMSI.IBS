@@ -6,6 +6,7 @@ using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using static IBS.Utility.Constants.TaxConstants;
 using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
@@ -269,13 +270,13 @@ namespace IBS.Services
                         decimal ewt = 0;
                         if (customer.WithHoldingTax && b.BilledTo == SD.BilledToLocal)
                         {
-                            ewt = b.IsVatable ? (b.Amount / 1.12m) * 0.02m : b.Amount * 0.02m;
+                            ewt = b.IsVatable ? (b.Amount / VatMultiplier) * EwtRate : b.Amount * EwtRate;
                         }
 
                         decimal wvat = 0;
                         if (customer.WithHoldingVat && b.BilledTo == SD.BilledToLocal)
                         {
-                            wvat = b.IsVatable ? (b.Amount / 1.12m) * 0.05m : 0;
+                            wvat = b.IsVatable ? (b.Amount / VatMultiplier) * WvatRate : 0;
                         }
 
                         return new

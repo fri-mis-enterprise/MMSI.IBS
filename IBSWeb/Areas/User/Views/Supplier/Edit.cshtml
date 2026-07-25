@@ -45,19 +45,19 @@
                                 <legend class="modern-label">Select Category</legend>
                                 <div class="flex gap-3 mt-1">
                                     <label class="flex items-center gap-1">
-                                        <input asp-for="Category" class="form-check-input" type="radio" value="Trade" onclick="toggleSelect('tradeList')">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Trade" data-target="tradeList">
                                         <span class="text-sm">Trade</span>
                                     </label>
                                     <label class="flex items-center gap-1">
-                                        <input asp-for="Category" class="form-check-input" type="radio" value="Non-Trade" onclick="toggleSelect('nonTradeList')">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Non-Trade" data-target="nonTradeList">
                                         <span class="text-sm">Non-Trade</span>
                                     </label>
                                     <label class="flex items-center gap-1">
-                                        <input asp-for="Category" class="form-check-input" type="radio" value="Commissionee" onclick="toggleSelect('commissioneeList')">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Commissionee" data-target="commissioneeList">
                                         <span class="text-sm">Commissionee</span>
                                     </label>
                                     <label class="flex items-center gap-1">
-                                        <input asp-for="Category" class="form-check-input" type="radio" value="Hauler" onclick="toggleSelect('haulerList')">
+                                        <input asp-for="Category" class="form-check-input category-radio" type="radio" value="Hauler" data-target="haulerList">
                                         <span class="text-sm">Hauler</span>
                                     </label>
                                 </div>
@@ -316,5 +316,11 @@
                     break;
             }
         }
+
+        $(document).ready(function () {
+            $('.category-radio').on('change', function() {
+                toggleSelect($(this).data('target'));
+            });
+        });
     </script>
 }

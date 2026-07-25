@@ -146,12 +146,12 @@ namespace IBSWeb.Areas.User.Controllers
                 if (!string.IsNullOrEmpty(ticket.ImageName))
                 {
                     try { ticket.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.ImageName); }
-                    catch { logger.LogWarning("Image file not found: {Name}", ticket.ImageName); }
+                    catch (Exception ex) { logger.LogWarning(ex, "Image file not found: {Name}", ticket.ImageName); }
                 }
                 if (!string.IsNullOrEmpty(ticket.VideoName))
                 {
                     try { ticket.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.VideoName); }
-                    catch { logger.LogWarning("Video file not found: {Name}", ticket.VideoName); }
+                    catch (Exception ex) { logger.LogWarning(ex, "Video file not found: {Name}", ticket.VideoName); }
                 }
             }
 
