@@ -67,6 +67,13 @@ namespace IBSWeb.Areas.User.Controllers
             IFormFile? videoFile,
             CancellationToken cancellationToken = default)
         {
+            if ((imageFile == null || imageFile.Length == 0) && !User.IsInRole("Admin"))
+            {
+                TempData["warning"] = "An image of the Dispatch Ticket is strictly required!";
+                viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
+                return View(viewModel);
+            }
+
             var result = await dispatchTicketService.CreateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
