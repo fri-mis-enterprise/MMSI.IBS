@@ -1,6 +1,19 @@
 # Changelog
 
 ## [2026-07-24]
+### Added
+- **Billing Preview dispatch ticket images** — Added `ICloudStorageService` to BillingController; Preview action now fetches signed URLs for each dispatch ticket's image and renders them in the print view with `page-break-before: always`. Also added dropdown action for "Generate PDF" on Billing Index. (`BillingController.cs`, `Preview.cshtml`, `Index.cshtml`)
+- **DispatchTicket image required for non-admin** — Server-side and client-side validation requiring image upload for non-Admin users on DispatchTicket Create. Admin users see the field as optional. (`DispatchTicketController.cs`, `Create.cshtml`)
+### Fixed
+- **VesselSchedule Create/Edit terminal cascade** — Cascade was using `$('#PortSelect')` / `$('#TerminalSelect')` with explicit `id` attributes that might be overridden by `asp-for` auto-generation. Changed to `$('select[name="PortId"]')` / `$('select[name="TerminalId"]')` (reliable since `name` always comes from `asp-for`). Also switched from `refreshModernSelect` (MutationObserver-dependent) to JobOrder's pattern: `terminalSelect.trigger('change')` after clearing and after populating, which forces the ModernSelect change handler to sync the trigger text and options. (`Create.cshtml`, `Edit.cshtml`)
+- **VesselSchedule Status select style** — Added missing `js-modern-select` class. (`Create.cshtml`, `Edit.cshtml`)
+- **VesselSchedule GetTerminalsByPort returns string values** — Changed `value` from `int` to `string` to match JS option handling; added explicit `[HttpGet]` attribute. (`VesselScheduleController.cs`)
+- **SuperAdminService date/time export format** — Changed planned start/end time separator from space to `T`; changed time left/arrived from default `ToString()` to explicit `HH:mm` format. (`SuperAdminService.cs`)
+### Changed
+- **ModernSelect refresh utility** — Added `window.refreshModernSelect` and stored trigger/options/placeholder references via `$select.data()` for explicit repopulation. (`modern-select.js`)
+- **AuditTrail DataTable ajax config** — Simplified to use `ModernTable.ajax()` helper instead of inline `{ url, type: 'POST' }`. (`Index.cshtml`)
+
+## [2026-07-24]
 ### Fixed
 - **Missing `[ValidateAntiForgeryToken]` on all `[HttpPost]` actions** — Added the antiforgery token attribute to 52 POST endpoints across 25 controllers that were missing it, preventing CSRF vulnerabilities on data-mutating and AJAX endpoints. (`AppRoleController.cs`, `UserController.cs`, `DataController.cs`, `AuditTrailController.cs`, `BillingController.cs`, `ChartOfAccountController.cs`, `CollectionController.cs`, `CompanyController.cs`, `CustomerController.cs`, `DispatchTicketController.cs`, `EmployeeController.cs`, `MaritimeReportController.cs`, `MaritimeServiceController.cs`, `PaymentTermsController.cs`, `PortController.cs`, `PrincipalController.cs`, `ServiceRequestController.cs`, `SupplierController.cs`, `TariffRateController.cs`, `TerminalController.cs`, `TugboatController.cs`, `TugboatOwnerController.cs`, `TugMasterController.cs`, `UserAccessController.cs`, `VesselScheduleController.cs`)
 - **Billing over-posting fix** — Added `[Bind]` to Create POST (was binding all properties including Status/Balance). (`BillingController.cs`)
