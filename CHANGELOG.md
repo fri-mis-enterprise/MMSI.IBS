@@ -1,6 +1,10 @@
 # Changelog
 
 ## [2026-07-25]
+### Fixed
+- **MSAP CSV Import dynamic record casting & duplicate checks** — Fixed `CsvHelper` `IEnumerable` auto-mapping exception across all master and transaction import methods in `MsapImportController` by casting dynamic records to `IDictionary<string, object?>`. Added existing record skip logic to `ImportChartOfAccountsAsync` to prevent database constraint errors on re-imports, and fixed escaped newline string formatting in flash messages. (`MsapImportController.cs`)
+- **ModernAlert success notification timer** — Removed automatic auto-close timer from `ModernAlert.success` in `modern-alert.js` so success notifications stay open until acknowledged. (`modern-alert.js`)
+
 ### Changed
 - **Code Quality Debt audit cleanup** — Resolved technical debt and non-standard coding patterns across the solution:
   - Replaced `dynamic` ExpandoObject parsing with type-safe CSV reader processing in `MsapImportController`.

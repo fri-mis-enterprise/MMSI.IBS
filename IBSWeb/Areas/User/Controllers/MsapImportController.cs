@@ -238,7 +238,7 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                TempData["success"] = sb.ToString().Replace(Environment.NewLine, "\\n");
+                TempData["success"] = sb.ToString();
             }
             catch (Exception ex)
             {
@@ -304,7 +304,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     using var reader = new StreamReader(collectBillPath);
                     using var csv = new CsvReader(reader, _csvConfig);
-                    var records = csv.GetRecords<ExpandoObject>().ToList();
+                    var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
                     foreach (var record in records)
                     {
                         string billNum = GetString(record, "billnum");
@@ -484,9 +484,15 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             var newRecords = new List<(ChartOfAccount Entity, int LegacyId, int? LegacyParentId)>();
 
+            var existingAccNumbers = await dbContext.ChartOfAccounts.AsNoTracking().Where(a => a.AccountNumber != null).Select(a => a.AccountNumber!).ToListAsync();
+            var existingAccNames = await dbContext.ChartOfAccounts.AsNoTracking().Select(a => a.AccountName).ToListAsync();
+            var existingAccSet = new HashSet<string>(existingAccNumbers, StringComparer.OrdinalIgnoreCase);
+            var existingNameSet = new HashSet<string>(existingAccNames, StringComparer.OrdinalIgnoreCase);
+
+            int skipped = 0;
             foreach (var record in records)
             {
                 int legacyId = (int)ParseDecimal(record, "account_id");
@@ -497,11 +503,20 @@ namespace IBSWeb.Areas.User.Controllers
                     legacyParentId = pid;
                 }
 
+                string? accNum = GetString(record, "account_number") == "-" ? null : GetString(record, "account_number");
+                string accName = GetString(record, "account_name");
+
+                if ((accNum != null && existingAccSet.Contains(accNum)) || existingNameSet.Contains(accName))
+                {
+                    skipped++;
+                    continue;
+                }
+
                 var entity = new ChartOfAccount
                 {
                     IsMain = ParseBool(record, "is_main"),
-                    AccountNumber = GetString(record, "account_number") == "-" ? null : GetString(record, "account_number"),
-                    AccountName = GetString(record, "account_name"),
+                    AccountNumber = accNum,
+                    AccountName = accName,
                     AccountType = GetString(record, "account_type") == "-" ? null : GetString(record, "account_type"),
                     NormalBalance = GetString(record, "normal_balance") == "-" ? null : GetString(record, "normal_balance"),
                     Level = (int)ParseDecimal(record, "level"),
@@ -514,10 +529,15 @@ namespace IBSWeb.Areas.User.Controllers
                 };
 
                 newRecords.Add((entity, legacyId, legacyParentId));
+                if (accNum != null) existingAccSet.Add(accNum);
+                existingNameSet.Add(accName);
             }
 
-            await dbContext.ChartOfAccounts.AddRangeAsync(newRecords.Select(x => x.Entity));
-            await dbContext.SaveChangesAsync();
+            if (newRecords.Count > 0)
+            {
+                await dbContext.ChartOfAccounts.AddRangeAsync(newRecords.Select(x => x.Entity));
+                await dbContext.SaveChangesAsync();
+            }
 
             foreach (var item in newRecords)
             {
@@ -540,14 +560,14 @@ namespace IBSWeb.Areas.User.Controllers
                 await dbContext.SaveChangesAsync();
             }
 
-            return $"Chart of Accounts: {newRecords.Count} imported.";
+            return $"Chart of Accounts: {newRecords.Count} imported, {skipped} already existed.";
         }
 
         private async Task<string> ImportBankAccountsAsync(IFormFile file, ImportMaps maps)
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<BankAccount>();
 
@@ -598,7 +618,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Customer Entity, string LegacyId)>();
 
@@ -689,7 +709,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Port Entity, string LegacyId)>();
 
@@ -745,7 +765,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Service Entity, string LegacyId)>();
 
@@ -801,7 +821,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(TugboatOwner Entity, string LegacyId)>();
 
@@ -857,7 +877,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(TugMaster Entity, string LegacyId)>();
 
@@ -914,7 +934,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Vessel Entity, string LegacyId)>();
 
@@ -971,7 +991,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Terminal Entity, string LegacyId)>();
 
@@ -1044,7 +1064,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Tugboat Entity, string LegacyId)>();
 
@@ -1118,7 +1138,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<(Principal Entity, string LegacyId)>();
 
@@ -1186,7 +1206,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<TariffRate>();
 
@@ -1261,7 +1281,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<Collection>();
 
@@ -1347,7 +1367,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0;
 
             foreach (var record in records)
@@ -1381,7 +1401,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r);
             int count = 0;
             var newRecords = new List<Billing>();
             var seenBillingKeys = new HashSet<string>();
@@ -1517,7 +1537,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             using var reader = new StreamReader(file.OpenReadStream());
             using var csv = new CsvReader(reader, _csvConfig);
-            var records = csv.GetRecords<ExpandoObject>().ToList();
+            var records = csv.GetRecords<dynamic>().Select(r => (IDictionary<string, object?>)r).ToList();
             int count = 0, skipped = 0;
             var newRecords = new List<DispatchTicket>();
 
@@ -1867,7 +1887,7 @@ namespace IBSWeb.Areas.User.Controllers
                 f.FileName.Contains(keyword, StringComparison.OrdinalIgnoreCase));
         }
 
-        private static string GetString(ExpandoObject? record, string propertyName)
+        private static string GetString(IDictionary<string, object?>? record, string propertyName)
         {
             if (record == null) return "-";
             var targetKey = propertyName.Trim().ToLower();
@@ -1884,34 +1904,34 @@ namespace IBSWeb.Areas.User.Controllers
             return "-";
         }
 
-        private static bool ParseBool(ExpandoObject? record, string propertyName)
+        private static bool ParseBool(IDictionary<string, object?>? record, string propertyName)
         {
             var val = GetString(record, propertyName).ToLower();
             return val == "t" || val == "true";
         }
 
-        private static decimal ParseDecimal(ExpandoObject? record, string propertyName)
+        private static decimal ParseDecimal(IDictionary<string, object?>? record, string propertyName)
         {
             var val = GetString(record, propertyName);
             return decimal.TryParse(val, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal result)
                 ? result : 0;
         }
 
-        private static DateOnly? ParseDateOnly(ExpandoObject? record, string propertyName)
+        private static DateOnly? ParseDateOnly(IDictionary<string, object?>? record, string propertyName)
         {
             var val = GetString(record, propertyName);
             return DateOnly.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result)
                 ? result : null;
         }
 
-        private static DateTime? ParseDateTime(ExpandoObject? record, string propertyName)
+        private static DateTime? ParseDateTime(IDictionary<string, object?>? record, string propertyName)
         {
             var val = GetString(record, propertyName);
             return DateTime.TryParse(val, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result)
                 ? result : null;
         }
 
-        private static TimeOnly? ParseTimeOnly(ExpandoObject? record, string propertyName)
+        private static TimeOnly? ParseTimeOnly(IDictionary<string, object?>? record, string propertyName)
         {
             var val = GetString(record, propertyName).Trim();
 

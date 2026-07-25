@@ -67,9 +67,7 @@ const ModernAlert = {
                     <div class="h-[1px] w-8" style="background-color: var(--outline-variant)"></div>
                 </div>
             `,
-            confirmButtonText: 'OK',
-            timer: 2500,
-            timerProgressBar: true
+            confirmButtonText: 'OK'
         });
     },
 
