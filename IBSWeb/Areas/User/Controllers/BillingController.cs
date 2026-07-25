@@ -9,9 +9,6 @@ using IBS.Services;
 using IBS.Utility.Constants;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
 
 namespace IBSWeb.Areas.User.Controllers
 {
