@@ -21,17 +21,15 @@ namespace IBS.Tests.UI
             await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
             await Page.FillAsync("input[name='Date']", "2026-06-10");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
-            await SelectModernOptionAsync("Port", "SUBIC");
-            await Page.WaitForFunctionAsync(@"() => {
-                const select = document.querySelector('#TerminalId');
-                return select && select.options.length > 1;
-            }");
+            await Page.RunAndWaitForResponseAsync(
+                async () => await SelectModernOptionAsync("Port", "SUBIC"),
+                r => r.Url.Contains("ChangeTerminal") && r.Status == 200);
             await SelectModernOptionAsync("Terminal", "COASTAL");
 
             await Page.FillAsync("#PlannedStartTime", "2026-06-10T10:00");
             await Page.FillAsync("#PlannedEndTime", "2026-06-10T12:00");
 
-            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await Page.ClickAsync("#confirmCreateBtn", new PageClickOptions { Force = true });
             await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForSelectorAsync("h1.modern-headline-lg:has-text('Job Order #')");
 

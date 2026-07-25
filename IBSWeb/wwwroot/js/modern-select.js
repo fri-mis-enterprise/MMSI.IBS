@@ -20,9 +20,14 @@ const ModernSelect = {
         $select.hide();
         
         // Create modern select structure
+        const selectId = $select.attr('id') || $select.attr('name') || '';
+        const testId = $select.attr('data-testid') || (selectId ? `select-${selectId}` : '');
+        const triggerTestId = testId ? `${testId}-trigger` : '';
+        const testIdAttr = triggerTestId ? `data-testid="${triggerTestId}"` : '';
+
         const $container = $('<div class="modern-select-container"></div>');
         const $trigger = $(`
-            <div class="modern-select-trigger" tabindex="0">
+            <div class="modern-select-trigger" ${testIdAttr} tabindex="0">
                 <span class="selected-text">${placeholder}</span>
                 <span class="material-symbols-outlined">expand_more</span>
             </div>
@@ -167,21 +172,6 @@ const ModernSelect = {
 
                 // Clear any manual keyboard highlight when user types
                 $optionsContainer.find('.modern-select-option.highlighted').removeClass('highlighted');
-
-                // Auto-select if there is exactly 1 matching option and term is at least 2 characters long
-                if (term.length >= 5) {
-                    const $visibleOptions = $optionsContainer.find('.modern-select-option:not(.hidden)');
-                    if ($visibleOptions.length === 1) {
-                        selectOption($visibleOptions.first());
-                        // ponytail: auto-focus next modern-select in DOM order
-                        setTimeout(function() {
-                            var $next = $('.js-modern-select').eq($('.js-modern-select').index($select) + 1);
-                            if ($next.length) {
-                                $next.next('.modern-select-container').find('.modern-select-trigger').focus();
-                            }
-                        }, 0);
-                    }
-                }
             });
 
             // Keyboard navigation (Tab to highlight, Space/Enter to select)

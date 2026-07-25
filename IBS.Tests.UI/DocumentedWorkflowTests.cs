@@ -14,28 +14,15 @@ namespace IBS.Tests.UI
             await LoginAsync("admin@mmsi.com", "Admin123!");
 
             // 1. Create Job Order
-            await Page.GotoAsync($"{ServerAddress}/User/JobOrder/Create");
-            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
-            await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
+            var jobOrderCreatePage = new Pages.JobOrderCreatePage(Page, ServerAddress);
+            await jobOrderCreatePage.NavigateAsync();
 
-            await SelectModernOptionAsync("Customer", "FOUR DRAGONS SHIPPING SERVICES");
+            await jobOrderCreatePage.SelectCustomerAsync("FOUR DRAGONS SHIPPING SERVICES");
+            await jobOrderCreatePage.SelectVesselAsync("BRP GREGORIO VELASQUEZ (LOCAL)");
+            await jobOrderCreatePage.SelectPortAndTerminalAsync("BATANGAS", "BBTI");
+            await jobOrderCreatePage.SetDatesAndTimesAsync("2026-06-06", "2026-06-06T08:00", "2026-06-06T20:00");
 
-            await Page.FillAsync("input[name='Date']", "2026-06-06");
-
-            await SelectModernOptionAsync("Vessel", "BRP GREGORIO VELASQUEZ (LOCAL)");
-            await SelectModernOptionAsync("Port", "BATANGAS");
-
-            await Page.WaitForFunctionAsync(@"() => {
-                const select = document.querySelector('#TerminalId');
-                return select && select.options.length > 1;
-            }");
-
-            await SelectModernOptionAsync("Terminal", "BBTI");
-
-            await Page.FillAsync("#PlannedStartTime", "2026-06-06T08:00");
-            await Page.FillAsync("#PlannedEndTime", "2026-06-06T20:00");
-
-            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await jobOrderCreatePage.SubmitAsync();
             await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForSelectorAsync("h1.modern-headline-lg:has-text('Job Order #')");
 

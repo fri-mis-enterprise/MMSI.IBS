@@ -30,9 +30,13 @@ const ModernAlert = {
             popup: 'modern-swal-popup',
             title: 'modern-swal-title',
             htmlContainer: 'modern-swal-html',
-            confirmButton: 'modern-swal-confirm',
-            cancelButton: 'modern-swal-cancel',
+            confirmButton: 'modern-swal-confirm swal2-confirm-btn',
+            cancelButton: 'modern-swal-cancel swal2-cancel-btn',
             actions: 'modern-swal-actions'
+        },
+        didOpen: function(popup) {
+            $(popup).find('.swal2-confirm').attr('data-testid', 'swal-confirm-btn');
+            $(popup).find('.swal2-cancel').attr('data-testid', 'swal-cancel-btn');
         },
         buttonsStyling: false,
         showCloseButton: false,

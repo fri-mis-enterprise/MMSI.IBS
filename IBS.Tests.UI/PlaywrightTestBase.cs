@@ -73,7 +73,7 @@ namespace IBS.Tests.UI
             });
 
             Page = await Context.NewPageAsync();
-            Page.SetDefaultTimeout(60000); 
+            Page.SetDefaultTimeout(60000);
         }
 
         public virtual async Task DisposeAsync()
@@ -99,57 +99,42 @@ namespace IBS.Tests.UI
             await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         }
 
-        protected async Task SelectModernOptionAsync(string label, string optionText)
+        protected async Task SelectModernOptionAsync(string labelOrTestId, string optionText)
         {
-            var idMap = new Dictionary<string, string>
-            {
-                { "Customer", "#CustomerContainer" },
-                { "Deposit To Bank", "#BankContainer" },
-                { "Port", "#PortContainer" },
-                { "Terminal", "#TerminalContainer" },
-                { "Vessel", "#VesselContainer" },
-                { "Activity/Service Type", "#ServiceContainer" },
-                { "Tugboat/Service provider", "#TugboatContainer" },
-                { "Master on Duty", "#TugMasterContainer" }
-            };
-
             ILocator trigger;
-            if (idMap.TryGetValue(label, out var id))
+            if (labelOrTestId.StartsWith("select-"))
             {
-                trigger = Page.Locator($"{id} .modern-select-trigger");
+                trigger = Page.Locator($"[data-testid='{labelOrTestId}-trigger'], .modern-select-trigger[data-testid='{labelOrTestId}']").First;
             }
             else
             {
-                trigger = Page.Locator("div")
-                    .Filter(new() { Has = Page.Locator($"label:has-text('{label}')") })
-                    .Filter(new() { Has = Page.Locator(".modern-select-trigger") })
-                    .First
-                    .Locator(".modern-select-trigger");
-            }
-
-            await trigger.ScrollIntoViewIfNeededAsync();
-            await Page.WaitForTimeoutAsync(300);
-            await trigger.WaitForAsync(new() { State = WaitForSelectorState.Visible });
-
-            bool shown = await Page.Locator(".modern-select-dropdown.show").IsVisibleAsync();
-
-            int retries = 3;
-            while (retries-- > 0 && !shown)
-            {
-                await trigger.FocusAsync();
-                await trigger.ClickAsync(new() { Force = true });
-                try
+                var idMap = new Dictionary<string, string>
                 {
-                    await Page.Locator(".modern-select-dropdown.show").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 2000 });
-                    shown = true;
+                    { "Customer", "#CustomerContainer .modern-select-trigger, [data-testid='select-CustomerId-trigger']" },
+                    { "Deposit To Bank", "#BankContainer .modern-select-trigger, [data-testid='select-BankAccountId-trigger']" },
+                    { "Port", "#PortContainer .modern-select-trigger, [data-testid='select-PortId-trigger']" },
+                    { "Terminal", "#TerminalContainer .modern-select-trigger, [data-testid='select-TerminalId-trigger']" },
+                    { "Vessel", "#VesselContainer .modern-select-trigger, [data-testid='select-VesselId-trigger']" },
+                    { "Activity/Service Type", "#ServiceContainer .modern-select-trigger, [data-testid='select-ServiceId-trigger']" },
+                    { "Tugboat/Service provider", "#TugboatContainer .modern-select-trigger, [data-testid='select-TugboatId-trigger']" },
+                    { "Master on Duty", "#TugMasterContainer .modern-select-trigger, [data-testid='select-TugMasterId-trigger']" }
+                };
+
+                if (idMap.TryGetValue(labelOrTestId, out var testIdSelector))
+                {
+                    trigger = Page.Locator(testIdSelector).First;
                 }
-                catch
+                else
                 {
-                    await trigger.EvaluateAsync("el => el.click()");
-                    await Page.WaitForTimeoutAsync(500);
-                    if (await Page.Locator(".modern-select-dropdown.show").IsVisibleAsync()) shown = true;
+                    trigger = Page.Locator("div")
+                        .Filter(new() { Has = Page.Locator($"label:has-text('{labelOrTestId}')") })
+                        .Filter(new() { Has = Page.Locator(".modern-select-trigger") })
+                        .First
+                        .Locator(".modern-select-trigger");
                 }
             }
+
+            await trigger.ClickAsync(new() { Force = true });
 
             var dropdown = Page.Locator(".modern-select-dropdown.show");
             await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Visible });
@@ -157,89 +142,30 @@ namespace IBS.Tests.UI
             var searchInput = dropdown.Locator(".modern-select-search input");
             if (await searchInput.CountAsync() > 0 && await searchInput.IsVisibleAsync())
             {
-                await searchInput.ClearAsync();
                 await searchInput.FillAsync(optionText);
-                await Page.WaitForTimeoutAsync(500);
             }
 
-            var escapedText = Regex.Escape(optionText);
             var option = dropdown.Locator(".modern-select-option")
-                .Filter(new() { HasTextRegex = new Regex("^\\s*" + escapedText + "\\s*$", RegexOptions.IgnoreCase) });
+                .Filter(new() { HasText = optionText })
+                .First;
 
-            if (await option.CountAsync() == 0)
-            {
-                option = dropdown.Locator(".modern-select-option")
-                    .Filter(new() { HasTextRegex = new Regex(escapedText, RegexOptions.IgnoreCase) })
-                    .First;
-            }
-            else
-            {
-                option = option.First;
-            }
-
-            await option.ScrollIntoViewIfNeededAsync();
-            await ForceClickAsync(option);
-
-            try
-            {
-                await dropdown.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5000 });
-            }
-            catch { /* ignore timeout */ }
+            await option.ClickAsync(new() { Force = true });
         }
 
         protected async Task ForceClickAsync(ILocator locator)
         {
             await locator.WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = 15000 });
-            await locator.DispatchEventAsync("click");
-            await Page.WaitForTimeoutAsync(200);
+            await locator.ClickAsync(new() { Force = true });
         }
 
         protected async Task ConfirmSweetAlertAsync(string? buttonText = null)
         {
             var container = Page.Locator(".swal2-container");
-            try 
-            {
-                await container.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
-            }
-            catch 
-            {
-                if (await container.CountAsync() == 0) return;
-            }
-            
-            await Page.WaitForTimeoutAsync(500);
+            await container.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
 
-            ILocator? button = null;
-            if (!string.IsNullOrEmpty(buttonText))
-            {
-                var strategies = new[] {
-                    container.Locator("button.swal2-confirm").Filter(new() { HasTextRegex = new Regex($"^{buttonText}$", RegexOptions.IgnoreCase) }),
-                    container.Locator("button.swal2-confirm").Filter(new() { HasTextRegex = new Regex(buttonText, RegexOptions.IgnoreCase) }),
-                    container.Locator("button").Filter(new() { HasTextRegex = new Regex(buttonText, RegexOptions.IgnoreCase) })
-                };
-
-                foreach (var strategy in strategies)
-                {
-                    if (await strategy.CountAsync() > 0)
-                    {
-                        button = strategy.First;
-                        break;
-                    }
-                }
-            }
-
-            button ??= container.Locator("button.swal2-confirm");
-
-            if (await button.CountAsync() > 0)
-            {
-                await button.ScrollIntoViewIfNeededAsync();
-                await button.ClickAsync(new() { Force = true });
-            }
-
-            try
-            {
-                await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 3000 });
-            }
-            catch (TimeoutException) { }
+            var confirmButton = container.Locator("[data-testid='swal-confirm-btn'], button.swal2-confirm").First;
+            await confirmButton.ClickAsync(new() { Force = true });
+            await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 5000 });
         }
 
         protected async Task ClickSweetAlertOkAsync()
@@ -249,25 +175,16 @@ namespace IBS.Tests.UI
 
         protected async Task DismissAnySweetAlertAsync()
         {
-            try
+            var container = Page.Locator(".swal2-container");
+            if (await container.CountAsync() > 0 && await container.IsVisibleAsync())
             {
-                var container = Page.Locator(".swal2-container");
-                for (int i = 0; i < 3; i++)
+                var confirmButton = container.Locator("[data-testid='swal-confirm-btn'], button.swal2-confirm").First;
+                if (await confirmButton.CountAsync() > 0)
                 {
-                    if (await container.CountAsync() > 0 && await container.IsVisibleAsync())
-                    {
-                        var okButton = container.Locator("button.swal2-confirm");
-                        if (await okButton.CountAsync() > 0)
-                        {
-                            await okButton.ClickAsync(new() { Force = true });
-                            try { await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 1000 }); }
-                            catch (TimeoutException) { }
-                        }
-                    }
-                    await Page.WaitForTimeoutAsync(300);
+                    await confirmButton.ClickAsync(new() { Force = true });
+                    await container.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 3000 });
                 }
             }
-            catch (TimeoutException) { }
         }
     }
 }

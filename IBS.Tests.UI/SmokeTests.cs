@@ -26,8 +26,8 @@ namespace IBS.Tests.UI
             // Navigate directly to Create
             await Page.GotoAsync($"{ServerAddress}/User/PaymentTerms/Create");
 
-            // Wait for the form to be ready
-            await Page.WaitForSelectorAsync("form button[type='submit']");
+            // Wait for the form to be ready (scope to main content, not navbar)
+            await Page.WaitForSelectorAsync("main button[type='submit']");
 
             // HACK: Remove overlays and disable the spinner logic that might interfere
             await Page.EvaluateAsync(@"() => {
@@ -43,7 +43,7 @@ namespace IBS.Tests.UI
             await Page.FillAsync("input[name='NumberOfMonths']", "0");
 
             // Submit and wait for navigation
-            await Page.ClickAsync("main button:has-text('Create')");
+            await Page.ClickAsync("main button[type='submit']", new PageClickOptions { Force = true });
             await Page.WaitForURLAsync($"{ServerAddress}/User/PaymentTerms");
 
             // Verify the new term is in the list

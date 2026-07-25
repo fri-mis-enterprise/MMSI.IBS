@@ -16,12 +16,14 @@ namespace IBS.Tests.UI
 
             // 1. Create Job Order
             await Page.GotoAsync($"{ServerAddress}/User/JobOrder/Create");
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
 
-            await SelectModernOptionAsync("Port", "SUBIC");
+            await Page.RunAndWaitForResponseAsync(
+                async () => await SelectModernOptionAsync("Port", "SUBIC"),
+                r => r.Url.Contains("ChangeTerminal") && r.Status == 200);
             await SelectModernOptionAsync("Terminal", "COASTAL");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
 
@@ -30,13 +32,13 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#PlannedStartTime", "2026-06-11T08:00");
             await Page.FillAsync("#PlannedEndTime", "2026-06-11T12:00");
 
-            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await Page.ClickAsync("#confirmCreateBtn", new PageClickOptions { Force = true });
             await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
             // 2. Add a ticket but don't set tariff (Status: For Tariff)
             await Page.ClickAsync("a:has-text('ADD TICKET')");
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             var ticketNo = $"T-EDGE-{Guid.NewGuid().ToString().Substring(0, 8)}";
@@ -74,12 +76,14 @@ namespace IBS.Tests.UI
 
             // 1. Create Job Order
             await Page.GotoAsync($"{ServerAddress}/User/JobOrder/Create");
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
 
-            await SelectModernOptionAsync("Port", "SUBIC");
+            await Page.RunAndWaitForResponseAsync(
+                async () => await SelectModernOptionAsync("Port", "SUBIC"),
+                r => r.Url.Contains("ChangeTerminal") && r.Status == 200);
             await SelectModernOptionAsync("Terminal", "COASTAL");
             await SelectModernOptionAsync("Vessel", "MT BULUSAN II");
 
@@ -89,7 +93,7 @@ namespace IBS.Tests.UI
             await Page.FillAsync("#PlannedStartTime", "2026-06-11T14:00");
             await Page.FillAsync("#PlannedEndTime", "2026-06-11T16:00");
 
-            await Page.ClickAsync("button:has-text('Create Job Order')");
+            await Page.ClickAsync("#confirmCreateBtn", new PageClickOptions { Force = true });
             await ConfirmSweetAlertAsync("Yes, create it!");
             await Page.WaitForURLAsync(new Regex("/User/JobOrder/Details/\\d+"));
 
@@ -148,7 +152,7 @@ namespace IBS.Tests.UI
 
             // 3. Go to Billing Create and select this JO
             await Page.GotoAsync($"{ServerAddress}/User/Billing/Create");
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await Page.EvaluateAsync("document.querySelectorAll('.loader-container, #qa-panel, .qa-list-area').forEach(el => el.remove())");
 
             await SelectModernOptionAsync("Customer", "INSULAR OIL CORPORATION");
