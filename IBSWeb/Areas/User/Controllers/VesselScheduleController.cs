@@ -316,10 +316,11 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(new { date = date.ToString("yyyy-MM-dd"), terminals = matrix });
         }
 
+        [HttpGet]
         public async Task<IActionResult> GetTerminalsByPort(int portId, CancellationToken ct)
         {
             var terminals = await unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, ct);
-            return Json(terminals.Select(t => new { value = t.TerminalId, text = t.TerminalName }));
+            return Json(terminals.Select(t => new { value = t.TerminalId.ToString(), text = t.TerminalName }));
         }
 
         private async Task PopulateDropdownsAsync(VesselScheduleViewModel vm, CancellationToken ct, int? selectedPortId = null)

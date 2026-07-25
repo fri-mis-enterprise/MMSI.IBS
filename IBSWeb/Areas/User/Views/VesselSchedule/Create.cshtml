@@ -60,7 +60,7 @@
                                 <div class="modern-col-6">
                                     <label class="modern-label">Port <span class="text-error">*</span></label>
                                     <div id="PortContainer">
-                                        <select asp-for="PortId" id="PortSelect" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --">
+                                        <select asp-for="PortId" id="PortId" asp-items="@Model.Ports" class="js-modern-select" data-placeholder="-- Select Port --">
                                             <option value="">-- Select Port --</option>
                                         </select>
                                     </div>
@@ -69,7 +69,7 @@
                                 <div class="modern-col-6">
                                     <label class="modern-label">Terminal <span class="text-error">*</span> <span id="terminalLoading" class="spinner-border spinner-border-sm text-secondary ms-1" style="display:none;" role="status"></span></label>
                                     <div id="TerminalContainer">
-                                        <select id="TerminalSelect" asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" data-placeholder="-- Select Terminal --">
+                                        <select id="TerminalId" asp-for="TerminalId" asp-items="@Model.Terminals" class="js-modern-select" data-placeholder="-- Select Terminal --">
                                             <option value="">-- Select Terminal --</option>
                                         </select>
                                     </div>
@@ -81,7 +81,7 @@
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Status</label>
-                                    <select asp-for="Status" asp-items="@Model.Statuses" class="modern-input"></select>
+                                    <select asp-for="Status" asp-items="@Model.Statuses" class="modern-input js-modern-select"></select>
                                 </div>
                             </div>
                         </div>
@@ -186,21 +186,32 @@
             if ($('#VesselId').val()) { updateVesselType(); }
 
             // --- Port/Terminal Cascade ---
-            $('#PortSelect').on('change', function () {
-                const portId = $(this).val();
+            $('#PortId').on('change', function () {
+                var portId = $(this).val();
+                var $terminalSelect = $('#TerminalId');
+
+                $terminalSelect.empty().append('<option value="">-- Select Terminal --</option>');
+                $terminalSelect.trigger('change');
+
                 if (!portId) return;
 
-                $('#terminalLoading').show();
-                $.get('@Url.Action("GetTerminalsByPort")', { portId: portId }, function (data) {
-                    const $select = $('#TerminalSelect');
-                    $select.empty().append('<option value="">-- Select Terminal --</option>');
-                    $.each(data, function (i, item) {
-                        $select.append($('<option>', { value: item.value, text: item.text }));
-                    });
-                    if (typeof refreshModernSelect === 'function') {
-                        refreshModernSelect($select);
+                $.ajax({
+                    url: '@Url.Action("GetTerminalsByPort", "VesselSchedule")',
+                    type: 'GET',
+                    data: { portId: portId },
+                    success: function (data) {
+                        $.each(data, function (i, item) {
+                            $terminalSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                        $terminalSelect.trigger('change');
+                    },
+                    error: function (xhr) {
+                        console.error('GetTerminalsByPort failed:', xhr.status, xhr.responseText);
                     }
-                }).always(() => $('#terminalLoading').hide());
+                });
             });
 
             // --- Tugboat DataTable + checkbox logic ---
@@ -252,7 +263,7 @@
                 $('.tug-checkbox:checked').each(function () { tugIds.push(parseInt($(this).val())); });
                 return {
                     vesselScheduleId: 0,
-                    terminalId: parseInt($('#TerminalSelect').val() || 0),
+                    terminalId: parseInt($('#TerminalId').val() || 0),
                     plannedStart: $('#PlannedStart').val() ? new Date($('#PlannedStart').val()).toISOString() : null,
                     plannedEnd: $('#PlannedEnd').val() ? new Date($('#PlannedEnd').val()).toISOString() : null,
                     selectedTugboatIds: tugIds
@@ -306,8 +317,6 @@
                         showSaveConfirm(false);
                     }
                 }).fail(function () {
-                    showSaveConfirm(false);
-                });
                     ModernAlert.confirm({
                         title: 'Save Schedule?',
                         text: 'Could not check conflicts. Proceed anyway?',
