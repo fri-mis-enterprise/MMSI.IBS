@@ -29,7 +29,7 @@
     .border-dark { border: 1px solid black; }
 
         @@media print {
-@@page {
+            @@page {
                 margin: 0 0.3in;
             }
             .modern-layout { background: white !important; }
@@ -41,6 +41,21 @@
             body { margin: 0; padding: 0 !important; }
             .no-print { display: none !important; }
             body.mnav-enabled { padding-top: 0.3in !important; }
+            .ticket-image-page {
+                page-break-before: always;
+                break-before: page;
+                margin-top: 0.5in !important;
+            }
+        }
+        .ticket-image-page {
+            border-top: 1px dashed var(--border-color, #ccc);
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+        }
+        @@media print {
+            .ticket-image-page {
+                border-top: none;
+            }
         }
 </style>
 
@@ -62,7 +77,7 @@
             </div>
             <div class="flex gap-2">
                 <button onclick="window.print()" class="modern-btn-primary">
-                    <span class="material-symbols-outlined">print</span> PRINT STATEMENT
+                    <span class="material-symbols-outlined">print</span> PRINT / SAVE AS PDF
                 </button>
                 <a asp-action="Print" asp-route-id="@Model.MsapBillingId" class="modern-btn-secondary">
                     <span class="material-symbols-outlined">terminal</span> DOT MATRIX
@@ -275,13 +290,30 @@
             </div>
         </div>
 
+        @if (Model.PaidDispatchTickets != null && Model.PaidDispatchTickets.Any(dt => !string.IsNullOrEmpty(dt.ImageSignedUrl)))
+        {
+            @foreach (var dt in Model.PaidDispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageSignedUrl)))
+            {
+                <div class="modern-card ticket-image-page">
+                    <div class="billing-statement text-center">
+                        <h4 class="font-bold text-sm mb-3">
+                            Dispatch Ticket #@(dt.DispatchNumber ?? dt.DispatchTicketId.ToString()) &mdash; Billing @Model.MsapBillingNumber
+                        </h4>
+                        <div class="flex justify-center items-center" style="max-height: 90vh;">
+                            <img src="@dt.ImageSignedUrl" alt="Dispatch Ticket @dt.DispatchNumber" style="max-width: 100%; max-height: 85vh; object-fit: contain;" />
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
         <!-- Sticky Footer Buttons (No Print) -->
         <div class="flex justify-end gap-2 mt-4 no-print">
             <a asp-action="Index" class="modern-btn-secondary px-5">
                 <span class="material-symbols-outlined">arrow_back</span> BACK TO LIST
             </a>
             <button onclick="window.print()" class="modern-btn-primary px-5">
-                <span class="material-symbols-outlined">print</span> PRINT NOW
+                <span class="material-symbols-outlined">print</span> PRINT / SAVE AS PDF
             </button>
         </div>
     </main>

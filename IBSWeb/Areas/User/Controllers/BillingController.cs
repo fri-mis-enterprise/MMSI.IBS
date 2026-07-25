@@ -9,6 +9,9 @@ using IBS.Services;
 using IBS.Utility.Constants;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -19,6 +22,7 @@ namespace IBSWeb.Areas.User.Controllers
     public class BillingController(
         IUnitOfWork unitOfWork,
         BillingService billingService,
+        ICloudStorageService cloudStorageService,
         ILogger<BillingController> logger)
         : Controller
     {
@@ -258,6 +262,23 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             model = await billingService.PopulateTicketListsAsync(model, cancellationToken);
+            if (model.PaidDispatchTickets != null)
+            {
+                foreach (var ticket in model.PaidDispatchTickets)
+                {
+                    if (!string.IsNullOrEmpty(ticket.ImageName))
+                    {
+                        try
+                        {
+                            ticket.ImageSignedUrl = await cloudStorageService.GetSignedUrlAsync(ticket.ImageName);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning(ex, "Failed to get signed URL for ticket {TicketId}", ticket.DispatchTicketId);
+                        }
+                    }
+                }
+            }
             return View(model);
         }
 
