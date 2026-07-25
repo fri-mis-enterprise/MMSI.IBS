@@ -17,8 +17,6 @@ namespace IBS.DataAccess.Data
 
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
-        public DbSet<LogMessage> LogMessages { get; set; }
-
         public DbSet<AppSetting> AppSettings { get; set; }
 
         public DbSet<AuditTrail> AuditTrails { get; set; }
@@ -58,9 +56,6 @@ namespace IBS.DataAccess.Data
         public DbSet<TugMaster> MsapTugMasters { get; set; }
         public DbSet<UserAccess> MsapUserAccesses { get; set; }
         public DbSet<Vessel> MsapVessels { get; set; }
-        public DbSet<Rate> MsapRates { get; set; }
-        public DbSet<Module> MsapModules { get; set; }
-
         #endregion --Master File Entities
 
         public DbSet<Company> Companies { get; set; }

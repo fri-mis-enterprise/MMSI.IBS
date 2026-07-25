@@ -1,14 +1,5 @@
 namespace IBS.Models.Enums
 {
-    public enum Enum
-    {
-
-    }
-
-    /// <summary>
-    /// Defines all access procedures for MMSI permission system.
-    /// Grouped by module for easier management.
-    /// </summary>
     public enum ProcedureEnum
     {
         #region -- MSAP Workflow --

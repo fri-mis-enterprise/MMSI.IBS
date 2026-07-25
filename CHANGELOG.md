@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-25]
+### Changed
+- **Ponytail audit cleanup** — Deleted dead code: `LogMessage.cs`, `Rate.cs`, `Module.cs` models + DbSets, `ChartOfAccountDto.cs`, `SupplierDto.cs`, `GoogleDriveService.cs` + `IGoogleDriveService`, `GoogleDriveFileViewModel.cs`. Removed `Enum` empty enum, kept `ProcedureEnum`. Removed 10 unused NuGet packages (`Humanizer`, `QuickGrid` x4, `Quartz`, `Serilog.GoogleCloudLogging`, `Azure.Containers.Tools`, `CsvHelper` from IBSWeb, EPPlus from IBSWeb/DataAccess). Removed `_ContentIncludedByDefault` and `.editorconfig` link from csproj. Removed unused `using IBS.DTOs` from DateTimeHelper. Cleaned up IBS.Utility project references. (`18 files, -517 net lines, -14 dependencies`)
+
 ## [2026-07-24]
 ### Added
 - **Billing Preview dispatch ticket images** — Added `ICloudStorageService` to BillingController; Preview action now fetches signed URLs for each dispatch ticket's image and renders them in the print view with `page-break-before: always`. Also added dropdown action for "Generate PDF" on Billing Index. (`BillingController.cs`, `Preview.cshtml`, `Index.cshtml`)
