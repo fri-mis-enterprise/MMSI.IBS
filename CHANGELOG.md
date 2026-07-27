@@ -5,6 +5,7 @@
 - **Rider formatting suggestions** — Accepted Rider IDE formatting suggestions across service, controller, and view files for consistent code style. (35 files)
 ### Fixed
 - **Billing post not closing Job Order** — `TryAutoCloseAsync` in `JobOrderService` silently swallowed exceptions and didn't exclude `Cancelled` dispatch tickets from the unbilled check. Now re-throws on failure (transaction rolls back) and treats `Cancelled` as a terminal status that doesn't block auto-close. (`JobOrderService.cs:231-233,250-253`)
+- **Billing edit loses JobOrderId after reversal** — Three bugs: (1) `ReverseBillingAsync` didn't clear `dt.BillingId = null`, so the JobOrder disappeared from the billable list; (2) `UpdateBillingAsync` blindly overwrote `JobOrderId` with null when the form didn't provide it; (3) Edit.cshtml had no fallback when the JO wasn't in the billable dropdown. Fixed all three. (`BillingService.cs:422-426,545`, `BillingController.cs:125-130`, `Edit.cshtml:439,451-456`)
 
 ## [2026-07-25]
 ### Fixed

@@ -419,7 +419,10 @@ namespace IBS.Services
                 currentModel.TerminalId = model.TerminalId;
                 currentModel.VesselId = model.VesselId;
                 currentModel.BilledTo = model.BilledTo;
-                currentModel.JobOrderId = model.JobOrderId;
+                if (model.JobOrderId.HasValue)
+                {
+                    currentModel.JobOrderId = model.JobOrderId;
+                }
                 currentModel.IsVatInclusive = model.IsVatInclusive;
                 currentModel.PrintWht = model.PrintWht;
                 currentModel.ApOtherTug = model.ApOtherTug;
@@ -543,6 +546,7 @@ namespace IBS.Services
                     foreach (var dt in linkedTickets)
                     {
                         dt.Status = SD.DispatchTicketStatus.ForBilling;
+                        dt.BillingId = null;
                     }
 
                     billing.Status = SD.BillingStatus.ForPosting;

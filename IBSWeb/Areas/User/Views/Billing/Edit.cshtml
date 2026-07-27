@@ -437,6 +437,7 @@
             
             function fillDataOnStartup() {
                 const initialJobOrderId = '@Model.JobOrderId';
+                const initialJobOrderText = '@(ViewData["CurrentJobOrderNumber"] ?? "")';
 
                 if (!initialJobOrderId) {
                     // Legacy billing (no Job Order): enable legacy toggle
@@ -449,6 +450,9 @@
                     }
                 } else {
                     populateJobOrderSelect().then(() => {
+                        if (initialJobOrderId && !$jobOrderSelect.find(`option[value="${initialJobOrderId}"]`).length) {
+                            $jobOrderSelect.append(`<option value="${initialJobOrderId}">${initialJobOrderText}</option>`);
+                        }
                         $jobOrderSelect.val(initialJobOrderId).trigger('change');
                     });
 

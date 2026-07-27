@@ -123,6 +123,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             model = await billingService.PopulateTicketListsAsync(model, cancellationToken);
 
+            if (model.JobOrderId.HasValue)
+            {
+                var jobOrder = await unitOfWork.JobOrder.GetAsync(jo => jo.JobOrderId == model.JobOrderId.Value, cancellationToken);
+                ViewData["CurrentJobOrderNumber"] = jobOrder?.JobOrderNumber;
+            }
+
             ViewData["HasPrincipal"] = model.CustomerPrincipal is { Count: > 0 };
 
             ViewData["CustomerAddress"] = model.Customer.CustomerAddress;
