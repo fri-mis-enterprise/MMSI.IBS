@@ -228,8 +228,9 @@ namespace IBS.Services
         {
             try
             {
+                var closedStatuses = new[] { SD.DispatchTicketStatus.Billed, SD.DispatchTicketStatus.Deleted, SD.DispatchTicketStatus.ServiceRequestDeleted, SD.DispatchTicketStatus.Cancelled };
                 var anyUnbilled = await unitOfWork.DispatchTicket.GetAsync(
-                    dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed && dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted,
+                    dt => dt.JobOrderId == jobOrderId && !closedStatuses.Contains(dt.Status),
                     cancellationToken) != null;
 
                 if (anyUnbilled)
@@ -249,7 +250,8 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Auto-close failed for Job Order {JobOrderId} — non-fatal", jobOrderId);
+                logger.LogError(ex, "Auto-close failed for Job Order {JobOrderId}", jobOrderId);
+                throw;
             }
         }
 

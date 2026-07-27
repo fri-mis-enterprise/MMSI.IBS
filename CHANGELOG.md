@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-07-27]
+### Changed
+- **Rider formatting suggestions** — Accepted Rider IDE formatting suggestions across service, controller, and view files for consistent code style. (35 files)
+### Fixed
+- **Billing post not closing Job Order** — `TryAutoCloseAsync` in `JobOrderService` silently swallowed exceptions and didn't exclude `Cancelled` dispatch tickets from the unbilled check. Now re-throws on failure (transaction rolls back) and treats `Cancelled` as a terminal status that doesn't block auto-close. (`JobOrderService.cs:231-233,250-253`)
+
 ## [2026-07-25]
 ### Fixed
 - **MSAP CSV Import dynamic record casting & duplicate checks** — Fixed `CsvHelper` `IEnumerable` auto-mapping exception across all master and transaction import methods in `MsapImportController` by casting dynamic records to `IDictionary<string, object?>`. Added existing record skip logic to `ImportChartOfAccountsAsync` to prevent database constraint errors on re-imports, and fixed escaped newline string formatting in flash messages. (`MsapImportController.cs`)
