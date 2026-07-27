@@ -1,6 +1,8 @@
 # Changelog
 
 ## [2026-07-27]
+### Fixed
+- **ModernSelect keyboard & focus improvements** — Auto-highlight first visible option on search input; Arrow Up/Down navigation; Enter/Space/Tab to select with auto-focus to next form field; Escape to close. Prevented hidden dropdown children from intercepting focus-advancement. (`modern-select.js`)
 ### Changed
 - **Rider formatting suggestions** — Accepted Rider IDE formatting suggestions across service, controller, and view files for consistent code style. (35 files)
 ### Fixed

@@ -134,6 +134,19 @@ const ModernSelect = {
             const val = $opt.data('value');
             const text = $opt.text();
             
+            // Find next visible focusable element in DOM order after the trigger
+            const findNextFocusable = () => {
+                const sel = 'input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+                const all = document.querySelectorAll(sel);
+                let past = false;
+                for (const el of all) {
+                    if (past && el.offsetParent !== null) return el;
+                    if (el === $trigger[0]) past = true;
+                }
+                return null;
+            };
+            const nextEl = findNextFocusable();
+
             $select.val(val).trigger('change');
             $trigger.find('.selected-text').text(text);
             $dropdown.removeClass('show');
@@ -141,6 +154,10 @@ const ModernSelect = {
             
             $optionsContainer.find('.modern-select-option').removeClass('selected');
             $opt.addClass('selected');
+
+            if (nextEl) {
+                setTimeout(() => { try { nextEl.focus(); } catch(e) {} }, 0);
+            }
         };
 
         $dropdown.on('click', '.modern-select-option', function(e) {
@@ -172,56 +189,65 @@ const ModernSelect = {
 
                 // Clear any manual keyboard highlight when user types
                 $optionsContainer.find('.modern-select-option.highlighted').removeClass('highlighted');
+
+                // Auto-highlight first visible option
+                const $firstVisible = $optionsContainer.find('.modern-select-option:not(.hidden):first');
+                if ($firstVisible.length) { $firstVisible.addClass('highlighted'); }
             });
 
-            // Keyboard navigation (Tab to highlight, Space/Enter to select)
+            // Keyboard navigation (Arrow Up/Down, Enter/Space/Tab to select)
             $input.on('keydown', function(e) {
                 const $visibleOptions = $optionsContainer.find('.modern-select-option:not(.hidden)');
                 
-                if (e.key === 'Tab') {
-                    if ($visibleOptions.length > 0) {
-                        e.preventDefault(); // Stop focus from leaving the search box
-                        
-                        const $currentHighlighted = $optionsContainer.find('.modern-select-option.highlighted');
-                        let nextIndex = 0;
-                        
-                        if ($currentHighlighted.length) {
-                            const currentIndex = $visibleOptions.index($currentHighlighted);
-                            if (e.shiftKey) {
-                                // Cycle backwards
-                                nextIndex = (currentIndex - 1 + $visibleOptions.length) % $visibleOptions.length;
-                            } else {
-                                // Cycle forwards
-                                nextIndex = (currentIndex + 1) % $visibleOptions.length;
-                            }
-                            $currentHighlighted.removeClass('highlighted');
-                        } else {
-                            // If nothing is highlighted yet, Tab starts at 0, Shift+Tab starts at the end
-                            nextIndex = e.shiftKey ? $visibleOptions.length - 1 : 0;
-                        }
-                        
-                        const $nextOpt = $visibleOptions.eq(nextIndex);
-                        $nextOpt.addClass('highlighted');
-                        
-                        // Scroll option into view if needed
-                        const container = $optionsContainer[0];
-                        const opt = $nextOpt[0];
-                        if (opt.offsetTop < container.scrollTop) {
-                            container.scrollTop = opt.offsetTop;
-                        } else if (opt.offsetTop + opt.offsetHeight > container.scrollTop + container.clientHeight) {
-                            container.scrollTop = opt.offsetTop + opt.offsetHeight - container.clientHeight;
-                        }
+                const scrollIntoView = ($opt) => {
+                    const container = $optionsContainer[0];
+                    const opt = $opt[0];
+                    if (opt.offsetTop < container.scrollTop) {
+                        container.scrollTop = opt.offsetTop;
+                    } else if (opt.offsetTop + opt.offsetHeight > container.scrollTop + container.clientHeight) {
+                        container.scrollTop = opt.offsetTop + opt.offsetHeight - container.clientHeight;
                     }
-                } else if (e.key === ' ' || e.key === 'Enter') {
+                };
+
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if ($visibleOptions.length === 0) return;
+
+                    const $current = $optionsContainer.find('.modern-select-option.highlighted');
+                    let nextIndex;
+
+                    if ($current.length) {
+                        const currentIndex = $visibleOptions.index($current);
+                        nextIndex = e.key === 'ArrowDown'
+                            ? Math.min(currentIndex + 1, $visibleOptions.length - 1)
+                            : Math.max(currentIndex - 1, 0);
+                        $current.removeClass('highlighted');
+                    } else {
+                        nextIndex = e.key === 'ArrowDown' ? 0 : $visibleOptions.length - 1;
+                    }
+
+                    const $next = $visibleOptions.eq(nextIndex);
+                    $next.addClass('highlighted');
+                    scrollIntoView($next);
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
                     const $highlighted = $optionsContainer.find('.modern-select-option.highlighted');
                     if ($highlighted.length) {
-                        e.preventDefault(); // Prevent space character or form submit
                         selectOption($highlighted);
-                    } else if (e.key === 'Enter' && $visibleOptions.length === 1) {
-                        // Enter also selects the single option if not explicitly highlighted
-                        e.preventDefault();
+                    } else if ($visibleOptions.length === 1) {
                         selectOption($visibleOptions.first());
                     }
+                } else if (e.key === 'Tab') {
+                    const $highlighted = $optionsContainer.find('.modern-select-option.highlighted');
+                    if ($highlighted.length) {
+                        e.preventDefault();
+                        selectOption($highlighted);
+                    }
+                    // otherwise let default Tab move focus naturally
+                } else if (e.key === 'Escape') {
+                    $dropdown.removeClass('show');
+                    $trigger.removeClass('active');
+                    $trigger.focus();
                 }
             });
 
