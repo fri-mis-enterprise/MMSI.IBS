@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
 {
-    public class JobOrderService(IUnitOfWork unitOfWork, ILogger<JobOrderService> logger)
+    public sealed class JobOrderService(IUnitOfWork unitOfWork, ILogger<JobOrderService> logger)
     {
         public async Task<IEnumerable<JobOrder>> GetAllJobOrdersAsync(CancellationToken cancellationToken)
         {
@@ -62,12 +62,15 @@ namespace IBS.Services
             return viewModel;
         }
 
-        public virtual async Task<ServiceResult<int>> CreateJobOrderAsync(JobOrder jobOrder, string username, CancellationToken cancellationToken)
+        public async Task<ServiceResult<int>> CreateJobOrderAsync(JobOrder jobOrder, string username, CancellationToken cancellationToken)
         {
             try
             {
                 var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
-                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+                if (guard != null)
+                {
+                    return ServiceResult<int>.Failure(guard.Message!);
+                }
 
                 var timeError = ValidateTimeRange(jobOrder.PlannedStartTime, jobOrder.PlannedEndTime);
                 if (timeError != null)
@@ -93,7 +96,7 @@ namespace IBS.Services
             }
         }
 
-        public virtual async Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken)
+        public async Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -104,7 +107,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (jobOrder.Status == SD.JobOrderStatus.Closed)
                 {
@@ -122,7 +128,7 @@ namespace IBS.Services
                     return ServiceResult.Failure(timeError);
                 }
 
-                var old = (CustomerId: jobOrder.CustomerId, VesselId: jobOrder.VesselId, PortId: jobOrder.PortId, TerminalId: jobOrder.TerminalId);
+                var old = (jobOrder.CustomerId, jobOrder.VesselId, jobOrder.PortId, jobOrder.TerminalId);
 
                 jobOrder.Date = model.Date;
                 jobOrder.CustomerId = model.CustomerId;
@@ -218,7 +224,7 @@ namespace IBS.Services
             }
         }
 
-        public virtual async Task TryAutoCloseAsync(int jobOrderId, string username, CancellationToken cancellationToken)
+        public async Task TryAutoCloseAsync(int jobOrderId, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -226,10 +232,16 @@ namespace IBS.Services
                     dt => dt.JobOrderId == jobOrderId && dt.Status != SD.DispatchTicketStatus.Billed && dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted,
                     cancellationToken) != null;
 
-                if (anyUnbilled) return;
+                if (anyUnbilled)
+                {
+                    return;
+                }
 
                 var jobOrder = await unitOfWork.JobOrder.GetAsync(jo => jo.JobOrderId == jobOrderId, cancellationToken);
-                if (jobOrder == null || jobOrder.Status == SD.JobOrderStatus.Closed) return;
+                if (jobOrder == null || jobOrder.Status == SD.JobOrderStatus.Closed)
+                {
+                    return;
+                }
 
                 jobOrder.Status = SD.JobOrderStatus.Closed;
                 await RecordAuditAsync($"Auto-closed Job Order #{jobOrder.JobOrderNumber}", username, cancellationToken, jobOrder.JobOrderId, jobOrder.JobOrderNumber);
@@ -263,7 +275,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 var tugboat = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
                 if (tugboat == null)
@@ -335,7 +350,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(jobOrder.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 var tug = await unitOfWork.Tugboat.GetAsync(t => t.TugboatId == tugboatId, cancellationToken);
                 string? tugboatName = tug?.TugboatName;
@@ -376,7 +394,7 @@ namespace IBS.Services
                 .Select(j => new SelectListItem
                 {
                     Value = j.JobOrderId.ToString(),
-                    Text = $"{j.JobOrderNumber} - {j.Vessel?.VesselName ?? "No Vessel"}"
+                    Text = $"{j.JobOrderNumber} - {j.Vessel.VesselName}"
                 })
                 .ToList();
         }
@@ -393,7 +411,10 @@ namespace IBS.Services
         private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
         {
             if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+            {
                 return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            }
+
             return null;
         }
     }

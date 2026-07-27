@@ -314,7 +314,7 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to activate customer master file. Activated by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Activate), new { id = id });
+                return RedirectToAction(nameof(Activate), new { id });
             }
         }
 
@@ -386,7 +386,7 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to deactivate customer master file. Deactivated by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Deactivate), new { id = id });
+                return RedirectToAction(nameof(Deactivate), new { id });
             }
         }
 
@@ -427,12 +427,12 @@ namespace IBSWeb.Areas.User.Controllers
 
                     customers = customers
                         .Where(s =>
-                            (s.CustomerCode != null && s.CustomerCode.ToLower().Contains(searchValue)) ||
-                            (s.CustomerName != null && s.CustomerName.ToLower().Contains(searchValue)) ||
-                            (s.CustomerTin != null && s.CustomerTin.ToLower().Contains(searchValue)) ||
+                            (s.CustomerCode.ToLower().Contains(searchValue)) ||
+                            (s.CustomerName.ToLower().Contains(searchValue)) ||
+                            (s.CustomerTin.ToLower().Contains(searchValue)) ||
                             (s.BusinessStyle != null && s.BusinessStyle.ToLower().Contains(searchValue)) ||
-                            (s.CustomerTerms != null && s.CustomerTerms.ToLower().Contains(searchValue)) ||
-                            (s.CustomerType != null && s.CustomerType.ToLower().Contains(searchValue)) ||
+                            (s.CustomerTerms.ToLower().Contains(searchValue)) ||
+                            (s.CustomerType.ToLower().Contains(searchValue)) ||
                             s.CreatedDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue)
                         )
                         .ToList();
@@ -514,7 +514,7 @@ namespace IBSWeb.Areas.User.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
-}
+        }
 
         //Download as .xlsx file.(Export)
 

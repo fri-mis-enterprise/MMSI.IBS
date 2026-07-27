@@ -14,9 +14,9 @@ namespace IBSWeb.Areas.User.Controllers
         UserManager<ApplicationUser> userManager)
         : Controller
     {
-        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+        public Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            return View();
+            return Task.FromResult<IActionResult>(View());
         }
 
         [HttpPost]
@@ -32,7 +32,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     var searchValue = parameters.Search.Value.ToLower();
                     queried = queried.Where(ua =>
-                        (ua.UserId != null && ua.UserId.ToLower().Contains(searchValue)) ||
+                        (ua.UserId.ToLower().Contains(searchValue)) ||
                         (ua.UserName != null && ua.UserName.ToLower().Contains(searchValue))
                     ).ToList();
                 }

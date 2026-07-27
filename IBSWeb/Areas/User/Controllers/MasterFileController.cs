@@ -103,12 +103,12 @@ namespace IBSWeb.Areas.User.Controllers
             // ===== WORKSHEET 1: Customer Master File =====
             var customerColumns = new List<ColumnDefinition>
             {
-                new() { Header = "CUSTOMER CODE", ValueSelector = c => ((Customer)c).CustomerCode ?? "" },
+                new() { Header = "CUSTOMER CODE", ValueSelector = c => ((Customer)c).CustomerCode },
                 new() { Header = "CUSTOMER NAME", ValueSelector = c => ((Customer)c).CustomerName },
                 new() { Header = "CUSTOMER ADDRESS", ValueSelector = c => ((Customer)c).CustomerAddress },
                 new() { Header = "TIN NO", ValueSelector = c => ((Customer)c).CustomerTin },
                 new() { Header = "BUSINESS STYLE", ValueSelector = c => ((Customer)c).BusinessStyle ?? "" },
-                new() { Header = "ZIP CODE", ValueSelector = c => ((Customer)c).ZipCode ?? "" },
+                new() { Header = "ZIP CODE", ValueSelector = c => ((Customer)c).ZipCode },
                 new() { Header = "CREDIT TERM", ValueSelector = c => ((Customer)c).CustomerTerms },
                 new()
             {
@@ -416,13 +416,11 @@ namespace IBSWeb.Areas.User.Controllers
             // Apply borders to all data
             if (row > headerRow + 1)
             {
-                using (var range = worksheet.Cells[headerRow, 1, row - 1, columnCount])
-                {
-                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                }
+                using var range = worksheet.Cells[headerRow, 1, row - 1, columnCount];
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
             }
         }
 
@@ -465,11 +463,10 @@ namespace IBSWeb.Areas.User.Controllers
 
         private class ColumnDefinition
         {
-            public string Header { get; set; } = string.Empty;
-            public Func<object, object?> ValueSelector { get; set; } = null!;
-            public string? NumberFormat { get; set; }
-            public bool WrapText { get; set; }
-            public ExcelHorizontalAlignment Alignment { get; set; } = ExcelHorizontalAlignment.Left;
+            public string Header { get; init; } = string.Empty;
+            public Func<object, object?> ValueSelector { get; init; } = null!;
+            public string? NumberFormat { get; init; }
+            public ExcelHorizontalAlignment Alignment { get; init; } = ExcelHorizontalAlignment.Left;
         }
 
         #endregion

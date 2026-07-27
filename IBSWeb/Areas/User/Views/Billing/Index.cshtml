@@ -79,6 +79,7 @@
             const previewUrl = '@Url.Action("Preview", "Billing")';
             const editUrl = '@Url.Action("Edit", "Billing")';
             const postUrl = '@Url.Action("Post", "Billing")';
+            const canReverse = @((ViewBag.CanReverse as bool? ?? false).ToString().ToLower());
 
             // Get status from URL on load
             const urlParams = new URLSearchParams(window.location.search);
@@ -136,13 +137,11 @@
                             } else if (row.status === "@SD.BillingStatus.ForCollection") {
                                 return ModernTable.render.dropdown([
                                     { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Generate PDF', icon: 'picture_as_pdf', url: `${previewUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Reverse (Unpost)', icon: 'undo', onclick: `confirmReverse(${row.msapBillingId})`, condition: !row.isMonthClosed }
+                                    { label: 'Reverse (Unpost)', icon: 'undo', onclick: `confirmReverse(${row.msapBillingId})`, condition: !row.isMonthClosed && canReverse }
                                 ]);
                             } else {
                                 return ModernTable.render.dropdown([
-                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` },
-                                    { label: 'Generate PDF', icon: 'picture_as_pdf', url: `${previewUrl}?id=${row.msapBillingId}` }
+                                    { label: 'View Details', icon: 'visibility', url: `${previewUrl}?id=${row.msapBillingId}` }
                                 ]);
                             }
                         }

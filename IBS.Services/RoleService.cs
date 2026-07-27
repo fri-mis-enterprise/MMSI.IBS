@@ -51,7 +51,10 @@ namespace IBS.Services
             {
                 var orderColumn = parameters.Order[0];
                 var columnName = parameters.Columns[orderColumn.Column].Name;
-                if (string.IsNullOrEmpty(columnName)) columnName = parameters.Columns[orderColumn.Column].Data;
+                if (string.IsNullOrEmpty(columnName))
+                {
+                    columnName = parameters.Columns[orderColumn.Column].Data;
+                }
 
                 var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
                 queried = queried.AsQueryable().OrderBy($"{columnName} {sortDirection}");

@@ -19,19 +19,6 @@ namespace IBSWeb.Areas.User.Controllers
         ApplicationDbContext dbContext)
         : Controller
     {
-        private async Task<string?> GetCompanyClaimAsync()
-        {
-            var user = await userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         private string GetUserFullName()
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value
@@ -119,16 +106,16 @@ namespace IBSWeb.Areas.User.Controllers
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
                     .Where(c =>
-                        c.CompanyCode!.ToLower().Contains(searchValue) == true ||
-                        c.CompanyName.ToLower().Contains(searchValue) == true ||
-                        c.CompanyAddress.ToLower().Contains(searchValue) == true ||
-                        c.CompanyTin.ToLower().Contains(searchValue) == true
+                        c.CompanyCode!.ToLower().Contains(searchValue) ||
+                        c.CompanyName.ToLower().Contains(searchValue) ||
+                        c.CompanyAddress.ToLower().Contains(searchValue) ||
+                        c.CompanyTin.ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
@@ -280,7 +267,7 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Activate), new { id = id });
+                return RedirectToAction(nameof(Activate), new { id });
             }
         }
 
@@ -347,7 +334,7 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Deactivate), new { id = id });
+                return RedirectToAction(nameof(Deactivate), new { id });
             }
         }
     }

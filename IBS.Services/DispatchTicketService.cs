@@ -1,6 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
@@ -104,7 +103,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+                if (guard != null)
+                {
+                    return ServiceResult<int>.Failure(guard.Message!);
+                }
 
                 if (model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
                 {
@@ -154,7 +156,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (currentModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == currentModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
                 {
@@ -317,7 +322,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 string auditMessage;
                 string documentType = "Tariff";
@@ -360,10 +368,10 @@ namespace IBS.Services
                 decimal bafDiscountPercent = model.BAFDiscount;
                 decimal bafDiscountAmount = bafRate * (bafDiscountPercent / 100);
 
-                decimal dispatchBilling = 0;
-                decimal dispatchRevenue = 0;
-                decimal bafBilling = 0;
-                decimal bafRevenue = 0;
+                decimal dispatchBilling;
+                decimal dispatchRevenue;
+                decimal bafBilling;
+                decimal bafRevenue;
 
                 var hours = Math.Round(currentModel.TotalHours, 2);
 
@@ -433,7 +441,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 model.Status = SD.DispatchTicketStatus.ForBilling;
                 model.EditedBy = username;
@@ -472,7 +483,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 model.Status = SD.DispatchTicketStatus.Disapproved;
                 model.EditedBy = username;
@@ -505,7 +519,10 @@ namespace IBS.Services
                 foreach (var ticket in tickets)
                 {
                     var guard = await GuardClosedPeriodAsync(ticket.Date, cancellationToken);
-                    if (guard != null) return guard;
+                    if (guard != null)
+                    {
+                        return guard;
+                    }
                 }
 
                 var toApprove = tickets.Where(t => t.Status == SD.DispatchTicketStatus.ForApproval).ToList();
@@ -539,7 +556,10 @@ namespace IBS.Services
 
                 var skippedCount = tickets.Count - toApprove.Count;
                 var msg = $"{toApprove.Count} tariff(s) approved successfully.";
-                if (skippedCount > 0) msg += $" {skippedCount} ticket(s) skipped (not in 'For Approval' status).";
+                if (skippedCount > 0)
+                {
+                    msg += $" {skippedCount} ticket(s) skipped (not in 'For Approval' status).";
+                }
 
                 return ServiceResult.Success(msg);
             }
@@ -560,7 +580,10 @@ namespace IBS.Services
                 foreach (var ticket in tickets)
                 {
                     var guard = await GuardClosedPeriodAsync(ticket.Date, cancellationToken);
-                    if (guard != null) return guard;
+                    if (guard != null)
+                    {
+                        return guard;
+                    }
                 }
 
                 var toSet = tickets.Where(t => t.Status is SD.DispatchTicketStatus.ForTariff or SD.DispatchTicketStatus.Pending).ToList();
@@ -620,7 +643,10 @@ namespace IBS.Services
 
                 var skippedCount = tickets.Count - toSet.Count;
                 var msg = $"{toSet.Count} tariff(s) set successfully.";
-                if (skippedCount > 0) msg += $" {skippedCount} ticket(s) skipped (not eligible).";
+                if (skippedCount > 0)
+                {
+                    msg += $" {skippedCount} ticket(s) skipped (not eligible).";
+                }
 
                 return ServiceResult.Success(msg);
             }
@@ -649,7 +675,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (model.Status != SD.DispatchTicketStatus.ForTariff &&
                     model.Status != SD.DispatchTicketStatus.Pending &&
@@ -690,21 +719,17 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (model.Status != SD.DispatchTicketStatus.Deleted)
                 {
                     return ServiceResult.Failure("Ticket is not in a deleted state.");
                 }
 
-                if (model.DateLeft != null && model.DateArrived != null && model.TimeLeft != null && model.TimeArrived != null)
-                {
-                    model.Status = SD.DispatchTicketStatus.ForTariff;
-                }
-                else
-                {
-                    model.Status = SD.DispatchTicketStatus.Pending;
-                }
+                model.Status = model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null } ? SD.DispatchTicketStatus.ForTariff : SD.DispatchTicketStatus.Pending;
 
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -732,7 +757,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (!string.IsNullOrEmpty(model.ImageName))
                 {
@@ -763,7 +791,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (!string.IsNullOrEmpty(model.VideoName))
                 {
@@ -835,7 +866,7 @@ namespace IBS.Services
             return await unitOfWork.DispatchTicket.IsJobOrderEditableAsync(jobOrderId, cancellationToken);
         }
 
-        public async Task<bool> IsTicketJobOrderEditableAsync(int dispatchTicketId, CancellationToken cancellationToken)
+        private async Task<bool> IsTicketJobOrderEditableAsync(int dispatchTicketId, CancellationToken cancellationToken)
         {
             var ticket = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == dispatchTicketId, cancellationToken);
             return ticket != null && await IsJobOrderEditableAsync(ticket.JobOrderId, cancellationToken);
@@ -910,7 +941,10 @@ namespace IBS.Services
         private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
         {
             if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+            {
                 return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            }
+
             return null;
         }
     }

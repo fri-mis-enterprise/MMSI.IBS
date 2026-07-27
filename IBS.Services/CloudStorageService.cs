@@ -27,7 +27,7 @@ namespace IBS.Services
         private readonly GCSConfigOptions _options = options.Value;
         private GoogleCredential? _googleCredential;
         private StorageClient? _storageClient;
-        private readonly object _lock = new();
+        private readonly Lock _lock = new();
 
         private void EnsureInitialized()
         {
@@ -99,7 +99,7 @@ namespace IBS.Services
                 var signedUrl = await urlSigner.SignAsync(bucketName, fileNameToRead, TimeSpan.FromMinutes(timeOutInMinutes));
 
                 logger.LogInformation($"Signed URL obtained for file '{fileNameToRead}'");
-                return signedUrl.ToString();
+                return signedUrl;
             }
             catch (Exception ex)
             {
@@ -108,7 +108,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task<string> UploadFileAsync(IFormFile fileToUpload, string fileNameToSave)
+        public async Task<string> UploadFileAsync(IFormFile? fileToUpload, string fileNameToSave)
         {
             EnsureInitialized();
             if (fileToUpload == null || fileToUpload.Length == 0)
@@ -119,19 +119,17 @@ namespace IBS.Services
 
             try
             {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await fileToUpload.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0; // Reset stream position after copying
+                using var memoryStream = new MemoryStream();
+                await fileToUpload.CopyToAsync(memoryStream);
+                memoryStream.Position = 0; // Reset stream position after copying
 
-                    var uploadedFile = await _storageClient!.UploadObjectAsync(
-                        _options.GoogleCloudStorageBucketName,
-                        fileNameToSave,
-                        fileToUpload.ContentType ?? "application/octet-stream",
-                        memoryStream
-                    );
-                    return uploadedFile.MediaLink;
-                }
+                var uploadedFile = await _storageClient!.UploadObjectAsync(
+                    _options.GoogleCloudStorageBucketName,
+                    fileNameToSave,
+                    fileToUpload.ContentType,
+                    memoryStream
+                );
+                return uploadedFile.MediaLink;
             }
             catch (Exception ex)
             {
@@ -162,7 +160,7 @@ namespace IBS.Services
         {
             if (string.IsNullOrEmpty(fileName))
             {
-                throw new ArgumentNullException("File name is required.");
+                throw new ArgumentNullException(nameof(fileName));
             }
 
             try

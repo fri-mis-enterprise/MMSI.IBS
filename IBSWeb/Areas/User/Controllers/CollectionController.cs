@@ -1,6 +1,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
+using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -154,15 +155,18 @@ namespace IBSWeb.Areas.User.Controllers
                     .Where(p => p.IsClosed)
                     .Select(p => (p.Year, p.Month))
                     .ToHashSet();
-                foreach (var item in data)
+                IEnumerable<Collection> collections = data as Collection[] ?? data.ToArray();
+                foreach (var item in collections)
+                {
                     item.IsMonthClosed = closedMonths.Contains((item.Date.Year, item.Date.Month));
+                }
 
                 return Json(new
                 {
                     draw = parameters.Draw,
                     recordsTotal = total,
                     recordsFiltered = filtered,
-                    data
+                    data = collections
                 });
             }
             catch (Exception ex)
@@ -208,7 +212,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> GetBankAccountDetails(int bankId, CancellationToken cancellationToken = default)
         {
             var result = await collectionService.GetBankAccountDetailsAsync(bankId, cancellationToken);
-            return Json(result.IsSuccess ? (object)new { success = true, bank = result.Data } : new { success = false, message = result.Message });
+            return Json(result.IsSuccess ? new { success = true, bank = result.Data } : new { success = false, message = result.Message });
         }
 
         /// <summary>

@@ -13,13 +13,10 @@ namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
     public class HomeController(
-        ILogger<HomeController> logger,
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext dbContext)
         : Controller
     {
-        private readonly ILogger<HomeController> _logger = logger;
-
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await userManager.GetUserAsync(User);
@@ -40,8 +37,6 @@ namespace IBSWeb.Areas.User.Controllers
                 .FirstOrDefaultAsync();
 
             ViewBag.GetUserDepartment = findUser?.Department;
-            var companyClaims = findUser != null ? await GetCompanyClaimAsync() : string.Empty;
-
             var dashboardCounts = new DashboardCountViewModel
             {
                 #region -- MMSI
@@ -179,8 +174,8 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(d => new {
                     Type = "Dispatch Ticket",
                     Number = d.DispatchNumber,
-                    Date = d.Date,
-                    Status = d.Status,
+                    d.Date,
+                    d.Status,
                     User = d.CreatedBy,
                     Time = d.CreatedDate
                 })
@@ -192,8 +187,8 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(b => new {
                     Type = "Billing",
                     Number = b.MsapBillingNumber,
-                    Date = b.Date,
-                    Status = b.Status,
+                    b.Date,
+                    b.Status,
                     User = b.CreatedBy ?? "System",
                     Time = b.CreatedDate
                 })
@@ -205,8 +200,8 @@ namespace IBSWeb.Areas.User.Controllers
                 .Select(j => new {
                     Type = "Job Order",
                     Number = j.JobOrderNumber,
-                    Date = j.Date,
-                    Status = j.Status,
+                    j.Date,
+                    j.Status,
                     User = j.CreatedBy ?? "System",
                     Time = j.CreatedDate
                 })

@@ -109,9 +109,20 @@ namespace IBS.Services
                     }
 
                     var changes = new List<string>();
-                    if (user.Name != model.Name) changes.Add($"Name: {user.Name} → {model.Name}");
-                    if (user.Department != model.Department) changes.Add($"Department: {user.Department} → {model.Department}");
-                    if (user.IsActive != model.IsActive) changes.Add($"Status: {(user.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
+                    if (user.Name != model.Name)
+                    {
+                        changes.Add($"Name: {user.Name} → {model.Name}");
+                    }
+
+                    if (user.Department != model.Department)
+                    {
+                        changes.Add($"Department: {user.Department} → {model.Department}");
+                    }
+
+                    if (user.IsActive != model.IsActive)
+                    {
+                        changes.Add($"Status: {(user.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
+                    }
 
                     var currentRoles = await userManager.GetRolesAsync(user);
                     if (!currentRoles.Contains(model.Role))
@@ -125,7 +136,11 @@ namespace IBS.Services
                         var addResult = await userManager.AddToRoleAsync(user, model.Role);
                         if (!addResult.Succeeded)
                         {
-                            if (currentRoles.Any()) await userManager.AddToRolesAsync(user, currentRoles);
+                            if (currentRoles.Any())
+                            {
+                                await userManager.AddToRolesAsync(user, currentRoles);
+                            }
+
                             return ServiceResult.Failure(string.Join(", ", addResult.Errors.Select(e => e.Description)));
                         }
                         changes.Add($"Role: {currentRoles.FirstOrDefault()} → {model.Role}");

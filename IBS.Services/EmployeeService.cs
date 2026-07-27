@@ -46,12 +46,35 @@ namespace IBS.Services
             }
 
             var changes = new List<string>();
-            if (existingModel.EmployeeNumber != model.EmployeeNumber) changes.Add($"Employee Number: {existingModel.EmployeeNumber} → {model.EmployeeNumber}");
-            if (existingModel.FirstName != model.FirstName) changes.Add($"First Name: {existingModel.FirstName} → {model.FirstName}");
-            if (existingModel.LastName != model.LastName) changes.Add($"Last Name: {existingModel.LastName} → {model.LastName}");
-            if (existingModel.Department != model.Department) changes.Add($"Department: {existingModel.Department} → {model.Department}");
-            if (existingModel.Position != model.Position) changes.Add($"Position: {existingModel.Position} → {model.Position}");
-            if (existingModel.IsActive != model.IsActive) changes.Add($"Status: {(existingModel.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
+            if (existingModel.EmployeeNumber != model.EmployeeNumber)
+            {
+                changes.Add($"Employee Number: {existingModel.EmployeeNumber} → {model.EmployeeNumber}");
+            }
+
+            if (existingModel.FirstName != model.FirstName)
+            {
+                changes.Add($"First Name: {existingModel.FirstName} → {model.FirstName}");
+            }
+
+            if (existingModel.LastName != model.LastName)
+            {
+                changes.Add($"Last Name: {existingModel.LastName} → {model.LastName}");
+            }
+
+            if (existingModel.Department != model.Department)
+            {
+                changes.Add($"Department: {existingModel.Department} → {model.Department}");
+            }
+
+            if (existingModel.Position != model.Position)
+            {
+                changes.Add($"Position: {existingModel.Position} → {model.Position}");
+            }
+
+            if (existingModel.IsActive != model.IsActive)
+            {
+                changes.Add($"Status: {(existingModel.IsActive ? "Active" : "Inactive")} → {(model.IsActive ? "Active" : "Inactive")}");
+            }
 
             await unitOfWork.ExecuteInTransactionAsync(async () =>
             {

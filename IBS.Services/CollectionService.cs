@@ -1,6 +1,5 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
@@ -31,7 +30,10 @@ namespace IBS.Services
             try
             {
                 var guard = await GuardClosedPeriodAsync(viewModel.Date, cancellationToken);
-                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+                if (guard != null)
+                {
+                    return ServiceResult<int>.Failure(guard.Message!);
+                }
 
                 int collectionId = 0;
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
@@ -53,7 +55,7 @@ namespace IBS.Services
                     decimal totalAllocated = viewModel.BillingPayments?.Sum(p => p.AmountToPay) ?? 0;
                     if (totalAllocated != viewModel.Amount && !model.IsUndocumented)
                     {
-                        throw new InvalidOperationException($"Collection amount (â‚±{viewModel.Amount:N2}) does not match the total allocated billing payments (â‚±{totalAllocated:N2}).");
+                        throw new InvalidOperationException($"Collection amount ({viewModel.Amount:N2}) does not match the total allocated billing payments ({totalAllocated:N2}).");
                     }
 
                     await unitOfWork.Collection.AddAsync(model, cancellationToken);
@@ -63,7 +65,7 @@ namespace IBS.Services
                     // Allocate payment
                     if (viewModel.BillingPayments != null)
                     {
-                        model.PaidBills = new List<Billing>();
+                        model.PaidBills = [];
                         foreach (var payment in viewModel.BillingPayments)
                         {
                             var billing = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == payment.BillingId, cancellationToken);
@@ -114,7 +116,10 @@ namespace IBS.Services
                     }
 
                     var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
-                    if (guard != null) throw new InvalidOperationException(guard.Message);
+                    if (guard != null)
+                    {
+                        throw new InvalidOperationException(guard.Message);
+                    }
 
                     if (currentModel.CustomerId != viewModel.CustomerId)
                     {
@@ -422,7 +427,10 @@ namespace IBS.Services
         private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
         {
             if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+            {
                 return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            }
+
             return null;
         }
     }

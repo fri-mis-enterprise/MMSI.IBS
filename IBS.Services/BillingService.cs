@@ -27,7 +27,10 @@ namespace IBS.Services
             try
             {
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return ServiceResult<int>.Failure(guard!.Message!);
+                if (guard != null)
+                {
+                    return ServiceResult<int>.Failure(guard.Message!);
+                }
 
                 if (model.JobOrderId is 0)
                 {
@@ -79,12 +82,12 @@ namespace IBS.Services
                             SD.DispatchTicketStatus.ForApproval
                         };
 
-                        var hasUnreadyTickets = jobOrder.DispatchTickets?
-                            .Any(dt => unreadyStatuses.Contains(dt.Status)) == true;
+                        var hasUnreadyTickets = jobOrder.DispatchTickets
+                            .Any(dt => unreadyStatuses.Contains(dt.Status));
 
                         if (hasUnreadyTickets)
                         {
-                            var unreadyList = jobOrder.DispatchTickets!
+                            var unreadyList = jobOrder.DispatchTickets
                                 .Where(dt => unreadyStatuses.Contains(dt.Status))
                                 .Select(dt => $"#{dt.DispatchNumber} ({dt.Status})")
                                 .ToList();
@@ -120,7 +123,7 @@ namespace IBS.Services
 
                 model.Terms = model.PrincipalId != null && model.PrincipalId != 0
                     ? model.Principal?.Terms
-                    : model.Customer?.CustomerTerms;
+                    : model.Customer.CustomerTerms;
 
                 if (string.IsNullOrEmpty(model.Terms))
                 {
@@ -164,7 +167,7 @@ namespace IBS.Services
                     dt.Billing = model;
                 }
 
-                    model.Amount = model.Balance = model.IsVatable && !model.IsVatInclusive ? total * VatMultiplier : total;
+                model.Amount = model.Balance = model is { IsVatable: true, IsVatInclusive: false } ? total * VatMultiplier : total;
                 model.DispatchAmount = dispatch;
                 model.BAFAmount = baf;
                 model.IsPaid = false;
@@ -193,7 +196,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(billing.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
@@ -212,7 +218,11 @@ namespace IBS.Services
                     }
 
                     var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-                    if (customer == null) throw new InvalidOperationException("Customer not found.");
+                    if (customer == null)
+                    {
+                        throw new InvalidOperationException("Customer not found.");
+                    }
+
                     model.Customer = customer;
 
                     if (model.PrincipalId.HasValue && model.PrincipalId != 0)
@@ -232,7 +242,7 @@ namespace IBS.Services
                         SoldTo = soldToName,
                         TinNo = tinNo,
                         Address = address,
-                        Description = model.Vessel?.VesselName ?? "Maritime Services",
+                        Description = model.Vessel.VesselName,
                         Amount = model.Amount - model.Discount
                     };
 
@@ -263,17 +273,28 @@ namespace IBS.Services
                     var revenue = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.MaritimeServiceRevenue);
                     var outputVat = accountTitlesDto.Find(c => c.AccountNumber == SD.MsapAccounts.OutputVat);
 
-                    if (arTrade == null) throw new InvalidOperationException($"Accounting setup incomplete: Account '{SD.MsapAccounts.ArTrade}' (AR Trade) not found in Chart of Accounts.");
-                    if (revenue == null) throw new InvalidOperationException($"Accounting setup incomplete: Account '{SD.MsapAccounts.MaritimeServiceRevenue}' (Service Revenue) not found in Chart of Accounts.");
-                    if (model.IsVatable && outputVat == null) throw new InvalidOperationException($"Accounting setup incomplete: Account '{SD.MsapAccounts.OutputVat}' (Output VAT) not found in Chart of Accounts.");
+                    if (arTrade == null)
+                    {
+                        throw new InvalidOperationException($"Accounting setup incomplete: Account '{SD.MsapAccounts.ArTrade}' (AR Trade) not found in Chart of Accounts.");
+                    }
+
+                    if (revenue == null)
+                    {
+                        throw new InvalidOperationException($"Accounting setup incomplete: Account '{SD.MsapAccounts.MaritimeServiceRevenue}' (Service Revenue) not found in Chart of Accounts.");
+                    }
+
+                    if (model.IsVatable && outputVat == null)
+                    {
+                        throw new InvalidOperationException($"Accounting setup incomplete: Account '{SD.MsapAccounts.OutputVat}' (Output VAT) not found in Chart of Accounts.");
+                    }
 
                     // 1. Debit AR Trade
                     ledgers.Add(new GeneralLedgerBook
                     {
                         Date = model.Date,
                         Reference = model.MsapBillingNumber,
-                        Description = $"Billing for {model.Vessel?.VesselName ?? "Maritime Services"}",
-                        AccountId = arTrade!.AccountId,
+                        Description = $"Billing for {model.Vessel.VesselName}",
+                        AccountId = arTrade.AccountId,
                         AccountNo = arTrade.AccountNumber,
                         AccountTitle = arTrade.AccountName,
                         Debit = salesBook.Amount,
@@ -284,7 +305,7 @@ namespace IBS.Services
                         ModuleType = nameof(ModuleType.Sales),
                         SubAccountType = SubAccountType.Customer,
                         SubAccountId = model.CustomerId,
-                        SubAccountName = customer.CustomerName ?? string.Empty
+                        SubAccountName = customer.CustomerName
                     });
 
                     // 2. Credit Service Revenue
@@ -292,8 +313,8 @@ namespace IBS.Services
                     {
                         Date = model.Date,
                         Reference = model.MsapBillingNumber,
-                        Description = $"Billing for {model.Vessel?.VesselName ?? "Maritime Services"}",
-                        AccountId = revenue!.AccountId,
+                        Description = $"Billing for {model.Vessel.VesselName}",
+                        AccountId = revenue.AccountId,
                         AccountNo = revenue.AccountNumber,
                         AccountTitle = revenue.AccountName,
                         Debit = 0,
@@ -360,7 +381,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 if (currentModel.Status != SD.BillingStatus.ForPosting)
                 {
@@ -419,7 +443,7 @@ namespace IBS.Services
                         dt.Billing = currentModel;
                     }
 
-                    currentModel.Amount = currentModel.Balance = currentModel.IsVatable && !currentModel.IsVatInclusive ? total * VatMultiplier : total;
+                    currentModel.Amount = currentModel.Balance = currentModel is { IsVatable: true, IsVatInclusive: false } ? total * VatMultiplier : total;
                     currentModel.DispatchAmount = dispatch;
                     currentModel.BAFAmount = baf;
                 }
@@ -447,7 +471,10 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
                 var linkedTickets = await unitOfWork.DispatchTicket
                     .GetAllAsync(dt => dt.BillingId == id, cancellationToken);
@@ -490,9 +517,12 @@ namespace IBS.Services
                 }
 
                 var guard = await GuardClosedPeriodAsync(billing.Date, cancellationToken);
-                if (guard != null) return guard;
+                if (guard != null)
+                {
+                    return guard;
+                }
 
-                string? billingNumber = billing.MsapBillingNumber;
+                string billingNumber = billing.MsapBillingNumber;
 
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
@@ -500,16 +530,19 @@ namespace IBS.Services
                     billingNumber = billing!.MsapBillingNumber;
 
                     if (billing.Status != SD.BillingStatus.ForCollection)
+                    {
                         throw new InvalidOperationException($"Only billings with '{SD.BillingStatus.ForCollection}' status can be reversed.");
+                    }
 
                     if (billing.CollectionId.HasValue)
+                    {
                         throw new InvalidOperationException($"Billing #{billingNumber} cannot be reversed because it is linked to a Collection (CR#{billing.CollectionNumber}).");
+                    }
 
                     var linkedTickets = await unitOfWork.DispatchTicket.GetAllAsync(dt => dt.BillingId == billing.MsapBillingId, cancellationToken);
                     foreach (var dt in linkedTickets)
                     {
                         dt.Status = SD.DispatchTicketStatus.ForBilling;
-                        dt.BillingId = null;
                     }
 
                     billing.Status = SD.BillingStatus.ForPosting;
@@ -528,7 +561,7 @@ namespace IBS.Services
                     if (billing.JobOrderId.HasValue)
                     {
                         var jobOrder = await unitOfWork.JobOrder.GetAsync(jo => jo.JobOrderId == billing.JobOrderId, cancellationToken);
-                        if (jobOrder != null && jobOrder.Status == SD.JobOrderStatus.Closed)
+                        if (jobOrder is { Status: SD.JobOrderStatus.Closed })
                         {
                             jobOrder.Status = SD.JobOrderStatus.Open;
                         }
@@ -592,8 +625,8 @@ namespace IBS.Services
                 {
                     DispatchTicketId = t.DispatchTicketId,
                     DispatchNo = t.DispatchNumber,
-                    Tugboat = t.Tugboat?.TugboatName ?? "N/A",
-                    Service = t.Service?.ServiceName ?? "N/A",
+                    Tugboat = t.Tugboat.TugboatName,
+                    Service = t.Service.ServiceName,
                     Duration = t.TotalHours,
                     DispatchAmount = t.DispatchBillingAmount,
                     BAFAmount = t.BAFBillingAmount,
@@ -627,8 +660,8 @@ namespace IBS.Services
             {
                 DispatchTicketId = t.DispatchTicketId,
                 DispatchNo = t.DispatchNumber,
-                Tugboat = t.Tugboat?.TugboatName ?? "N/A",
-                Service = t.Service?.ServiceName ?? "N/A",
+                Tugboat = t.Tugboat.TugboatName,
+                Service = t.Service.ServiceName,
                 Duration = t.TotalHours,
                 DispatchAmount = t.DispatchBillingAmount,
                 BAFAmount = t.BAFBillingAmount,
@@ -745,7 +778,10 @@ namespace IBS.Services
         private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
         {
             if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))
+            {
                 return ServiceResult.Failure($"Cannot modify: {date:MMMM yyyy} is closed.");
+            }
+
             return null;
         }
     }

@@ -48,7 +48,7 @@ namespace IBS.Services
                     {
                         new PostEvictionCallbackRegistration
                         {
-                            EvictionCallback = (_, __, ___, ____) => { _keys.TryRemove(key, out var _); }
+                            EvictionCallback = (_, _, _, _) => { _keys.TryRemove(key, out var _); }
                         }
                     }
                 });

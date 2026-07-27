@@ -1,5 +1,4 @@
 using IBS.Models;
-using IBS.Models.Enums;
 using IBS.Services.AccessControl;
 using Markdig;
 using Microsoft.AspNetCore.Authorization;
@@ -50,24 +49,34 @@ public class DocsController(
     public async Task<IActionResult> Show(string slug)
     {
         if (string.IsNullOrWhiteSpace(slug))
+        {
             return RedirectToAction(nameof(Index));
+        }
 
         if (slug == "index" || slug == "README")
+        {
             return RedirectToAction("Index");
+        }
 
         var fileSlug = ManualFiles.FirstOrDefault(f =>
             f.EndsWith(slug, StringComparison.OrdinalIgnoreCase) ||
             f.Replace("0", "").Replace("-", "") == slug.Replace("-", ""));
 
         if (fileSlug == null)
+        {
             return NotFound();
+        }
 
         if (!await UserCanAccess(fileSlug))
+        {
             return NotFound();
+        }
 
         var html = RenderMarkdownFile(fileSlug);
         if (html == null)
+        {
             return NotFound();
+        }
 
         ViewBag.Sidebar = await GetSidebarItems();
         ViewBag.ActiveSlug = slug;
@@ -82,7 +91,9 @@ public class DocsController(
             : Path.Combine(_docsRoot, $"{slug}.md");
 
         if (!System.IO.File.Exists(filePath))
+        {
             return null;
+        }
 
         var markdown = System.IO.File.ReadAllText(filePath);
         return Markdown.ToHtml(markdown, _pipeline);
@@ -92,7 +103,9 @@ public class DocsController(
     {
         var match = Regex.Match(slug, @"^\d+-(.+)$");
         if (!match.Success)
+        {
             return "User Manual";
+        }
 
         var name = match.Groups[1].Value.Replace("-", " ");
         return char.ToUpper(name[0]) + name[1..];
@@ -111,7 +124,7 @@ public class DocsController(
             ("collection", "Collection", null),
             ("service-request", "Service Request", null),
             ("master-files", "Master Files", null),
-            ("admin", "Administration", async uid => User.IsInRole("Admin")),
+            ("admin", "Administration", async _ => User.IsInRole("Admin")),
             ("import-export", "Import & Export", async uid => await accessControl.HasMsapImportAccessAsync(uid)),
             ("reports", "Reports", async uid => await accessControl.HasMaritimeReportAccessAsync(uid))
         };
@@ -120,7 +133,9 @@ public class DocsController(
         foreach (var (slug, title, guard) in allItems)
         {
             if (guard == null || await guard(userId))
+            {
                 result.Add((slug, title));
+            }
         }
         return result;
     }

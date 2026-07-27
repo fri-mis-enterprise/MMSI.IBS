@@ -47,17 +47,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return new
                 {
                     id = s.VesselScheduleId.ToString(),
-                    name = $"{s.Vessel?.VesselName}",
+                    name = $"{s.Vessel.VesselName}",
                     start = s.PlannedStart.ToString("yyyy-MM-dd HH:mm"),
                     end = s.PlannedEnd.ToString("yyyy-MM-dd HH:mm"),
                     progress = s.Status == SD.VesselScheduleStatus.Completed ? 100
                         : s.Status == SD.VesselScheduleStatus.InProgress ? 50 : 0,
                     status = s.Status,
-                    vessel = s.Vessel?.VesselName,
-                    port = s.Port?.PortName,
-                    terminal = s.Terminal?.TerminalName,
+                    vessel = s.Vessel.VesselName,
+                    port = s.Port.PortName,
+                    terminal = s.Terminal.TerminalName,
                     tugCount = s.RequiredTugCount,
-                    tugIds = tugIds,
+                    tugIds,
                     notes = s.Notes
                 };
             }).ToList();
@@ -78,9 +78,9 @@ namespace IBSWeb.Areas.User.Controllers
             var data = schedules.Select(s => new
             {
                 vesselScheduleId = s.VesselScheduleId,
-                vessel = s.Vessel?.VesselName,
-                port = s.Port?.PortName,
-                terminal = s.Terminal?.TerminalName,
+                vessel = s.Vessel.VesselName,
+                port = s.Port.PortName,
+                terminal = s.Terminal.TerminalName,
                 start = s.PlannedStart.ToString("yyyy-MM-dd HH:mm"),
                 end = s.PlannedEnd.ToString("yyyy-MM-dd HH:mm"),
                 tugCount = s.RequiredTugCount,
@@ -130,7 +130,9 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var entity = await scheduleService.GetByIdAsync(id, ct);
             if (entity == null)
+            {
                 return NotFound();
+            }
 
             var vm = MapToViewModel(entity);
             await PopulateDropdownsAsync(vm, ct, entity.PortId);
@@ -167,7 +169,9 @@ namespace IBSWeb.Areas.User.Controllers
             var entity = await unitOfWork.VesselSchedule.GetAsync(
                 s => s.VesselScheduleId == id, ct);
             if (entity == null)
+            {
                 return NotFound();
+            }
 
             // Load navigation properties manually
             var schedule = (await unitOfWork.VesselSchedule.GetSchedulesWithDetailsAsync(null, null, ct))
@@ -183,9 +187,13 @@ namespace IBSWeb.Areas.User.Controllers
             var result = await scheduleService.DeleteAsync(id, User.Identity?.Name ?? "system", ct);
 
             if (result.IsSuccess)
+            {
                 TempData["success"] = "Schedule deleted successfully.";
+            }
             else
+            {
                 TempData["error"] = result.Message;
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -238,7 +246,9 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     busyTugIds.Add(tid);
                     if (!assignmentsByTug.ContainsKey(tid))
+                    {
                         assignmentsByTug[tid] = new List<object>();
+                    }
 
                     assignmentsByTug[tid].Add(new
                     {
@@ -255,7 +265,6 @@ namespace IBSWeb.Areas.User.Controllers
 
             // Load ALL tugboats
             var allTugboats = await unitOfWork.Tugboat.GetAllAsync(null, ct);
-            var tugboatDict = allTugboats.ToDictionary(t => t.TugboatId, t => t.TugboatName);
 
             var tugboats = allTugboats.Select(t =>
             {
@@ -283,14 +292,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             var terminals = schedules
                 .Select(s => s.Terminal)
-                .Where(t => t != null)
-                .DistinctBy(t => t!.TerminalId)
-                .OrderBy(t => t!.TerminalName)
+                .DistinctBy(t => t.TerminalId)
+                .OrderBy(t => t.TerminalName)
                 .ToList();
 
             var matrix = terminals.Select(t =>
             {
-                var terminalSchedules = schedules.Where(s => s.TerminalId == t!.TerminalId).ToList();
+                var terminalSchedules = schedules.Where(s => s.TerminalId == t.TerminalId).ToList();
                 var hours = Enumerable.Range(0, 24).Select(h =>
                 {
                     var slotStart = date.Date.AddHours(h);
@@ -301,13 +309,13 @@ namespace IBSWeb.Areas.User.Controllers
                     {
                         hour = h,
                         vesselScheduleId = sch?.VesselScheduleId,
-                        vessel = sch?.Vessel?.VesselName,
+                        vessel = sch?.Vessel.VesselName,
                         status = sch?.Status
                     };
                 }).ToList();
                 return new
                 {
-                    terminalId = t!.TerminalId,
+                    terminalId = t.TerminalId,
                     terminalName = t.TerminalName,
                     hours
                 };
@@ -389,12 +397,17 @@ namespace IBSWeb.Areas.User.Controllers
         }
     }
 
-    public class ConflictCheckRequest
+    public class ConflictCheckRequest(
+        List<int>? selectedTugboatIds,
+        DateTime plannedEnd,
+        DateTime plannedStart,
+        int terminalId,
+        int vesselScheduleId)
     {
-        public int VesselScheduleId { get; set; }
-        public int TerminalId { get; set; }
-        public DateTime PlannedStart { get; set; }
-        public DateTime PlannedEnd { get; set; }
-        public List<int>? SelectedTugboatIds { get; set; }
+        public int VesselScheduleId { get; } = vesselScheduleId;
+        public int TerminalId { get; } = terminalId;
+        public DateTime PlannedStart { get; } = plannedStart;
+        public DateTime PlannedEnd { get; } = plannedEnd;
+        public List<int>? SelectedTugboatIds { get; } = selectedTugboatIds;
     }
 }

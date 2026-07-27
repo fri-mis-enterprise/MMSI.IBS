@@ -1,4 +1,5 @@
 using IBS.Models;
+using IBS.Models.MSAP;
 using IBS.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,7 +46,9 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> SearchJobOrders(string term, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(term))
+            {
                 return Json(new List<object>());
+            }
 
             var parameters = new DataTablesParameters
             {
@@ -54,12 +57,12 @@ namespace IBSWeb.Areas.User.Controllers
                 Start = 0
             };
 
-            var (data, _, _) = await jobOrderService.GetPagedJobOrdersAsync(parameters, cancellationToken);
+            (IEnumerable<JobOrder> data, _, _) = await jobOrderService.GetPagedJobOrdersAsync(parameters, cancellationToken);
 
             var result = data.Select(jo => new
             {
                 id = jo.JobOrderId,
-                text = $"{jo.JobOrderNumber} - {jo.Vessel?.VesselName ?? "Unknown Vessel"}"
+                text = $"{jo.JobOrderNumber} - {jo.Vessel.VesselName}"
             });
 
             return Json(result);

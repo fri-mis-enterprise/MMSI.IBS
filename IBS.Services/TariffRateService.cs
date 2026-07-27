@@ -25,7 +25,7 @@ namespace IBS.Services
             model.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             model.Ports = await unitOfWork.Port.GetMsapPortsSelectList(cancellationToken);
             model.Services = await unitOfWork.Service.GetMsapActivitiesServicesById(cancellationToken);
-            
+
             if (model.TerminalId != 0)
             {
                 var terminal = await unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
@@ -43,7 +43,7 @@ namespace IBS.Services
             {
                 model.Terminals = new List<SelectListItem>();
             }
-            
+
             return model;
         }
 
@@ -78,15 +78,18 @@ namespace IBS.Services
                     existingModel.BAFDiscount = model.BAFDiscount;
                     existingModel.UpdateBy = username;
                     existingModel.UpdateDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    
+
                     await RecordAuditAsync($"Updated existing Tariff Rate for Customer {existingModel.CustomerId}", username, cancellationToken);
                 }
                 else if (model.TariffRateId != 0)
                 {
                     // Explicit edit
                     var current = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == model.TariffRateId, cancellationToken);
-                    if (current == null) return ServiceResult<int>.Failure("Not found", ServiceResultStatus.NotFound);
-                    
+                    if (current == null)
+                    {
+                        return ServiceResult<int>.Failure("Not found", ServiceResultStatus.NotFound);
+                    }
+
                     current.AsOfDate = model.AsOfDate;
                     current.CustomerId = model.CustomerId;
                     current.ServiceId = model.ServiceId;
@@ -125,8 +128,11 @@ namespace IBS.Services
             try
             {
                 var model = await unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == id, cancellationToken);
-                if (model == null) return ServiceResult.Failure("Not found", ServiceResultStatus.NotFound);
-                
+                if (model == null)
+                {
+                    return ServiceResult.Failure("Not found", ServiceResultStatus.NotFound);
+                }
+
                 await unitOfWork.TariffTable.RemoveAsync(model, cancellationToken);
                 await RecordAuditAsync($"Deleted Tariff Rate #{id}", username, cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);

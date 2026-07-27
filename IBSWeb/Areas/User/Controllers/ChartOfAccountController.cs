@@ -1,4 +1,3 @@
-using IBS.Models.MasterFile;
 using System.Security.Claims;
 using IBS.Models;
 using IBS.Models.Enums;
@@ -25,7 +24,10 @@ namespace IBSWeb.Areas.User.Controllers
         private async Task<string> GetCompanyClaimAsync()
         {
             var user = await userManager.GetUserAsync(User);
-            if (user == null) return string.Empty;
+            if (user == null)
+            {
+                return string.Empty;
+            }
 
             var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
@@ -46,7 +48,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
         {
             var result = await chartOfAccountService.CreateAsync(parentId, accountName, GetUserFullName(), await GetCompanyClaimAsync(), cancellationToken);
-            
+
             if (result.IsSuccess)
             {
                 TempData["success"] = result.Message;
@@ -61,14 +63,18 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
             var result = await chartOfAccountService.UpdateAsync(accountId, accountName, GetUserFullName(), await GetCompanyClaimAsync(), cancellationToken);
-            
+
             if (result.IsSuccess)
             {
                 TempData["success"] = result.Message;
                 return Json(new { redirectUrl = Url.Action(nameof(Index)) });
             }
 
-            if (result.Status == ServiceResultStatus.NotFound) return NotFound();
+            if (result.Status == ServiceResultStatus.NotFound)
+            {
+                return NotFound();
+            }
+
             return BadRequest(new { message = result.Message });
         }
 
@@ -103,7 +109,10 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Export(string selectedRecord, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(selectedRecord)) return RedirectToAction(nameof(Index));
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                return RedirectToAction(nameof(Index));
+            }
 
             try
             {

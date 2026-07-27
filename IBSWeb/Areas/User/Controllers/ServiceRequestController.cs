@@ -9,7 +9,6 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -193,7 +192,7 @@ namespace IBSWeb.Areas.User.Controllers
                 viewModel.VideoSignedUrl = await GenerateSignedUrl(viewModel.VideoName);
             }
 
-            ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
+            ViewData["PortId"] = viewModel.Terminal?.Port.PortId;
             return View(viewModel);
         }
 
@@ -394,13 +393,13 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 success = true,
                 customerId = jobOrder.CustomerId,
-                customerName = jobOrder.Customer?.CustomerName,
+                customerName = jobOrder.Customer.CustomerName,
                 vesselId = jobOrder.VesselId,
-                vesselName = jobOrder.Vessel?.VesselName,
+                vesselName = jobOrder.Vessel.VesselName,
                 portId = jobOrder.PortId,
-                portName = jobOrder.Port?.PortName,
+                portName = jobOrder.Port.PortName,
                 terminalId = jobOrder.TerminalId,
-                terminalName = jobOrder.Terminal?.TerminalName,
+                terminalName = jobOrder.Terminal.TerminalName,
                 voyageNumber = jobOrder.VoyageNumber,
                 cosNumber = jobOrder.COSNumber,
                 date = jobOrder.Date.ToString("yyyy-MM-dd")
@@ -469,15 +468,15 @@ namespace IBSWeb.Areas.User.Controllers
 
                     queried = queried
                     .Where(dt =>
-                        dt.COSNumber!.ToLower().Contains(searchValue) == true ||
+                        dt.COSNumber!.ToLower().Contains(searchValue) ||
                         dt.DispatchNumber.ToLower().Contains(searchValue) ||
-                        dt.Service.ServiceName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal.TerminalName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal.Port.PortName.ToString().Contains(searchValue) == true ||
-                        dt.Tugboat.TugboatName.ToString().Contains(searchValue) == true ||
-                        dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) == true ||
-                        dt.Vessel.VesselName.ToString().Contains(searchValue) == true ||
-                        dt.Status.Contains(searchValue) == true
+                        dt.Service.ServiceName.ToString().Contains(searchValue) ||
+                        dt.Terminal.TerminalName.ToString().Contains(searchValue) ||
+                        dt.Terminal.Port.PortName.ToString().Contains(searchValue) ||
+                        dt.Tugboat.TugboatName.ToString().Contains(searchValue) ||
+                        dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) ||
+                        dt.Vessel.VesselName.ToString().Contains(searchValue) ||
+                        dt.Status.Contains(searchValue)
                         )
                         .ToList();
                 }
@@ -633,7 +632,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Post(int id, int? jobOrderId, CancellationToken cancellationToken = default)
         {
             var record = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
-            if (record != null && record.Status == SD.DispatchTicketStatus.Requested)
+            if (record is { Status: SD.DispatchTicketStatus.Requested })
             {
                 record.Status = SD.DispatchTicketStatus.ForTariff;
 
@@ -653,7 +652,10 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             if (jobOrderId.HasValue)
+            {
                 return RedirectToAction("Details", "JobOrder", new { id = jobOrderId.Value });
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -682,7 +684,7 @@ namespace IBSWeb.Areas.User.Controllers
                     var recordToUpdate = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind,
                         cancellationToken);
 
-                    if (recordToUpdate != null && recordToUpdate.Status == SD.DispatchTicketStatus.Requested)
+                    if (recordToUpdate is { Status: SD.DispatchTicketStatus.Requested })
                     {
                         recordToUpdate.Status = SD.DispatchTicketStatus.ForTariff;
                         postedTickets.Add($"{recordToUpdate.DispatchNumber}");
@@ -796,11 +798,15 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
                 if (model == null)
+                {
                     return Json(new { success = false, message = "Service request not found." });
+                }
 
                 if (model.Status != SD.DispatchTicketStatus.Draft &&
                     model.Status != SD.DispatchTicketStatus.Requested)
+                {
                     return Json(new { success = false, message = $"Cannot delete — status is '{model.Status}'. Only Draft and Requested can be deleted." });
+                }
 
                 model.Status = SD.DispatchTicketStatus.ServiceRequestDeleted;
                 model.EditedBy = User.Identity?.Name ?? "System";
@@ -829,10 +835,14 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
                 if (model == null)
+                {
                     return Json(new { success = false, message = "Service request not found." });
+                }
 
                 if (model.Status != SD.DispatchTicketStatus.ServiceRequestDeleted)
+                {
                     return Json(new { success = false, message = $"Cannot restore — status is '{model.Status}'. Only deleted requests can be restored." });
+                }
 
                 model.Status = SD.DispatchTicketStatus.Requested;
                 model.EditedBy = User.Identity?.Name ?? "System";

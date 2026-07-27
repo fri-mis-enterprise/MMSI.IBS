@@ -6,9 +6,11 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using IBS.Services.Attributes;
 using IBS.Services;
+using IBS.Services.AccessControl;
 using IBS.Utility.Constants;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -20,6 +22,7 @@ namespace IBSWeb.Areas.User.Controllers
         IUnitOfWork unitOfWork,
         BillingService billingService,
         ICloudStorageService cloudStorageService,
+        IAccessControlService accessControl,
         ILogger<BillingController> logger)
         : Controller
     {
@@ -34,17 +37,12 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.EditBilling,
             ProcedureEnum.DeleteBilling,
             ProcedureEnum.ReverseBilling)]
-        public Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
-            try
-            {
-                ViewBag.FilterType = filterType;
-                return Task.FromResult<IActionResult>(View(Enumerable.Empty<Billing>()));
-            }
-            catch (Exception exception)
-            {
-                return Task.FromException<IActionResult>(exception);
-            }
+            ViewBag.FilterType = filterType;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.CanReverse = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.ReverseBilling);
+            return View(Enumerable.Empty<Billing>());
         }
 
         #endregion

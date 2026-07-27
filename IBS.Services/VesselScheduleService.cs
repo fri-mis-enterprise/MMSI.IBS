@@ -16,7 +16,9 @@ namespace IBS.Services
             try
             {
                 if (model.PlannedEnd <= model.PlannedStart)
+                {
                     return ServiceResult<int>.Failure("Planned end must be after planned start.", ServiceResultStatus.ValidationError);
+                }
 
                 model.CreatedBy = username;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -39,13 +41,19 @@ namespace IBS.Services
             {
                 var existing = await unitOfWork.VesselSchedule.GetAsync(s => s.VesselScheduleId == model.VesselScheduleId, ct);
                 if (existing == null)
+                {
                     return ServiceResult.Failure("Schedule not found.", ServiceResultStatus.NotFound);
+                }
 
                 if (existing.Status == SD.VesselScheduleStatus.Completed || existing.Status == SD.VesselScheduleStatus.Cancelled)
+                {
                     return ServiceResult.Failure("Cannot edit a completed or cancelled schedule.", ServiceResultStatus.ValidationError);
+                }
 
                 if (model.PlannedEnd <= model.PlannedStart)
+                {
                     return ServiceResult.Failure("Planned end must be after planned start.", ServiceResultStatus.ValidationError);
+                }
 
                 existing.VesselId = model.VesselId;
                 existing.PortId = model.PortId;
@@ -78,7 +86,9 @@ namespace IBS.Services
             {
                 var existing = await unitOfWork.VesselSchedule.GetAsync(s => s.VesselScheduleId == id, ct);
                 if (existing == null)
+                {
                     return ServiceResult.Failure("Schedule not found.", ServiceResultStatus.NotFound);
+                }
 
                 await unitOfWork.VesselSchedule.RemoveAsync(existing, ct);
                 await unitOfWork.SaveAsync(ct);
@@ -119,9 +129,9 @@ namespace IBS.Services
                 conflicts.Add(new ScheduleConflict
                 {
                     Type = "Terminal",
-                    Message = $"Terminal '{s.Terminal?.TerminalName}' occupied by '{s.Vessel?.VesselName}'.",
+                    Message = $"Terminal '{s.Terminal.TerminalName}' occupied by '{s.Vessel.VesselName}'.",
                     ConflictingScheduleId = s.VesselScheduleId,
-                    ConflictingVessel = s.Vessel?.VesselName,
+                    ConflictingVessel = s.Vessel.VesselName,
                     ConflictStart = s.PlannedStart,
                     ConflictEnd = s.PlannedEnd
                 });
@@ -142,7 +152,10 @@ namespace IBS.Services
                     var otherTugIds = string.IsNullOrEmpty(s.AssignedTugboatIds)
                         ? new List<int>()
                         : JsonSerializer.Deserialize<List<int>>(s.AssignedTugboatIds) ?? new();
-                    if (otherTugIds.Count == 0) continue;
+                    if (otherTugIds.Count == 0)
+                    {
+                        continue;
+                    }
 
                     var shared = tugboatIds.Intersect(otherTugIds).ToList();
                     if (shared.Count > 0 &&
@@ -152,9 +165,9 @@ namespace IBS.Services
                         conflicts.Add(new ScheduleConflict
                         {
                             Type = "Tugboat",
-                            Message = $"Tugboat(s) '{string.Join(", ", shared.Select(id => tugboatNames.GetValueOrDefault(id, $"#{id}")))}' assigned to '{s.Vessel?.VesselName}'.",
+                            Message = $"Tugboat(s) '{string.Join(", ", shared.Select(id => tugboatNames.GetValueOrDefault(id, $"#{id}")))}' assigned to '{s.Vessel.VesselName}'.",
                             ConflictingScheduleId = s.VesselScheduleId,
-                            ConflictingVessel = s.Vessel?.VesselName,
+                            ConflictingVessel = s.Vessel.VesselName,
                             ConflictStart = s.PlannedStart,
                             ConflictEnd = s.PlannedEnd
                         });

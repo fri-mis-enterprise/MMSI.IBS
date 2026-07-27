@@ -10,10 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text;
-using System.Dynamic;
 using IBS.Models.Enums;
 using IBS.Services.Attributes;
-using Microsoft.Extensions.Logging;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -1420,12 +1418,11 @@ namespace IBSWeb.Areas.User.Controllers
                 string billingYearKey = $"{billingYear}|{billingNumber}";
 
                 // 2. Skip if (year, number) already seen — same number in same year
-                if (seenBillingKeys.Contains(billingYearKey))
+                if (!seenBillingKeys.Add(billingYearKey))
                 {
                     _importErrors.Add($"Billing {billingNumber} (RECID {legacyRecId}): Duplicate (year, number) found. Skipping.");
                     continue;
                 }
-                seenBillingKeys.Add(billingYearKey);
 
                 string vesselNumRaw = GetString(record, "vesselnum");
                 string vesselNum = PadNumber(vesselNumRaw, 4);
@@ -1654,7 +1651,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
                 int? billingId = info?.Id == -1 ? null : info?.Id;
 
-                // Resolve optional TugMaster (MASTERNO) â€” not required, so skip if not found
+                // Resolve optional TugMaster (MASTERNO) not required, so skip if not found
                 int? tugMasterId = null;
                 if (masterNoRaw != "-" && !string.IsNullOrWhiteSpace(masterNoRaw))
                 {
@@ -1935,7 +1932,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var val = GetString(record, propertyName).Trim();
 
-            // Handle legacy compact format: "330" Ã¢â€ â€™ 03:30, "1915" Ã¢â€ â€™ 19:15
+            // Handle legacy compact format: "330" 03:30, "1915" 19:15
             if (int.TryParse(val, out int _) && val.Length <= 4)
             {
                 int hours = 0, minutes;

@@ -61,7 +61,9 @@ namespace IBSWeb.Areas.User.Controllers
                     .Select(p => (p.Year, p.Month))
                     .ToHashSet();
                 foreach (var item in data)
+                {
                     item.IsMonthClosed = closedMonths.Contains((item.Date.Year, item.Date.Month));
+                }
 
                 return Json(new
                 {

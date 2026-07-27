@@ -9,7 +9,6 @@ using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -546,7 +545,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
-        public async Task<IActionResult> BatchApproveTariff([FromBody] List<int> ids, CancellationToken cancellationToken)
+        public async Task<IActionResult> BatchApproveTariff([FromBody] List<int>? ids, CancellationToken cancellationToken)
         {
             if (ids == null || ids.Count == 0)
             {
@@ -564,7 +563,7 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
         public async Task<IActionResult> BatchSetTariff(
-            [FromBody] BatchTariffRequest request,
+            [FromBody] BatchTariffRequest? request,
             CancellationToken cancellationToken)
         {
             if (request?.Ids == null || request.Ids.Count == 0)
@@ -645,7 +644,9 @@ namespace IBSWeb.Areas.User.Controllers
                     .Select(p => (p.Year, p.Month))
                     .ToHashSet();
                 foreach (var dt in data)
+                {
                     dt.IsMonthClosed = closedMonths.Contains((dt.Date.Year, dt.Date.Month));
+                }
 
                 return Json(new
                 {

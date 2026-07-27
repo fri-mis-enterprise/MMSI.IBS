@@ -17,7 +17,10 @@ namespace IBSWeb.Areas.User.Controllers
         private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await userManager.GetUserAsync(User);
-            if (user == null) return null;
+            if (user == null)
+            {
+                return null;
+            }
 
             var claims = await userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
@@ -85,7 +88,10 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var employee = await employeeService.GetByIdAsync(id, cancellationToken);
-            if (employee == null) return NotFound();
+            if (employee == null)
+            {
+                return NotFound();
+            }
 
             return View(employee);
         }

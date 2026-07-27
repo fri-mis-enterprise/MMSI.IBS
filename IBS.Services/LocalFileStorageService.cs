@@ -1,24 +1,20 @@
-using IBS.Utility;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace IBS.Services
 {
     public class LocalFileStorageService : ICloudStorageService
     {
-        private readonly GCSConfigOptions _options;
         private readonly ILogger<LocalFileStorageService> _logger;
         private readonly string _storagePath;
 
-        public LocalFileStorageService(IOptions<GCSConfigOptions> options, 
-            ILogger<LocalFileStorageService> logger, 
+        public LocalFileStorageService(
+            ILogger<LocalFileStorageService> logger,
             IWebHostEnvironment environment,
             IConfiguration configuration)
         {
-            _options = options.Value;
             _logger = logger;
 
             // Use a local folder within the project for development storage
@@ -80,7 +76,7 @@ namespace IBS.Services
             return Task.FromResult(relativePath);
         }
 
-        public async Task<string> UploadFileAsync(IFormFile fileToUpload, string fileNameToSave)
+        public async Task<string> UploadFileAsync(IFormFile? fileToUpload, string fileNameToSave)
         {
             if (fileToUpload == null || fileToUpload.Length == 0)
             {
@@ -109,7 +105,7 @@ namespace IBS.Services
 
                 var filePath = Path.Combine(targetDirectory, fileNameParts[^1]);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                await using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await fileToUpload.CopyToAsync(stream);
                 }
@@ -155,7 +151,7 @@ namespace IBS.Services
         {
             if (string.IsNullOrEmpty(fileName))
             {
-                throw new ArgumentNullException("File name is required.");
+                throw new ArgumentNullException(nameof(fileName));
             }
 
             try

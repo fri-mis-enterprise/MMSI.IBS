@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Reflection;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -14,7 +13,7 @@ namespace IBS.Services
         IUnitOfWork unitOfWork,
         ILogger<SuperAdminService> logger)
     {
-        private static readonly HashSet<string> ImmutableProps =
+        private static readonly HashSet<string> _immutableProps =
         [
             nameof(BaseEntity.CreatedBy), nameof(BaseEntity.CreatedDate),
             nameof(BaseEntity.EditedBy), nameof(BaseEntity.EditedDate),
@@ -306,7 +305,9 @@ namespace IBS.Services
             string remarks, string username, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(remarks) || remarks.Length < 10)
+            {
                 return ServiceResult.Failure("Remarks are required (min 10 characters).");
+            }
 
             try
             {
@@ -315,15 +316,17 @@ namespace IBS.Services
                 {
                     result = table switch
                     {
-                        "JobOrder" => await SaveJobOrderAsync(id, changes, remarks, username, ct),
-                        "DispatchTicket" => await SaveDispatchTicketAsync(id, changes, remarks, username, ct),
-                        "Billing" => await SaveBillingAsync(id, changes, remarks, username, ct),
-                        "Collection" => await SaveCollectionAsync(id, changes, remarks, username, ct),
+                        "JobOrder" => await SaveJobOrderAsync(id, changes, username, ct),
+                        "DispatchTicket" => await SaveDispatchTicketAsync(id, changes, username, ct),
+                        "Billing" => await SaveBillingAsync(id, changes, username, ct),
+                        "Collection" => await SaveCollectionAsync(id, changes, username, ct),
                         _ => ServiceResult.Failure($"Unknown table: {table}")
                     };
 
                     if (result!.IsSuccess)
+                    {
                         await unitOfWork.SaveAsync(ct);
+                    }
                 }, ct);
 
                 return result!;
@@ -335,28 +338,28 @@ namespace IBS.Services
             }
         }
 
-        private async Task<ServiceResult> SaveJobOrderAsync(int id, Dictionary<string, string> changes, string remarks, string username, CancellationToken ct)
+        private async Task<ServiceResult> SaveJobOrderAsync(int id, Dictionary<string, string> changes, string username, CancellationToken ct)
         {
             var entity = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == id, ct);
-            return await ApplyChangesAsync(entity, entity?.JobOrderNumber, "Job Order", id, changes, remarks, username, ct);
+            return await ApplyChangesAsync(entity, entity?.JobOrderNumber, "Job Order", id, changes, username, ct);
         }
 
-        private async Task<ServiceResult> SaveDispatchTicketAsync(int id, Dictionary<string, string> changes, string remarks, string username, CancellationToken ct)
+        private async Task<ServiceResult> SaveDispatchTicketAsync(int id, Dictionary<string, string> changes, string username, CancellationToken ct)
         {
             var entity = await unitOfWork.DispatchTicket.GetAsync(d => d.DispatchTicketId == id, ct);
-            return await ApplyChangesAsync(entity, entity?.DispatchNumber, "Dispatch Ticket", id, changes, remarks, username, ct);
+            return await ApplyChangesAsync(entity, entity?.DispatchNumber, "Dispatch Ticket", id, changes, username, ct);
         }
 
-        private async Task<ServiceResult> SaveBillingAsync(int id, Dictionary<string, string> changes, string remarks, string username, CancellationToken ct)
+        private async Task<ServiceResult> SaveBillingAsync(int id, Dictionary<string, string> changes, string username, CancellationToken ct)
         {
             var entity = await unitOfWork.Billing.GetAsync(b => b.MsapBillingId == id, ct);
-            return await ApplyChangesAsync(entity, entity?.MsapBillingNumber, "Billing", id, changes, remarks, username, ct);
+            return await ApplyChangesAsync(entity, entity?.MsapBillingNumber, "Billing", id, changes, username, ct);
         }
 
-        private async Task<ServiceResult> SaveCollectionAsync(int id, Dictionary<string, string> changes, string remarks, string username, CancellationToken ct)
+        private async Task<ServiceResult> SaveCollectionAsync(int id, Dictionary<string, string> changes, string username, CancellationToken ct)
         {
             var entity = await unitOfWork.Collection.GetAsync(c => c.MsapCollectionId == id, ct);
-            return await ApplyChangesAsync(entity, entity?.MsapCollectionNumber, "Collection", id, changes, remarks, username, ct);
+            return await ApplyChangesAsync(entity, entity?.MsapCollectionNumber, "Collection", id, changes, username, ct);
         }
 
         public async Task<List<SelectListItem>> GetLookupAsync(string lookupKey, CancellationToken ct)
@@ -400,7 +403,7 @@ namespace IBS.Services
             {
                 var s = search.ToLower();
                 filtered = list.Where(e => columns
-                    .Any(c => c.Data != null && (e?.GetType().GetProperty(c.Data)?.GetValue(e)?.ToString() ?? "")
+                    .Any(c => (e?.GetType().GetProperty(c.Data)?.GetValue(e)?.ToString() ?? "")
                         .Contains(s, StringComparison.CurrentCultureIgnoreCase)));
             }
 
@@ -419,11 +422,15 @@ namespace IBS.Services
         private static IEnumerable<T> ApplySort<T>(IEnumerable<T> items, string? sortColumn, string? sortDir)
         {
             if (string.IsNullOrEmpty(sortColumn) || string.IsNullOrEmpty(sortDir))
+            {
                 return items;
+            }
 
             var prop = typeof(T).GetProperty(sortColumn, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
             if (prop == null)
+            {
                 return items;
+            }
 
             // ponytail: reflection-based sort, switch to Expression if performance becomes an issue
             return sortDir == "desc"
@@ -434,27 +441,39 @@ namespace IBS.Services
         private async Task<ServiceResult> ApplyChangesAsync(
             object? entity, string? refVal,
             string documentType, int id,
-            Dictionary<string, string> changes, string remarks, string username,
+            Dictionary<string, string> changes, string username,
             CancellationToken ct)
         {
             if (entity == null)
+            {
                 return ServiceResult.Failure($"{documentType} not found.", ServiceResultStatus.NotFound);
+            }
 
             var auditEntries = new List<AuditTrail>();
             var type = entity.GetType();
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanRead && p.CanWrite)
+                .Where(p => p is { CanRead: true, CanWrite: true })
                 .ToDictionary(p => p.Name, p => p);
 
             foreach (var (key, rawValue) in changes)
             {
-                if (!props.TryGetValue(key, out var prop)) continue;
-                if (ImmutableProps.Contains(key)) continue;
+                if (!props.TryGetValue(key, out var prop))
+                {
+                    continue;
+                }
+
+                if (_immutableProps.Contains(key))
+                {
+                    continue;
+                }
 
                 var currentValue = prop.GetValue(entity);
                 var newValue = ConvertValue(rawValue, prop.PropertyType);
 
-                if (Equals(currentValue, newValue)) continue;
+                if (Equals(currentValue, newValue))
+                {
+                    continue;
+                }
 
                 prop.SetValue(entity, newValue);
 
@@ -467,15 +486,24 @@ namespace IBS.Services
             }
 
             if (props.TryGetValue("EditedBy", out var eb) && eb.CanWrite)
+            {
                 eb.SetValue(entity, username);
+            }
+
             if (props.TryGetValue("EditedDate", out var ed) && ed.CanWrite)
+            {
                 ed.SetValue(entity, DateTimeHelper.GetCurrentPhilippineTime());
+            }
 
             if (auditEntries.Count == 0)
+            {
                 return ServiceResult.Success("No changes detected.");
+            }
 
             foreach (var entry in auditEntries)
+            {
                 await unitOfWork.AuditTrail.AddAsync(entry, ct);
+            }
 
             return ServiceResult.Success(
                 $"{documentType} #{refVal} updated ({auditEntries.Count} field(s) changed).");
@@ -484,16 +512,41 @@ namespace IBS.Services
         private static object? ConvertValue(string? value, Type targetType)
         {
             if (string.IsNullOrEmpty(value))
+            {
                 return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+            }
 
             var underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
-            if (underlying == typeof(int)) return int.TryParse(value, out var i) ? i : 0;
-            if (underlying == typeof(decimal)) return decimal.TryParse(value, out var d) ? d : 0m;
-            if (underlying == typeof(bool)) return value is "true" or "True" or "1";
-            if (underlying == typeof(DateOnly)) return DateOnly.TryParse(value, out var dt) ? dt : default(DateOnly?);
-            if (underlying == typeof(DateTime)) return DateTime.TryParse(value, out var dtm) ? dtm : default(DateTime?);
-            if (underlying == typeof(TimeOnly)) return TimeOnly.TryParse(value, out var t) ? t : default(TimeOnly?);
+            if (underlying == typeof(int))
+            {
+                return int.TryParse(value, out var i) ? i : 0;
+            }
+
+            if (underlying == typeof(decimal))
+            {
+                return decimal.TryParse(value, out var d) ? d : 0m;
+            }
+
+            if (underlying == typeof(bool))
+            {
+                return value is "true" or "True" or "1";
+            }
+
+            if (underlying == typeof(DateOnly))
+            {
+                return DateOnly.TryParse(value, out var dt) ? dt : default(DateOnly?);
+            }
+
+            if (underlying == typeof(DateTime))
+            {
+                return DateTime.TryParse(value, out var dtm) ? dtm : default(DateTime?);
+            }
+
+            if (underlying == typeof(TimeOnly))
+            {
+                return TimeOnly.TryParse(value, out var t) ? t : default(TimeOnly?);
+            }
 
             return value;
         }
@@ -514,7 +567,10 @@ namespace IBS.Services
         private static string FieldDisplayName(string propName)
         {
             if (propName.EndsWith("Id") && propName.Length > 2)
+            {
                 return propName[..^2];
+            }
+
             return propName;
         }
 
@@ -522,7 +578,11 @@ namespace IBS.Services
 
         private static Dictionary<string, object?> MapJobOrder(JobOrder? j)
         {
-            if (j == null) return [];
+            if (j == null)
+            {
+                return [];
+            }
+
             return new()
             {
                 ["JobOrderId"] = j.JobOrderId,
@@ -549,7 +609,11 @@ namespace IBS.Services
 
         private static Dictionary<string, object?> MapDispatchTicket(DispatchTicket? d)
         {
-            if (d == null) return [];
+            if (d == null)
+            {
+                return [];
+            }
+
             return new()
             {
                 ["DispatchTicketId"] = d.DispatchTicketId,
@@ -585,7 +649,11 @@ namespace IBS.Services
 
         private static Dictionary<string, object?> MapBilling(Billing? b)
         {
-            if (b == null) return [];
+            if (b == null)
+            {
+                return [];
+            }
+
             return new()
             {
                 ["MsapBillingId"] = b.MsapBillingId,
@@ -619,7 +687,11 @@ namespace IBS.Services
 
         private static Dictionary<string, object?> MapCollection(Collection? c)
         {
-            if (c == null) return [];
+            if (c == null)
+            {
+                return [];
+            }
+
             return new()
             {
                 ["MsapCollectionId"] = c.MsapCollectionId,
