@@ -82,7 +82,8 @@ namespace IBS.DataAccess.Repository.Msap
                             j.DispatchTickets.All(dt => dt.Status == Utility.Constants.SD.DispatchTicketStatus.ForBilling ||
                                                         dt.Status == Utility.Constants.SD.DispatchTicketStatus.Billed ||
                                                         dt.Status == Utility.Constants.SD.DispatchTicketStatus.Deleted ||
-                                                        dt.Status == Utility.Constants.SD.DispatchTicketStatus.ServiceRequestDeleted));
+                                                        dt.Status == Utility.Constants.SD.DispatchTicketStatus.ServiceRequestDeleted ||
+                                                        dt.Status == Utility.Constants.SD.DispatchTicketStatus.Cancelled));
 
             if (!string.IsNullOrWhiteSpace(term))
             {

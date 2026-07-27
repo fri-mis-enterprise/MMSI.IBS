@@ -23,7 +23,7 @@
                 </div>
             </div>
             <div class="flex gap-2" style="flex-wrap: wrap;">
-                @if (Model.Status == SD.JobOrderStatus.Open)
+                @if (Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling)
                 {
                     <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary" data-hotkey="e">
                         <span class="material-symbols-outlined">edit</span> Edit Details
@@ -117,7 +117,7 @@
                             <span class="material-symbols-outlined text-primary">list_alt</span>
                             <h2 class="modern-headline-md">Dispatch Tickets</h2>
                         </div>
-                        @if (Model.Status == SD.JobOrderStatus.Open && !Model.DispatchTickets.Any(t => t.Status == SD.DispatchTicketStatus.Billed))
+                        @if (Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && !Model.DispatchTickets.Any(t => t.Status == SD.DispatchTicketStatus.Billed))
                         {
                             <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
                                 <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
@@ -126,7 +126,15 @@
                         }
                     </div>
 
-                    <div id="batchToolbar" class="batch-toolbar" style="display:none; padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--outline-variant); background: var(--surface-container-low);">
+                    @if (ViewBag.HasBilling)
+                    {
+                        <div style="padding: 0.75rem 1.25rem; background: var(--error-container, #fce4ec); color: var(--on-error-container, #c62828); font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--outline-variant);">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">lock</span>
+                            <span>This Job Order has a billing — modifications are restricted.</span>
+                        </div>
+                    }
+
+                    <div id="batchToolbar" class="batch-toolbar" style="display:@(ViewBag.HasBilling ? "none!important" : "none"); padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--outline-variant); background: var(--surface-container-low);">
                         <div class="flex items-center justify-between">
                             <span id="batchCount" class="modern-label font-bold">0 selected</span>
                             <div class="flex gap-2">
@@ -201,7 +209,7 @@
                                                         <span class="material-symbols-outlined">visibility</span> View Ticket
                                                     </a>
 
-                                                    @if (ticket.Status is "Draft" or "Requested")
+                                                    @if (!ViewBag.HasBilling && ticket.Status is "Draft" or "Requested")
                                                     {
                                                         @if (ticket.Status == "Requested")
                                                         {
@@ -228,7 +236,7 @@
                                                             </button>
                                                         }
                                                     }
-                                                    else if (ticket.Status is "For Tariff" or "Pending")
+                                                    else if (!ViewBag.HasBilling && ticket.Status is "For Tariff" or "Pending")
                                                     {
                                                         <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
                                                             <span class="material-symbols-outlined">payments</span> Set Tariff
@@ -243,7 +251,7 @@
                                                             </a>
                                                         }
                                                     }
-                                                    else if (ticket.Status == "For Approval")
+                                                    else if (!ViewBag.HasBilling && ticket.Status == "For Approval")
                                                     {
                                                         <button type="button" class="modern-dropdown-item" style="color: #406915; width: 100%; border: none; background: none; cursor: pointer;" data-id="@ticket.DispatchTicketId" onclick="confirmApprove(this)">
                                                             <span class="material-symbols-outlined">check_circle</span> Approve Tariff
@@ -258,7 +266,7 @@
                                                             </a>
                                                         }
                                                     }
-                                                    else if (ticket.Status == "Disapproved")
+                                                    else if (!ViewBag.HasBilling && ticket.Status == "Disapproved")
                                                     {
                                                         <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
                                                             <span class="material-symbols-outlined">edit</span> Edit Tariff
@@ -267,7 +275,7 @@
                                                             <span class="material-symbols-outlined">delete</span> Delete Ticket
                                                         </button>
                                                     }
-                                                    else if (ticket.Status == "For Billing" || ticket.Status == "Billed")
+                                                    else if (!ViewBag.HasBilling && (ticket.Status == "For Billing" || ticket.Status == "Billed"))
                                                     {
                                                         @if (Model.Status == SD.JobOrderStatus.Open)
                                                         {
