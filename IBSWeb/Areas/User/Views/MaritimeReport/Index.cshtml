@@ -24,6 +24,7 @@
                         <div class="modern-card-body" style="gap: 1rem;">
                             <p class="text-sm" style="color: var(--on-surface-variant);">Dispatch tickets ready for billing with tariff and BAF amounts.</p>
                             <form method="post" action="@Url.Action("DispatchForBilling", "MaritimeReport", new { area = "User" })">
+                                @Html.AntiForgeryToken()
                                 <div class="modern-grid-compact" style="margin-bottom: 0.75rem;">
                                     <div>
                                         <label class="modern-label">From</label>
@@ -49,6 +50,7 @@
                         <div class="modern-card-body" style="gap: 1rem;">
                             <p class="text-sm" style="color: var(--on-surface-variant);">Detailed dispatch summary with billing and collection info.</p>
                             <form method="post" action="@Url.Action("DispatchTicketSummary", "MaritimeReport", new { area = "User" })">
+                                @Html.AntiForgeryToken()
                                 <div class="modern-grid-compact" style="margin-bottom: 0.75rem;">
                                     <div>
                                         <label class="modern-label">From</label>
@@ -74,6 +76,7 @@
                         <div class="modern-card-body" style="gap: 1rem;">
                             <p class="text-sm" style="color: var(--on-surface-variant);">AR monitoring report with trip details per month.</p>
                             <form method="post" action="@Url.Action("SalesSummary", "MaritimeReport", new { area = "User" })">
+                                @Html.AntiForgeryToken()
                                 <div class="modern-grid-compact" style="margin-bottom: 0.75rem;">
                                     <div>
                                         <label class="modern-label">Month</label>

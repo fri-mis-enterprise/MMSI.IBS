@@ -20,249 +20,267 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DispatchForBilling(DateOnly dateFrom, DateOnly dateTo, CancellationToken ct)
         {
-            var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
-            using var pkg = new ExcelPackage();
-            var ws = pkg.Workbook.Worksheets.Add("Dispatch For Billing");
-            const int totalCols = 22;
-
-            WriteCompanyHeader(ws);
-            ws.Cells["A2"].Value = "Dispatch Ticket For Billing";
-            ws.Cells["A2"].Style.Font.Size = 14;
-            ws.Cells["A2"].Style.Font.Bold = true;
-            ws.Cells["A3"].Value = $"Date: {DateTime.Now:MMMM dd, yyyy}";
-
-            var mainLabels = new[] { "COS #", "DISPATCH #", "DATE", "SERVICE", "VOYAGE #", "CUSTOMER", "VESSEL",
-                "PORT", "TERMINAL", "DATE/TIME           LEFT", "DATE/TIME           ARRIVED", "# OF HOURS", "RATE INDICATOR" };
-            for (int i = 0; i < mainLabels.Length; i++)
+            try
             {
-                ws.Cells[5, i + 1].Value = mainLabels[i];
-            }
+                var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
+                using var pkg = new ExcelPackage();
+                var ws = pkg.Workbook.Worksheets.Add("Dispatch For Billing");
+                const int totalCols = 22;
 
-            MergeRowRange(ws, 5, 14, 17, "D I S P A T C H");
-            MergeRowRange(ws, 5, 18, 21, "B A F");
-            ws.Cells[5, 22].Value = "TOTAL BILL AMOUNT";
-            StyleHeader(ws, 5, totalCols);
+                WriteCompanyHeader(ws);
+                ws.Cells["A2"].Value = "Dispatch Ticket For Billing";
+                ws.Cells["A2"].Style.Font.Size = 14;
+                ws.Cells["A2"].Style.Font.Bold = true;
+                ws.Cells["A3"].Value = $"Date: {DateTime.Now:MMMM dd, yyyy}";
 
-            foreach (var (col, label) in new[] { (14, "RATE"), (15, "BILL AMOUNT"), (16, "DISCOUNT"), (17, "NET AMOUNT"),
-                (18, "RATE"), (19, "BILL AMOUNT"), (20, "DISCOUNT"), (21, "NET AMOUNT") })
-            {
-                ws.Cells[6, col].Value = label;
-            }
-
-            StyleHeader(ws, 6, totalCols);
-            for (int c = 1; c <= 13; c++)
-            {
-                ws.Cells[5, c, 6, c].Merge = true;
-            }
-
-            ws.Cells[5, 22, 6, 22].Merge = true;
-
-            int dataStart = 7, row = dataStart;
-            foreach (var t in data)
-            {
-                ws.Cells[row, 1].Value = t.COSNumber;
-                ws.Cells[row, 2].Value = t.DispatchNumber;
-                ws.Cells[row, 3].Value = t.Date.ToString("MM/dd/yyyy");
-                ws.Cells[row, 4].Value = t.Service.ServiceName;
-                ws.Cells[row, 5].Value = t.VoyageNumber;
-                ws.Cells[row, 6].Value = t.Customer.CustomerName;
-                ws.Cells[row, 7].Value = t.Vessel.VesselName;
-                ws.Cells[row, 8].Value = t.Terminal.Port.PortName;
-                ws.Cells[row, 9].Value = t.Terminal.TerminalName;
-                ws.Cells[row, 10].Value = FormatDateTime(t.DateLeft, t.TimeLeft);
-                ws.Cells[row, 11].Value = FormatDateTime(t.DateArrived, t.TimeArrived);
-                ws.Cells[row, 12].Value = Math.Round(t.TotalHours, 2);
-                ws.Cells[row, 13].Value = "Per Move";
-                ws.Cells[row, 14].Value = NullIfZero(t.DispatchRate);
-                ws.Cells[row, 15].Value = NullIfZero(t.DispatchBillingAmount);
-                ws.Cells[row, 16].Value = NullIfZero(t.DispatchDiscount);
-                ws.Cells[row, 17].Value = NullIfZero(t.DispatchNetRevenue);
-                ws.Cells[row, 18].Value = NullIfZero(t.BAFRate);
-                ws.Cells[row, 19].Value = NullIfZero(t.BAFBillingAmount);
-                ws.Cells[row, 20].Value = NullIfZero(t.BAFDiscount);
-                ws.Cells[row, 21].Value = NullIfZero(t.BAFNetRevenue);
-                ws.Cells[row, 22].Value = NullIfZero(t.TotalBilling);
-                ws.Cells[row, 1, row, totalCols].Style.Font.Size = 11;
-                for (int c = 12; c <= 22; c++)
+                var mainLabels = new[] { "COS #", "DISPATCH #", "DATE", "SERVICE", "VOYAGE #", "CUSTOMER", "VESSEL",
+                    "PORT", "TERMINAL", "DATE/TIME           LEFT", "DATE/TIME           ARRIVED", "# OF HOURS", "RATE INDICATOR" };
+                for (int i = 0; i < mainLabels.Length; i++)
                 {
-                    ws.Cells[row, c].Style.Numberformat.Format = "#,##0.00";
+                    ws.Cells[5, i + 1].Value = mainLabels[i];
                 }
 
-                row++;
-            }
+                MergeRowRange(ws, 5, 14, 17, "D I S P A T C H");
+                MergeRowRange(ws, 5, 18, 21, "B A F");
+                ws.Cells[5, 22].Value = "TOTAL BILL AMOUNT";
+                StyleHeader(ws, 5, totalCols);
 
-            FinalizeColumns(ws, dataStart, row - 1, totalCols);
-            return File(await pkg.GetAsByteArrayAsync(ct), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"Dispatch_For_Billing_{DateTime.Now:yyyyMMdd}.xlsx");
+                foreach (var (col, label) in new[] { (14, "RATE"), (15, "BILL AMOUNT"), (16, "DISCOUNT"), (17, "NET AMOUNT"),
+                    (18, "RATE"), (19, "BILL AMOUNT"), (20, "DISCOUNT"), (21, "NET AMOUNT") })
+                {
+                    ws.Cells[6, col].Value = label;
+                }
+
+                StyleHeader(ws, 6, totalCols);
+                for (int c = 1; c <= 13; c++)
+                {
+                    ws.Cells[5, c, 6, c].Merge = true;
+                }
+
+                ws.Cells[5, 22, 6, 22].Merge = true;
+
+                int dataStart = 7, row = dataStart;
+                foreach (var t in data)
+                {
+                    ws.Cells[row, 1].Value = t.COSNumber;
+                    ws.Cells[row, 2].Value = t.DispatchNumber;
+                    ws.Cells[row, 3].Value = t.Date.ToString("MM/dd/yyyy");
+                    ws.Cells[row, 4].Value = t.Service.ServiceName;
+                    ws.Cells[row, 5].Value = t.VoyageNumber;
+                    ws.Cells[row, 6].Value = t.Customer.CustomerName;
+                    ws.Cells[row, 7].Value = t.Vessel.VesselName;
+                    ws.Cells[row, 8].Value = t.Terminal.Port.PortName;
+                    ws.Cells[row, 9].Value = t.Terminal.TerminalName;
+                    ws.Cells[row, 10].Value = FormatDateTime(t.DateLeft, t.TimeLeft);
+                    ws.Cells[row, 11].Value = FormatDateTime(t.DateArrived, t.TimeArrived);
+                    ws.Cells[row, 12].Value = Math.Round(t.TotalHours, 2);
+                    ws.Cells[row, 13].Value = "Per Move";
+                    ws.Cells[row, 14].Value = NullIfZero(t.DispatchRate);
+                    ws.Cells[row, 15].Value = NullIfZero(t.DispatchBillingAmount);
+                    ws.Cells[row, 16].Value = NullIfZero(t.DispatchDiscount);
+                    ws.Cells[row, 17].Value = NullIfZero(t.DispatchNetRevenue);
+                    ws.Cells[row, 18].Value = NullIfZero(t.BAFRate);
+                    ws.Cells[row, 19].Value = NullIfZero(t.BAFBillingAmount);
+                    ws.Cells[row, 20].Value = NullIfZero(t.BAFDiscount);
+                    ws.Cells[row, 21].Value = NullIfZero(t.BAFNetRevenue);
+                    ws.Cells[row, 22].Value = NullIfZero(t.TotalBilling);
+                    ws.Cells[row, 1, row, totalCols].Style.Font.Size = 11;
+                    for (int c = 12; c <= 22; c++)
+                    {
+                        ws.Cells[row, c].Style.Numberformat.Format = "#,##0.00";
+                    }
+
+                    row++;
+                }
+
+                FinalizeColumns(ws, dataStart, row - 1, totalCols);
+                return File(await pkg.GetAsByteArrayAsync(ct), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Dispatch_For_Billing_{DateTime.Now:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DispatchTicketSummary(DateOnly dateFrom, DateOnly dateTo, CancellationToken ct)
         {
-            var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
-            using var pkg = new ExcelPackage();
-            var ws = pkg.Workbook.Worksheets.Add("Dispatch Summary");
-            const int totalCols = 35;
-
-            WriteCompanyHeader(ws);
-            ws.Cells["A2"].Value = "Dispatch Ticket Summary";
-            ws.Cells["A2"].Style.Font.Size = 14;
-            ws.Cells["A2"].Style.Font.Bold = true;
-            ws.Cells["A3"].Value = $"Period: {dateFrom:MMMM yyyy}";
-
-            var mainLabels = new[] { "COS #", "DISPATCH #", "DATE", "SERVICE", "VOYAGE #", "CUSTOMER", "VESSEL",
-                "PORT", "TERMINAL", "DATE/TIME           LEFT", "DATE/TIME           ARRIVED", "# OF HOURS", "RATE INDICATOR" };
-            for (int i = 0; i < mainLabels.Length; i++)
+            try
             {
-                ws.Cells[5, i + 1].Value = mainLabels[i];
-            }
+                var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct);
+                using var pkg = new ExcelPackage();
+                var ws = pkg.Workbook.Worksheets.Add("Dispatch Summary");
+                const int totalCols = 35;
 
-            MergeRowRange(ws, 5, 14, 17, "D I S P A T C H");
-            MergeRowRange(ws, 5, 18, 21, "B A F");
-            ws.Cells[5, 22].Value = "TOTAL BILL AMOUNT";
-            MergeRowRange(ws, 5, 23, 28, "B I L L I N G");
-            MergeRowRange(ws, 5, 29, 35, "C O L L E C T I O N");
-            for (int c = 1; c <= 13; c++)
-            {
-                ws.Cells[5, c, 7, c].Merge = true;
-            }
+                WriteCompanyHeader(ws);
+                ws.Cells["A2"].Value = "Dispatch Ticket Summary";
+                ws.Cells["A2"].Style.Font.Size = 14;
+                ws.Cells["A2"].Style.Font.Bold = true;
+                ws.Cells["A3"].Value = $"Period: {dateFrom:MMMM yyyy}";
 
-            ws.Cells[5, 22, 7, 22].Merge = true;
-
-            var peach = Color.FromArgb(0xFF, 0xCC, 0x99);
-            var cyan = Color.FromArgb(0xCC, 0xFF, 0xFF);
-            var lavender = Color.FromArgb(0xCC, 0xCC, 0xFF);
-            var paleGreen = Color.FromArgb(0xCC, 0xFF, 0xCC);
-            var paleYellow = Color.FromArgb(0xFF, 0xFF, 0x99);
-            foreach (int r in new[] { 5, 6, 7 })
-            {
-                StyleSection(ws, r, 1, 13, peach);
-                StyleSection(ws, r, 14, 17, cyan);
-                StyleSection(ws, r, 18, 21, lavender);
-                StyleSection(ws, r, 22, 22, peach);
-                StyleSection(ws, r, 23, 28, paleGreen);
-                StyleSection(ws, r, 29, 35, paleYellow);
-            }
-
-            foreach (var (col, label) in new[] {
-                (14, "RATE"), (15, "BILL AMOUNT"), (16, "DISCOUNT"), (17, "NET AMOUNT"),
-                (18, "RATE"), (19, "BILL AMOUNT"), (20, "DISCOUNT"), (21, "NET AMOUNT"),
-                (23, "BILL #"), (24, "DATE"),
-                (29, "AP OTHER TUG"), (30, "CR NUMBER"), (31, "CHECK NUMBER"),
-                (32, "CHECK DATE"), (33, "DATE DEPOSITED"), (34, "AMOUNT PER DISPATCH"), (35, "2307 PER DISPATCH") })
-            {
-                ws.Cells[6, col].Value = label;
-            }
-
-            MergeRowRange(ws, 6, 25, 26, "DISPATCH");
-            MergeRowRange(ws, 6, 27, 28, "BAF");
-            ws.Cells[7, 25].Value = "RATE";
-            ws.Cells[7, 26].Value = "AMOUNT";
-            ws.Cells[7, 27].Value = "RATE";
-            ws.Cells[7, 28].Value = "AMOUNT";
-            for (int c = 14; c <= 21; c++)
-            {
-                ws.Cells[6, c, 7, c].Merge = true;
-            }
-
-            ws.Cells[6, 23, 7, 23].Merge = true;
-            ws.Cells[6, 24, 7, 24].Merge = true;
-            ws.Cells[6, 29, 7, 29].Merge = true;
-            for (int c = 30; c <= 35; c++)
-            {
-                ws.Cells[6, c, 7, c].Merge = true;
-            }
-
-            ws.View.FreezePanes(8, 1);
-
-            int dataStart = 8, row = dataStart;
-            foreach (var t in data)
-            {
-                ws.Cells[row, 1].Value = t.COSNumber;
-                ws.Cells[row, 2].Value = t.DispatchNumber;
-                ws.Cells[row, 3].Value = t.Date.ToString("MM/dd/yyyy");
-                ws.Cells[row, 4].Value = t.Service.ServiceName;
-                ws.Cells[row, 5].Value = t.VoyageNumber;
-                ws.Cells[row, 6].Value = t.Customer.CustomerName;
-                ws.Cells[row, 7].Value = t.Vessel.VesselName;
-                ws.Cells[row, 8].Value = t.Terminal.Port.PortName;
-                ws.Cells[row, 9].Value = t.Terminal.TerminalName;
-                ws.Cells[row, 10].Value = FormatDateTime(t.DateLeft, t.TimeLeft);
-                ws.Cells[row, 11].Value = FormatDateTime(t.DateArrived, t.TimeArrived);
-                ws.Cells[row, 12].Value = Math.Round(t.TotalHours, 2);
-                ws.Cells[row, 13].Value = "Per Move";
-                ws.Cells[row, 14].Value = NullIfZero(t.DispatchRate);
-                ws.Cells[row, 15].Value = NullIfZero(t.DispatchBillingAmount);
-                ws.Cells[row, 16].Value = NullIfZero(t.DispatchDiscount);
-                ws.Cells[row, 17].Value = NullIfZero(t.DispatchNetRevenue);
-                ws.Cells[row, 18].Value = NullIfZero(t.BAFRate);
-                ws.Cells[row, 19].Value = NullIfZero(t.BAFBillingAmount);
-                ws.Cells[row, 20].Value = NullIfZero(t.BAFDiscount);
-                ws.Cells[row, 21].Value = NullIfZero(t.BAFNetRevenue);
-                ws.Cells[row, 22].Formula = $"Q{row}+U{row}";
-                ws.Cells[row, 23].Value = t.Billing?.MsapBillingNumber;
-                ws.Cells[row, 24].Value = t.Billing?.Date.ToString("MM/dd/yyyy");
-                ws.Cells[row, 25].Value = NullIfZero(t.DispatchRate);
-                ws.Cells[row, 26].Value = NullIfZero(t.DispatchBillingAmount);
-                ws.Cells[row, 27].Value = NullIfZero(t.BAFRate);
-                ws.Cells[row, 28].Value = NullIfZero(t.BAFBillingAmount);
-                ws.Cells[row, 29].Value = NullIfZero(t.ApOtherTugs);
-                ws.Cells[row, 30].Value = t.Billing?.Collection?.MsapCollectionNumber;
-                ws.Cells[row, 31].Value = t.Billing?.Collection?.CheckNumber;
-                ws.Cells[row, 32].Value = t.Billing?.Collection?.CheckDate?.ToString("MM/dd/yyyy");
-                ws.Cells[row, 33].Value = t.Billing?.Collection?.DepositDate?.ToString("MM/dd/yyyy");
-                ws.Cells[row, 34].Value = NullIfZero(t.Billing?.Collection?.Amount ?? 0);
-                ws.Cells[row, 35].Value = NullIfZero(t.Billing?.Collection?.EWT ?? 0);
-                ws.Cells[row, 1, row, totalCols].Style.Font.Size = 11;
-                ws.Cells[row, 12].Style.Numberformat.Format = "#,##0.00";
-                for (int c = 14; c <= 35; c++)
+                var mainLabels = new[] { "COS #", "DISPATCH #", "DATE", "SERVICE", "VOYAGE #", "CUSTOMER", "VESSEL",
+                    "PORT", "TERMINAL", "DATE/TIME           LEFT", "DATE/TIME           ARRIVED", "# OF HOURS", "RATE INDICATOR" };
+                for (int i = 0; i < mainLabels.Length; i++)
                 {
-                    if (c < 30 || c > 33)
-                    {
-                        ws.Cells[row, c].Style.Numberformat.Format = "_(#,##0.00_);[Red](#,##0.00)";
-                    }
+                    ws.Cells[5, i + 1].Value = mainLabels[i];
                 }
 
-                row++;
-            }
+                MergeRowRange(ws, 5, 14, 17, "D I S P A T C H");
+                MergeRowRange(ws, 5, 18, 21, "B A F");
+                ws.Cells[5, 22].Value = "TOTAL BILL AMOUNT";
+                MergeRowRange(ws, 5, 23, 28, "B I L L I N G");
+                MergeRowRange(ws, 5, 29, 35, "C O L L E C T I O N");
+                for (int c = 1; c <= 13; c++)
+                {
+                    ws.Cells[5, c, 7, c].Merge = true;
+                }
 
-            int lastDataRow = row - 1, totalRow = row;
-            ws.Cells[totalRow, 1].Value = "TOTAL";
-            ws.Cells[totalRow, 1, totalRow, totalCols].Style.Font.Size = 11;
-            ws.Cells[totalRow, 1, totalRow, totalCols].Style.Font.Bold = true;
-            foreach (int c in new[] { 15, 17, 19, 21, 22, 26, 28, 29, 34, 35 })
+                ws.Cells[5, 22, 7, 22].Merge = true;
+
+                var peach = Color.FromArgb(0xFF, 0xCC, 0x99);
+                var cyan = Color.FromArgb(0xCC, 0xFF, 0xFF);
+                var lavender = Color.FromArgb(0xCC, 0xCC, 0xFF);
+                var paleGreen = Color.FromArgb(0xCC, 0xFF, 0xCC);
+                var paleYellow = Color.FromArgb(0xFF, 0xFF, 0x99);
+                foreach (int r in new[] { 5, 6, 7 })
+                {
+                    StyleSection(ws, r, 1, 13, peach);
+                    StyleSection(ws, r, 14, 17, cyan);
+                    StyleSection(ws, r, 18, 21, lavender);
+                    StyleSection(ws, r, 22, 22, peach);
+                    StyleSection(ws, r, 23, 28, paleGreen);
+                    StyleSection(ws, r, 29, 35, paleYellow);
+                }
+
+                foreach (var (col, label) in new[] {
+                    (14, "RATE"), (15, "BILL AMOUNT"), (16, "DISCOUNT"), (17, "NET AMOUNT"),
+                    (18, "RATE"), (19, "BILL AMOUNT"), (20, "DISCOUNT"), (21, "NET AMOUNT"),
+                    (23, "BILL #"), (24, "DATE"),
+                    (29, "AP OTHER TUG"), (30, "CR NUMBER"), (31, "CHECK NUMBER"),
+                    (32, "CHECK DATE"), (33, "DATE DEPOSITED"), (34, "AMOUNT PER DISPATCH"), (35, "2307 PER DISPATCH") })
+                {
+                    ws.Cells[6, col].Value = label;
+                }
+
+                MergeRowRange(ws, 6, 25, 26, "DISPATCH");
+                MergeRowRange(ws, 6, 27, 28, "BAF");
+                ws.Cells[7, 25].Value = "RATE";
+                ws.Cells[7, 26].Value = "AMOUNT";
+                ws.Cells[7, 27].Value = "RATE";
+                ws.Cells[7, 28].Value = "AMOUNT";
+                for (int c = 14; c <= 21; c++)
+                {
+                    ws.Cells[6, c, 7, c].Merge = true;
+                }
+
+                ws.Cells[6, 23, 7, 23].Merge = true;
+                ws.Cells[6, 24, 7, 24].Merge = true;
+                ws.Cells[6, 29, 7, 29].Merge = true;
+                for (int c = 30; c <= 35; c++)
+                {
+                    ws.Cells[6, c, 7, c].Merge = true;
+                }
+
+                ws.View.FreezePanes(8, 1);
+
+                int dataStart = 8, row = dataStart;
+                foreach (var t in data)
+                {
+                    ws.Cells[row, 1].Value = t.COSNumber;
+                    ws.Cells[row, 2].Value = t.DispatchNumber;
+                    ws.Cells[row, 3].Value = t.Date.ToString("MM/dd/yyyy");
+                    ws.Cells[row, 4].Value = t.Service.ServiceName;
+                    ws.Cells[row, 5].Value = t.VoyageNumber;
+                    ws.Cells[row, 6].Value = t.Customer.CustomerName;
+                    ws.Cells[row, 7].Value = t.Vessel.VesselName;
+                    ws.Cells[row, 8].Value = t.Terminal.Port.PortName;
+                    ws.Cells[row, 9].Value = t.Terminal.TerminalName;
+                    ws.Cells[row, 10].Value = FormatDateTime(t.DateLeft, t.TimeLeft);
+                    ws.Cells[row, 11].Value = FormatDateTime(t.DateArrived, t.TimeArrived);
+                    ws.Cells[row, 12].Value = Math.Round(t.TotalHours, 2);
+                    ws.Cells[row, 13].Value = "Per Move";
+                    ws.Cells[row, 14].Value = NullIfZero(t.DispatchRate);
+                    ws.Cells[row, 15].Value = NullIfZero(t.DispatchBillingAmount);
+                    ws.Cells[row, 16].Value = NullIfZero(t.DispatchDiscount);
+                    ws.Cells[row, 17].Value = NullIfZero(t.DispatchNetRevenue);
+                    ws.Cells[row, 18].Value = NullIfZero(t.BAFRate);
+                    ws.Cells[row, 19].Value = NullIfZero(t.BAFBillingAmount);
+                    ws.Cells[row, 20].Value = NullIfZero(t.BAFDiscount);
+                    ws.Cells[row, 21].Value = NullIfZero(t.BAFNetRevenue);
+                    ws.Cells[row, 22].Formula = $"O{row}+S{row}";
+                    ws.Cells[row, 23].Value = t.Billing?.MsapBillingNumber;
+                    ws.Cells[row, 24].Value = t.Billing?.Date.ToString("MM/dd/yyyy");
+                    ws.Cells[row, 25].Value = NullIfZero(t.DispatchRate);
+                    ws.Cells[row, 26].Value = NullIfZero(t.DispatchBillingAmount);
+                    ws.Cells[row, 27].Value = NullIfZero(t.BAFRate);
+                    ws.Cells[row, 28].Value = NullIfZero(t.BAFBillingAmount);
+                    ws.Cells[row, 29].Value = NullIfZero(t.ApOtherTugs);
+                    ws.Cells[row, 30].Value = t.Billing?.Collection?.MsapCollectionNumber;
+                    ws.Cells[row, 31].Value = t.Billing?.Collection?.CheckNumber?.Trim();
+                    ws.Cells[row, 32].Value = t.Billing?.Collection?.CheckDate?.ToString("MM/dd/yyyy");
+                    ws.Cells[row, 33].Value = t.Billing?.Collection?.DepositDate?.ToString("MM/dd/yyyy");
+                    ws.Cells[row, 34].Value = NullIfZero(t.Billing?.Collection?.Amount ?? 0);
+                    ws.Cells[row, 35].Value = NullIfZero(t.Billing?.Collection?.EWT ?? 0);
+                    ws.Cells[row, 1, row, totalCols].Style.Font.Size = 11;
+                    ws.Cells[row, 12].Style.Numberformat.Format = "#,##0.00";
+                    for (int c = 14; c <= 35; c++)
+                    {
+                        if (c < 30 || c > 33)
+                        {
+                            ws.Cells[row, c].Style.Numberformat.Format = "_(#,##0.00_);[Red](#,##0.00)";
+                        }
+                    }
+
+                    row++;
+                }
+
+                int lastDataRow = row - 1, totalRow = row;
+                ws.Cells[totalRow, 1].Value = "TOTAL";
+                ws.Cells[totalRow, 1, totalRow, totalCols].Style.Font.Size = 11;
+                ws.Cells[totalRow, 1, totalRow, totalCols].Style.Font.Bold = true;
+                foreach (int c in new[] { 15, 17, 19, 21, 22, 26, 28, 29, 34, 35 })
+                {
+                    ws.Cells[totalRow, c].FormulaR1C1 = $"SUM(R{dataStart}C:R{lastDataRow}C)";
+                }
+
+                FinalizeColumns(ws, dataStart, lastDataRow, totalCols);
+                ws.Column(6).Width = 50.7;
+                ws.Column(25).Width = 20.7;
+                return File(await pkg.GetAsByteArrayAsync(ct), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Dispatch_Ticket_Summary_{DateTime.Now:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
             {
-                ws.Cells[totalRow, c].FormulaR1C1 = $"SUM(R{dataStart}C:R{lastDataRow}C)";
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
-
-            FinalizeColumns(ws, dataStart, lastDataRow, totalCols);
-            ws.Column(6).Width = 50.7;
-            ws.Column(25).Width = 20.7;
-            return File(await pkg.GetAsByteArrayAsync(ct), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"Dispatch_Ticket_Summary_{DateTime.Now:yyyyMMdd}.xlsx");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalesSummary(int month, int year, CancellationToken ct)
         {
-            var dateFrom = new DateOnly(year, month, 1);
-            var dateTo = dateFrom.AddMonths(1).AddDays(-1);
-            var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct, filterByBillingDate: true);
+            try
+            {
+                var dateFrom = new DateOnly(year, month, 1);
+                var dateTo = dateFrom.AddMonths(1).AddDays(-1);
+                var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct, filterByBillingDate: true);
 
-            var tugboatsInData = data.Select(t => t.Tugboat.TugboatName).Where(_ => true).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
-            var ownersInData = data.Select(t => t.Tugboat.TugboatOwner?.TugboatOwnerName).Where(n => n != null).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
-            var customersInData = data.Select(t => t.Customer.CustomerName).Where(_ => true).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
-            var allTugboats = (await unitOfWork.Tugboat.GetAllAsync(cancellationToken: ct))
-                .Where(t => tugboatsInData.Contains(t.TugboatName)).OrderBy(t => t.TugboatName).ToList();
-            var tugboatOwners = (await unitOfWork.TugboatOwner.GetAllAsync(cancellationToken: ct))
-                .Where(o => ownersInData.Contains(o.TugboatOwnerName)).OrderBy(o => o.TugboatOwnerName).ToList();
-            var allCustomers = (await unitOfWork.Customer.GetAllAsync(cancellationToken: ct))
-                .Where(c => c.IsActive && customersInData.Contains(c.CustomerName)).OrderBy(c => c.CustomerName).ToList();
+                var tugboatsInData = data.Select(t => t.Tugboat.TugboatName).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
+                var ownersInData = data.Select(t => t.Tugboat.TugboatOwner?.TugboatOwnerName).Where(n => n != null).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
+                var customersInData = data.Select(t => t.Customer.CustomerName).Distinct(StringComparer.OrdinalIgnoreCase).ToHashSet();
+                var allTugboats = (await unitOfWork.Tugboat.GetAllAsync(cancellationToken: ct))
+                    .Where(t => tugboatsInData.Contains(t.TugboatName)).OrderBy(t => t.TugboatName).ToList();
+                var tugboatOwners = (await unitOfWork.TugboatOwner.GetAllAsync(cancellationToken: ct))
+                    .Where(o => ownersInData.Contains(o.TugboatOwnerName)).OrderBy(o => o.TugboatOwnerName).ToList();
+                var allCustomers = (await unitOfWork.Customer.GetAllAsync(cancellationToken: ct))
+                    .Where(c => c.IsActive && customersInData.Contains(c.CustomerName)).OrderBy(c => c.CustomerName).ToList();
 
-            using var pkg = new ExcelPackage();
-            var ws = pkg.Workbook.Worksheets.Add("AR Monitoring");
+                using var pkg = new ExcelPackage();
+                var ws = pkg.Workbook.Worksheets.Add("AR Monitoring");
 
             WriteCompanyHeader(ws);
             ws.Cells["A2"].Value = "AR MONITORING AS OF";
@@ -433,11 +451,11 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 ws.Cells[row, 1, row, totalCols].Style.Font.Size = 11;
                 ws.Cells[row, 1].Value = (t.Billing?.Date ?? t.Date).ToString("MM/dd/yyyy");
-                ws.Cells[row, 2].Value = t.DispatchNumber.Trim();
+                ws.Cells[row, 2].Value = t.DispatchNumber?.Trim();
                 ws.Cells[row, 3].Value = t.Billing?.MsapBillingNumber;
                 ws.Cells[row, 4].Value = t.Customer.CustomerName;
                 ws.Cells[row, 5].Value = t.Vessel.VesselName;
-                ws.Cells[row, 6].Value = t.Vessel.VesselType.Trim();
+                ws.Cells[row, 6].Value = t.Vessel.VesselType?.Trim();
                 ws.Cells[row, 7].Value = t.Tugboat.TugboatName;
                 ws.Cells[row, 8].Value = t.Terminal.Port.PortName;
                 ws.Cells[row, 9].Value = t.Terminal.TerminalName;
@@ -449,7 +467,7 @@ namespace IBSWeb.Areas.User.Controllers
                 SetDecimal(ws, row, 15, t.TotalBilling);
                 ws.Cells[row, 16].Value = t.Billing?.Collection?.DepositDate?.ToString("MM/dd/yyyy");
                 ws.Cells[row, 17].Value = t.Billing?.Collection?.Date.ToString("MM/dd/yyyy");
-                ws.Cells[row, 18].Value = t.Billing?.Collection?.MsapCollectionNumber.Trim();
+                ws.Cells[row, 18].Value = t.Billing?.Collection?.MsapCollectionNumber?.Trim();
                 ws.Cells[row, 19].Value = t.Billing?.Collection?.CheckBank;
                 SetDecimal(ws, row, 20, t.TotalBilling);
                 SetDecimal(ws, row, 21, t.Billing?.Collection?.EWT ?? 0);
@@ -462,8 +480,8 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 var tugName = t.Tugboat.TugboatName;
-                var isForeign = t.Vessel.VesselType.Contains("FOREIGN", StringComparison.OrdinalIgnoreCase);
-                var isTending = t.Service.ServiceName.Contains("TENDING", StringComparison.OrdinalIgnoreCase);
+                var isForeign = t.Vessel.VesselType?.Contains("FOREIGN", StringComparison.OrdinalIgnoreCase) == true;
+                var isTending = t.Service.ServiceName?.Contains("TENDING", StringComparison.OrdinalIgnoreCase) == true;
 
                 if (tugboatCols.TryGetValue(tugName, out var tc))
                 {
@@ -563,6 +581,12 @@ namespace IBSWeb.Areas.User.Controllers
             FinalizeColumns(ws, dataStartRow, lastDataRow, totalCols);
             return File(await pkg.GetAsByteArrayAsync(ct), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 $"Sales_Summary_{year}{month:D2}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         private static bool TryStripSuffix(string label, string suffix, out string name)

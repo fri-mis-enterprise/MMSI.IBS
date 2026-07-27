@@ -6,6 +6,7 @@
 ### Fixed
 - **Billing post not closing Job Order** — `TryAutoCloseAsync` in `JobOrderService` silently swallowed exceptions and didn't exclude `Cancelled` dispatch tickets from the unbilled check. Now re-throws on failure (transaction rolls back) and treats `Cancelled` as a terminal status that doesn't block auto-close. (`JobOrderService.cs:231-233,250-253`)
 - **Billing edit loses JobOrderId after reversal** — Three bugs: (1) `ReverseBillingAsync` didn't clear `dt.BillingId = null`, so the JobOrder disappeared from the billable list; (2) `UpdateBillingAsync` blindly overwrote `JobOrderId` with null when the form didn't provide it; (3) Edit.cshtml had no fallback when the JO wasn't in the billable dropdown. Fixed all three. (`BillingService.cs:422-426,545`, `BillingController.cs:125-130`, `Edit.cshtml:439,451-456`)
+- **Maritime reports crash / 400 on POST** — Four NRE fixes in `MaritimeReportController`: null-safe access on `Vessel.VesselType`, `Service.ServiceName`, `DispatchNumber`, and `MsapCollectionNumber`. Corrected column 22 formula in DispatchTicketSummary from net (`Q+U`) to gross (`O+S`) matching the "TOTAL BILL AMOUNT" header. Added `@Html.AntiForgeryToken()` to all three report forms in the Index view, fixing 400 Bad Request on submit. Wrapped all three report actions in try-catch with `TempData["error"]` feedback. Removed dead `.Where(_ => true)` calls. (`MaritimeReportController.cs`, `Index.cshtml`)
 
 ## [2026-07-25]
 ### Fixed
