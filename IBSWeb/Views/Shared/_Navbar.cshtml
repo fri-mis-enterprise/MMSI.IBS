@@ -1,8 +1,5 @@
-@* _ModernNavbar.cshtml
-   Opt-in modern mega-menu navbar partial.
-   Rendered in _Layout.cshtml alongside the classic Bootstrap navbar.
-   Visibility is controlled by modern-navbar.js + localStorage.
-   This partial assumes the same @inject / @using context as _Layout.cshtml.
+@* _Navbar.cshtml
+   Mega-menu navbar partial — sole navbar for the app.
 *@
 @using IBS.Models.Enums
 @using IBS.Services.AccessControl
@@ -472,11 +469,6 @@
                         <span class="material-symbols-outlined" id="mnav-theme-icon">dark_mode</span>
                         <span>Dark mode</span>
                         <span class="mnav-dropdown-check" id="mnav-theme-check" style="display:none">check</span>
-                    </button>
-
-                    <button class="mnav-dropdown-item" data-mnav-toggle type="button">
-                        <span class="material-symbols-outlined">toggle_on</span>
-                        <span>Modern UI</span>
                     </button>
 
                     <a class="mnav-dropdown-item" asp-area="User" asp-controller="Docs" asp-action="Index">

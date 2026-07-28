@@ -1,69 +1,37 @@
-# AGENTS.md — MMSI-IBS / MSAP
+### AGENTS.md — MMSI-IBS / MSAP
 
-MSAP = **Job Order → Dispatch Ticket → Billing → Collection**. .NET 10 ASP.NET Core MVC, active dev — inconsistencies exist, fix minimal.
+.NET 10 ASP.NET Core MVC & PostgreSQL active dev. MSAP Workflow: Job Order → Dispatch Ticket → Billing → Collection. 
 
-## Quick reference
+### Quick Reference & Environment
 
-```powershell
-dotnet build                 # TreatWarningsAsErrors on 6/8 projects (not test projects)
-dotnet test IBS.Tests        # unit tests (xUnit + Moq + FluentAssertions + EF Core InMemory)
-dotnet test IBS.Tests.UI     # UI integration (Playwright)
-docker compose up            # app :5001, DB :5002
-```
+* Build: dotnet build (TreatWarningsAsErrors on 6/8 projects)
+* Tests: dotnet test IBS.Tests (xUnit/Moq) | dotnet test IBS.Tests.UI (Playwright)
+* Environment: docker compose up (App :5001, DB :5002)
+* DB: localhost:5432, mmsi_ibs_dev, user postgres/mis123
 
-DB: `localhost:5432`, `mmsi_ibs_dev`, user `postgres`/`mis123`.
+### Stack Configuration & Gotchas
 
-## Stack extras (not obvious from csproj)
+* Timestamps: Npgsql.EnableLegacyTimestampBehavior = true | Snake-case via EFCore.NamingConventions
+* Serialization: DecimalJsonConverter rounds to 2 decimal places.
+* Core Packages: Quartz scheduling (IBS.Services), QuestPDF (IBSWeb).
+* Auth: Cookie-based 30-min sliding. [Authorize(Roles = "Admin")] or MSAP [RequireAnyAccess].
+* Storage & DB: Auto-migrations via IBS.DataAccess. Local storage at App_Data/LocalStorage -> /local-storage.
+* Architecture Hierarchy: IBS.Models → IBS.DataAccess → IBS.Services → IBSWeb. Areas: User (28 controllers), Admin, Identity (Razor Pages). Uses Primary Constructors & UoW/Generic Repository.
+* Modern UI: Sole navbar is `_Navbar.cshtml` (partial in `_Layout.cshtml:71`). Powered by `modern-navbar.js` (always-on, no toggle). `modern-dashboard.css` shows modern dashboard unconditionally. Classic Bootstrap dashboard removed.
 
-- `Npgsql.EnableLegacyTimestampBehavior = true` in Program.cs
-- Snake-case naming via `EFCore.NamingConventions`
-- Custom `DecimalJsonConverter` rounds to 2 places
-- **Quartz** scheduling in `IBS.Services`
-- **QuestPDF** for report generation in `IBSWeb`
-- Auth: Cookie-based 30-min sliding. `[Authorize(Roles = "Admin")]` on Admin area controllers; `[RequireAnyAccess]` on MSAP controllers
-- Migrations in `IBS.DataAccess/Migrations/`, auto-applied on startup
-- Local file storage at `App_Data/LocalStorage` under `/local-storage`
+### Conventions & Agent Constraints
 
-## Architecture
+* Ponytail Optimization: Strict compliance with YAGNI/KISS rules. No unrequested abstractions (no single-implementation interfaces, no single-product factories). Code bloat will be heavily penalized.
+* Minimal Fixes: Inconsistencies exist in legacy blocks; do minimal, localized fixes. Write the absolute minimum custom code required to pass tests.
+* Patterns First: Follow existing implementations in Areas/User/Views/ before writing new code.
+* Root-Cause Fixes: Grep all callers of a function before modifying shared logic.
+* Constraints: Invariant Philippine time via DateTimeHelper.GetCurrentPhilippineTime(). Workflow state guards mandatory (e.g., "ForTariff" before pricing). Audit trails required on all CUD operations.
+* Frontend: Refreshes only for .cshtml/.js/.css. Icons via <span class="material-symbols-outlined">. Gotcha: ModernTable.ajax() is POST by default; pass explicit inline type: "GET" if targeting [HttpGet].
 
-```
-IBS.Models → IBS.DataAccess → IBS.Services → IBSWeb
-                                    ↑              ↓
-                               IBS.Utility    IBS.DTOs
-```
+### Housekeeping & Workflow Tools
 
-- **Areas**: `User` (app — 28 controllers), `Admin` (users/roles), `Identity` (login — **Razor Pages**, not controllers)
-- DI: Primary constructors, `IUnitOfWork` + generic `Repository<T>` + typed repos
-- Service layer: thin orchestration over UoW. Some MSAP entities have service classes; accounting master files use controllers + UoW directly.
-
-## MCP tools (always available)
-
-| Tool | Use |
-|------|-----|
-| `search_code_context(methodName)` | C# method body + related DTOs/Models |
-| `trace_workflow(methodName, filePath)` | Recursive Controller → Service → Repo trace |
-| `analyze_action(methodName, filePath)` | Controller action + all deps |
-| `read_model(modelName)` | Model/DTO properties summary |
-| `execute_sql(sql)` | Run SQL against PostgreSQL (prompts on write) |
-| `check_build_status` | `dotnet build` with structured errors |
-| `list_csv_files` | List CSVs in Exported/Imports dirs |
-| `query_csv(filePath, filter?)` | Filter CSV data |
-
-## Conventions an agent would miss
-
-- **Patterns first** (read before writing): standard Index → `Areas/User/Views/JobOrder/Index.cshtml`; standard Create/Edit → `JobOrder/Create.cshtml`; advanced (conditional dropdowns, uploads) → `DispatchTicket/Index.cshtml`, `Create.cshtml`
-- **Root-cause fixes**: grep all callers of the function you're touching, fix once at the shared path
-- **No unrequested abstractions**: no interface with one implementation, no factory for one product
-- **Audit trail** on every create/edit/delete
-- **Workflow state guards**: only "ForTariff" → price, only "Billed" → collect, etc.
-- **Time zone**: Philippine time via `DateTimeHelper.GetCurrentPhilippineTime()`
-- **Check build only for `.cs` changes** — `cshtml`/`js`/`css` changes just need browser refresh
-- **Modern UI**: `modern-ui.css`, `modern-table.js`, `modern-select.js` (Select2 wrapper), `modern-alert.js` (SweetAlert2 wrapper). Icons: Material Symbols Outlined (`<span class="material-symbols-outlined">icon_name</span>`). **Gotcha**: `ModernTable.ajax()` sends POST — if endpoint is `[HttpGet]`, inline `ajax: { url, type: "GET", data: d => d }`.
-
-## Housekeeping
-
-- **Changelog**: append to `CHANGELOG.md` (reverse chronological) for user-visible or architecture-level changes. Format: `## [date]` / `### Added|Changed|Fixed`. Skip trivial edits.
-- **Version** at `IBSWeb/Views/Shared/_Layout.cshtml:19` (`ViewBag.AppVersion`). Format: `0.{DeploymentVersion}.{CommitCounts}`. Ask before incrementing.
-- **Commit**: never without asking. Present a summary and ask "Commit?".
-- **Docs**: update `Docs/` if workflow or architecture changes.
-- **Ask when uncertain** — vague prompt or ambiguity → ask instead of guessing.
+* Tools: Use search_code_context, trace_workflow, analyze_action, and read_model to map code. Use execute_sql for diagnostics.
+* Changelog: Append reverse-chronological logs to CHANGELOG.md. Skip trivial edits.
+* Versioning: Found at IBSWeb/Views/Shared/_Layout.cshtml:15. Format: 0.{DeploymentVersion}.{CommitCounts}. Ask before incrementing.
+* Git: Summarize changes and ask "Commit?" explicitly before committing.
+* Ambiguity: Ask for clarification if prompts or requirements are vague.

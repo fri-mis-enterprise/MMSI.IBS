@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-07-28]
+### Changed
+- **Modern navbar is now the sole navbar** — Classic Bootstrap navbar removed entirely from `_Layout.cshtml`. Modern navbar is always-on: no more opt-in toggle, no localStorage preference check, no `_LoginPartial`. Renamed `_ModernNavbar.cshtml` → `_Navbar.cshtml`. All conditional `body.mnav-enabled` CSS/JS selectors simplified to unconditional. Classic dashboard view removed from `Home/Index.cshtml`. `modern-dashboard.css` always shows modern view. `modern-navbar.js` stripped of toggle/preference logic. Removed Quick Access sidebar suppression toggle (always suppressed). (`_Layout.cshtml`, `_Navbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`, `modern-dashboard.css`, `modern-dashboard.js`, `site.css`, `Home/Index.cshtml`, `Billing/Preview.cshtml`)
+
 ## [2026-07-27]
 ### Fixed
 - **ModernSelect keyboard & focus improvements** — Auto-highlight first visible option on search input; Arrow Up/Down navigation; Enter/Space/Tab to select with auto-focus to next form field; Escape to close. Prevented hidden dropdown children from intercepting focus-advancement. (`modern-select.js`)

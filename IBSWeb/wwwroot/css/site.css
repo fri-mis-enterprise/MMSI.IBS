@@ -729,7 +729,7 @@ body.loading {
 }
 
 /* Modern navbar snaps instantly (content changes between pages) */
-body.mnav-enabled #modern-navbar {
+#modern-navbar {
     view-transition-name: modern-header;
 }
 ::view-transition-old(modern-header),

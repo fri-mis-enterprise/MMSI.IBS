@@ -33,86 +33,6 @@ else
 {
     if (selectedCompany == "MMSI" && !User.IsInRole("PortCoordinator"))
     {
-        <!-- Classic Dashboard (Visible when body does not have mnav-enabled class) -->
-        <div class="classic-dashboard-view container">
-            <div class="row justify-content-center my-5">
-                <div class="col-lg-8 text-center">
-                    <h1 class="display-4 text-primary fw-bold">Welcome to Our Integrated Business System</h1>
-                    <p class="fs-5 text-muted">Effortlessly manage and optimize your business tasks.</p>
-                    <div class="mt-5">
-                        <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
-                        <div class="row g-4">
-                            <div class="col-md-4">
-                                <a href="@Url.Action("Index", "ServiceRequest", new { area = "User", filterType = "ForPosting" })" class="text-decoration-none">
-                                    <div class="card shadow-sm h-100 border-0">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-tools me-2 text-primary"></i>Service Request for Posting
-                                            </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.MsapServiceRequestForPosting.ToString("N0")</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div class="col-md-4">
-                                <a href="@Url.Action("Index", "DispatchTicket", new { area = "User", filterType = "ForTariff" })" class="text-decoration-none">
-                                    <div class="card shadow-sm h-100 border-0">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-ticket-perforated-fill me-2 text-primary"></i>Dispatch Ticket for Tariff
-                                            </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.MsapDispatchTicketForTariff.ToString("N0")</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div class="col-md-4">
-                                <a href="@Url.Action("Index", "DispatchTicket", new { area = "User", filterType = "ForApproval" })" class="text-decoration-none">
-                                    <div class="card shadow-sm h-100 border-0">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-hand-thumbs-up-fill me-2 text-primary"></i>Dispatch Ticket Tariff for Approval
-                                            </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.MsapDispatchTicketForApproval.ToString("N0")</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div class="col-md-4">
-                                <a href="@Url.Action("Index", "DispatchTicket", new { area = "User", filterType = "ForBilling" })" class="text-decoration-none">
-                                    <div class="card shadow-sm h-100 border-0">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-receipt me-2 text-primary"></i>Dispatch Ticket for Billing
-                                            </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.MsapDispatchTicketForBilling.ToString("N0")</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div class="col-md-4">
-                                <a href="@Url.Action("Index", "Billing", new { area = "User", filterType = "ForCollection" })" class="text-decoration-none">
-                                    <div class="card shadow-sm h-100 border-0">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-cash-coin me-2 text-primary"></i>Billing for Collection
-                                            </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.MsapBillingForCollection.ToString("N0")</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modern Dashboard (Visible when body has mnav-enabled class) -->
         <div class="modern-dashboard-view">
             <div class="dashboard-container">
                 <!-- Banner welcome header -->
@@ -378,27 +298,7 @@ else
     }
 }
 
-<style>
-    .classic-dashboard-view .card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        background-color: #fff;
-        border-radius: 0.75rem;
-    }
 
-    .classic-dashboard-view .card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .classic-dashboard-view .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
-
-    .classic-dashboard-view .card-text {
-        font-size: 2rem;
-    }
-</style>
 
 @section Styles {
     <link rel="stylesheet" href="~/css/modern-dashboard.css" asp-append-version="true" />

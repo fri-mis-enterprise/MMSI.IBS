@@ -30,32 +30,22 @@
 
 /* ── Wrapper ── */
 #modern-navbar {
-    display: none; /* hidden by default; body.mnav-enabled shows it */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    gap: 16px;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1060; /* above Bootstrap's z-index-fixed (1030) */
+    z-index: 1060;
     height: var(--mnav-height);
     background-color: var(--mnav-primary);
     box-shadow: var(--mnav-shadow);
     font-family: var(--mnav-font);
 }
 
-/* Opt-in: body class set inline before navbars render — no JS delay */
-body.mnav-enabled #modern-navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    gap: 16px;
-}
-
-body.mnav-enabled #classic-navbar-header {
-    display: none !important;
-}
-
-/* When classic nav is hidden, body carries the top offset via padding-top */
 body.mnav-enabled {
     padding-top: var(--mnav-height) !important;
 }
@@ -396,30 +386,6 @@ body.mnav-enabled {
     background: #fef2f2;
 }
 
-/* ── Chip in the classic Bootstrap navbar ── */
-.classic-nav-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 9999px;
-    border: 1px solid rgba(255,255,255,.25);
-    background: rgba(255,255,255,.1);
-    color: rgba(255,255,255,.85);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: background .18s, border-color .18s;
-    font-family: var(--mnav-font);
-}
-.classic-nav-toggle:hover {
-    background: rgba(255,255,255,.2);
-    color: #fff;
-    border-color: rgba(255,255,255,.45);
-}
-.classic-nav-toggle .material-symbols-outlined { font-size: 15px; }
-
 /* ── Overlay (closes menu on outside click) ── */
 #mnav-overlay {
     display: none;
@@ -532,15 +498,15 @@ body.mnav-drawer-open .mnav-drawer {
 }
 
 @media (max-width: 767px) {
-    body.mnav-enabled .mnav-nav-area {
+    .mnav-nav-area {
         display: none;
     }
 
-    body.mnav-enabled.mnav-drawer-open .mnav-drawer {
+    .mnav-drawer-open .mnav-drawer {
         display: flex;
     }
 
-    body.mnav-enabled.mnav-drawer-open .mnav-drawer-overlay {
+    .mnav-drawer-open .mnav-drawer-overlay {
         display: block;
     }
 }

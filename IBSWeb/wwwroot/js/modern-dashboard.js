@@ -38,17 +38,6 @@
         // Start polling if body has modern-ui enabled
         startPolling();
 
-        // Watch for modern-ui toggling
-        const observer = new MutationObserver(() => {
-            if (document.body.classList.contains('mnav-enabled')) {
-                fetchDashboardData();
-                startPolling();
-            } else {
-                stopPolling();
-            }
-        });
-        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
         // Watch for theme changes to update chart colors
         const themeObserver = new MutationObserver(function() {
             if (trendChart) {

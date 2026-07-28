@@ -5,17 +5,10 @@
 
 /* View toggles */
 .modern-dashboard-view {
-    display: none;
+    display: block;
     animation: fadeIn 0.4s ease;
 }
 .classic-dashboard-view {
-    display: block;
-}
-
-body.mnav-enabled .modern-dashboard-view {
-    display: block;
-}
-body.mnav-enabled .classic-dashboard-view {
     display: none;
 }
 
