@@ -20,9 +20,9 @@
     {
         bafFirstDate = bafTickets!.Min(dt => dt.Date);
         bafLastDate = bafTickets!.Max(dt => dt.Date);
-        bafTotalHours = bafTickets.Sum(dt => dt.TotalHours);
-        bafTotalAmount = bafTickets.Sum(dt => dt.BAFNetRevenue);
-        bafRate = bafTickets.First().BAFRate;
+        bafTotalHours = bafTickets!.Sum(dt => dt.TotalHours);
+        bafTotalAmount = bafTickets!.Sum(dt => dt.BAFNetRevenue);
+        bafRate = bafTickets!.First().BAFRate;
     }
 }
 

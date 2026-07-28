@@ -140,8 +140,9 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var hasBilling = await unitOfWork.Billing.GetAsync(b => b.JobOrderId == id, cancellationToken) != null;
-            ViewData["HasBilling"] = hasBilling;
+            var billing = await unitOfWork.Billing.GetAsync(b => b.JobOrderId == id, cancellationToken);
+            ViewData["HasBilling"] = billing != null;
+            ViewData["BillingNumber"] = billing?.MsapBillingNumber;
 
             var ticketViewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, id, cancellationToken);
             ViewData["TicketViewModel"] = ticketViewModel;

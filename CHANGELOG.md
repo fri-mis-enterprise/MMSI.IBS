@@ -1,6 +1,10 @@
 # Changelog
 
 ## [2026-07-28]
+### Added
+- **Billing number in Job Order restriction banner** — Restriction message now shows "Billing #XX" so users can identify the billing without leaving the page. (`JobOrderController.cs`, `Details.cshtml`)
+### Fixed
+- **Nullable CS8604 warning in Billing Preview** — Added missing `!` null-forgiving operators on `bafTickets.Sum`/`.First()` calls. (`Preview.cshtml`)
 ### Changed
 - **Billing Preview actions dropdown** — Replaced "PRINT / SAVE AS PDF" button with an "Actions" dropdown containing checkable print modes (Include Ticket Images, Combined BAF) and a PROCEED button that applies selections before opening the browser print dialog. Combined BAF collapses all BAF rows into one summary line with date range, total hours, single rate, and total amount. (`Preview.cshtml`)
 ### Removed
