@@ -2,6 +2,15 @@
 
 ## [2026-07-28]
 ### Changed
+- **Billing Preview actions dropdown** — Replaced "PRINT / SAVE AS PDF" button with an "Actions" dropdown containing checkable print modes (Include Ticket Images, Combined BAF) and a PROCEED button that applies selections before opening the browser print dialog. Combined BAF collapses all BAF rows into one summary line with date range, total hours, single rate, and total amount. (`Preview.cshtml`)
+### Removed
+- **Duplicate ACTIONS button** — Removed the redundant sticky-footer ACTIONS button. (`Preview.cshtml`)
+### Fixed
+- **Ticket images page breaking in print** — Added `page-break-before` so ticket images print on separate pages when enabled. (`Preview.cshtml`)
+- **Combined BAF header duplication** — Combined mode now hides both individual BAF rows and the header row. (`Preview.cshtml`)
+- **Null BAF collection guard** — Legacy billings with no dispatch tickets no longer crash on `.Min()`/`.Max()`. (`Preview.cshtml`)
+- **Actions button styling** — Changed from `modern-btn-dropdown` to `modern-btn-secondary` to match sibling button sizes. (`Preview.cshtml`)
+
 - **Modern navbar is now the sole navbar** — Classic Bootstrap navbar removed entirely from `_Layout.cshtml`. Modern navbar is always-on: no more opt-in toggle, no localStorage preference check, no `_LoginPartial`. Renamed `_ModernNavbar.cshtml` → `_Navbar.cshtml`. All conditional `body.mnav-enabled` CSS/JS selectors simplified to unconditional. Classic dashboard view removed from `Home/Index.cshtml`. `modern-dashboard.css` always shows modern view. `modern-navbar.js` stripped of toggle/preference logic. Removed Quick Access sidebar suppression toggle (always suppressed). (`_Layout.cshtml`, `_Navbar.cshtml`, `modern-navbar.css`, `modern-navbar.js`, `modern-dashboard.css`, `modern-dashboard.js`, `site.css`, `Home/Index.cshtml`, `Billing/Preview.cshtml`)
 
 ## [2026-07-27]
