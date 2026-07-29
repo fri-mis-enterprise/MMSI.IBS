@@ -779,6 +779,211 @@ namespace IBS.Services
             }).ToList();
         }
 
+        /// <summary>
+        /// Creates two billings for PHIL-CEB / THERMA SOUTH:
+        /// Billing 1 – tickets linked, amount = dispatch revenue only.
+        /// Billing 2 – no tickets, amount = BAF revenue, user-supplied billing number.
+        /// </summary>
+        public async Task<ServiceResult<(int DispatchBillingId, int BafBillingId)>> CreatePhilCebSplitAsync(
+            Billing model, string bafBillingNumber, string username, string company, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null)
+                    return ServiceResult<(int, int)>.Failure(guard.Message!);
+
+                if (string.IsNullOrWhiteSpace(model.MsapBillingNumber))
+                    return ServiceResult<(int, int)>.Failure("Billing Number is required.");
+
+                if (string.IsNullOrWhiteSpace(bafBillingNumber))
+                    return ServiceResult<(int, int)>.Failure("BAF Billing Number is required.");
+
+                // Duplicate check
+                var dupMain = await unitOfWork.Billing.GetAsync(b => b.MsapBillingNumber == model.MsapBillingNumber, cancellationToken);
+                if (dupMain != null)
+                    return ServiceResult<(int, int)>.Failure($"Billing number '{model.MsapBillingNumber}' already exists.");
+
+                var dupBaf = await unitOfWork.Billing.GetAsync(b => b.MsapBillingNumber == bafBillingNumber, cancellationToken);
+                if (dupBaf != null)
+                    return ServiceResult<(int, int)>.Failure($"BAF Billing number '{bafBillingNumber}' already exists.");
+
+                if (model.JobOrderId is 0) model.JobOrderId = null;
+
+                if (model.ToBillDispatchTickets == null || !model.ToBillDispatchTickets.Any())
+                    return ServiceResult<(int, int)>.Failure("At least one dispatch ticket must be selected.");
+
+                var customer = await unitOfWork.Customer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                if (customer == null)
+                    return ServiceResult<(int, int)>.Failure("Customer not found.");
+
+                var now = DateTimeHelper.GetCurrentPhilippineTime();
+
+                // Resolve optional principal
+                if (model.PrincipalId.HasValue && model.PrincipalId != 0)
+                    model.Principal = await unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId.Value, cancellationToken);
+
+                var terms = (model.PrincipalId > 0 ? model.Principal?.Terms : customer.CustomerTerms) ?? "COD";
+                var dueDate = await unitOfWork.Billing.ComputeDueDateAsync(terms, model.Date, cancellationToken);
+
+                decimal dispatch = 0, baf = 0;
+                var ticketEntities = new List<DispatchTicket>();
+                foreach (var idStr in model.ToBillDispatchTickets)
+                {
+                    var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(idStr), cancellationToken);
+                    if (dt == null)
+                        return ServiceResult<(int, int)>.Failure($"Dispatch ticket #{idStr} not found.");
+                    dispatch += dt.DispatchNetRevenue;
+                    baf += dt.BAFNetRevenue;
+                    ticketEntities.Add(dt);
+                }
+
+                // ── Billing 1: dispatch tickets, dispatch amount only ──────
+                var billing1 = new Billing
+                {
+                    MsapBillingNumber = model.MsapBillingNumber,
+                    Date = model.Date,
+                    DueDate = dueDate,
+                    Year = model.Date.Year,
+                    CustomerId = model.CustomerId,
+                    Customer = customer,
+                    PrincipalId = model.PrincipalId,
+                    Principal = model.Principal,
+                    BilledTo = model.BilledTo,
+                    VesselId = model.VesselId,
+                    PortId = model.PortId,
+                    TerminalId = model.TerminalId,
+                    VoyageNumber = model.VoyageNumber,
+                    COSNumber = model.COSNumber,
+                    JobOrderId = model.JobOrderId,
+                    IsVatable = model.IsVatable,
+                    IsVatInclusive = model.IsVatInclusive,
+                    PrintWht = model.PrintWht,
+                    ApOtherTug = model.ApOtherTug,
+                    Terms = terms,
+                    Company = company,
+                    Status = SD.BillingStatus.ForPosting,
+                    CreatedBy = username,
+                    CreatedDate = now,
+                    IsPaid = false,
+                    DispatchAmount = dispatch,
+                    BAFAmount = 0,
+                };
+                billing1.Amount = billing1.Balance = billing1 is { IsVatable: true, IsVatInclusive: false }
+                    ? dispatch * VatMultiplier : dispatch;
+
+                var bafTickets = new List<DispatchTicket>();
+
+                foreach (var dt in ticketEntities)
+                {
+                    // Capture original BAF rate & amounts before zeroing out on original ticket
+                    var origBafRate = dt.BAFRate;
+                    var origBafBillingAmt = dt.BAFBillingAmount;
+                    var origBafNetRev = dt.BAFNetRevenue;
+
+                    dt.Billing = billing1;
+                    // Zero out BAF on original ticket so Billing 1 only shows tickets/dispatch
+                    dt.BAFBillingAmount = 0;
+                    dt.BAFNetRevenue = 0;
+                    dt.BAFRate = 0;
+                    dt.TotalBilling = dt.DispatchBillingAmount;
+                    dt.TotalNetRevenue = dt.DispatchNetRevenue;
+
+                    // Clone ticket for BAF billing (Billing 2)
+                    // Keep BAF rate & amounts in BAF fields so Preview renders under BUNKER ADJUSTMENT FACTORS
+                    var bafTicket = new DispatchTicket
+                    {
+                        DispatchNumber = string.IsNullOrEmpty(dt.DispatchNumber) ? "BAF-A" : $"{dt.DispatchNumber}-A",
+                        Date = dt.Date,
+                        DateLeft = dt.DateLeft,
+                        TimeLeft = dt.TimeLeft,
+                        DateArrived = dt.DateArrived,
+                        TimeArrived = dt.TimeArrived,
+                        TotalHours = dt.TotalHours,
+                        CustomerId = dt.CustomerId,
+                        VesselId = dt.VesselId,
+                        PortId = dt.PortId,
+                        TerminalId = dt.TerminalId,
+                        TugBoatId = dt.TugBoatId,
+                        TugMasterId = dt.TugMasterId,
+                        ServiceId = dt.ServiceId,
+                        JobOrderId = dt.JobOrderId,
+                        Status = dt.Status,
+                        CreatedBy = username,
+                        CreatedDate = now,
+                        DispatchRate = 0,
+                        DispatchBillingAmount = 0,
+                        DispatchNetRevenue = 0,
+                        BAFRate = origBafRate,
+                        BAFBillingAmount = origBafBillingAmt,
+                        BAFNetRevenue = origBafNetRev,
+                        TotalBilling = origBafBillingAmt,
+                        TotalNetRevenue = origBafNetRev
+                    };
+                    bafTickets.Add(bafTicket);
+                }
+
+                await unitOfWork.Billing.AddAsync(billing1, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(
+                    new AuditTrail(username, $"Created Billing #{billing1.MsapBillingNumber} (PHIL-CEB dispatch split)", "Billing", billing1.MsapBillingId, billing1.MsapBillingNumber),
+                    cancellationToken);
+
+                // ── Billing 2: BAF tickets with -A suffix ────────────────
+                var billing2 = new Billing
+                {
+                    MsapBillingNumber = bafBillingNumber,
+                    Date = model.Date,
+                    DueDate = dueDate,
+                    Year = model.Date.Year,
+                    CustomerId = model.CustomerId,
+                    PrincipalId = model.PrincipalId,
+                    BilledTo = model.BilledTo,
+                    VesselId = model.VesselId,
+                    PortId = model.PortId,
+                    TerminalId = model.TerminalId,
+                    VoyageNumber = model.VoyageNumber,
+                    COSNumber = model.COSNumber,
+                    JobOrderId = model.JobOrderId,
+                    IsVatable = model.IsVatable,
+                    IsVatInclusive = model.IsVatInclusive,
+                    PrintWht = model.PrintWht,
+                    ApOtherTug = 0,
+                    Terms = terms,
+                    Company = company,
+                    Status = SD.BillingStatus.ForPosting,
+                    CreatedBy = username,
+                    CreatedDate = now,
+                    IsPaid = false,
+                    DispatchAmount = 0,
+                    BAFAmount = baf,
+                };
+                billing2.Amount = billing2.Balance = billing2 is { IsVatable: true, IsVatInclusive: false }
+                    ? baf * VatMultiplier : baf;
+
+                foreach (var bt in bafTickets)
+                {
+                    bt.Billing = billing2;
+                    await unitOfWork.DispatchTicket.AddAsync(bt, cancellationToken);
+                }
+
+                await unitOfWork.Billing.AddAsync(billing2, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(
+                    new AuditTrail(username, $"Created Billing #{billing2.MsapBillingNumber} (PHIL-CEB BAF split)", "Billing", billing2.MsapBillingId, billing2.MsapBillingNumber),
+                    cancellationToken);
+
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult<(int, int)>.Success(
+                    (billing1.MsapBillingId, billing2.MsapBillingId),
+                    $"Billings created: #{billing1.MsapBillingNumber} (dispatch) and #{billing2.MsapBillingNumber} (BAF).");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create PHIL-CEB split billing.");
+                return ServiceResult<(int, int)>.Failure($"Failed to create split billing: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
         private async Task<ServiceResult?> GuardClosedPeriodAsync(DateOnly date, CancellationToken ct)
         {
             if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, ct))

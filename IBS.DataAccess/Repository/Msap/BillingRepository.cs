@@ -250,11 +250,17 @@ namespace IBS.DataAccess.Repository.Msap
             if (!string.IsNullOrEmpty(parameters.Search.Value))
             {
                 var s = parameters.Search.Value.ToLower();
+                var matchingBillingIds = await _db.Set<DispatchTicket>()
+                    .Where(dt => dt.BillingId != null && dt.DispatchNumber.ToLower().Contains(s))
+                    .Select(dt => dt.BillingId!.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
                 query = query.Where(dt =>
                     dt.MsapBillingNumber.ToLower().Contains(s) ||
                     dt.Customer.CustomerName.ToLower().Contains(s) ||
                     dt.Vessel.VesselName.ToLower().Contains(s) ||
-                    dt.Status.ToLower().Contains(s)
+                    dt.Status.ToLower().Contains(s) ||
+                    matchingBillingIds.Contains(dt.MsapBillingId)
                 );
             }
 
@@ -294,6 +300,19 @@ namespace IBS.DataAccess.Repository.Msap
                 .Skip(parameters.Start)
                 .Take(parameters.Length)
                 .ToListAsync(cancellationToken);
+
+            var billingIds = data.Select(b => b.MsapBillingId).ToList();
+            var ticketGroups = await _db.Set<DispatchTicket>()
+                .Where(dt => dt.BillingId != null && billingIds.Contains(dt.BillingId.Value))
+                .GroupBy(dt => dt.BillingId!.Value)
+                .Select(g => new { BillingId = g.Key, Numbers = g.Select(dt => dt.DispatchNumber) })
+                .ToListAsync(cancellationToken);
+            var ticketMap = ticketGroups.ToDictionary(g => g.BillingId, g => string.Join(", ", g.Numbers));
+            foreach (var b in data)
+            {
+                if (ticketMap.TryGetValue(b.MsapBillingId, out var numbers))
+                    b.DispatchTicketNumbers = numbers;
+            }
 
             return (data, recordsFiltered, totalRecords);
         }

@@ -2,6 +2,7 @@
 
 ## [2026-07-28]
 ### Added
+- **PHIL-CEB / THERMA SOUTH split billing** — When creating a billing for PHIL-CEB MARINE SERVICES INC. with THERMA SOUTH terminal, submitting intercepts the normal flow and prompts the user for a separate BAF billing number (with real-time duplicate validation via `CheckBillingNumber`). Two billings are created atomically: Billing 1 has original tickets with `DispatchRate` and 0 BAF; Billing 2 is linked to cloned tickets with a `-A` suffix on `DispatchNumber`, carrying 0 dispatch rate and the original BAF rate/revenue figures. Preview filters out empty dispatch ticket rows for BAF-only billings. (`BillingService.CreatePhilCebSplitAsync`, `BillingController.CheckBillingNumber`, `BillingController.CreatePhilCebSplit`, `Create.cshtml`, `Preview.cshtml`)
 - **Billing number in Job Order restriction banner** — Restriction message now shows "Billing #XX" so users can identify the billing without leaving the page. (`JobOrderController.cs`, `Details.cshtml`)
 ### Fixed
 - **Nullable CS8604 warning in Billing Preview** — Added missing `!` null-forgiving operators on `bafTickets.Sum`/`.First()` calls. (`Preview.cshtml`)

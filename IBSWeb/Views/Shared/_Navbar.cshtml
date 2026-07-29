@@ -89,7 +89,7 @@
                             MSAP
                             <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
                         </button>
-                        <div class="mnav-mega" style="--mnav-cols:2; min-width:480px;" role="menu">
+                        <div class="mnav-mega" style="--mnav-cols:3; min-width:640px;" role="menu">
                             <div class="mnav-mega-grid">
                                 <!-- Col 1 -->
                                 <div>
@@ -111,15 +111,6 @@
                                             <div>
                                                 <div class="mnav-link-title">Dispatch Tickets</div>
                                                 <div class="mnav-link-sub">Tariff &amp; approval workflow</div>
-                                            </div>
-                                        </a>
-                                        <a class="mnav-mega-link"
-                                           asp-area="User" asp-controller="VesselSchedule" asp-action="Index"
-                                           role="menuitem">
-                                            <span class="material-symbols-outlined">calendar_month</span>
-                                            <div>
-                                                <div class="mnav-link-title">Vessel Schedule</div>
-                                                <div class="mnav-link-sub">Schedule &amp; Gantt board</div>
                                             </div>
                                         </a>
                                         <a class="mnav-mega-link"
@@ -165,6 +156,21 @@
                                             <div>
                                                 <div class="mnav-link-title">MMSI Reports</div>
                                                 <div class="mnav-link-sub">Analytics &amp; exports</div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Col 3 -->
+                                <div>
+                                    <div class="mnav-section-label">Experimental</div>
+                                    <div class="mnav-link-list">
+                                        <a class="mnav-mega-link"
+                                           asp-area="User" asp-controller="VesselSchedule" asp-action="Index"
+                                           role="menuitem">
+                                            <span class="material-symbols-outlined">calendar_month</span>
+                                            <div>
+                                                <div class="mnav-link-title">Vessel Schedule</div>
+                                                <div class="mnav-link-sub">Schedule &amp; Gantt board</div>
                                             </div>
                                         </a>
                                     </div>

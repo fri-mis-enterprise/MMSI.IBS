@@ -55,6 +55,7 @@
                             <th>CUSTOMER</th>
                             <th>PORT - TERMINAL</th>
                             <th>VESSEL</th>
+                            <th>DISPATCH TICKET #</th>
                             <th class="text-center">STATUS</th>
                             <th class="text-center">ACTIONS</th>
                         </tr>
@@ -87,7 +88,7 @@
 
             let table = $('#paginatedTable').DataTable(ModernTable.config({
                 order: [[0, 'desc']],
-                columnDefs: [{ orderable: false, targets: [7] }],
+                columnDefs: [{ orderable: false, targets: [8] }],
                 ajax: ModernTable.ajax("@Url.Action("GetBillingList", "Billing", new { area = "User" })"),
                 columns: [
                     { data: "date", defaultContent: "" },
@@ -111,6 +112,15 @@
                         }
                     },
                     { data: "vessel.vesselName", defaultContent: "" },
+                    {
+                        data: "dispatchTicketNumbers",
+                        render: (data, type, row) => {
+                            if (!data) return "";
+                            const parts = data.split(", ");
+                            if (parts.length <= 3) return data;
+                            return `<span title="${data.replace(/"/g, '&quot;')}">${parts.slice(0, 3).join(", ")} +${parts.length - 3} more</span>`;
+                        }
+                    },
                     {
                         data: "status",
                         className: "text-center",

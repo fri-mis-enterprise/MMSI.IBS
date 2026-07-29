@@ -55,6 +55,7 @@
                                 <th>Date</th>
                                 <th>COS #</th>
                                 <th>Ticket #</th>
+                                <th>Billing #</th>
                                 <th>Start</th>
                                 <th>End</th>
                                 <th>Activity/Service</th>
@@ -95,7 +96,7 @@
 
             let table = $('#paginatedTable').DataTable(ModernTable.config({
                 order: [[0, 'desc']],
-                columnDefs: [{ orderable: false, targets: [11] }],
+                columnDefs: [{ orderable: false, targets: [12] }],
                 ajax: ModernTable.ajax("@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "User" })", (d) => {
                     d.filterType = filterType;
                     return d;
@@ -107,6 +108,7 @@
                         data: "dispatchNumber",
                         render: (data, type, row) => `<a href="${previewUrl}?id=${row.dispatchTicketId}" class="font-bold" style="text-decoration:none; color: var(--primary)">${data}</a>`
                     },
+                    { data: "billing.msapBillingNumber", defaultContent: "" },
                     {
                         data: "dateLeft",
                         render: (data, type, row) => ModernTable.render.dateTime(row.dateLeft, row.timeLeft)

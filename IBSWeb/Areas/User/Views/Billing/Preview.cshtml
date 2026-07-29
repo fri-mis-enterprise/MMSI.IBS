@@ -235,20 +235,24 @@
                     <tbody>
                         @foreach (var tugboat in Model.UniqueTugboats!)
                         {
-                            <tr>
-                                <td colspan="7" class="pt-1.5 pb-0.5" style="padding-inline: 0;"><b>NAME OF TUGBOAT: @tugboat</b></td>
-                            </tr>
-                            @foreach (var dt in Model.PaidDispatchTickets!.Where(dt => dt.Tugboat?.TugboatName == tugboat))
+                            var dispatchNetTickets = Model.PaidDispatchTickets!.Where(dt => dt.Tugboat?.TugboatName == tugboat && dt.DispatchNetRevenue > 0).ToList();
+                            if (dispatchNetTickets.Any())
                             {
                                 <tr>
-                                    <td class="text-left">@dt.Date.ToString("dd-MMM")</td>
-                                    <td>@dt.Service?.ServiceName</td>
-                                    <td class="text-left">@dt.DateLeft?.ToString("MM/dd/yyyy") @dt.TimeLeft?.ToString(@"HH\:mm")</td>
-                                    <td class="text-left">@dt.DateArrived?.ToString("MM/dd/yyyy") @dt.TimeArrived?.ToString(@"HH\:mm")</td>
-                                    <td class="text-center">@dt.TotalHours.ToString("N2")</td>
-                                    <td class="text-right">@dt.DispatchRate.ToString("N2")</td>
-                                    <td class="text-right">@dt.DispatchNetRevenue.ToString("N2")</td>
+                                    <td colspan="7" class="pt-1.5 pb-0.5" style="padding-inline: 0;"><b>NAME OF TUGBOAT: @tugboat</b></td>
                                 </tr>
+                                @foreach (var dt in dispatchNetTickets)
+                                {
+                                    <tr>
+                                        <td class="text-left">@dt.Date.ToString("dd-MMM")</td>
+                                        <td>@dt.Service?.ServiceName</td>
+                                        <td class="text-left">@dt.DateLeft?.ToString("MM/dd/yyyy") @dt.TimeLeft?.ToString(@"HH\:mm")</td>
+                                        <td class="text-left">@dt.DateArrived?.ToString("MM/dd/yyyy") @dt.TimeArrived?.ToString(@"HH\:mm")</td>
+                                        <td class="text-center">@dt.TotalHours.ToString("N2")</td>
+                                        <td class="text-right">@dt.DispatchRate.ToString("N2")</td>
+                                        <td class="text-right">@dt.DispatchNetRevenue.ToString("N2")</td>
+                                    </tr>
+                                }
                             }
                         }
 

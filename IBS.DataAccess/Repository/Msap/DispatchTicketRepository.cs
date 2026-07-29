@@ -109,6 +109,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(dt => dt.TugMaster)
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Customer)
+                .Include(dt => dt.Billing)
                 .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted);
 
             if (!string.IsNullOrEmpty(filterType))
@@ -139,6 +140,7 @@ namespace IBS.DataAccess.Repository.Msap
                     (dt.Tugboat != null && dt.Tugboat.TugboatName.ToLower().Contains(s)) ||
                     (dt.Customer != null && dt.Customer.CustomerName.ToLower().Contains(s)) ||
                     (dt.Vessel != null && dt.Vessel.VesselName.ToLower().Contains(s)) ||
+                    (dt.Billing != null && dt.Billing.MsapBillingNumber.ToLower().Contains(s)) ||
                     dt.Status.ToLower().Contains(s));
             }
 

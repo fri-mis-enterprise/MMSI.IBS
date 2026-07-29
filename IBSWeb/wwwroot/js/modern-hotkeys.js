@@ -28,6 +28,7 @@
     }
 
     function handleKeydown(e) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
         if ($(e.target).is('input,textarea,select,[contenteditable]')) return;
         var key = e.key.toLowerCase();
         if (key === 'escape') {

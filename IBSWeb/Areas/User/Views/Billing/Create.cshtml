@@ -309,6 +309,7 @@
             let currentCustomerId = null;
             let currentCustomer = null;
             let currentPrincipal = null;
+            let currentTerminalName = null; // ponytail: track for PHIL-CEB split detection
             setupEventListeners();
             handleCheckboxChange();
             
@@ -373,6 +374,9 @@
                 });
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PortSelect").on("change", handlePortChange);
+                $("#TerminalSelect").on("change", function () {
+                    currentTerminalName = $(this).find('option:selected').text().trim();
+                });
                 $("#legacyToggle").on("change", handleLegacyToggleChange);
                 $("#isVatableToggle").on("change", function () {
                     // ponytail: Enable/disable VAT inclusive based on VAT status using lockToggle
@@ -712,6 +716,13 @@
                 }
             }
 
+            // ── PHIL-CEB / THERMA SOUTH split detection ──────────────────
+            function isPhilCebTherma() {
+                const customerName = currentCustomer?.name?.trim().toUpperCase() ?? '';
+                const terminalName = (currentTerminalName ?? '').toUpperCase();
+                return customerName.includes('PHIL-CEB MARINE SERVICES') && terminalName.includes('THERMA SOUTH');
+            }
+
             // ── Submit ───────────────────────────────────────────────────────
             function areYouSureToBill(event) {
                 event.preventDefault();
@@ -721,11 +732,70 @@
                     ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
                     return;
                 }
+
+                if (isPhilCebTherma()) {
+                    promptBafBillingNumber();
+                    return;
+                }
+
                 ModernAlert.confirm({ 
                     title: "Submit Billing?", 
                     text: "Review all details before proceeding.", 
                     confirmText: "Yes, submit" 
                 }).then(result => { if (result.isConfirmed) submitCreateForm(); });
+            }
+
+            // ponytail: PHIL-CEB split — prompt user for BAF billing number with dup check
+            function promptBafBillingNumber(errorMsg) {
+                ModernAlert.prompt({
+                    title: 'BAF Billing Number',
+                    text: errorMsg ||
+                        'This billing will be split into two entries (Dispatch + BAF). Enter the billing number for the BAF entry:',
+                    placeholder: 'e.g. B000001',
+                    confirmText: 'Continue',
+                    icon: 'info',
+                    validator: async (value) => {
+                        if (!value || !value.trim()) return 'BAF Billing Number is required.';
+                        // duplicate check
+                        try {
+                            const res = await fetch(`@Url.Action("CheckBillingNumber", "Billing", new { area = "User" })?number=${encodeURIComponent(value.trim())}`);
+                            const data = await res.json();
+                            if (data.exists) return `'${value.trim()}' is already used. Enter a different number.`;
+                        } catch { /* proceed — server will double-check */ }
+                        return null;
+                    }
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+                    ModernAlert.confirm({
+                        title: 'Submit Split Billing?',
+                        text: `Two billings will be created:\n• Dispatch → ${$("#billingNumber").val()}\n• BAF → ${result.value}`,
+                        confirmText: 'Yes, submit',
+                        icon: 'question'
+                    }).then(confirm => {
+                        if (confirm.isConfirmed) submitPhilCebSplit(result.value.trim());
+                    });
+                });
+            }
+
+            async function submitPhilCebSplit(bafBillingNumber) {
+                try {
+                    ModernAlert.showLoading('Creating split billings...');
+                    const formData = new URLSearchParams(new FormData(document.getElementById('myForm')));
+                    formData.set('bafBillingNumber', bafBillingNumber);
+                    const res = await fetch('@Url.Action("CreatePhilCebSplit", "Billing", new { area = "User" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData.toString()
+                    });
+                    const response = await res.json();
+                    if (response.success) {
+                        ModernAlert.success(response.message).then(() => response.redirectUrl ? window.location.href = response.redirectUrl : location.reload());
+                    } else {
+                        ModernAlert.error(response.message || 'Failed to create split billing.');
+                    }
+                } catch {
+                    ModernAlert.error('An error occurred while creating the split billing.');
+                }
             }
 
             async function submitCreateForm() {

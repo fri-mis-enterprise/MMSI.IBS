@@ -616,6 +616,47 @@ namespace IBSWeb.Areas.User.Controllers
             return result.Status == ServiceResultStatus.NotFound ? NotFound() : BadRequest(result.Message);
         }
 
+        /// <summary>
+        /// Checks whether a billing number already exists (used for client-side duplicate validation).
+        /// </summary>
+        [HttpGet]
+        [RequireAnyAccess("Access denied.", ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling)]
+        public async Task<IActionResult> CheckBillingNumber(string number, CancellationToken cancellationToken)
+        {
+            var exists = await unitOfWork.Billing.GetAsync(b => b.MsapBillingNumber == number, cancellationToken) != null;
+            return Json(new { exists });
+        }
+
+        /// <summary>
+        /// Creates two billings for PHIL-CEB / THERMA SOUTH: one for dispatch tickets, one for BAF only.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateBilling, "Access denied. You don't have permission to create Billings.")]
+        public async Task<IActionResult> CreatePhilCebSplit(
+            [Bind("CustomerId,PrincipalId,BilledTo,MsapBillingNumber,Date,VoyageNumber,COSNumber,PortId,TerminalId,VesselId,ApOtherTug,IsVatable,IsVatInclusive,PrintWht,JobOrderId,ToBillDispatchTickets")] Billing model,
+            string bafBillingNumber,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var username = User.Identity?.Name ?? "System";
+                var company = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? SD.Company_MMSI;
+
+                var result = await billingService.CreatePhilCebSplitAsync(model, bafBillingNumber, username, company, cancellationToken);
+
+                if (result.IsSuccess)
+                    return Json(new { success = true, message = result.Message, redirectUrl = Url.Action(nameof(Index)) });
+
+                return Json(new { success = false, message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create PHIL-CEB split billing.");
+                return Json(new { success = false, message = ExceptionHelper.GetErrorMessage(ex) });
+            }
+        }
+
         #endregion
 
 
