@@ -7,12 +7,13 @@
 ```mermaid
 graph LR
     ForPosting[For Posting] -->|post to GL| ForCollection[For Collection]
-    ForCollection --> Collected
+    ForCollection -->|full payment| Collected
+    ForCollection -->|reverse| ForPosting
 
     classDef pending fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
     classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
     class ForPosting,ForCollection pending;
-    class Collected,Paid done;
+    class Collected done;
 ```
 
 ### State Descriptions
@@ -21,7 +22,7 @@ graph LR
 |-------|---------|
 | **For Posting** | Created but not yet posted to accounting |
 | **For Collection** | Posted, awaiting payment |
-| **Collected / Paid** | Payment received |
+| **Collected** | Payment received |
 
 ## Pages
 

@@ -4,45 +4,58 @@ A **Dispatch Ticket** records actual maritime service delivery — tugboat assig
 
 ## Workflow State
 
+Dispatch Tickets are created either directly (under a Job Order) or by posting a **Service Request** (see [Service Requests](service-request)). The Dispatch Ticket flow is independent of the Service Request flow once the ticket exists.
+
 ```mermaid
 graph LR
-    Draft --> Requested
-    Requested --> Pending
-    Pending --> ForTariff[For Tariff]
-    ForTariff --> ForApproval[For Approval]
+    %% Entry points
+    Create[Create Dispatch Ticket] -->|times complete| ForTariff[For Tariff]
+    Create -->|times incomplete| Pending
+    SR[Service Request] -->|post| ForTariff
+
+    %% Main flow
+    Pending -->|set tariff| ForApproval[For Approval]
+    ForTariff -->|set tariff| ForApproval
     ForApproval -->|approve| ForBilling[For Billing]
     ForApproval -->|disapprove| Disapproved
-    Disapproved --> ForTariff
-    ForBilling --> Billed
+    Disapproved -->|edit tariff| ForApproval
+    ForBilling -->|post billing| Billed
+    ForBilling -->|revoke approval| ForApproval
+    Billed -->|reverse billing| ForBilling
 
-    Pending -.-> Cancelled
-    ForTariff -.-> Cancelled
-    ForApproval -.-> Cancelled
-    Disapproved -.-> Cancelled
+    %% Edit resets tariff on critical change
+    ForApproval -->|edit critical fields| ForTariff
+
+    %% Soft delete / restore
+    Pending -->|delete| Deleted
+    ForTariff -->|delete| Deleted
+    Disapproved -->|delete| Deleted
+    Deleted -->|restore| ForTariff
+    Deleted -->|restore| Pending
 
     classDef main fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
     classDef billed fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef cancelled fill:#ffebee,stroke:#c62828,stroke-width:2px;
     classDef disapproved fill:#fff3e0,stroke:#e65100,stroke-width:2px;
-    class Draft,Requested,Pending,ForTariff,ForApproval,ForBilling main;
+    classDef deleted fill:#eceff1,stroke:#546e7a,stroke-width:2px;
+    class Pending,ForTariff,ForApproval,ForBilling main;
     class Disapproved disapproved;
     class Billed billed;
-    class Cancelled cancelled;
+    class Deleted deleted;
 ```
 
 ### State Descriptions
 
 | State | Meaning |
 |-------|---------|
-| **Draft** | Incomplete, still being filled in |
-| **Requested** | Complete, pending review |
-| **Pending** | Under review |
+| **Pending** | Dispatch Ticket without complete service times |
 | **For Tariff** | Ready for rate assignment |
 | **For Approval** | Tariff set, waiting for approval |
 | **Disapproved** | Tariff rejected, can be revised |
 | **For Billing** | Approved, ready to be billed |
 | **Billed** | Included in a billing statement |
-| **Cancelled** | Ticket voided |
+| **Deleted** | Soft-deleted, can be restored |
+
+> **Note:** A `Cancelled` status exists in the domain model but is not reachable from any UI surface, so it is not part of the documented flow.
 
 ## Pages
 
@@ -86,11 +99,12 @@ graph LR
 | Edit | Modify ticket details (status-dependent) |
 | Set Tariff | Assign rates to a For Tariff ticket |
 | Edit Tariff | Modify existing tariff rates |
-| Approve Tariff | Approve a tariff (moves to For Billing) |
-| Disapprove Tariff | Reject tariff with reason (returns to For Tariff) |
+| Approve Tariff | Approve a tariff (For Approval → For Billing) |
+| Disapprove Tariff | Reject tariff with reason (For Approval → Disapproved) |
+| Revoke Approval | Pull a For Billing ticket back to For Approval |
 | Batch Approve | Approve multiple tariffs at once |
 | Batch Set Tariff | Set rates for multiple tickets at once |
-| Delete | Soft-delete a ticket |
+| Delete | Soft-delete a ticket (Pending / For Tariff / Disapproved only) |
 | Restore | Restore a deleted ticket |
 | Change Status | Generic status transition |
 
