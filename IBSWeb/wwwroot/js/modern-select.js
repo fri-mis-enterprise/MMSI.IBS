@@ -229,7 +229,7 @@ const ModernSelect = {
                     const $next = $visibleOptions.eq(nextIndex);
                     $next.addClass('highlighted');
                     scrollIntoView($next);
-                } else if (e.key === 'Enter' || e.key === ' ') {
+                } else if (e.key === 'Enter') {
                     e.preventDefault();
                     const $highlighted = $optionsContainer.find('.modern-select-option.highlighted');
                     if ($highlighted.length) {

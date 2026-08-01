@@ -3,15 +3,12 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
-    var department = ViewBag.GetUserDepartment;
     ViewData["Title"] = "Dashboard";
     var selectedCompany = string.Empty;
-    var selectedStation = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 }
 
@@ -45,15 +42,6 @@ else
                         <span class="material-symbols-outlined">calendar_today</span>
                         <span id="modernCurrentDate"></span>
                     </div>
-                </div>
-
-                <!-- Attention Required Alert Bar (Hidden by default, shown by JS if alerts exist) -->
-                <div id="attention-bar" class="attention-bar" style="display: none;">
-                    <div class="attention-title">
-                        <span class="material-symbols-outlined">warning</span>
-                        <span>AWAITING ACTION:</span>
-                    </div>
-                    <div id="attention-badge-list" class="attention-badge-list"></div>
                 </div>
 
                 <!-- KPI Stats Grid -->

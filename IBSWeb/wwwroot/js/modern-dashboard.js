@@ -114,10 +114,7 @@
         // 1. Render KPI values & counts
         updateKpiValues(data);
 
-        // 2. Render Attention Required alerts
-        renderAttentionAlerts(data);
-
-        // 3. Render Trend Chart
+        // 2. Render Trend Chart
         if (data.monthlyTrends && data.monthlyTrends.length > 0) {
             renderChart(data.monthlyTrends);
         }
@@ -159,61 +156,6 @@
         $('#c-total-value').text(data.collections.total.toLocaleString());
         $('#c-active-count').text(data.collections.active.toLocaleString());
         $('#c-voided-count').text(data.collections.voided.toLocaleString());
-    }
-
-    /**
-     * Render Attention Required Alert Badges
-     */
-    function renderAttentionAlerts(data) {
-        const wrap = $('#attention-badge-list');
-        wrap.empty();
-
-        let alerts = [
-            {
-                count: data.dispatchTickets.requested,
-                label: 'Service Requests Awaiting Posting',
-                url: '/User/ServiceRequest/Index?filterType=ForPosting'
-            },
-            {
-                count: data.dispatchTickets.forTariff,
-                label: 'Dispatch Tickets Awaiting Tariff',
-                url: '/User/DispatchTicket/Index?filterType=ForTariff'
-            },
-            {
-                count: data.dispatchTickets.forApproval,
-                label: 'Dispatch Tickets Awaiting Approval',
-                url: '/User/DispatchTicket/Index?filterType=ForApproval'
-            },
-            {
-                count: data.dispatchTickets.forBilling,
-                label: 'Dispatch Tickets Awaiting Billing',
-                url: '/User/DispatchTicket/Index?filterType=ForBilling'
-            },
-            {
-                count: data.billings.forCollection,
-                label: 'Billings Awaiting Collection',
-                url: '/User/Billing/Index?filterType=ForCollection'
-            }
-        ];
-
-        // Filter out zero counts
-        alerts = alerts.filter(a => a.count > 0);
-
-        if (alerts.length === 0) {
-            $('#attention-bar').hide();
-            return;
-        }
-
-        $('#attention-bar').show();
-        alerts.forEach(a => {
-            const badge = $(`
-                <a href="${a.url}" class="attention-badge-item">
-                    <span class="count-num">${a.count}</span>
-                    <span>${a.label}</span>
-                </a>
-            `);
-            wrap.append(badge);
-        });
     }
 
     /**
