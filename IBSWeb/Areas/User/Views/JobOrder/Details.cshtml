@@ -209,9 +209,9 @@
                                                         <span class="material-symbols-outlined">visibility</span> View Ticket
                                                     </a>
 
-                                                    @if (!ViewBag.HasBilling && ticket.Status is "Draft" or "Requested")
+                                                    @if (!ViewBag.HasBilling && ticket.Status is "@SD.ServiceRequestStatus.Draft" or "@SD.ServiceRequestStatus.Requested")
                                                     {
-                                                        @if (ticket.Status == "Requested")
+                                                        @if (ticket.Status == "@SD.ServiceRequestStatus.Requested")
                                                         {
                                                             <form id="postForm-@ticket.DispatchTicketId" method="post" asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" style="display:none">
                                                                 @Html.AntiForgeryToken()
@@ -236,7 +236,7 @@
                                                             </button>
                                                         }
                                                     }
-                                                    else if (!ViewBag.HasBilling && ticket.Status is "For Tariff" or "Pending")
+                                                    else if (!ViewBag.HasBilling && ticket.Status is "For Tariff")
                                                     {
                                                         <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
                                                             <span class="material-symbols-outlined">payments</span> Set Tariff
@@ -342,13 +342,11 @@
 @functions {
     string getStatusBadgeClass(string status) {
         return status switch {
-            "Pending" => "status-closed",
             "For Tariff" => "status-tariff",
             "For Approval" => "status-approval",
             "For Billing" => "status-billing",
             "Billed" => "status-open",
             "Disapproved" => "status-closed",
-            "Cancelled" => "status-closed",
             "Draft" => "status-closed",
             "Requested" => "status-approval",
             _ => "status-closed"
@@ -483,7 +481,7 @@
                     $('#batchCount').text(count + ' selected');
 
                     const hasApproval = checked.filter(function() { return $(this).data('status') === 'For Approval'; }).length > 0;
-                    const hasTariffable = checked.filter(function() { return $(this).data('status') === 'For Tariff' || $(this).data('status') === 'Pending'; }).length > 0;
+                    const hasTariffable = checked.filter(function() { return $(this).data('status') === 'For Tariff'; }).length > 0;
 
                     $('#batchApproveBtn').toggle(hasApproval);
                     $('#batchSetTariffBtn').toggle(hasTariffable);
@@ -581,7 +579,7 @@
             const ids = getSelectedIds();
             if (ids.length === 0) return;
             const tariffable = $('.row-checkbox:checked').filter(function() {
-                return $(this).data('status') === 'For Tariff' || $(this).data('status') === 'Pending';
+                return $(this).data('status') === 'For Tariff';
             });
             $('#batchModalCount').text(tariffable.length);
             $('#batchTariffModal').css('display', 'flex');
@@ -593,7 +591,7 @@
 
         function batchSetTariff() {
             const ids = $('.row-checkbox:checked').filter(function() {
-                return $(this).data('status') === 'For Tariff' || $(this).data('status') === 'Pending';
+                return $(this).data('status') === 'For Tariff';
             }).map(function() { return parseInt($(this).val()); }).get();
             const dispatchRate = parseFloat($('#batchDispatchRate').val()) || 0;
             const bafRate = parseFloat($('#batchBafRate').val()) || 0;
@@ -619,30 +617,6 @@
                     }
                 })
                 .catch(err => ModernAlert.error(err.message));
-        }
-
-        function confirmCancel() {
-            const htmlContent = `
-                <p style="margin-bottom:0.5rem"><strong>This will:</strong></p>
-                <ul style="margin-bottom:0.5rem; padding-left:1.5rem; text-align:left">
-                    <li>Mark Job Order as "Cancelled"</li>
-                    <li>Prevent adding new dispatch tickets</li>
-                </ul>
-                <p style="color:var(--error); font-size:12px; margin-bottom:0">
-                    Admin-only action. Tickets in billing process will block cancellation.
-                </p>
-            `;
-
-            ModernAlert.confirm({
-                title: 'Cancel Job Order?',
-                text: htmlContent,
-                icon: 'warning',
-                confirmText: 'Yes, cancel it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $('#cancelForm').submit();
-                }
-            });
         }
 
         function confirmApprove(btn) {

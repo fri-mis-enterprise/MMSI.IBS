@@ -75,9 +75,8 @@ namespace IBS.Services
                         // Block billing if any ticket under this Job Order is not yet ready for billing
                         var unreadyStatuses = new[]
                         {
-                            SD.DispatchTicketStatus.Draft,
-                            SD.DispatchTicketStatus.Requested,
-                            SD.DispatchTicketStatus.Pending,
+                            SD.ServiceRequestStatus.Draft,
+                            SD.ServiceRequestStatus.Requested,
                             SD.DispatchTicketStatus.ForTariff,
                             SD.DispatchTicketStatus.ForApproval
                         };

@@ -172,7 +172,7 @@ namespace IBS.Services
                 dt => dt.JobOrderId == jobOrder.JobOrderId &&
                       dt.Status != SD.DispatchTicketStatus.Billed &&
                       dt.Status != SD.DispatchTicketStatus.Deleted &&
-                      dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted,
+                      dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted,
                 cancellationToken);
 
             foreach (var ticket in tickets)
@@ -185,7 +185,7 @@ namespace IBS.Services
                 ticket.TerminalId = jobOrder.TerminalId;
                 ticket.Date = jobOrder.Date;
 
-                if (criticalChanged && ticket.Status is not (SD.DispatchTicketStatus.Pending or SD.DispatchTicketStatus.ForTariff))
+                if (criticalChanged && ticket.Status is not SD.DispatchTicketStatus.ForTariff)
                 {
                     ticket.Status = SD.DispatchTicketStatus.ForTariff;
                     ticket.DispatchRate = 0;
@@ -228,7 +228,7 @@ namespace IBS.Services
         {
             try
             {
-                var closedStatuses = new[] { SD.DispatchTicketStatus.Billed, SD.DispatchTicketStatus.Deleted, SD.DispatchTicketStatus.ServiceRequestDeleted, SD.DispatchTicketStatus.Cancelled };
+                var closedStatuses = new[] { SD.DispatchTicketStatus.Billed, SD.DispatchTicketStatus.Deleted, SD.ServiceRequestStatus.ServiceRequestDeleted };
                 var anyUnbilled = await unitOfWork.DispatchTicket.GetAsync(
                     dt => dt.JobOrderId == jobOrderId && !closedStatuses.Contains(dt.Status),
                     cancellationToken) != null;
@@ -321,7 +321,7 @@ namespace IBS.Services
                         ServiceId = serviceId,
                         Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
                         DispatchNumber = $"P{jobOrder.JobOrderId:X}T{tugboatId:X}",
-                        Status = SD.DispatchTicketStatus.Pending,
+                        Status = SD.DispatchTicketStatus.ForTariff,
                         CreatedBy = username,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                     };
@@ -368,7 +368,7 @@ namespace IBS.Services
                 var ticketToRemove = jobOrder.DispatchTickets.FirstOrDefault(dt => dt.TugBoatId == tugboatId);
                 if (ticketToRemove != null)
                 {
-                    if (ticketToRemove.Status != SD.DispatchTicketStatus.Pending && ticketToRemove.Status != SD.DispatchTicketStatus.ForTariff)
+                    if (ticketToRemove.Status != SD.DispatchTicketStatus.ForTariff)
                     {
                         return ServiceResult.Failure("Cannot unassign a tugboat with an active or processed dispatch ticket.");
                     }

@@ -99,13 +99,11 @@
                 'Closed': 'badge-secondary',
                 'Draft': 'badge-secondary',
                 'Requested': 'badge-info',
-                'Pending': 'badge-warning',
                 'For Tariff': 'badge-warning',
                 'For Approval': 'badge-info',
                 'Disapproved': 'badge-error',
                 'For Billing': 'badge-info',
                 'Billed': 'badge-success',
-                'Cancelled': 'badge-error',
                 'Deleted': 'badge-error',
                 'For Posting': 'badge-warning',
                 'For Collection': 'badge-info',
@@ -363,7 +361,7 @@
 
                 // Check terminal state
                 const status = record['Status'] || '';
-                const terminalStates = ['Billed', 'Collected', 'Cancelled', 'Deleted'];
+                const terminalStates = ['Billed', 'Collected', 'Deleted'];
                 if (terminalStates.includes(status)) {
                     document.getElementById('terminalStateWarning').classList.remove('d-none');
                 }

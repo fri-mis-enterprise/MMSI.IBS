@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region -- MMSI
 
                 MsapServiceRequestForPosting = await dbContext.MsapDispatchTickets
-                        .Where(po => po.Status == SD.DispatchTicketStatus.Requested)
+                        .Where(po => po.Status == SD.ServiceRequestStatus.Requested)
                         .CountAsync(),
 
                 MsapDispatchTicketForTariff = await dbContext.MsapDispatchTickets
@@ -92,15 +92,11 @@ namespace IBSWeb.Areas.User.Controllers
             var joTotal = joOpen + joClosed;
 
             // Fetch Dispatch Tickets counts
-            var dtDraft = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.Draft, cancellationToken);
-            var dtRequested = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.Requested, cancellationToken);
-            var dtPending = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.Pending, cancellationToken);
             var dtForTariff = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.ForTariff, cancellationToken);
             var dtForApproval = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.ForApproval, cancellationToken);
             var dtDisapproved = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.Disapproved, cancellationToken);
             var dtForBilling = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.ForBilling, cancellationToken);
             var dtBilled = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.Billed, cancellationToken);
-            var dtCancelled = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status == SD.DispatchTicketStatus.Cancelled, cancellationToken);
             var dtTotal = await dbContext.MsapDispatchTickets.CountAsync(d => d.Status != SD.DispatchTicketStatus.Deleted, cancellationToken);
 
             // Fetch Billings counts & amounts
@@ -225,15 +221,11 @@ namespace IBSWeb.Areas.User.Controllers
             return Json(new {
                 JobOrders = new { Open = joOpen, Closed = joClosed, Total = joTotal },
                 DispatchTickets = new {
-                    Draft = dtDraft,
-                    Requested = dtRequested,
-                    Pending = dtPending,
                     ForTariff = dtForTariff,
                     ForApproval = dtForApproval,
                     Disapproved = dtDisapproved,
                     ForBilling = dtForBilling,
                     Billed = dtBilled,
-                    Cancelled = dtCancelled,
                     Total = dtTotal
                 },
                 Billings = new {

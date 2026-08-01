@@ -154,8 +154,7 @@
                             {
                                 label: 'View Details',
                                 icon: 'visibility',
-                                url: `${previewUrl}?id=${row.dispatchTicketId}`,
-                                condition: row.status !== "@SD.DispatchTicketStatus.Pending"
+                                url: `${previewUrl}?id=${row.dispatchTicketId}`
                             },
                             {
                                 label: 'Set Tariff',
@@ -173,7 +172,7 @@
                                 label: 'Edit Ticket',
                                 icon: 'edit',
                                 url: `${editTicketUrl}?id=${row.dispatchTicketId}&filterType=${filterType}`,
-                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status) && !row.isMonthClosed
+                                condition: ["@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.ForApproval"].includes(row.status) && !row.isMonthClosed
                             },
                             {
                                 label: 'Approve Tariff',
@@ -186,7 +185,7 @@
                                 icon: 'delete',
                                 isError: true,
                                 onclick: `confirmDeleteTicket(${row.dispatchTicketId})`,
-                                condition: ["@SD.DispatchTicketStatus.Pending", "@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.Disapproved"].includes(row.status) && !row.isMonthClosed
+                                condition: ["@SD.DispatchTicketStatus.ForTariff", "@SD.DispatchTicketStatus.Disapproved"].includes(row.status) && !row.isMonthClosed
                             },
                             {
                                 label: 'Restore Ticket',

@@ -36,9 +36,8 @@ PostgreSQL (via Npgsql, snake_case naming)
 ## 3. MSAP Workflow State Machine
 
 > The state machine below reflects **what the UI allows**, not every constant in the
-> domain model. The domain still carries an unreachable `Cancelled` status and a shared
-> `DispatchTicketStatus` enum for Service Requests; see `Docs/WORKFLOW-DESIGN-REVIEW.md`
-> for the proposed code cleanup (separate SR enum, remove `Cancelled`, orphaned endpoints).
+> domain model. `ServiceRequestStatus` and `DispatchTicketStatus` are separate enums;
+> see `Docs/WORKFLOW-DESIGN-REVIEW.md` for the remaining cleanup (service-level state guards).
 
 ```
 JobOrder:  Open  ──→  Closed  (auto-closes when all DTs billed)
@@ -48,15 +47,15 @@ ServiceRequest (separate lifecycle):
   Draft / Requested → Service Request Deleted ⇄ restore
 
 DispatchTicket:
-  create → For Tariff | Pending   (complete / incomplete times)
-  Pending / For Tariff → For Approval      (set tariff)
-  For Approval → For Billing               (approve)
+  create → For Tariff
+  For Tariff → For Approval              (set tariff)
+  For Approval → For Billing             (approve)
   For Approval → Disapproved → For Approval(disapprove / edit tariff)
-  For Approval → For Tariff                (edit resets tariff on critical change)
-  For Billing → Billed                     (post billing)
-  For Billing ⇄ For Approval               (revoke approval)
-  Billed ⇄ For Billing                     (reverse billing)
-  Pending / ForTariff / Disapproved → Deleted ⇄ restore
+  For Approval → For Tariff              (edit resets tariff on critical change)
+  For Billing → Billed                   (post billing)
+  For Billing ⇄ For Approval             (revoke approval)
+  Billed ⇄ For Billing                   (reverse billing)
+  ForTariff / Disapproved → Deleted ⇄ restore
 
 Billing:  For Posting → For Collection → Collected
 ```

@@ -136,15 +136,11 @@
 
         // Dispatch Tickets
         $('#dt-total-value').text(data.dispatchTickets.total.toLocaleString());
-        $('#dt-draft-count').text(data.dispatchTickets.draft.toLocaleString());
-        $('#dt-requested-count').text(data.dispatchTickets.requested.toLocaleString());
-        $('#dt-pending-count').text(data.dispatchTickets.pending.toLocaleString());
         $('#dt-tariff-count').text(data.dispatchTickets.forTariff.toLocaleString());
         $('#dt-approval-count').text(data.dispatchTickets.forApproval.toLocaleString());
         $('#dt-disapproved-count').text(data.dispatchTickets.disapproved.toLocaleString());
         $('#dt-billing-count').text(data.dispatchTickets.forBilling.toLocaleString());
         $('#dt-billed-count').text(data.dispatchTickets.billed.toLocaleString());
-        $('#dt-cancelled-count').text(data.dispatchTickets.cancelled.toLocaleString());
 
         // Billings
         $('#b-total-value').text(data.billings.total.toLocaleString());
@@ -261,7 +257,7 @@
                 badgeClass = 'bg-primary text-white';
             } else if (act.status === 'Billed' || act.status === 'Collected') {
                 badgeClass = 'bg-success text-white';
-            } else if (act.status === 'Cancelled' || act.status === 'Disapproved') {
+            } else if (act.status === 'Disapproved') {
                 badgeClass = 'bg-danger text-white';
             }
 

@@ -98,21 +98,25 @@ namespace IBS.Utility.Constants
             public const string Closed = "Closed";
         }
 
-        public static class DispatchTicketStatus
+        public static class ServiceRequestStatus
         {
             public const string Draft = "Draft";
             public const string Requested = "Requested";
-            public const string Pending = "Pending";
+            public const string ServiceRequestDeleted = "Service Request Deleted";
+
+            public static readonly string[] All = [Draft, Requested, ServiceRequestDeleted];
+        }
+
+        public static class DispatchTicketStatus
+        {
             public const string ForTariff = "For Tariff";
             public const string ForApproval = "For Approval";
             public const string Disapproved = "Disapproved";
             public const string ForBilling = "For Billing";
             public const string Billed = "Billed";
-            public const string Cancelled = "Cancelled";
             public const string Deleted = "Deleted";
-            public const string ServiceRequestDeleted = "Service Request Deleted";
 
-            public static readonly string[] All = [Draft, Requested, Pending, ForTariff, ForApproval, Disapproved, ForBilling, Billed, Cancelled, Deleted, ServiceRequestDeleted];
+            public static readonly string[] All = [ForTariff, ForApproval, Disapproved, ForBilling, Billed, Deleted];
         }
 
         public static class BillingStatus

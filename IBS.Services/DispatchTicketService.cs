@@ -124,7 +124,7 @@ namespace IBS.Services
                 }
                 else
                 {
-                    model.Status = SD.DispatchTicketStatus.Pending;
+                    model.Status = SD.DispatchTicketStatus.ForTariff;
                 }
 
                 await unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
@@ -586,10 +586,10 @@ namespace IBS.Services
                     }
                 }
 
-                var toSet = tickets.Where(t => t.Status is SD.DispatchTicketStatus.ForTariff or SD.DispatchTicketStatus.Pending).ToList();
+                var toSet = tickets.Where(t => t.Status is SD.DispatchTicketStatus.ForTariff).ToList();
                 if (toSet.Count == 0)
                 {
-                    return ServiceResult.Failure("No tickets eligible for tariff setting (status must be 'For Tariff' or 'Pending').");
+                    return ServiceResult.Failure("No tickets eligible for tariff setting (status must be 'For Tariff').");
                 }
 
                 var now = DateTimeHelper.GetCurrentPhilippineTime();
@@ -631,7 +631,7 @@ namespace IBS.Services
                             cancellationToken);
                     }
 
-                    foreach (var skipped in tickets.Where(t => t.Status is not SD.DispatchTicketStatus.ForTariff and not SD.DispatchTicketStatus.Pending))
+                    foreach (var skipped in tickets.Where(t => t.Status is not SD.DispatchTicketStatus.ForTariff))
                     {
                         await unitOfWork.AuditTrail.AddAsync(
                             new AuditTrail(username, $"Batch tariff skipped for #{skipped.DispatchNumber} — status is '{skipped.Status}'", "Tariff", skipped.DispatchTicketId, skipped.DispatchNumber),
@@ -681,7 +681,6 @@ namespace IBS.Services
                 }
 
                 if (model.Status != SD.DispatchTicketStatus.ForTariff &&
-                    model.Status != SD.DispatchTicketStatus.Pending &&
                     model.Status != SD.DispatchTicketStatus.Disapproved)
                 {
                     return ServiceResult.Failure($"Cannot delete ticket — status is '{model.Status}' and must be disapproved or have no tariff applied.");
@@ -729,7 +728,7 @@ namespace IBS.Services
                     return ServiceResult.Failure("Ticket is not in a deleted state.");
                 }
 
-                model.Status = model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null } ? SD.DispatchTicketStatus.ForTariff : SD.DispatchTicketStatus.Pending;
+                model.Status = SD.DispatchTicketStatus.ForTariff;
 
                 model.EditedBy = username;
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();

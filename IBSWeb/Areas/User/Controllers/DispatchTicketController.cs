@@ -508,12 +508,10 @@ namespace IBSWeb.Areas.User.Controllers
 
             var validStatuses = new HashSet<string>
             {
-                SD.DispatchTicketStatus.Pending,
                 SD.DispatchTicketStatus.ForTariff,
                 SD.DispatchTicketStatus.ForApproval,
                 SD.DispatchTicketStatus.ForBilling,
                 SD.DispatchTicketStatus.Billed,
-                SD.DispatchTicketStatus.Cancelled,
                 SD.DispatchTicketStatus.Disapproved,
                 SD.DispatchTicketStatus.Deleted
             };
@@ -524,7 +522,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
 
             // ponytail: prevent transitions from terminal states
-            if (model.Status is SD.DispatchTicketStatus.Billed or SD.DispatchTicketStatus.Cancelled or SD.DispatchTicketStatus.Deleted)
+            if (model.Status is SD.DispatchTicketStatus.Billed or SD.DispatchTicketStatus.Deleted)
             {
                 return Json(new { success = false, message = "Cannot change status from a terminal state." });
             }

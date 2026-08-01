@@ -39,8 +39,6 @@ graph LR
 | **Requested** | Complete, ready for posting |
 | **Service Request Deleted** | Soft-deleted, can be restored |
 
-> **Note:** A `Cancelled` status exists in the domain model but is not reachable from any UI surface, so it is not part of the documented flow.
-
 ## Pages
 
 ### Service Requests List (Index)

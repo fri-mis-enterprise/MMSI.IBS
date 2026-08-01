@@ -123,12 +123,12 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                model.Status = SD.DispatchTicketStatus.Draft;
+                model.Status = SD.ServiceRequestStatus.Draft;
 
                 if (model is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
                     model.TerminalId != 0 && model.ServiceId != 0 && model.TugBoatId != 0 && model.TugMasterId != null && model.VesselId != 0)
                 {
-                    model.Status = SD.DispatchTicketStatus.Requested;
+                    model.Status = SD.ServiceRequestStatus.Requested;
                 }
 
                 await unitOfWork.DispatchTicket.AddAsync(model,
@@ -222,9 +222,8 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 // Only allow editing while still in pre-approval states
-                if (currentModel.Status != SD.DispatchTicketStatus.Draft &&
-                    currentModel.Status != SD.DispatchTicketStatus.Requested &&
-                    currentModel.Status != SD.DispatchTicketStatus.Cancelled)
+                if (currentModel.Status != SD.ServiceRequestStatus.Draft &&
+                    currentModel.Status != SD.ServiceRequestStatus.Requested)
                 {
                     TempData["error"] = "Service request can no longer be edited — it has already been accepted into the workflow.";
                     return RedirectToAction(nameof(Index));
@@ -320,11 +319,11 @@ namespace IBSWeb.Areas.User.Controllers
                 if (currentModel is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
                     currentModel.TerminalId != 0 && currentModel.ServiceId != 0 && currentModel.TugBoatId != 0 && currentModel.TugMasterId != null && currentModel.VesselId != 0)
                 {
-                    currentModel.Status = SD.DispatchTicketStatus.Requested;
+                    currentModel.Status = SD.ServiceRequestStatus.Requested;
                 }
                 else
                 {
-                    currentModel.Status = SD.DispatchTicketStatus.Draft;
+                    currentModel.Status = SD.ServiceRequestStatus.Draft;
                 }
 
                 if (imageFile != null)
@@ -448,10 +447,9 @@ namespace IBSWeb.Areas.User.Controllers
                     .Include(dt => dt.TugMaster)
                     .Include(dt => dt.Vessel)
                     .Include(dt => dt.Customer)
-                    .Where(dt => dt.Status == SD.DispatchTicketStatus.Draft ||
-                                 dt.Status == SD.DispatchTicketStatus.Requested ||
-                                 dt.Status == SD.DispatchTicketStatus.Cancelled ||
-                                 dt.Status == SD.DispatchTicketStatus.ServiceRequestDeleted);
+                    .Where(dt => dt.Status == SD.ServiceRequestStatus.Draft ||
+                                 dt.Status == SD.ServiceRequestStatus.Requested ||
+                                 dt.Status == SD.ServiceRequestStatus.ServiceRequestDeleted);
 
                 // Port Coordinators can only see their own requests
                 if (User.IsInRole("PortCoordinator"))
@@ -492,9 +490,8 @@ namespace IBSWeb.Areas.User.Controllers
                             case "status":
                                 queried = searchValue switch
                                 {
-                                    "requested" => queried.Where(s => s.Status == SD.DispatchTicketStatus.Requested).ToList(),
-                                    "draft" => queried.Where(s => s.Status == SD.DispatchTicketStatus.Draft).ToList(),
-                                    "cancelled" => queried.Where(s => s.Status == SD.DispatchTicketStatus.Cancelled).ToList(),
+                                    "requested" => queried.Where(s => s.Status == SD.ServiceRequestStatus.Requested).ToList(),
+                                    "draft" => queried.Where(s => s.Status == SD.ServiceRequestStatus.Draft).ToList(),
                                     _ => queried.Where(s => !string.IsNullOrEmpty(s.Status)).ToList()
                                 };
                                 break;
@@ -632,7 +629,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> Post(int id, int? jobOrderId, CancellationToken cancellationToken = default)
         {
             var record = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
-            if (record is { Status: SD.DispatchTicketStatus.Requested })
+            if (record is { Status: SD.ServiceRequestStatus.Requested })
             {
                 record.Status = SD.DispatchTicketStatus.ForTariff;
 
@@ -661,136 +658,6 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to post Service Requests.")]
-        public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
-        {
-
-            if (string.IsNullOrEmpty(records))
-            {
-                TempData["info"] = "Passed record list is empty";
-                return RedirectToAction(nameof(Index));
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                var recordList = JsonConvert.DeserializeObject<List<string>>(records);
-                var postedTickets = new List<string>();
-
-                foreach (var recordId in recordList!)
-                {
-                    int idToFind = int.Parse(recordId);
-                    var recordToUpdate = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind,
-                        cancellationToken);
-
-                    if (recordToUpdate is { Status: SD.DispatchTicketStatus.Requested })
-                    {
-                        recordToUpdate.Status = SD.DispatchTicketStatus.ForTariff;
-                        postedTickets.Add($"{recordToUpdate.DispatchNumber}");
-                    }
-                }
-
-                await unitOfWork.SaveAsync(cancellationToken);
-
-                #region -- Audit Trail
-
-                var activity = postedTickets.Any()
-                    ? $"Posted service requests #{string.Join(", #", postedTickets)}"
-                    : $"No posting detected";
-
-                var audit = new AuditTrail(
-                    await GetUserNameAsync() ?? throw new InvalidOperationException(),
-                    activity,
-                    "Service Request"
-                );
-
-                await unitOfWork.AuditTrail.AddAsync(audit,
-                    cancellationToken);
-
-                #endregion --Audit Trail
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Records posted successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex,
-                    "Failed to post selected requests.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to cancel Service Requests.")]
-        public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
-        {
-
-            if (string.IsNullOrEmpty(records))
-            {
-                TempData["error"] = "Passed record list is empty";
-                return RedirectToAction(nameof(Index));
-            }
-
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                var recordList = JsonConvert.DeserializeObject<List<string>>(records);
-                var cancelledTickets = new List<string>();
-
-                foreach (var recordId in recordList!)
-                {
-                    var idToFind = int.Parse(recordId);
-                    var recordToUpdate = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == idToFind,
-                        cancellationToken);
-
-                    if (recordToUpdate != null)
-                    {
-                        recordToUpdate.Status = SD.DispatchTicketStatus.Cancelled;
-                        cancelledTickets.Add(recordToUpdate.DispatchNumber);
-                    }
-                }
-
-                await unitOfWork.SaveAsync(cancellationToken);
-
-                #region -- Audit Trail
-
-                var activity = cancelledTickets.Any()
-                    ? $"Cancel service requests #{string.Join(", #", cancelledTickets)}"
-                    : $"No cancel detected";
-
-                var audit = new AuditTrail(
-                    await GetUserNameAsync() ?? throw new InvalidOperationException(),
-                    activity,
-                    "Service Request"
-                );
-
-                await unitOfWork.AuditTrail.AddAsync(audit,
-                    cancellationToken);
-
-                #endregion --Audit Trail
-
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Records cancelled successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                logger.LogError(ex,
-                    "Failed to cancel selected entries.");
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to delete Service Requests.")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
@@ -802,13 +669,13 @@ namespace IBSWeb.Areas.User.Controllers
                     return Json(new { success = false, message = "Service request not found." });
                 }
 
-                if (model.Status != SD.DispatchTicketStatus.Draft &&
-                    model.Status != SD.DispatchTicketStatus.Requested)
+                if (model.Status != SD.ServiceRequestStatus.Draft &&
+                    model.Status != SD.ServiceRequestStatus.Requested)
                 {
                     return Json(new { success = false, message = $"Cannot delete — status is '{model.Status}'. Only Draft and Requested can be deleted." });
                 }
 
-                model.Status = SD.DispatchTicketStatus.ServiceRequestDeleted;
+                model.Status = SD.ServiceRequestStatus.ServiceRequestDeleted;
                 model.EditedBy = User.Identity?.Name ?? "System";
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -839,12 +706,12 @@ namespace IBSWeb.Areas.User.Controllers
                     return Json(new { success = false, message = "Service request not found." });
                 }
 
-                if (model.Status != SD.DispatchTicketStatus.ServiceRequestDeleted)
+                if (model.Status != SD.ServiceRequestStatus.ServiceRequestDeleted)
                 {
                     return Json(new { success = false, message = $"Cannot restore — status is '{model.Status}'. Only deleted requests can be restored." });
                 }
 
-                model.Status = SD.DispatchTicketStatus.Requested;
+                model.Status = SD.ServiceRequestStatus.Requested;
                 model.EditedBy = User.Identity?.Name ?? "System";
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 

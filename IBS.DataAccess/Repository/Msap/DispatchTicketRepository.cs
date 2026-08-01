@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Billing)
-                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted);
+                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted);
 
             if (!string.IsNullOrEmpty(filterType))
             {
@@ -122,12 +122,12 @@ namespace IBS.DataAccess.Repository.Msap
                     "for billing" => query.Where(dt => dt.Status == "For Billing"),
                     "billed" => query.Where(dt => dt.Status == "Billed"),
                     "deleted" => query.Where(dt => dt.Status == SD.DispatchTicketStatus.Deleted),
-                    _ => query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted)
+                    _ => query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted)
                 };
             }
             else
             {
-                query = query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted);
+                query = query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted);
             }
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -166,7 +166,7 @@ namespace IBS.DataAccess.Repository.Msap
                 }
             }
 
-            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.DispatchTicketStatus.ServiceRequestDeleted, cancellationToken);
+            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted, cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
             if (parameters.Order?.Count > 0 && parameters.Columns != null)

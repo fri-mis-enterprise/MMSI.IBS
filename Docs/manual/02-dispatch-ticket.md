@@ -9,13 +9,11 @@ Dispatch Tickets are created either directly (under a Job Order) or by posting a
 ```mermaid
 graph LR
     %% Entry points
-    Create[Create Dispatch Ticket] -->|times complete| ForTariff[For Tariff]
-    Create -->|times incomplete| Pending
+    Create[Create Dispatch Ticket] --> ForTariff[For Tariff]
     SR[Service Request] -->|post| ForTariff
 
     %% Main flow
-    Pending -->|set tariff| ForApproval[For Approval]
-    ForTariff -->|set tariff| ForApproval
+    ForTariff -->|set tariff| ForApproval[For Approval]
     ForApproval -->|approve| ForBilling[For Billing]
     ForApproval -->|disapprove| Disapproved
     Disapproved -->|edit tariff| ForApproval
@@ -27,17 +25,15 @@ graph LR
     ForApproval -->|edit critical fields| ForTariff
 
     %% Soft delete / restore
-    Pending -->|delete| Deleted
     ForTariff -->|delete| Deleted
     Disapproved -->|delete| Deleted
     Deleted -->|restore| ForTariff
-    Deleted -->|restore| Pending
 
     classDef main fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
     classDef billed fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
     classDef disapproved fill:#fff3e0,stroke:#e65100,stroke-width:2px;
     classDef deleted fill:#eceff1,stroke:#546e7a,stroke-width:2px;
-    class Pending,ForTariff,ForApproval,ForBilling main;
+    class ForTariff,ForApproval,ForBilling main;
     class Disapproved disapproved;
     class Billed billed;
     class Deleted deleted;
@@ -47,15 +43,12 @@ graph LR
 
 | State | Meaning |
 |-------|---------|
-| **Pending** | Dispatch Ticket without complete service times |
-| **For Tariff** | Ready for rate assignment |
+| **For Tariff** | Ready for rate assignment (includes tickets with incomplete service times) |
 | **For Approval** | Tariff set, waiting for approval |
 | **Disapproved** | Tariff rejected, can be revised |
 | **For Billing** | Approved, ready to be billed |
 | **Billed** | Included in a billing statement |
 | **Deleted** | Soft-deleted, can be restored |
-
-> **Note:** A `Cancelled` status exists in the domain model but is not reachable from any UI surface, so it is not part of the documented flow.
 
 ## Pages
 
