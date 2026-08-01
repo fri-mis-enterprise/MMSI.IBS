@@ -209,9 +209,9 @@
                                                         <span class="material-symbols-outlined">visibility</span> View Ticket
                                                     </a>
 
-                                                    @if (!ViewBag.HasBilling && ticket.Status is "@SD.ServiceRequestStatus.Draft" or "@SD.ServiceRequestStatus.Requested")
+                                                    @if (!ViewBag.HasBilling && ticket.Status is "Draft" or "Requested")
                                                     {
-                                                        @if (ticket.Status == "@SD.ServiceRequestStatus.Requested")
+                                                        @if (ticket.Status == "Requested")
                                                         {
                                                             <form id="postForm-@ticket.DispatchTicketId" method="post" asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" style="display:none">
                                                                 @Html.AntiForgeryToken()
