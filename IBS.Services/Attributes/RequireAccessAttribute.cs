@@ -2,7 +2,6 @@ using IBS.Models.Enums;
 using IBS.Services.AccessControl;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Security.Claims;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,14 +10,13 @@ namespace IBS.Services.Attributes
     /// <summary>
     /// Declarative access control attribute that checks user permissions before action execution.
     /// Implements IAsyncAuthorizationFilter to run in the authorization filter phase.
+    /// Denial is always returned as a JSON envelope ({ success = false, message }) matching the
+    /// response contract used across all MSAP workflow actions and consumed by ModernAlert.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public class RequireAccessAttribute(
         ProcedureEnum procedure,
-        string errorMessage = "Access denied. You don't have permission to perform this action.",
-        string redirectController = "Home",
-        string redirectAction = "Index",
-        string redirectArea = "User")
+        string errorMessage = "Access denied. You don't have permission to perform this action.")
         : Attribute, IAsyncAuthorizationFilter
     {
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -29,7 +27,7 @@ namespace IBS.Services.Attributes
             var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
             {
-                SetErrorAndRedirect(context, "You must be logged in to access this resource.");
+                Deny(context, "You must be logged in to access this resource.");
                 return;
             }
 
@@ -40,36 +38,13 @@ namespace IBS.Services.Attributes
             var hasAccess = await accessControl.HasAccessAsync(userIdClaim.Value, procedure);
             if (!hasAccess)
             {
-                SetErrorAndRedirect(context, errorMessage);
+                Deny(context, errorMessage);
             }
         }
 
-        private void SetErrorAndRedirect(AuthorizationFilterContext context, string message)
+        private static void Deny(AuthorizationFilterContext context, string message)
         {
-            var isAjax = context.HttpContext.Request.Headers["X-Requested-With"].ToString()
-                .Contains("XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
-            var isJsonRequest = context.HttpContext.Request.Headers["Content-Type"].ToString()
-                .Contains("application/json", StringComparison.OrdinalIgnoreCase);
-
-            if (isAjax || isJsonRequest)
-            {
-                context.Result = new JsonResult(new { success = false, message }) { StatusCode = 403 };
-                return;
-            }
-
-            // Set TempData error message
-            var tempDataFactory = context.HttpContext.RequestServices
-                .GetRequiredService<ITempDataDictionaryFactory>();
-            var tempData = tempDataFactory.GetTempData(context.HttpContext);
-            tempData["Denied"] = message;
-            tempData.Save();
-
-            // Redirect to configured target
-            context.Result = new RedirectToActionResult(
-                redirectAction,
-                redirectController,
-                new { area = redirectArea }
-            );
+            context.Result = new JsonResult(new { success = false, message });
         }
     }
 
@@ -82,18 +57,12 @@ namespace IBS.Services.Attributes
     {
         private readonly ProcedureEnum[] _procedures;
         private readonly string _errorMessage;
-        private readonly string _redirectController;
-        private readonly string _redirectAction;
-        private readonly string _redirectArea;
 
         public RequireAnyAccessAttribute(
             params ProcedureEnum[] procedures)
         {
             _procedures = procedures ?? Array.Empty<ProcedureEnum>();
             _errorMessage = "Access denied. You don't have permission to perform this action.";
-            _redirectController = "Home";
-            _redirectAction = "Index";
-            _redirectArea = "User";
         }
 
         public RequireAnyAccessAttribute(
@@ -102,23 +71,6 @@ namespace IBS.Services.Attributes
         {
             _procedures = procedures ?? Array.Empty<ProcedureEnum>();
             _errorMessage = errorMessage;
-            _redirectController = "Home";
-            _redirectAction = "Index";
-            _redirectArea = "User";
-        }
-
-        public RequireAnyAccessAttribute(
-            string errorMessage,
-            string redirectController,
-            string redirectAction,
-            string redirectArea,
-            params ProcedureEnum[] procedures)
-        {
-            _procedures = procedures ?? Array.Empty<ProcedureEnum>();
-            _errorMessage = errorMessage;
-            _redirectController = redirectController;
-            _redirectAction = redirectAction;
-            _redirectArea = redirectArea;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -129,7 +81,7 @@ namespace IBS.Services.Attributes
             var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
             {
-                SetErrorAndRedirect(context, "You must be logged in to access this resource.");
+                Deny(context, "You must be logged in to access this resource.");
                 return;
             }
 
@@ -147,35 +99,12 @@ namespace IBS.Services.Attributes
             }
 
             // None of the procedures passed — deny access
-            SetErrorAndRedirect(context, _errorMessage);
+            Deny(context, _errorMessage);
         }
 
-        private void SetErrorAndRedirect(AuthorizationFilterContext context, string message)
+        private static void Deny(AuthorizationFilterContext context, string message)
         {
-            var isAjax = context.HttpContext.Request.Headers["X-Requested-With"].ToString()
-                .Contains("XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
-            var isJsonRequest = context.HttpContext.Request.Headers["Content-Type"].ToString()
-                .Contains("application/json", StringComparison.OrdinalIgnoreCase);
-
-            if (isAjax || isJsonRequest)
-            {
-                context.Result = new JsonResult(new { success = false, message }) { StatusCode = 403 };
-                return;
-            }
-
-            // Set TempData error message
-            var tempDataFactory = context.HttpContext.RequestServices
-                .GetRequiredService<ITempDataDictionaryFactory>();
-            var tempData = tempDataFactory.GetTempData(context.HttpContext);
-            tempData["Denied"] = message;
-            tempData.Save();
-
-            // Redirect to configured target
-            context.Result = new RedirectToActionResult(
-                _redirectAction,
-                _redirectController,
-                new { area = _redirectArea }
-            );
+            context.Result = new JsonResult(new { success = false, message });
         }
     }
 }

@@ -3,7 +3,7 @@
 Read this FIRST at session start. Update it at the END of every session so the next session starts where this one left off. Keep entries short — bullet points, not essays. If it's in AGENTS.md, don't duplicate it here.
 
 ### Current Focus
-- Guided tour (tutorial.js) rollout across MSAP pages. Done: JobOrder/Create, DispatchTicket/Create, DispatchTicket/SetTariff, Billing/Create, Collection/Create. Next: EditTicket, JobOrder/Details, etc.
+- RequireAccess/RequireAnyAccess now always return `{ success = false, message }` JSON (HTTP 200) — one response shape matching all MSAP actions + ModernAlert. Redirect/TempData["Denied"] path removed.
 
 ### Recent Decisions
 - Tour steps: mark containers/inputs with `data-tour-step="N"`, config in `@section Scripts` via `window.IBS_TOUR_STEPS`. Add `data-page-header` to the `<h1>` to auto-inject the (?) help button.
@@ -25,6 +25,8 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element lifted via `.tour-interactive-active` (z-index 10002) — must stay above overlay/backdrop. Popover flips above for selects.
 
 ### Session Log
+- 2026-08-03 — AccessControlService cleanup — removed 12 dead members (`HasAllAccessAsync`, `GetAccessMapAsync`, 10 unused extensions); only HasAccessAsync/HasAnyAccessAsync + HasServiceRequestAccessAsync/HasMsapImportAccessAsync/HasMaritimeReportAccessAsync remain. Build green.
+- 2026-08-03 — RequireAccess refactor — both attributes always return `Json(new { success = false, message })` at HTTP 200; dropped redirectController/Action/Area params + unused 5-arg RequireAnyAccess ctor; removed TempData["Denied"] from _Notification.cshtml; updated 15 DispatchTicketController call sites. Resolves the "formalize one consistent success/error response shape" pending item. Trade-off: non-AJAX nav to a denied action now renders raw JSON (global FallbackPolicy handles unauthenticated).
 - 2026-08-03 — tutorial.js on DispatchTicket/Create — added data-tour-step (1-15) + data-page-header + IBS_TOUR_STEPS config; fixed autoAdvance click bug for date/time rows; removed admin caveat text. AGENTS.md noted cshtml/js/css needs no build (refresh only).
 - 2026-08-03 — DispatchTicket/Create — trimmed tour to 8 steps (moved step 2 onward), removed `sticky top-24` from Timeline card (trapped tour z-index under stacking context). tutorial.js: 250ms debounce guard for double-advance (radio fires input+change).
 - 2026-08-03 — DispatchTicket/SetTariff — tour steps 1-8; step 7 (AP Other Tugs) auto-skips when `Model.IsTugboatCompanyOwned` (inside @if); removed error styling on Outsourced header + ApOtherTugs input.

@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the form to create a new Dispatch Ticket.
         /// </summary>
         [HttpGet]
-        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
+        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
         public async Task<IActionResult> Create(int jobOrderId, CancellationToken cancellationToken = default)
         {
             var viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, jobOrderId, cancellationToken);
@@ -59,7 +59,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.", "JobOrder")]
+        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
         public async Task<IActionResult> Create(
             ServiceRequestViewModel viewModel,
             IFormFile? imageFile,
@@ -133,7 +133,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the form to set the tariff for a Dispatch Ticket.
         /// </summary>
         [HttpGet]
-        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.")]
         public async Task<IActionResult> SetTariff(int id, string? filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
@@ -196,7 +196,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.")]
         public async Task<IActionResult> SetTariff(
             TariffViewModel viewModel,
             string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
@@ -247,7 +247,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the form to edit the tariff for a Dispatch Ticket.
         /// </summary>
         [HttpGet]
-        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.")]
         public async Task<IActionResult> EditTariff(int id, string? filterType, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = filterType;
@@ -316,7 +316,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to edit Tariff.")]
         public async Task<IActionResult> EditTariff(
             TariffViewModel viewModel,
             string chargeType, string chargeType2, string? filterType, CancellationToken cancellationToken)
@@ -367,7 +367,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// Displays the form to edit basic information of a Dispatch Ticket.
         /// </summary>
         [HttpGet]
-        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.")]
         public async Task<IActionResult> EditTicket(
             int id, int? jobOrderId, string? filterType, CancellationToken cancellationToken = default)
         {
@@ -412,7 +412,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.")]
         public async Task<IActionResult> EditTicket(
             ServiceRequestViewModel viewModel,
             IFormFile? imageFile,
@@ -449,7 +449,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public async Task<IActionResult> ApproveTariff(int id, CancellationToken cancellationToken)
         {
             var result = await dispatchTicketService.ApproveTariffAsync(id, User.Identity?.Name ?? "System", cancellationToken);
@@ -461,7 +461,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public async Task<IActionResult> DisapproveTariff(int id, string reason, CancellationToken cancellationToken)
         {
             var result = await dispatchTicketService.DisapproveTariffAsync(id, reason, User.Identity?.Name ?? "System", cancellationToken);
@@ -473,7 +473,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.DeleteDispatchTicket, "Access denied. You don't have permission to delete Dispatch Tickets.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.DeleteDispatchTicket, "Access denied. You don't have permission to delete Dispatch Tickets.")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             var result = await dispatchTicketService.DeleteTicketAsync(id, User.Identity?.Name ?? "System", cancellationToken);
@@ -485,7 +485,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.DeleteDispatchTicket, "Access denied. You don't have permission to restore Dispatch Tickets.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.DeleteDispatchTicket, "Access denied. You don't have permission to restore Dispatch Tickets.")]
         public async Task<IActionResult> Restore(int id, CancellationToken cancellationToken)
         {
             var result = await dispatchTicketService.RestoreTicketAsync(id, User.Identity?.Name ?? "System", cancellationToken);
@@ -497,7 +497,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to change Dispatch Ticket status.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to change Dispatch Ticket status.")]
         public async Task<IActionResult> ChangeStatus(int id, string status, string activity, string docType, string successMessage, CancellationToken cancellationToken)
         {
             var model = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
@@ -542,7 +542,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.ApproveTariff, "Access denied. You don't have permission to approve Tariff.")]
         public async Task<IActionResult> BatchApproveTariff([FromBody] List<int>? ids, CancellationToken cancellationToken)
         {
             if (ids == null || ids.Count == 0)
@@ -559,7 +559,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.", "DispatchTicket")]
+        [RequireAccess(ProcedureEnum.SetTariff, "Access denied. You don't have permission to set Tariff.")]
         public async Task<IActionResult> BatchSetTariff(
             [FromBody] BatchTariffRequest? request,
             CancellationToken cancellationToken)

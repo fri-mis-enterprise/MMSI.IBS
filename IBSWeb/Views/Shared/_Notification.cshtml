@@ -12,12 +12,6 @@
     </script>
 }
 
-@if (TempData["Denied"] != null)
-{
-    <script>
-        ModernAlert.error(@Html.Raw(Json.Serialize(TempData["Denied"])), 'Sorry...');
-    </script>
-}
 @if (TempData["warning"] != null)
 {
     <script>
