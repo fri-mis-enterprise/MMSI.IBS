@@ -83,6 +83,7 @@
     <script>
         $(document).ready(function () {
             const editUrl = '@Url.Action("Edit", "ServiceRequest", new { area = "User" })';
+            const canEdit = @((ViewBag.CanEdit as bool? ?? false).ToString().ToLower());
 
             let table = $('#paginatedTable').DataTable(ModernTable.config({
                 order: [[0, 'desc']],
@@ -137,7 +138,7 @@
                         className: "text-center",
                         render: (data, type, row) => {
                             const items = [];
-                            if (row.status !== "@SD.ServiceRequestStatus.ServiceRequestDeleted") {
+                            if (row.status !== "@SD.ServiceRequestStatus.ServiceRequestDeleted" && canEdit) {
                                 items.push({ label: 'Edit', icon: 'edit', url: `${editUrl}?id=${row.dispatchTicketId}` });
                             }
                             if (row.imageSignedUrl) {
@@ -146,10 +147,10 @@
                             if (row.videoSignedUrl) {
                                 items.push({ label: 'Play Video', icon: 'play_circle', onclick: `ModernAlert.video('${row.videoSignedUrl}', 'Video Preview')` });
                             }
-                            if (["@SD.ServiceRequestStatus.Draft", "@SD.ServiceRequestStatus.Requested"].includes(row.status)) {
+                            if (["@SD.ServiceRequestStatus.Draft", "@SD.ServiceRequestStatus.Requested"].includes(row.status) && canEdit) {
                                 items.push({ label: 'Delete', icon: 'delete', isError: true, onclick: `confirmDeleteRequest(${row.dispatchTicketId})` });
                             }
-                            if (row.status === "@SD.ServiceRequestStatus.ServiceRequestDeleted") {
+                            if (row.status === "@SD.ServiceRequestStatus.ServiceRequestDeleted" && canEdit) {
                                 items.push({ label: 'Restore', icon: 'restore', onclick: `confirmRestoreRequest(${row.dispatchTicketId})` });
                             }
                             return ModernTable.render.dropdown(items);

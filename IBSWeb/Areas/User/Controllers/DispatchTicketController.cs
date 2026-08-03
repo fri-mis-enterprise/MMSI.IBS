@@ -5,10 +5,12 @@ using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
+using IBS.Services.AccessControl;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -20,6 +22,7 @@ namespace IBSWeb.Areas.User.Controllers
         IUnitOfWork unitOfWork,
         DispatchTicketService dispatchTicketService,
         ICloudStorageService cloudStorageService,
+        IAccessControlService accessControl,
         ILogger<DispatchTicketController> logger)
         : Controller
     {
@@ -33,10 +36,15 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.CreateDispatchTicket,
             ProcedureEnum.EditDispatchTicket,
             ProcedureEnum.DeleteDispatchTicket)]
-        public Task<IActionResult> Index(string filterType)
+        public async Task<IActionResult> Index(string filterType)
         {
             ViewBag.FilterType = filterType;
-            return Task.FromResult<IActionResult>(View(Enumerable.Empty<DispatchTicket>()));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.CanSetTariff = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.SetTariff);
+            ViewBag.CanEditTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditDispatchTicket);
+            ViewBag.CanApproveTariff = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.ApproveTariff);
+            ViewBag.CanDeleteTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.DeleteDispatchTicket);
+            return View(Enumerable.Empty<DispatchTicket>());
         }
 
         #endregion
@@ -121,6 +129,10 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 model.VideoSignedUrl = await cloudStorageService.GetSignedUrlAsync(model.VideoName);
             }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.CanApproveTariff = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.ApproveTariff);
+            ViewBag.CanEditTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditDispatchTicket);
 
             return View(model);
         }

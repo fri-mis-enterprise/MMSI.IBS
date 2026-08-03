@@ -3,10 +3,12 @@ using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
+using IBS.Services;
+using IBS.Services.AccessControl;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using IBS.Services;
+using System.Security.Claims;
 using IBS.Utility.Constants;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -21,6 +23,7 @@ namespace IBSWeb.Areas.User.Controllers
         DispatchTicketService dispatchTicketService,
         ITerminalService terminalService,
         ICloudStorageService cloudStorageService,
+        IAccessControlService accessControl,
         ILogger<JobOrderController> logger) : Controller
     {
         #region Index
@@ -34,8 +37,10 @@ namespace IBSWeb.Areas.User.Controllers
             ProcedureEnum.EditJobOrder,
             ProcedureEnum.DeleteJobOrder,
             ProcedureEnum.CloseJobOrder)]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.CanEdit = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditJobOrder);
             return View();
         }
 
@@ -143,6 +148,15 @@ namespace IBSWeb.Areas.User.Controllers
             var billing = await unitOfWork.Billing.GetAsync(b => b.JobOrderId == id, cancellationToken);
             ViewData["HasBilling"] = billing != null;
             ViewData["BillingNumber"] = billing?.MsapBillingNumber;
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.CanSetTariff = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.SetTariff);
+            ViewBag.CanApproveTariff = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.ApproveTariff);
+            ViewBag.CanEditTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditDispatchTicket);
+            ViewBag.CanDeleteTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.DeleteDispatchTicket);
+            ViewBag.CanEditJobOrder = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditJobOrder);
+            ViewBag.CanCreateServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateServiceRequest);
+            ViewBag.CanPostServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.PostServiceRequest);
 
             var ticketViewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, id, cancellationToken);
             ViewData["TicketViewModel"] = ticketViewModel;

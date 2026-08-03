@@ -23,7 +23,7 @@
                 </div>
             </div>
             <div class="flex gap-2" style="flex-wrap: wrap;">
-                @if (Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling)
+                @if (ViewBag.CanEditJobOrder == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling)
                 {
                     <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="modern-btn-secondary" data-hotkey="e">
                         <span class="material-symbols-outlined">edit</span> Edit Details
@@ -134,27 +134,39 @@
                         </div>
                     }
 
-                    <div id="batchToolbar" class="batch-toolbar" style="display:@(ViewBag.HasBilling ? "none!important" : "none"); padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--outline-variant); background: var(--surface-container-low);">
-                        <div class="flex items-center justify-between">
-                            <span id="batchCount" class="modern-label font-bold">0 selected</span>
-                            <div class="flex gap-2">
-                                <button type="button" id="batchApproveBtn" class="modern-btn-primary text-sm" style="display:none; padding:0.4rem 0.75rem;" onclick="batchApprove()">
-                                    <span class="material-symbols-outlined" style="font-size:16px">check_circle</span> Approve Selected
-                                </button>
-                                <button type="button" id="batchSetTariffBtn" class="modern-btn-secondary text-sm" style="display:none; padding:0.4rem 0.75rem;" onclick="showBatchTariffModal()">
-                                    <span class="material-symbols-outlined" style="font-size:16px">payments</span> Set Tariff
-                                </button>
+                    @if (ViewBag.CanSetTariff == true || ViewBag.CanApproveTariff == true)
+                    {
+                        <div id="batchToolbar" class="batch-toolbar" style="display:@(ViewBag.HasBilling ? "none!important" : "none"); padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--outline-variant); background: var(--surface-container-low);">
+                            <div class="flex items-center justify-between">
+                                <span id="batchCount" class="modern-label font-bold">0 selected</span>
+                                <div class="flex gap-2">
+                                    @if (ViewBag.CanApproveTariff == true)
+                                    {
+                                        <button type="button" id="batchApproveBtn" class="modern-btn-primary text-sm" style="display:none; padding:0.4rem 0.75rem;" onclick="batchApprove()">
+                                            <span class="material-symbols-outlined" style="font-size:16px">check_circle</span> Approve Selected
+                                        </button>
+                                    }
+                                    @if (ViewBag.CanSetTariff == true)
+                                    {
+                                        <button type="button" id="batchSetTariffBtn" class="modern-btn-secondary text-sm" style="display:none; padding:0.4rem 0.75rem;" onclick="showBatchTariffModal()">
+                                            <span class="material-symbols-outlined" style="font-size:16px">payments</span> Set Tariff
+                                        </button>
+                                    }
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
 
                     <div class="modern-table-container">
                         <table class="modern-table">
                             <thead>
                                 <tr>
-                                    <th class="text-center" style="width:40px">
-                                        <input type="checkbox" id="selectAll" class="batch-checkbox" title="Select all">
-                                    </th>
+                                    @if (ViewBag.CanSetTariff == true || ViewBag.CanApproveTariff == true)
+                                    {
+                                        <th class="text-center" style="width:40px">
+                                            <input type="checkbox" id="selectAll" class="batch-checkbox" title="Select all">
+                                        </th>
+                                    }
                                     <th>Ticket #</th>
                                     <th>Timeline</th>
                                     <th>Date</th>
@@ -170,9 +182,12 @@
                                 @foreach (var ticket in Model.DispatchTickets)
                                 {
                                     <tr>
-                                        <td class="text-center">
-                                            <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status">
-                                        </td>
+                                        @if (ViewBag.CanSetTariff == true || ViewBag.CanApproveTariff == true)
+                                        {
+                                            <td class="text-center">
+                                                <input type="checkbox" class="batch-checkbox row-checkbox" value="@ticket.DispatchTicketId" data-status="@ticket.Status">
+                                            </td>
+                                        }
                                         <td class="font-bold">
                                             <a asp-action="Preview" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" style="text-decoration:none; color: var(--primary)" target="_blank">
                                                 @ticket.DispatchNumber
@@ -213,16 +228,22 @@
                                                     {
                                                         @if (ticket.Status == "Requested")
                                                         {
-                                                            <form id="postForm-@ticket.DispatchTicketId" method="post" asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" style="display:none">
-                                                                @Html.AntiForgeryToken()
-                                                            </form>
-                                                            <button type="button" class="modern-dropdown-item" style="color: var(--primary); width:100%; border:none; background:none; cursor:pointer;" onclick="confirmPostRequest(@ticket.DispatchTicketId, @Model.JobOrderId)">
-                                                                <span class="material-symbols-outlined">check_circle</span> Post Request
-                                                            </button>
+                                                            @if (ViewBag.CanPostServiceRequest == true)
+                                                            {
+                                                                <form id="postForm-@ticket.DispatchTicketId" method="post" asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" style="display:none">
+                                                                    @Html.AntiForgeryToken()
+                                                                </form>
+                                                                <button type="button" class="modern-dropdown-item" style="color: var(--primary); width:100%; border:none; background:none; cursor:pointer;" onclick="confirmPostRequest(@ticket.DispatchTicketId, @Model.JobOrderId)">
+                                                                    <span class="material-symbols-outlined">check_circle</span> Post Request
+                                                                </button>
+                                                            }
                                                         }
-                                                        <a asp-controller="ServiceRequest" asp-action="Edit" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item">
-                                                            <span class="material-symbols-outlined">edit</span> Edit Request
-                                                        </a>
+                                                        @if (ViewBag.CanCreateServiceRequest == true)
+                                                        {
+                                                            <a asp-controller="ServiceRequest" asp-action="Edit" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Request
+                                                            </a>
+                                                        }
                                                         @if (!string.IsNullOrEmpty(ticket.ImageSignedUrl))
                                                         {
                                                             <button type="button" class="modern-dropdown-item" style="width:100%; border:none; background:none; cursor:pointer;" onclick="ModernAlert.image('@ticket.ImageSignedUrl', 'Upload Preview')">
@@ -238,13 +259,19 @@
                                                     }
                                                     else if (!ViewBag.HasBilling && ticket.Status is "For Tariff")
                                                     {
-                                                        <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
-                                                            <span class="material-symbols-outlined">payments</span> Set Tariff
-                                                        </a>
-                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDeleteTicket(@ticket.DispatchTicketId)">
-                                                            <span class="material-symbols-outlined">delete</span> Delete Ticket
-                                                        </button>
-                                                        @if (Model.Status == SD.JobOrderStatus.Open)
+                                                        @if (ViewBag.CanSetTariff == true)
+                                                        {
+                                                            <a asp-action="SetTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: var(--primary)">
+                                                                <span class="material-symbols-outlined">payments</span> Set Tariff
+                                                            </a>
+                                                        }
+                                                        @if (ViewBag.CanDeleteTicket == true)
+                                                        {
+                                                            <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDeleteTicket(@ticket.DispatchTicketId)">
+                                                                <span class="material-symbols-outlined">delete</span> Delete Ticket
+                                                            </button>
+                                                        }
+                                                        @if (ViewBag.CanEditTicket == true && Model.Status == SD.JobOrderStatus.Open)
                                                         {
                                                             <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
                                                                 <span class="material-symbols-outlined">edit</span> Edit Ticket
@@ -253,16 +280,25 @@
                                                     }
                                                     else if (!ViewBag.HasBilling && ticket.Status == "For Approval")
                                                     {
-                                                        <button type="button" class="modern-dropdown-item" style="color: #406915; width: 100%; border: none; background: none; cursor: pointer;" data-id="@ticket.DispatchTicketId" onclick="confirmApprove(this)">
-                                                            <span class="material-symbols-outlined">check_circle</span> Approve Tariff
-                                                        </button>
-                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
-                                                            <span class="material-symbols-outlined">block</span> Disapprove Tariff
-                                                        </button>
-                                                        <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
-                                                            <span class="material-symbols-outlined">edit</span> Edit Tariff
-                                                        </a>
-                                                        @if (Model.Status == SD.JobOrderStatus.Open)
+                                                        @if (ViewBag.CanApproveTariff == true)
+                                                        {
+                                                            <button type="button" class="modern-dropdown-item" style="color: #406915; width: 100%; border: none; background: none; cursor: pointer;" data-id="@ticket.DispatchTicketId" onclick="confirmApprove(this)">
+                                                                <span class="material-symbols-outlined">check_circle</span> Approve Tariff
+                                                            </button>
+                                                        }
+                                                        @if (ViewBag.CanApproveTariff == true)
+                                                        {
+                                                            <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
+                                                                <span class="material-symbols-outlined">block</span> Disapprove Tariff
+                                                            </button>
+                                                        }
+                                                        @if (ViewBag.CanSetTariff == true)
+                                                        {
+                                                            <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Tariff
+                                                            </a>
+                                                        }
+                                                        @if (ViewBag.CanEditTicket == true && Model.Status == SD.JobOrderStatus.Open)
                                                         {
                                                             <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
                                                                 <span class="material-symbols-outlined">edit</span> Edit Ticket
@@ -271,16 +307,22 @@
                                                     }
                                                     else if (!ViewBag.HasBilling && ticket.Status == "Disapproved")
                                                     {
-                                                        <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
-                                                            <span class="material-symbols-outlined">edit</span> Edit Tariff
-                                                        </a>
-                                                        <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDeleteTicket(@ticket.DispatchTicketId)">
-                                                            <span class="material-symbols-outlined">delete</span> Delete Ticket
-                                                        </button>
+                                                        @if (ViewBag.CanSetTariff == true)
+                                                        {
+                                                            <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Tariff
+                                                            </a>
+                                                        }
+                                                        @if (ViewBag.CanDeleteTicket == true)
+                                                        {
+                                                            <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDeleteTicket(@ticket.DispatchTicketId)">
+                                                                <span class="material-symbols-outlined">delete</span> Delete Ticket
+                                                            </button>
+                                                        }
                                                     }
                                                     else if (!ViewBag.HasBilling && (ticket.Status == "For Billing" || ticket.Status == "Billed"))
                                                     {
-                                                        @if (Model.Status == SD.JobOrderStatus.Open)
+                                                        @if (ViewBag.CanEditTicket == true && Model.Status == SD.JobOrderStatus.Open)
                                                         {
                                                             <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
                                                                 <span class="material-symbols-outlined">edit</span> Edit Ticket

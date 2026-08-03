@@ -42,6 +42,9 @@ namespace IBSWeb.Areas.User.Controllers
             ViewBag.FilterType = filterType;
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ViewBag.CanReverse = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.ReverseBilling);
+            ViewBag.CanPost = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateBilling);
+            ViewBag.CanEdit = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditBilling);
+            ViewBag.CanDelete = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.DeleteBilling);
             return View(Enumerable.Empty<Billing>());
         }
 

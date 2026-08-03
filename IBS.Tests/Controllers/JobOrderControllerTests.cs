@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
+using IBS.Services.AccessControl;
 using IBS.Utility.Helpers;
 using IBSWeb.Areas.User.Controllers;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +24,7 @@ namespace IBS.Tests.Controllers
         private readonly Mock<ITerminalService> _mockTerminalService;
         private readonly Mock<ILogger<JobOrderController>> _mockLogger;
         private readonly Mock<ICloudStorageService> _mockCloudStorageService;
+        private readonly Mock<IAccessControlService> _mockAccessControl;
         private readonly JobOrderController _controller;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ITempDataDictionary> _mockTempData;
@@ -34,6 +37,8 @@ namespace IBS.Tests.Controllers
             _mockDispatchTicketService = new Mock<DispatchTicketService>(_mockUnitOfWork.Object, _mockCloudStorageService.Object, new Mock<ILogger<DispatchTicketService>>().Object);
             _mockTerminalService = new Mock<ITerminalService>();
             _mockLogger = new Mock<ILogger<JobOrderController>>();
+            _mockAccessControl = new Mock<IAccessControlService>();
+            _mockAccessControl.Setup(a => a.HasAccessAsync(It.IsAny<string>(), It.IsAny<ProcedureEnum[]>())).ReturnsAsync(true);
             _mockTempData = new Mock<ITempDataDictionary>();
 
             _controller = new JobOrderController(
@@ -42,6 +47,7 @@ namespace IBS.Tests.Controllers
                 _mockDispatchTicketService.Object,
                 _mockTerminalService.Object,
                 _mockCloudStorageService.Object,
+                _mockAccessControl.Object,
                 _mockLogger.Object
             );
 

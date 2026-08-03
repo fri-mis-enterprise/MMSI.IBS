@@ -6,11 +6,13 @@ using IBS.Models.Enums;
 using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
+using IBS.Services.AccessControl;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -27,11 +29,14 @@ namespace IBSWeb.Areas.User.Controllers
         IUnitOfWork unitOfWork,
         UserManager<ApplicationUser> userManager,
         ICloudStorageService cloudStorageService,
+        IAccessControlService accessControl,
         ILogger<ServiceRequestController> logger)
         : Controller
     {
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.CanEdit = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateServiceRequest);
             return View(Enumerable.Empty<DispatchTicket>());
         }
 

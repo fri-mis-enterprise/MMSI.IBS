@@ -253,7 +253,7 @@
 
                         <!-- Action Buttons -->
                         <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-outline-variant">
-                            @if (Model.Status == SD.DispatchTicketStatus.ForApproval)
+                            @if (ViewBag.CanApproveTariff == true && Model.Status == SD.DispatchTicketStatus.ForApproval)
                             {
                                 <button type="button" id="approveTariff" data-id="@Model.DispatchTicketId" class="modern-btn-primary" style="background-color: #406915; color: white;">
                                     <span class="material-symbols-outlined">check_circle</span> APPROVE TARIFF
@@ -262,7 +262,7 @@
                                     <span class="material-symbols-outlined">block</span> DISAPPROVE
                                 </button>
                             }
-                            else if (Model.Status == SD.DispatchTicketStatus.ForBilling)
+                            else if (ViewBag.CanEditTicket == true && Model.Status == SD.DispatchTicketStatus.ForBilling)
                             {
                                 <button type="button" id="revokeApproval" data-id="@Model.DispatchTicketId" class="modern-btn-secondary" style="color: #ef6c00">
                                     <span class="material-symbols-outlined">history</span> REVOKE APPROVAL

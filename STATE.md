@@ -3,7 +3,7 @@
 Read this FIRST at session start. Update it at the END of every session so the next session starts where this one left off. Keep entries short — bullet points, not essays. If it's in AGENTS.md, don't duplicate it here.
 
 ### Current Focus
-- RequireAccess/RequireAnyAccess now always return `{ success = false, message }` JSON (HTTP 200) — one response shape matching all MSAP actions + ModernAlert. Redirect/TempData["Denied"] path removed.
+- Action visibility: workflow pages now hide buttons the user lacks permission for, via `ViewBag.Can*` flags (DispatchTicket Index/Preview, JobOrder Index/Details, Billing Index, ServiceRequest Index). Follows Billing's `CanReverse` precedent.
 
 ### Recent Decisions
 - Tour steps: mark containers/inputs with `data-tour-step="N"`, config in `@section Scripts` via `window.IBS_TOUR_STEPS`. Add `data-page-header` to the `<h1>` to auto-inject the (?) help button.
@@ -25,6 +25,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element lifted via `.tour-interactive-active` (z-index 10002) — must stay above overlay/backdrop. Popover flips above for selects.
 
 ### Session Log
+- 2026-08-03 — Action visibility gating — DispatchTicket Index dropdown + Preview buttons, JobOrder Index/Details (header edit, batch toolbar/checkboxes, ticket dropdown, SR post/edit), Billing Index (Post/Edit/Delete), ServiceRequest Index (Edit/Delete/Restore) now hidden without the matching procedure. `ViewBag.Can*` pattern in controllers; also added missing `confirmApprove()` JS in DispatchTicket Index. JobOrderControllerTests ctor updated for new IAccessControlService param.
 - 2026-08-03 — AccessControlService cleanup — removed 12 dead members (`HasAllAccessAsync`, `GetAccessMapAsync`, 10 unused extensions); only HasAccessAsync/HasAnyAccessAsync + HasServiceRequestAccessAsync/HasMsapImportAccessAsync/HasMaritimeReportAccessAsync remain. Build green.
 - 2026-08-03 — RequireAccess refactor — both attributes always return `Json(new { success = false, message })` at HTTP 200; dropped redirectController/Action/Area params + unused 5-arg RequireAnyAccess ctor; removed TempData["Denied"] from _Notification.cshtml; updated 15 DispatchTicketController call sites. Resolves the "formalize one consistent success/error response shape" pending item. Trade-off: non-AJAX nav to a denied action now renders raw JSON (global FallbackPolicy handles unauthenticated).
 - 2026-08-03 — tutorial.js on DispatchTicket/Create — added data-tour-step (1-15) + data-page-header + IBS_TOUR_STEPS config; fixed autoAdvance click bug for date/time rows; removed admin caveat text. AGENTS.md noted cshtml/js/css needs no build (refresh only).
