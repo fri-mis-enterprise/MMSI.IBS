@@ -259,6 +259,9 @@
                                                         <button type="button" class="modern-dropdown-item" style="color: var(--error); width: 100%; border: none; background: none; cursor: pointer;" onclick="confirmDisapprove(@ticket.DispatchTicketId)">
                                                             <span class="material-symbols-outlined">block</span> Disapprove Tariff
                                                         </button>
+                                                        <a asp-action="EditTariff" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item" style="color: #ef6c00">
+                                                            <span class="material-symbols-outlined">edit</span> Edit Tariff
+                                                        </a>
                                                         @if (Model.Status == SD.JobOrderStatus.Open)
                                                         {
                                                             <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
@@ -635,6 +638,7 @@
 
                     fetch('@Url.Action("ApproveTariff", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: new URLSearchParams(formData)
                     })
                     .then(response => response.json())
@@ -670,6 +674,7 @@
 
                     fetch('@Url.Action("DisapproveTariff", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: new URLSearchParams(formData)
                     })
                     .then(response => response.json())
@@ -714,6 +719,7 @@
 
                     fetch('@Url.Action("Delete", "DispatchTicket", new { area = "User" })', {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: new URLSearchParams(formData)
                     })
                     .then(response => response.json())

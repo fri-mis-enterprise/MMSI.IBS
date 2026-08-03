@@ -44,9 +44,9 @@
                         <span class="material-symbols-outlined text-xs">chevron_right</span>
                         <span class="modern-label" style="color: var(--on-surface)">Create</span>
                     </div>
-                    <h1 class="modern-headline-lg">Record New Collection</h1>
+                    <h1 class="modern-headline-lg" data-page-header>Record New Collection</h1>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2" data-tour-step="6">
                     <button type="submit" class="modern-btn-primary" id="submitButton">
                         <span class="material-symbols-outlined">save</span> SAVE COLLECTION
                     </button>
@@ -71,7 +71,7 @@
                             <div class="modern-grid-compact" style="gap: 0.5rem;">
                                 <div class="modern-col-8">
                                     <label class="modern-label">Customer <span class="text-error">*</span></label>
-                                    <div id="CustomerContainer">
+                                    <div id="CustomerContainer" data-tour-step="1">
                                         <select asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" id="CustomerId" data-placeholder="-- Select Customer --">
                                             <option value="">-- Select Customer --</option>
                                         </select>
@@ -103,7 +103,7 @@
                                 </div>
                             </div>
 
-                            <div class="modern-grid-compact mt-2 pt-2 border-t border-outline-variant" style="gap: 0.5rem;">
+                            <div class="modern-grid-compact mt-2 pt-2 border-t border-outline-variant" style="gap: 0.5rem;" data-tour-step="2">
                                 <div class="modern-col-6">
                                     <div class="flex items-center justify-between mb-1">
                                         <label class="modern-label mb-0">Collection # <span class="text-error" id="receiptNumberRequired">*</span></label>
@@ -133,7 +133,7 @@
                             <span class="material-symbols-outlined">receipt_long</span>
                             <h2 class="modern-headline-md">2. Billing Settlement</h2>
                         </div>
-                        <div class="modern-card-body">
+                        <div class="modern-card-body" data-tour-step="3">
                             <table id="billingsTable" class="modern-table">
                                 <thead>
                                     <tr>
@@ -167,7 +167,7 @@
                             <span class="material-symbols-outlined">payments</span>
                             <h2 class="modern-headline-md">3. Payment Summary</h2>
                         </div>
-                        <div class="modern-card-body">
+                        <div class="modern-card-body" data-tour-step="4">
                             <div class="financial-summary-card mb-4" style="flex-direction: column; gap: 0.75rem;">
                                 <div class="financial-item">
                                     <span class="financial-label">Settlement Net</span>
@@ -226,7 +226,7 @@
                             <span class="material-symbols-outlined">account_balance</span>
                             <h2 class="modern-headline-md">4. Deposit & Check Details</h2>
                         </div>
-                        <div class="modern-card-body">
+                        <div class="modern-card-body" data-tour-step="5">
                             <div class="flex flex-column" style="gap: 1rem;">
                                 <div>
                                     <label class="modern-label">Deposit To Bank</label>
@@ -285,6 +285,16 @@
 
 @section Scripts
 {
+    <script>
+        window.IBS_TOUR_STEPS = [
+            { step: 1, title: "Customer", text: "Select the customer collecting from. Their unpaid billings load below." },
+            { step: 2, title: "Collection #", text: "Enter the collection (OR) number. Toggle UNDOCUMENTED to auto-generate it.", required: false, autoAdvance: false },
+            { step: 3, title: "Billing Settlement", text: "Tick the billings being paid. Net totals update live.", autoAdvance: false },
+            { step: 4, title: "Payment Summary", text: "Enter cash and check amounts; WVAT withheld if any. Input should match the settlement net." },
+            { step: 5, title: "Deposit & Check Details", text: "Select the deposit bank and fill in check details if paying by check." },
+            { step: 6, title: "Save Collection", text: "Review the summary and click SAVE COLLECTION." }
+        ];
+    </script>
     <script>
         $(document).ready(function () {
             let table;

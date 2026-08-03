@@ -4,7 +4,7 @@
 
 ### Quick Reference & Environment
 
-* Build: dotnet build (TreatWarningsAsErrors on 6/8 projects)
+* Build: dotnet build (TreatWarningsAsErrors on 6/8 projects). Only run when touching .cs/.csproj — .cshtml/js/css changes need no build; browser refresh is enough.
 * Tests: dotnet test IBS.Tests (xUnit/Moq) | dotnet test IBS.Tests.UI (Playwright)
 * Environment: docker compose up (App :5001, DB :5002)
 * DB: localhost:5432, mmsi_ibs_dev, user postgres/mis123
@@ -26,10 +26,11 @@
 * Patterns First: Follow existing implementations in Areas/User/Views/ before writing new code.
 * Root-Cause Fixes: Grep all callers of a function before modifying shared logic.
 * Constraints: Invariant Philippine time via DateTimeHelper.GetCurrentPhilippineTime(). Workflow state guards mandatory (e.g., "ForTariff" before pricing). Audit trails required on all CUD operations.
-* Frontend: Refreshes only for .cshtml/.js/.css. Icons via <span class="material-symbols-outlined">. Gotcha: ModernTable.ajax() is POST by default; pass explicit inline type: "GET" if targeting [HttpGet].
+* Frontend: Refreshes only for .cshtml/.js/.css (no build needed). Icons via <span class="material-symbols-outlined">. Gotcha: ModernTable.ajax() is POST by default; pass explicit inline type: "GET" if targeting [HttpGet].
 
 ### Housekeeping & Workflow Tools
 
+* Session State: STATE.md holds cross-session context (current focus, decisions, key file shortcuts, next steps). READ it at session start; UPDATE it before ending a session. Keep it current or it rots.
 * Tools: Use search_code_context, trace_workflow, analyze_action, and read_model to map code. Use execute_sql for diagnostics.
 * Changelog: Append reverse-chronological logs to CHANGELOG.md. Skip trivial edits.
 * Versioning: Found at IBSWeb/Views/Shared/_Layout.cshtml:15. Format: 0.{DeploymentVersion}.{CommitCounts}. Ask before incrementing.

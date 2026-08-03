@@ -20,9 +20,9 @@
                         <span class="material-symbols-outlined text-xs">chevron_right</span>
                         <span class="modern-label" style="color: var(--on-surface)">New Ticket</span>
                     </div>
-                    <h1 class="modern-headline-lg">Create Dispatch Ticket</h1>
+                    <h1 class="modern-headline-lg" data-page-header>Create Dispatch Ticket</h1>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2" data-tour-step="8">
                     <button type="submit" class="modern-btn-primary" id="submitButton">
                         <span class="material-symbols-outlined">save</span> SAVE TICKET
                     </button>
@@ -55,12 +55,12 @@
                             <div class="modern-grid-compact">
                                 <div class="modern-col-6">
                                     <label class="modern-label">Date Today <span class="text-error">*</span></label>
-                                    <input asp-for="Date" type="date" value="@(Model.Date == default ? now.ToString("yyyy-MM-dd") : Model.Date.ToString("yyyy-MM-dd"))" class="modern-input">
+                                    <input asp-for="Date" type="date" value="@(Model.Date == default ? now.ToString("yyyy-MM-dd") : Model.Date.ToString("yyyy-MM-dd"))" class="modern-input" data-tour-step="1">
                                     <span asp-validation-for="Date" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Dispatch/Mooring # <span class="text-error">*</span></label>
-                                    <input asp-for="DispatchNumber" class="modern-input" placeholder="Enter Dispatch #" maxlength="20" required>
+                                    <input asp-for="DispatchNumber" class="modern-input" placeholder="Enter Dispatch #" maxlength="20" required data-tour-step="2">
                                     <span asp-validation-for="DispatchNumber" class="text-error text-xs"></span>
                                 </div>
                                 <div class="modern-col-6">
@@ -167,7 +167,7 @@
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Activity/Service Type <span class="text-error">*</span></label>
-                                    <div id="ServiceContainer">
+                                    <div id="ServiceContainer" data-tour-step="3">
                                         <select asp-for="ServiceId" asp-items="@Model.Services" class="js-modern-select" data-placeholder="-- Select Service --" required>
                                             <option value="">-- Select Service --</option>
                                         </select>
@@ -175,7 +175,7 @@
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Tugboat/Service provider <span class="text-error">*</span></label>
-                                    <div id="TugboatContainer">
+                                    <div id="TugboatContainer" data-tour-step="4">
                                         <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="js-modern-select" data-placeholder="-- Select Tugboat --" required>
                                             <option value="">-- Select Tugboat --</option>
                                         </select>
@@ -183,7 +183,7 @@
                                 </div>
                                 <div class="modern-col-6">
                                     <label class="modern-label">Master on Duty <span class="text-error">*</span></label>
-                                    <div id="TugMasterContainer">
+                                    <div id="TugMasterContainer" data-tour-step="5">
                                         <select asp-for="TugMasterId" asp-items="@Model.TugMasters" class="js-modern-select" data-placeholder="-- Select Tug Master --" required>
                                             <option value="">-- Select Tug Master --</option>
                                         </select>
@@ -208,7 +208,7 @@
                 <!-- Right Column: Timeline and Media -->
                 <div class="modern-col-4 flex flex-column" style="gap: 1.5rem;">
                     <!-- Timeline & Duration -->
-                    <div class="modern-card sticky top-24">
+                    <div class="modern-card">
                         <div class="modern-card-header-info" style="background-color: var(--primary); color: white;">
                             <span class="material-symbols-outlined">schedule</span>
                             <div class="flex justify-content-between w-full gap-2">
@@ -217,18 +217,20 @@
                             </div>
                         </div>
                         <div class="modern-card-body">
-                            <div class="mb-2">
-                                <label class="modern-label font-bold">Start Date & Time <span class="text-error">*</span></label>
-                                <div class="flex gap-2 mt-1">
-                                    <input type="date" asp-for="DateLeft" id="DateLeft" value="@(Model.DateLeft?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
-                                    <input type="time" asp-for="TimeLeft" id="TimeLeft" value="@(Model.TimeLeft?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                            <div data-tour-step="6">
+                                <div class="mb-2">
+                                    <label class="modern-label font-bold">Start Date & Time <span class="text-error">*</span></label>
+                                    <div class="flex gap-2 mt-1">
+                                        <input type="date" asp-for="DateLeft" id="DateLeft" value="@(Model.DateLeft?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
+                                        <input type="time" asp-for="TimeLeft" id="TimeLeft" value="@(Model.TimeLeft?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label class="modern-label font-bold">End Date & Time <span class="text-error">*</span></label>
-                                <div class="flex gap-2 mt-1">
-                                    <input type="date" asp-for="DateArrived" id="DateArrived" value="@(Model.DateArrived?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
-                                    <input type="time" asp-for="TimeArrived" id="TimeArrived" value="@(Model.TimeArrived?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                <div>
+                                    <label class="modern-label font-bold">End Date & Time <span class="text-error">*</span></label>
+                                    <div class="flex gap-2 mt-1">
+                                        <input type="date" asp-for="DateArrived" id="DateArrived" value="@(Model.DateArrived?.ToString("yyyy-MM-dd") ?? now.ToString("yyyy-MM-dd"))" class="modern-input timeline-input" required>
+                                        <input type="time" asp-for="TimeArrived" id="TimeArrived" value="@(Model.TimeArrived?.ToString("HH:mm") ?? now.ToString("HH:mm"))" class="modern-input timeline-input" required>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -241,34 +243,32 @@
                             <h2 class="modern-headline-md">Media Attachments</h2>
                         </div>
                         <div class="modern-card-body">
-                            <div class="mb-4">
-                                <div class="flex justify-between items-center mb-1">
-                                    <label class="modern-label">
-                                        Dispatch Ticket Image
-                                        @if (!User.IsInRole("Admin"))
-                                        {
-                                            <span class="text-error" title="Required">*</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="modern-label opacity-50 text-xs" style="font-weight:400;">(optional for admin)</span>
-                                        }
-                                    </label>
-                                    <button type="button" id="btnPreviewImage" class="modern-btn-text text-xs" style="display:none;">
-                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
-                                    </button>
+                            <div data-tour-step="7">
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="modern-label">
+                                            Dispatch Ticket Image
+                                            @if (!User.IsInRole("Admin"))
+                                            {
+                                                <span class="text-error" title="Required">*</span>
+                                            }
+                                        </label>
+                                        <button type="button" id="btnPreviewImage" class="modern-btn-text text-xs" style="display:none;">
+                                            <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                        </button>
+                                    </div>
+                                    <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;"
+                                           @(User.IsInRole("Admin") ? "" : "required")>
                                 </div>
-                                <input class="modern-input" id="imageUpload" name="imageFile" type="file" accept="image/*" style="padding: 0.35rem;"
-                                       @(User.IsInRole("Admin") ? "" : "required")>
-                            </div>
-                            <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <label class="modern-label">Operation Video</label>
-                                    <button type="button" id="btnPreviewVideo" class="modern-btn-text text-xs" style="display:none;">
-                                        <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
-                                    </button>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="modern-label">Operation Video</label>
+                                        <button type="button" id="btnPreviewVideo" class="modern-btn-text text-xs" style="display:none;">
+                                            <span class="material-symbols-outlined text-sm">visibility</span> PREVIEW
+                                        </button>
+                                    </div>
+                                    <input class="modern-input" id="videoUpload" name="videoFile" type="file" accept="video/*" style="padding: 0.35rem;">
                                 </div>
-                                <input class="modern-input" id="videoUpload" name="videoFile" type="file" accept="video/*" style="padding: 0.35rem;">
                             </div>
                         </div>
                     </div>
@@ -279,6 +279,19 @@
 </div>
 
 @section Scripts {
+    <script>
+        window.IBS_TOUR_STEPS = [
+            { step: 1, title: "Date Today", text: "Defaults to today's date. Change if dispatching on a different day." },
+            { step: 2, title: "Dispatch/Mooring #", text: "Enter the dispatch or mooring number for this ticket." },
+            { step: 3, title: "Activity/Service Type", text: "Select the service being performed." },
+            { step: 4, title: "Tugboat/Service Provider", text: "Select the tugboat or service provider." },
+            { step: 5, title: "Master on Duty", text: "Select the master on duty." },
+            { step: 6, title: "Date & Time", text: "Set the start and end of the operation. Duration is calculated automatically.", autoAdvance: false },
+            { step: 7, title: "Media Attachments", text: "Attach the dispatch ticket image and optionally an operation video." },
+            { step: 8, title: "Save Ticket", text: "Review everything and click SAVE TICKET to submit." }
+        ];
+    </script>
+
     <script>
         $(document).ready(function () {
             // --- Vessel → VoyageType auto-set ---

@@ -307,7 +307,12 @@
 
             // If autoAdvance is set, listen for change/input to advance tour automatically once valid
             if (step.autoAdvance) {
+                // Guard against input+change firing together (e.g. radio groups) causing a double advance
+                var lastAdvanceAt = 0;
                 var advanceHandler = function () {
+                    var now = Date.now();
+                    if (now - lastAdvanceAt < 250) return;
+                    lastAdvanceAt = now;
                     setTimeout(function () {
                         if (overlay.classList.contains('active') && isStepValid(step, el)) {
                             idx++;
@@ -323,9 +328,16 @@
                     $targetSelect.one('select2:select.tour change.tour', advanceHandler);
                     activeCleanups.push(function () { $targetSelect.off('select2:select.tour change.tour'); });
                 } else {
-                    var eventName = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') ? 'change' : 'click';
-                    el.addEventListener(eventName, advanceHandler, { once: true });
-                    activeCleanups.push(function () { el.removeEventListener(eventName, advanceHandler); });
+                    // Advance on value change of contained inputs, not on raw click
+                    var $containedInputs = window.jQuery ? window.jQuery(el).find('input, textarea') : null;
+                    if ($containedInputs && $containedInputs.length) {
+                        $containedInputs.one('change.tour input.tour', advanceHandler);
+                        activeCleanups.push(function () { $containedInputs.off('change.tour input.tour'); });
+                    } else {
+                        var eventName = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') ? 'change' : 'click';
+                        el.addEventListener(eventName, advanceHandler, { once: true });
+                        activeCleanups.push(function () { el.removeEventListener(eventName, advanceHandler); });
+                    }
                 }
 
                 // If element has a ModernSelect container, flip popover above when dropdown opens

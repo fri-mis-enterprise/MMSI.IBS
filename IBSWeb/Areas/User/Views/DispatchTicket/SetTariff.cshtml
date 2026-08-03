@@ -27,9 +27,9 @@
                         <span class="material-symbols-outlined text-xs">chevron_right</span>
                         <span class="modern-label" style="color: var(--on-surface)">Set Tariff</span>
                     </div>
-                    <h1 class="modern-headline-lg">Set Tariff: @Model.DispatchNumber</h1>
+                    <h1 class="modern-headline-lg" data-page-header>Set Tariff: @Model.DispatchNumber</h1>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2" data-tour-step="8">
                     <button type="submit" class="modern-btn-primary" id="submitButton">
                         <span class="material-symbols-outlined">check_circle</span> SUBMIT TARIFF
                     </button>
@@ -196,7 +196,7 @@
                                 <div class="modern-grid-compact">
                                     <div class="modern-col-12">
                                         <label class="modern-label mb-1 d-block">Charge Type</label>
-                                        <div class="radio-group">
+                                        <div class="radio-group" data-tour-step="1">
                                             <input type="radio" class="radio-tab-input" name="chargeType" id="dispatchHour" value="Per hour" checked>
                                             <label class="radio-tab-label" for="dispatchHour">Per Hour</label>
 
@@ -206,11 +206,11 @@
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Dispatch Rate</label>
-                                        <input asp-for="DispatchRate" id="DispatchRate" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.DispatchRate?.ToString("0.00")">
+                                        <input asp-for="DispatchRate" id="DispatchRate" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.DispatchRate?.ToString("0.00")" data-tour-step="2">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Discount (%)</label>
-                                        <input asp-for="DispatchDiscount" id="DispatchDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.DispatchDiscount?.ToString("0.00")">
+                                        <input asp-for="DispatchDiscount" id="DispatchDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.DispatchDiscount?.ToString("0.00")" data-tour-step="3">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Billing Amount</label>
@@ -229,7 +229,7 @@
                                 <div class="modern-grid-compact">
                                     <div class="modern-col-12">
                                         <label class="modern-label mb-1 d-block">Charge Type</label>
-                                        <div class="radio-group">
+                                        <div class="radio-group" data-tour-step="4">
                                             <input type="radio" class="radio-tab-input" name="chargeType2" id="bafHour" value="Per hour" checked>
                                             <label class="radio-tab-label" for="bafHour">Per Hour</label>
 
@@ -239,11 +239,11 @@
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">BAF Rate</label>
-                                        <input asp-for="BAFRate" id="BAFRate" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.BAFRate?.ToString("0.00")">
+                                        <input asp-for="BAFRate" id="BAFRate" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.BAFRate?.ToString("0.00")" data-tour-step="5">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Discount (%)</label>
-                                        <input asp-for="BAFDiscount" id="BAFDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.BAFDiscount?.ToString("0.00")">
+                                        <input asp-for="BAFDiscount" id="BAFDiscount" step="0.01" type="number" class="modern-input" placeholder="0.00" value="@Model.BAFDiscount?.ToString("0.00")" data-tour-step="6">
                                     </div>
                                     <div class="modern-col-6">
                                         <label class="modern-label">Billing Amount</label>
@@ -260,7 +260,7 @@
                             @if (Model.IsTugboatCompanyOwned == false)
                             {
                                 <div class="mb-3">
-                                    <h3 class="modern-label font-bold text-xs uppercase text-error border-b border-outline-variant pb-1 mb-2">3. Outsourced Tug Details</h3>
+                                    <h3 class="modern-label font-bold text-xs uppercase border-b border-outline-variant pb-1 mb-2">3. Outsourced Tug Details</h3>
                                     <div class="modern-grid-compact">
                                         <div class="modern-col-6">
                                             <label class="modern-label">Tug Provider</label>
@@ -268,7 +268,7 @@
                                         </div>
                                         <div class="modern-col-6">
                                             <label class="modern-label">AP Other Tugs (Expense)</label>
-                                            <input asp-for="ApOtherTugs" id="ApOtherTugs" type="number" step="0.01" class="modern-input" style="border-color: var(--error)" placeholder="0.00" value="@(Model.ApOtherTugs?.ToString("0.00") ?? "0.00")">
+                                            <input asp-for="ApOtherTugs" id="ApOtherTugs" type="number" step="0.01" class="modern-input" placeholder="0.00" value="@(Model.ApOtherTugs?.ToString("0.00") ?? "0.00")" data-tour-step="7">
                                         </div>
                                     </div>
                                 </div>
@@ -295,6 +295,19 @@
 </div>
 
 @section Scripts {
+    <script>
+        window.IBS_TOUR_STEPS = [
+            { step: 1, title: "Dispatch Charge Type", text: "Choose whether dispatch is billed per hour or per move." },
+            { step: 2, title: "Dispatch Rate", text: "Enter the dispatch rate. Billing is calculated automatically." },
+            { step: 3, title: "Dispatch Discount", text: "Enter a discount percentage if applicable." },
+            { step: 4, title: "BAF Charge Type", text: "Choose whether the BAF charge is billed per hour or per move." },
+            { step: 5, title: "BAF Rate", text: "Enter the BAF (Bunker Adjustment Factor) rate." },
+            { step: 6, title: "BAF Discount", text: "Enter a discount percentage if applicable." },
+            { step: 7, title: "AP Other Tugs", text: "Enter the amount payable to other tugs for outsourced services.", required: false },
+            { step: 8, title: "Submit Tariff", text: "Review the calculations and click SUBMIT TARIFF." }
+        ];
+    </script>
+
     <script>
         const PageConfig = {
             messages: {

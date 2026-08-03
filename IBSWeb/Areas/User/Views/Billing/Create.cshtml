@@ -44,9 +44,9 @@
                         <span class="material-symbols-outlined text-xs">chevron_right</span>
                         <span class="modern-label" style="color: var(--on-surface)">Create</span>
                     </div>
-                    <h1 class="modern-headline-lg">Create Billing Statement</h1>
+                    <h1 class="modern-headline-lg" data-page-header>Create Billing Statement</h1>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2" data-tour-step="7">
                     <button type="submit" class="modern-btn-primary" id="submitButton">
                         <span class="material-symbols-outlined">check_circle</span> SUBMIT BILLING
                     </button>
@@ -67,7 +67,7 @@
                         </div>
                         <div class="modern-card-body" style="gap: 1.25rem;">
                             <!-- Customer Select -->
-                            <div id="CustomerContainer">
+                            <div id="CustomerContainer" data-tour-step="1">
                                 <label asp-for="CustomerId" class="modern-label">Customer <span class="text-error">*</span></label>
                                 <select asp-for="CustomerId" asp-items="@Model.Customers" class="js-modern-select" id="CustomerId" data-placeholder="-- Select Customer --">
                                     <option value="">-- Select Customer --</option>
@@ -131,7 +131,7 @@
                             <h2 class="modern-headline-md">2. Billing Details</h2>
                         </div>
                         <div class="modern-card-body" style="gap: 1rem;">
-                            <div>
+                            <div data-tour-step="4">
                                 <div class="flex items-center justify-between mb-1">
                                     <label class="modern-label mb-0">Billing # <span class="text-error" id="billingNumberRequired">*</span></label>
                                     <span id="undocBadge" class="modern-badge-sm">DOCUMENTED</span>
@@ -141,7 +141,7 @@
                                 <input type="checkbox" id="isUndocumentedCheckbox" style="display: none;">
                             </div>
 
-                            <div class="modern-grid-compact">
+                            <div class="modern-grid-compact" data-tour-step="5">
                                 <div class="modern-col-4">
                                     <label class="modern-label" for="isVatableToggle">VAT Status</label>
                                     <label class="flex items-center gap-2 border border-outline-variant rounded-md px-3 cursor-pointer" style="height: 38px;">
@@ -183,7 +183,7 @@
                                 </div>
                             </div>
 
-                            <div class="border-t border-outline-variant pt-3 flex flex-column" style="gap: 1rem;">
+                            <div class="border-t border-outline-variant pt-3 flex flex-column" style="gap: 1rem;" data-tour-step="6">
                                 <div>
                                     <label class="modern-label">Port</label>
                                     <div id="PortContainer">
@@ -228,7 +228,7 @@
                             <div asp-validation-summary="ModelOnly" class="text-error mb-2"></div>
 
                             <!-- Job Order Selection -->
-                            <div class="mb-4">
+                            <div class="mb-4" data-tour-step="2">
                                 <div class="flex items-center justify-between mb-1">
                                     <label class="modern-label mb-0">Target Job Order</label>
                                     <div class="flex items-center gap-2">
@@ -249,7 +249,7 @@
                             </div>
 
                             <!-- Tickets Table -->
-                            <div class="modern-table-container border border-outline-variant">
+                            <div class="modern-table-container border border-outline-variant" data-tour-step="3">
                                 <table id="ticketsTable" class="modern-table">
                                     <thead>
                                         <tr>
@@ -304,6 +304,18 @@
 </div>
 
 @section Scripts {
+    <script>
+        window.IBS_TOUR_STEPS = [
+            { step: 1, title: "Customer", text: "Select the customer to bill. Their profile defaults VAT, WHT, and terms." },
+            { step: 2, title: "Target Job Order", text: "Pick a job order to pull its tickets and prefill billing details — or toggle LEGACY (NO JO) to bill tickets without a job order and enter details manually." },
+            { step: 3, title: "Dispatch Tickets", text: "Tick the tickets to include in this billing. Totals update live below.", autoAdvance: false },
+            { step: 4, title: "Billing Number", text: "Enter the billing number. Toggle UNDOCUMENTED to auto-generate it.", required: false, autoAdvance: false },
+            { step: 5, title: "VAT / WHT", text: "Set VAT status, VAT-inclusive, and withholding tax. These affect the computed totals." },
+            { step: 6, title: "Port / Terminal / Vessel", text: "Prefilled from the job order. In LEGACY mode, select them manually." },
+            { step: 7, title: "Submit Billing", text: "Review the totals and click SUBMIT BILLING." }
+        ];
+    </script>
+
     <script>
         $(document).ready(function () {
             let currentCustomerId = null;

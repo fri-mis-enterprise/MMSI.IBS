@@ -46,10 +46,12 @@ namespace IBS.Services.Attributes
 
         private void SetErrorAndRedirect(AuthorizationFilterContext context, string message)
         {
+            var isAjax = context.HttpContext.Request.Headers["X-Requested-With"].ToString()
+                .Contains("XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
             var isJsonRequest = context.HttpContext.Request.Headers["Content-Type"].ToString()
                 .Contains("application/json", StringComparison.OrdinalIgnoreCase);
 
-            if (isJsonRequest)
+            if (isAjax || isJsonRequest)
             {
                 context.Result = new JsonResult(new { success = false, message }) { StatusCode = 403 };
                 return;
@@ -150,10 +152,12 @@ namespace IBS.Services.Attributes
 
         private void SetErrorAndRedirect(AuthorizationFilterContext context, string message)
         {
+            var isAjax = context.HttpContext.Request.Headers["X-Requested-With"].ToString()
+                .Contains("XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
             var isJsonRequest = context.HttpContext.Request.Headers["Content-Type"].ToString()
                 .Contains("application/json", StringComparison.OrdinalIgnoreCase);
 
-            if (isJsonRequest)
+            if (isAjax || isJsonRequest)
             {
                 context.Result = new JsonResult(new { success = false, message }) { StatusCode = 403 };
                 return;
