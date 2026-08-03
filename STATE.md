@@ -3,7 +3,7 @@
 Read this FIRST at session start. Update it at the END of every session so the next session starts where this one left off. Keep entries short — bullet points, not essays. If it's in AGENTS.md, don't duplicate it here.
 
 ### Current Focus
-- Action visibility: workflow pages now hide buttons the user lacks permission for, via `ViewBag.Can*` flags (DispatchTicket Index/Preview, JobOrder Index/Details, Billing Index, ServiceRequest Index). Follows Billing's `CanReverse` precedent.
+- Access denial is transport-aware: AJAX gets `{success:false,message}` JSON, full-page navigations redirect back to the same-origin referer with TempData["error"] (fallback Home/Index). Create entry buttons gated (JobOrder Details ADD TICKET, Billing/JobOrder/SR Index CREATE). Navbar hides MSAP workflow links without matching procedures (Job Orders/Dispatch Tickets/Billing/Collection/MMSI Reports).
 
 ### Recent Decisions
 - Tour steps: mark containers/inputs with `data-tour-step="N"`, config in `@section Scripts` via `window.IBS_TOUR_STEPS`. Add `data-page-header` to the `<h1>` to auto-inject the (?) help button.
@@ -18,6 +18,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - IBSWeb/Areas/User/Views/Billing/Create.cshtml — tour steps 1-7; closest template for multi-select + undoc-toggle pages (Collection/Create mirrors it).
 
 ### Open Questions / Next Steps
+- Gate MSAP References menu links per-module (`ManageMaritimeMasterFile` etc.) — deliberately deferred.
 - Continue tutorial.js rollout on remaining core MSAP pages.
 - Consider a shared partial for IBS_TOUR_STEPS if step patterns repeat.
 
@@ -25,6 +26,8 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element lifted via `.tour-interactive-active` (z-index 10002) — must stay above overlay/backdrop. Popover flips above for selects.
 
 ### Session Log
+- 2026-08-03 — Contextual denial redirect + navbar gating — full-page denials now redirect back to the same-origin referer (fallback Home/Index). Navbar MSAP core links (JobOrders/DispatchTickets/Billing/Collection/MMSI Reports) hidden without matching procedures via `ModernHasAnyAccess` helper; MSAP References deliberately untouched. Build green.
+- 2026-08-03 — Transport-aware denial + Create button gating — RequireAccess attributes now return JSON for AJAX and redirect full-page navs back to referer with TempData["error"] (base class `RequireAccessBaseAttribute` dedups the shared claim/deny logic). Gated ADD TICKET / CREATE BILLING / CREATE JOB ORDER / CREATE REQUEST entry buttons.
 - 2026-08-03 — Action visibility gating — DispatchTicket Index dropdown + Preview buttons, JobOrder Index/Details (header edit, batch toolbar/checkboxes, ticket dropdown, SR post/edit), Billing Index (Post/Edit/Delete), ServiceRequest Index (Edit/Delete/Restore) now hidden without the matching procedure. `ViewBag.Can*` pattern in controllers; also added missing `confirmApprove()` JS in DispatchTicket Index. JobOrderControllerTests ctor updated for new IAccessControlService param.
 - 2026-08-03 — AccessControlService cleanup — removed 12 dead members (`HasAllAccessAsync`, `GetAccessMapAsync`, 10 unused extensions); only HasAccessAsync/HasAnyAccessAsync + HasServiceRequestAccessAsync/HasMsapImportAccessAsync/HasMaritimeReportAccessAsync remain. Build green.
 - 2026-08-03 — RequireAccess refactor — both attributes always return `Json(new { success = false, message })` at HTTP 200; dropped redirectController/Action/Area params + unused 5-arg RequireAnyAccess ctor; removed TempData["Denied"] from _Notification.cshtml; updated 15 DispatchTicketController call sites. Resolves the "formalize one consistent success/error response shape" pending item. Trade-off: non-AJAX nav to a denied action now renders raw JSON (global FallbackPolicy handles unauthenticated).

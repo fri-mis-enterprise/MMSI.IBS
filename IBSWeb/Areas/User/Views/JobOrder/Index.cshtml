@@ -16,10 +16,13 @@
                 <h1 class="modern-headline-lg">@ViewData["Title"]</h1>
             </div>
             <div class="flex gap-2">
-                <a asp-action="Create" class="modern-btn-primary" data-hotkey="c">
-                    <span class="material-symbols-outlined">add_circle</span>
-                    CREATE JOB ORDER
-                </a>
+                @if (ViewBag.CanCreate == true)
+                {
+                    <a asp-action="Create" class="modern-btn-primary" data-hotkey="c">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        CREATE JOB ORDER
+                    </a>
+                }
             </div>
         </div>
 

@@ -14,10 +14,15 @@
     var company    = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value ?? string.Empty;
     var stationCode = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? string.Empty;
 
-    async Task<bool> ModernHasMsapAccess()
+    async Task<bool> ModernHasAnyAccess(params ProcedureEnum[] procedures)
     {
         if (string.IsNullOrEmpty(userId)) return false;
-        return await AccessControl.HasAnyAccessAsync(userId,
+        return await AccessControl.HasAnyAccessAsync(userId, procedures);
+    }
+
+    async Task<bool> ModernHasMsapAccess()
+    {
+        return await ModernHasAnyAccess(
             ProcedureEnum.CreateDispatchTicket,
             ProcedureEnum.EditDispatchTicket,
             ProcedureEnum.DeleteDispatchTicket,
@@ -95,48 +100,60 @@
                                 <div>
                                     <div class="mnav-section-label">Operations</div>
                                     <div class="mnav-link-list">
-                                        <a class="mnav-mega-link"
-                                           asp-area="User" asp-controller="JobOrder" asp-action="Index"
-                                           role="menuitem">
-                                            <span class="material-symbols-outlined">assignment</span>
-                                            <div>
-                                                <div class="mnav-link-title">Job Orders</div>
-                                                <div class="mnav-link-sub">Create &amp; track job orders</div>
-                                            </div>
-                                        </a>
-                                        <a class="mnav-mega-link"
-                                           asp-area="User" asp-controller="DispatchTicket" asp-action="Index"
-                                           role="menuitem">
-                                            <span class="material-symbols-outlined">confirmation_number</span>
-                                            <div>
-                                                <div class="mnav-link-title">Dispatch Tickets</div>
-                                                <div class="mnav-link-sub">Tariff &amp; approval workflow</div>
-                                            </div>
-                                        </a>
-                                        <a class="mnav-mega-link"
-                                           asp-area="User" asp-controller="Billing" asp-action="Index"
-                                           role="menuitem">
-                                            <span class="material-symbols-outlined">receipt_long</span>
-                                            <div>
-                                                <div class="mnav-link-title">Billing</div>
-                                                <div class="mnav-link-sub">Dispatch ticket invoices</div>
-                                            </div>
-                                        </a>
+                                        @if (await ModernHasAnyAccess(ProcedureEnum.CreateJobOrder, ProcedureEnum.EditJobOrder, ProcedureEnum.DeleteJobOrder, ProcedureEnum.CloseJobOrder))
+                                        {
+                                            <a class="mnav-mega-link"
+                                               asp-area="User" asp-controller="JobOrder" asp-action="Index"
+                                               role="menuitem">
+                                                <span class="material-symbols-outlined">assignment</span>
+                                                <div>
+                                                    <div class="mnav-link-title">Job Orders</div>
+                                                    <div class="mnav-link-sub">Create &amp; track job orders</div>
+                                                </div>
+                                            </a>
+                                        }
+                                        @if (await ModernHasAnyAccess(ProcedureEnum.CreateDispatchTicket, ProcedureEnum.EditDispatchTicket, ProcedureEnum.DeleteDispatchTicket))
+                                        {
+                                            <a class="mnav-mega-link"
+                                               asp-area="User" asp-controller="DispatchTicket" asp-action="Index"
+                                               role="menuitem">
+                                                <span class="material-symbols-outlined">confirmation_number</span>
+                                                <div>
+                                                    <div class="mnav-link-title">Dispatch Tickets</div>
+                                                    <div class="mnav-link-sub">Tariff &amp; approval workflow</div>
+                                                </div>
+                                            </a>
+                                        }
+                                        @if (await ModernHasAnyAccess(ProcedureEnum.CreateBilling, ProcedureEnum.EditBilling, ProcedureEnum.DeleteBilling, ProcedureEnum.ReverseBilling))
+                                        {
+                                            <a class="mnav-mega-link"
+                                               asp-area="User" asp-controller="Billing" asp-action="Index"
+                                               role="menuitem">
+                                                <span class="material-symbols-outlined">receipt_long</span>
+                                                <div>
+                                                    <div class="mnav-link-title">Billing</div>
+                                                    <div class="mnav-link-sub">Dispatch ticket invoices</div>
+                                                </div>
+                                            </a>
+                                        }
                                     </div>
                                 </div>
                                 <!-- Col 2 -->
                                 <div>
                                     <div class="mnav-section-label">Finance &amp; Reports</div>
                                     <div class="mnav-link-list">
-                                        <a class="mnav-mega-link"
-                                           asp-area="User" asp-controller="Collection" asp-action="Index"
-                                           role="menuitem">
-                                            <span class="material-symbols-outlined">payments</span>
-                                            <div>
-                                                <div class="mnav-link-title">Collection</div>
-                                                <div class="mnav-link-sub">Billing payments</div>
-                                            </div>
-                                        </a>
+                                        @if (await ModernHasAnyAccess(ProcedureEnum.CreateCollection))
+                                        {
+                                            <a class="mnav-mega-link"
+                                               asp-area="User" asp-controller="Collection" asp-action="Index"
+                                               role="menuitem">
+                                                <span class="material-symbols-outlined">payments</span>
+                                                <div>
+                                                    <div class="mnav-link-title">Collection</div>
+                                                    <div class="mnav-link-sub">Billing payments</div>
+                                                </div>
+                                            </a>
+                                        }
                                         @if (await ModernHasMsapImportAccess())
                                         {
                                             <a class="mnav-mega-link"
@@ -149,15 +166,18 @@
                                                 </div>
                                             </a>
                                         }
-                                        <a class="mnav-mega-link"
-                                           asp-area="User" asp-controller="MaritimeReport" asp-action="Index"
-                                           role="menuitem">
-                                            <span class="material-symbols-outlined">analytics</span>
-                                            <div>
-                                                <div class="mnav-link-title">MMSI Reports</div>
-                                                <div class="mnav-link-sub">Analytics &amp; exports</div>
-                                            </div>
-                                        </a>
+                                        @if (await ModernHasAnyAccess(ProcedureEnum.ViewMaritimeReport))
+                                        {
+                                            <a class="mnav-mega-link"
+                                               asp-area="User" asp-controller="MaritimeReport" asp-action="Index"
+                                               role="menuitem">
+                                                <span class="material-symbols-outlined">analytics</span>
+                                                <div>
+                                                    <div class="mnav-link-title">MMSI Reports</div>
+                                                    <div class="mnav-link-sub">Analytics &amp; exports</div>
+                                                </div>
+                                            </a>
+                                        }
                                     </div>
                                 </div>
                                 <!-- Col 3 -->

@@ -41,6 +41,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ViewBag.CanEdit = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditJobOrder);
+            ViewBag.CanCreate = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateJobOrder);
             return View();
         }
 
@@ -154,6 +155,7 @@ namespace IBSWeb.Areas.User.Controllers
             ViewBag.CanApproveTariff = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.ApproveTariff);
             ViewBag.CanEditTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditDispatchTicket);
             ViewBag.CanDeleteTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.DeleteDispatchTicket);
+            ViewBag.CanCreateDispatchTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateDispatchTicket);
             ViewBag.CanEditJobOrder = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditJobOrder);
             ViewBag.CanCreateServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateServiceRequest);
             ViewBag.CanPostServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.PostServiceRequest);
