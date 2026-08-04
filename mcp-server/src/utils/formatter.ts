@@ -104,6 +104,21 @@ export function formatConformanceAudit(findings: any[], scope: string): string {
   return output;
 }
 
+export function formatViewsAudit(findings: any[]): string {
+  let output = "### Views Audit (ARCHITECTURE.md §4.4)\n\n";
+
+  if (findings.length === 0) {
+    return output + "✅ No violations found.\n";
+  }
+
+  output += `Found ${findings.length} issue(s). Rules: V1 Index no @model, V2 ViewModel on Create/Edit, V3 modern-layout, V4 fetch error handling, V5 tag balance, V6 undeclared var, V7 unused @model.\n\n`;
+  output += `| Rule | File | Item | Detail |\n| --- | --- | --- | --- |\n`;
+  for (const f of findings) {
+    output += `| ${f.rule} | ${f.file} | ${f.item} | ${f.detail} |\n`;
+  }
+  return output;
+}
+
 export function formatCsvList(files: any[]): string {
   let output = "### CSV Files\n\n| Path | Size (bytes) |\n| --- | --- |\n";
   output += files.map(f => `| ${f.path} | ${f.size} |`).join("\n");

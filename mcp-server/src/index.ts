@@ -9,6 +9,7 @@ import { runBuild, parseBuildErrors } from "./tools/build-guard.js";
 import { findMethodInFile, extractReferencedTypes, findTypeDefinition, extractModelInfo, analyzeActionRelations, traceWorkflowDeep } from "./utils/dotnet-parser.js";
 import { listCsvFiles, queryCsv } from "./tools/csv-handler.js";
 import { auditControllers, auditServices } from "./tools/audit-conformance.js";
+import { auditViews } from "./tools/audit-views.js";
 import * as Formatter from "./utils/formatter.js";
 import path from "path";
 import fs from "fs";
@@ -113,6 +114,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             scope: { type: "string", description: "controllers | services | all (default all)." },
+          },
+        },
+      },
+      {
+        name: "audit_views",
+        description: "Audit .cshtml views against ARCHITECTURE.md §4.4 (layout, @model, AJAX error handling, tag balance, model references).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            folder: { type: "string", description: "Optional area folder to narrow, e.g. Billing. Default all." },
           },
         },
       },
@@ -249,6 +260,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (scope === "services" || scope === "all") findings.push(...await auditServices(PROJECT_ROOT));
       return {
         content: [{ type: "text", text: Formatter.formatConformanceAudit(findings, scope) }],
+      };
+    }
+
+    if (name === "audit_views") {
+      const folder = args?.folder as string | undefined;
+      const findings = auditViews(PROJECT_ROOT, folder);
+      return {
+        content: [{ type: "text", text: Formatter.formatViewsAudit(findings) }],
       };
     }
 
