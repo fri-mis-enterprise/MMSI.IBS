@@ -1,5 +1,6 @@
 using IBS.Models;
 using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -28,13 +29,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var model = await tariffRateService.PopulateSelectListsAsync(null, cancellationToken);
+            var model = new TariffRateViewModel();
+            await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(TariffRate model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(TariffRateViewModel model, CancellationToken cancellationToken = default)
         {
             await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
 
@@ -61,19 +63,20 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await tariffRateService.GetByIdAsync(id, cancellationToken);
-            if (model == null)
+            var entity = await tariffRateService.GetByIdAsync(id, cancellationToken);
+            if (entity == null)
             {
                 return NotFound();
             }
 
+            var model = new TariffRateViewModel(entity);
             await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(TariffRate model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(TariffRateViewModel model, CancellationToken cancellationToken)
         {
             await tariffRateService.PopulateSelectListsAsync(model, cancellationToken);
 

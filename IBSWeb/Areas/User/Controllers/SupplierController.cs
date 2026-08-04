@@ -64,7 +64,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            Supplier model = new()
+            SupplierViewModel model = new()
             {
                 DefaultExpenses = await dbContext.ChartOfAccounts
                     .Where(coa => !coa.HasChildren)
@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Supplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(SupplierViewModel model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -254,7 +254,9 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            supplier.DefaultExpenses = await dbContext.ChartOfAccounts
+            var model = new SupplierViewModel(supplier);
+
+            model.DefaultExpenses = await dbContext.ChartOfAccounts
                 .Where(coa => !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
@@ -264,7 +266,7 @@ namespace IBSWeb.Areas.User.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            supplier.WithholdingTaxList = await dbContext.ChartOfAccounts
+            model.WithholdingTaxList = await dbContext.ChartOfAccounts
                 .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
@@ -274,13 +276,13 @@ namespace IBSWeb.Areas.User.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            supplier.PaymentTerms = await unitOfWork.Terms.GetTermsListAsyncByCode(cancellationToken);
-            return View(supplier);
+            model.PaymentTerms = await unitOfWork.Terms.GetTermsListAsyncByCode(cancellationToken);
+            return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Supplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(SupplierViewModel model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
             model.DefaultExpenses = await dbContext.ChartOfAccounts
                 .Where(coa => !coa.HasChildren)

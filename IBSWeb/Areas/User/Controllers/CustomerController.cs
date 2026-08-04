@@ -64,7 +64,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return BadRequest();
             }
-            var model = new Customer()
+            var model = new CustomerViewModel()
             {
 
                 PaymentTerms = await unitOfWork.Terms
@@ -76,7 +76,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Customer model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CustomerViewModel model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -144,10 +144,11 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (customer != null)
             {
-                customer.PaymentTerms = await unitOfWork.Terms
+                var model = new CustomerViewModel(customer);
+                model.PaymentTerms = await unitOfWork.Terms
                     .GetTermsListAsyncByCode(cancellationToken);
-                customer.Commissionees = await unitOfWork.GetCommissioneeListAsyncById(companyClaims, cancellationToken);
-                return View(customer);
+                model.Commissionees = await unitOfWork.GetCommissioneeListAsyncById(companyClaims, cancellationToken);
+                return View(model);
             }
 
             return NotFound();
@@ -155,7 +156,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Customer model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(CustomerViewModel model, CancellationToken cancellationToken)
         {
             model.PaymentTerms = await unitOfWork.Terms
                 .GetTermsListAsyncByCode(cancellationToken);

@@ -131,6 +131,7 @@ public class Repository<T> : IRepository<T> where T : class
 | V1 | **Model type inconsistency** | `Billing Create.cshtml`, `Billing Edit.cshtml` | Uses domain entity `@model Billing` with `[Bind]` attribute workaround instead of a ViewModel. Low risk — `[Bind]` restricts over-posting. |
 | V2 | **Direct DataTable init** | `Collection Create.cshtml` (`#billingsTable`) | Uses direct `$('#billingsTable').DataTable({...})` instead of `ModernTable.config()` + `ModernTable.ajax()`. Intentional — this is a sub-table within a form, not a primary list, so ModernTable's server-side pattern doesn't apply. |
 | V3 | **No @model on Index pages** | `JobOrder Index.cshtml`, `Collection Index.cshtml` | Inconsistent with Billing/DispatchTicket Index which declare `@model`. DataTable loads via AJAX server-side, so `@model` is functionally optional. |
+| V4 | **ViewModel on Create/Edit** | `UserAccess Create.cshtml`, `UserAccess Edit.cshtml`, `Billing Create.cshtml`, `Billing Edit.cshtml` | Intentional deviation (approved): these two screens keep the domain-entity `@model` (with `[Bind]` attribute workaround on Billing) instead of a ViewModel. `[Bind]` restricts over-posting. All other master-file Create/Edit screens were converted to the `XViewModel : XEntity` inheritance pattern (in `IBS.Models/MSAP/ViewModels/` and `IBS.Models/MasterFile/`). |
 
 ## 6. Migration Architecture Notes
 

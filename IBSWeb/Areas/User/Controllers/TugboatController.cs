@@ -1,5 +1,6 @@
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Models.Enums;
 using IBS.Services.Attributes;
@@ -31,13 +32,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var model = await tugboatService.PopulateSelectListsAsync(null, cancellationToken);
+            var model = new TugboatViewModel();
+            await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Tugboat model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(TugboatViewModel model, CancellationToken cancellationToken = default)
         {
             var result = await tugboatService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
@@ -55,19 +57,20 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await tugboatService.GetByIdAsync(id, cancellationToken);
-            if (model == null)
+            var entity = await tugboatService.GetByIdAsync(id, cancellationToken);
+            if (entity == null)
             {
                 return NotFound();
             }
 
+            var model = new TugboatViewModel(entity);
             await tugboatService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Tugboat model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(TugboatViewModel model, CancellationToken cancellationToken)
         {
             var result = await tugboatService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 

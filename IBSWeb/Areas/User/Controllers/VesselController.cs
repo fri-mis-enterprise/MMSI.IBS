@@ -1,5 +1,6 @@
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Models.Enums;
 using IBS.Services.Attributes;
@@ -31,12 +32,12 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(new VesselViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Vessel model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(VesselViewModel model, CancellationToken cancellationToken = default)
         {
             var result = await vesselService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
@@ -59,12 +60,12 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            return View(model);
+            return View(new VesselViewModel(model));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Vessel model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(VesselViewModel model, CancellationToken cancellationToken)
         {
             var result = await vesselService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 

@@ -101,14 +101,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            Terms viewModel = new();
+            PaymentTermsViewModel viewModel = new();
 
             return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Terms model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(PaymentTermsViewModel model, CancellationToken cancellationToken)
         {
             var getUserFullName = GetUserFullName();
             var companyClaims = await GetCompanyClaimAsync();
@@ -167,12 +167,12 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            return View(supplier);
+            return View(new PaymentTermsViewModel(supplier));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Terms model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(PaymentTermsViewModel model, CancellationToken cancellationToken)
         {
             var getUserFullName = GetUserFullName();
             var companyClaims = await GetCompanyClaimAsync();

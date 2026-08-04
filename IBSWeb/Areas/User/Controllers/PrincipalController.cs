@@ -1,5 +1,6 @@
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Models.Enums;
 using IBS.Services.Attributes;
@@ -31,13 +32,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var model = await principalService.PopulateSelectListsAsync(null, cancellationToken);
+            var model = new PrincipalViewModel();
+            await principalService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Principal model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(PrincipalViewModel model, CancellationToken cancellationToken = default)
         {
             var result = await principalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
@@ -55,19 +57,20 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await principalService.GetByIdAsync(id, cancellationToken);
-            if (model == null)
+            var entity = await principalService.GetByIdAsync(id, cancellationToken);
+            if (entity == null)
             {
                 return NotFound();
             }
 
+            var model = new PrincipalViewModel(entity);
             await principalService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Principal model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(PrincipalViewModel model, CancellationToken cancellationToken)
         {
             var result = await principalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 

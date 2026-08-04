@@ -1,5 +1,6 @@
 using IBS.Models;
 using IBS.Models.MSAP.MasterFile;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using IBS.Models.Enums;
 using IBS.Services.Attributes;
@@ -31,13 +32,14 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var model = await terminalService.PopulateSelectListsAsync(null, cancellationToken);
+            var model = new TerminalViewModel();
+            await terminalService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Terminal model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(TerminalViewModel model, CancellationToken cancellationToken = default)
         {
             var result = await terminalService.CreateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 
@@ -55,19 +57,20 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await terminalService.GetByIdAsync(id, cancellationToken);
-            if (model == null)
+            var entity = await terminalService.GetByIdAsync(id, cancellationToken);
+            if (entity == null)
             {
                 return NotFound();
             }
 
+            var model = new TerminalViewModel(entity);
             await terminalService.PopulateSelectListsAsync(model, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Terminal model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(TerminalViewModel model, CancellationToken cancellationToken)
         {
             var result = await terminalService.UpdateAsync(model, userManager.GetUserName(User)!, cancellationToken);
 

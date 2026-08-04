@@ -41,12 +41,12 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(new EmployeeViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(EmployeeViewModel model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
             var result = await employeeService.CreateAsync(model, companyClaims, GetUserFullName(), cancellationToken);
@@ -93,12 +93,12 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            return View(employee);
+            return View(new EmployeeViewModel(employee));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Employee model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(EmployeeViewModel model, CancellationToken cancellationToken)
         {
             var result = await employeeService.UpdateAsync(model, GetUserFullName(), cancellationToken);
 

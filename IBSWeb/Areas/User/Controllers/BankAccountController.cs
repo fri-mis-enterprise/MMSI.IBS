@@ -28,12 +28,12 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(new BankAccountViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(BankAccount bankAccount, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(BankAccountViewModel bankAccount, CancellationToken cancellationToken)
         {
             if (await unitOfWork.BankAccount.IsBankAccountNoExist(bankAccount.AccountNo, cancellationToken))
             {
@@ -58,12 +58,12 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return NotFound();
             }
-            return View(bankAccount);
+            return View(new BankAccountViewModel(bankAccount));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(BankAccount bankAccount, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(BankAccountViewModel bankAccount, CancellationToken cancellationToken)
         {
             var existingBankAccount = await unitOfWork.BankAccount.GetAsync(b => b.BankAccountId == bankAccount.BankAccountId, cancellationToken);
             if (existingBankAccount == null)
