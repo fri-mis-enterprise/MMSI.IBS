@@ -31,6 +31,7 @@
 ### Housekeeping & Workflow Tools
 
 * Session State: STATE.md holds cross-session context (current focus, decisions, key file shortcuts, next steps). READ it at session start; UPDATE it before ending a session. Keep it current or it rots.
+* Detected Issues: Whenever you READ a file and spot a possible problem (bug, smell, dead code, missing audit trail, copy-paste error, etc.), log it to DETECTED-ISSUES.md (reverse-chronological, `[date] [severity] file:line — description`). Do this even if you fix it later in the same session. Don't fix issues unrelated to the current task — just log them for a future pass.
 * Tools: Use search_code_context, trace_workflow, analyze_action, and read_model to map code. Use execute_sql for diagnostics.
 * Changelog: Append reverse-chronological logs to CHANGELOG.md. Skip trivial edits.
 * Versioning: Found at IBSWeb/Views/Shared/_Layout.cshtml:15. Format: 0.{DeploymentVersion}.{CommitCounts}. Ask before incrementing.
