@@ -1,17 +1,14 @@
-using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Enums;
 using IBS.Models.MSAP.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
 {
     public class UserAccessService(
-        ApplicationDbContext dbContext,
         IUnitOfWork unitOfWork,
         UserManager<ApplicationUser> userManager,
         ILogger<UserAccessService> logger)
@@ -91,7 +88,7 @@ namespace IBS.Services
 
                 await unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
-                    var selectedUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == model.UserId, cancellationToken);
+                    var selectedUser = await userManager.FindByIdAsync(model.UserId);
                     model.UserName = selectedUser?.UserName;
 
                     await unitOfWork.UserAccess.AddAsync(model, cancellationToken);

@@ -186,7 +186,7 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.DeleteBilling, "Access denied. You don't have permission to delete Billings.")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var result = await billingService.DeleteBillingAsync(id, cancellationToken);
+            var result = await billingService.DeleteBillingAsync(id, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
             {

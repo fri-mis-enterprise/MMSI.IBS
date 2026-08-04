@@ -462,7 +462,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task<ServiceResult> DeleteBillingAsync(int id, CancellationToken cancellationToken)
+        public async Task<ServiceResult> DeleteBillingAsync(int id, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -486,6 +486,7 @@ namespace IBS.Services
                 }
 
                 await unitOfWork.Billing.RemoveAsync(model, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Deleted Billing #{model.MsapBillingNumber}", "Billing", model.MsapBillingId, model.MsapBillingNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 // Re-open the Job Order if it was auto-closed

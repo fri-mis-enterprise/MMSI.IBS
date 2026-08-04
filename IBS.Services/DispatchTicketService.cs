@@ -745,7 +745,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task<ServiceResult> DeleteImageAsync(int id, CancellationToken cancellationToken)
+        public async Task<ServiceResult> DeleteImageAsync(int id, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -768,6 +768,7 @@ namespace IBS.Services
 
                 model.ImageName = null;
                 model.ImageSavedUrl = null;
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Deleted image on dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Image Deleted Successfully!");
@@ -779,7 +780,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task<ServiceResult> DeleteVideoAsync(int id, CancellationToken cancellationToken)
+        public async Task<ServiceResult> DeleteVideoAsync(int id, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -802,6 +803,7 @@ namespace IBS.Services
 
                 model.VideoName = null;
                 model.VideoSavedUrl = null;
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Deleted video on dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
                 return ServiceResult.Success("Video Deleted Successfully!");

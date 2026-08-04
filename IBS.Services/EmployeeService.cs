@@ -22,28 +22,37 @@ namespace IBS.Services
 
         public async Task<ServiceResult<int>> CreateAsync(Employee model, string? companyClaims, string username, CancellationToken cancellationToken)
         {
-            await unitOfWork.ExecuteInTransactionAsync(async () =>
+            try
             {
-                model.Company = companyClaims;
-                await unitOfWork.Employee.AddAsync(model, cancellationToken);
+                await unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    model.Company = companyClaims;
+                    await unitOfWork.Employee.AddAsync(model, cancellationToken);
 
-                AuditTrail auditTrail = new(username, $"Created new Employee #{model.EmployeeNumber}", "Employee");
-                await unitOfWork.AuditTrail.AddAsync(auditTrail, cancellationToken);
+                    AuditTrail auditTrail = new(username, $"Created new Employee #{model.EmployeeNumber}", "Employee");
+                    await unitOfWork.AuditTrail.AddAsync(auditTrail, cancellationToken);
 
-                await unitOfWork.SaveAsync(cancellationToken);
-            }, cancellationToken);
+                    await unitOfWork.SaveAsync(cancellationToken);
+                }, cancellationToken);
 
-            return ServiceResult<int>.Success(model.EmployeeId, $"Employee {model.EmployeeNumber} created successfully");
+                return ServiceResult<int>.Success(model.EmployeeId, $"Employee {model.EmployeeNumber} created successfully");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<int>.Failure($"Failed to create employee: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
         }
 
         public async Task<ServiceResult> UpdateAsync(Employee model, string username, CancellationToken cancellationToken)
         {
-            var existingModel = await GetByIdAsync(model.EmployeeId, cancellationToken);
-
-            if (existingModel == null)
+            try
             {
-                return ServiceResult.Failure("Employee not found.", ServiceResultStatus.NotFound);
-            }
+                var existingModel = await GetByIdAsync(model.EmployeeId, cancellationToken);
+
+                if (existingModel == null)
+                {
+                    return ServiceResult.Failure("Employee not found.", ServiceResultStatus.NotFound);
+                }
 
             var changes = new List<string>();
             if (existingModel.EmployeeNumber != model.EmployeeNumber)
@@ -111,6 +120,11 @@ namespace IBS.Services
             }, cancellationToken);
 
             return ServiceResult.Success("Employee edited successfully");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult.Failure($"Failed to edit employee: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
         }
 
         public async Task<(IEnumerable<Employee> Data, int TotalRecords)> GetPagedEmployeesAsync(DataTablesParameters parameters, CancellationToken cancellationToken)

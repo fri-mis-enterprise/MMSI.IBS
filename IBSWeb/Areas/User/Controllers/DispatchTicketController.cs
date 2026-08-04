@@ -705,7 +705,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         public async Task<IActionResult> DeleteImage(int id, string filterType, CancellationToken cancellationToken)
         {
-            var result = await dispatchTicketService.DeleteImageAsync(id, cancellationToken);
+            var result = await dispatchTicketService.DeleteImageAsync(id, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
             {
@@ -724,7 +724,7 @@ namespace IBSWeb.Areas.User.Controllers
         /// </summary>
         public async Task<IActionResult> DeleteVideo(int id, string filterType, CancellationToken cancellationToken)
         {
-            var result = await dispatchTicketService.DeleteVideoAsync(id, cancellationToken);
+            var result = await dispatchTicketService.DeleteVideoAsync(id, User.Identity?.Name ?? "System", cancellationToken);
 
             if (result.IsSuccess)
             {
