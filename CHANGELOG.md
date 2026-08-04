@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-08-04]
+### Added
+- **MCP `audit_conformance` tool** — Batch-scans `IBSWeb/Areas/**/Controllers` and `IBS.Services` against ARCHITECTURE.md §4 / AGENTS.md rules in one call. Controller rules: C2 (primary constructor DI), C3 (every IActionResult action covered by `[RequireAccess]`/`[RequireAnyAccess]`/`[Authorize]` at method or class level, multi-line attributes handled). Service rules: S1 (primary ctor injects IUnitOfWork), S2 (no direct `ApplicationDbContext`), S3 (mutations wrapped in try/catch returning ServiceResult), S4 (mutations call `AuditTrail.AddAsync`/`RecordAuditAsync`). Emits a violations table grouped by rule. (`mcp-server/src/tools/audit-conformance.ts`, `mcp-server/src/utils/formatter.ts`)
+
+### Changed
+- **`trace_workflow` is now genuinely recursive** — Resolves `member.method()` calls to their defining file (camelCase variable → PascalCase class, `I*Service`/`*Repository` matching across `IBS.Services/**` + `IBS.DataAccess/**`), follows them up to `maxDepth` (default 3) with cycle dedupe, and emits one section per visited method. Previously it was a flat regex scan of a single method body despite the "recursive" name. (`mcp-server/src/utils/dotnet-parser.ts`)
+- **`execute_sql` rows capped at 500** — Output truncates with a note to add `LIMIT`, preventing token bloat on large tables (e.g. 5.5MB `Imports/atrail.csv`). (`mcp-server/src/index.ts`, `mcp-server/src/utils/formatter.ts`)
+
 ## [2026-08-03]
 ### Added
 - **Guided tours (tutorial.js) on MSAP create pages** — Interactive step-by-step tours with `data-tour-step="N"` markers, `data-page-header` on the h1, and `window.IBS_TOUR_STEPS` config in `@section Scripts`. Rolled out on DispatchTicket/Create (steps 1-8), DispatchTicket/SetTariff (1-8, conditional step 7 auto-skips for company-owned tugs), Billing/Create (1-7, tickets multi-select `autoAdvance:false`, Billing # covers DOCUMENTED/UNDOCUMENTED badge `required:false`), Collection/Create (1-6, Collection # + UNDOCUMENTED badge `required:false`, Billing Settlement `autoAdvance:false`). (`DispatchTicket/Create.cshtml`, `DispatchTicket/SetTariff.cshtml`, `Billing/Create.cshtml`, `Collection/Create.cshtml`)

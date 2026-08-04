@@ -132,6 +132,67 @@ export function traceMethodCalls(code) {
     }
     return calls;
 }
+/** Resolve a member reference (variable or property chain) to a candidate class file. */
+async function resolveMemberFile(projectRoot, member) {
+    const segment = member.split('.').pop();
+    const pascal = segment.charAt(0).toUpperCase() + segment.slice(1).replace(/^I/, '');
+    const singular = pascal.replace(/ies$/, 'y').replace(/s$/, '');
+    const baseNames = new Set([
+        pascal, pascal + 'Service', pascal + 'Repository',
+        singular, singular + 'Service', singular + 'Repository',
+        'I' + pascal + 'Service', 'I' + pascal + 'Repository',
+    ]);
+    const patterns = [
+        path.join(projectRoot, 'IBS.Services', '**', '*.cs'),
+        path.join(projectRoot, 'IBS.DataAccess', '**', '*.cs'),
+    ];
+    for (const pattern of patterns) {
+        const files = await glob(pattern.replace(/\\/g, '/'));
+        for (const file of files) {
+            const base = path.basename(file, '.cs');
+            if (baseNames.has(base))
+                return file;
+        }
+    }
+    return null;
+}
+/**
+ * Recursively trace delegation calls: resolves member.method() to a definition file
+ * (IBS.Services / IBS.DataAccess) and follows it, deduping cycles and capping depth.
+ */
+export async function traceWorkflowDeep(projectRoot, filePath, methodName, maxDepth = 3) {
+    const fullPath = path.join(projectRoot, filePath);
+    const body = await findMethodInFile(fullPath, methodName);
+    if (!body)
+        return [];
+    const results = [];
+    const visited = new Set();
+    const queue = [{ file: filePath, method: methodName, depth: 0 }];
+    while (queue.length > 0) {
+        const { file, method, depth } = queue.shift();
+        const key = `${file}#${method}`;
+        if (visited.has(key) || depth > maxDepth)
+            continue;
+        visited.add(key);
+        const full = path.join(projectRoot, file);
+        const methodBody = await findMethodInFile(full, method);
+        if (!methodBody)
+            continue;
+        const calls = traceMethodCalls(methodBody);
+        results.push({ file, method, calls });
+        for (const call of calls) {
+            const memberFile = await resolveMemberFile(projectRoot, call.member);
+            if (!memberFile)
+                continue;
+            queue.push({
+                file: path.relative(projectRoot, memberFile).replace(/\\/g, '/'),
+                method: call.method,
+                depth: depth + 1,
+            });
+        }
+    }
+    return results;
+}
 export function extractModelInfo(code) {
     const propertyRegex = /\[([^\]]+)\]\s*public\s+([\w\<\>\[\]\?]+)\s+(\w+)\s*\{\s*get;\s*set;\s*\}/g;
     const simplePropertyRegex = /public\s+([\w\<\>\[\]\?]+)\s+(\w+)\s*\{\s*get;\s*set;\s*\}/g;

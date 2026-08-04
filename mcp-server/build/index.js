@@ -3,8 +3,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
 import { getDbPool } from "./utils/db-client.js";
 import { runBuild, parseBuildErrors } from "./tools/build-guard.js";
-import { findMethodInFile, extractReferencedTypes, findTypeDefinition, traceMethodCalls, extractModelInfo, analyzeActionRelations } from "./utils/dotnet-parser.js";
+import { findMethodInFile, extractReferencedTypes, findTypeDefinition, extractModelInfo, analyzeActionRelations, traceWorkflowDeep } from "./utils/dotnet-parser.js";
 import { listCsvFiles, queryCsv } from "./tools/csv-handler.js";
+import { auditControllers, auditServices } from "./tools/audit-conformance.js";
 import * as Formatter from "./utils/formatter.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -87,8 +88,19 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     properties: {
                         methodName: { type: "string" },
                         filePath: { type: "string" },
+                        maxDepth: { type: "number", description: "Recursion depth cap (default 3)." },
                     },
                     required: ["methodName", "filePath"],
+                },
+            },
+            {
+                name: "audit_conformance",
+                description: "Audit controllers/services against ARCHITECTURE.md §4 and AGENTS.md rules (access control, primary constructors, IUnitOfWork-only, audit trails).",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        scope: { type: "string", description: "controllers | services | all (default all)." },
+                    },
                 },
             },
             {
@@ -123,7 +135,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const pool = await getDbPool(PROJECT_ROOT);
             const result = await pool.query(sql);
             return {
-                content: [{ type: "text", text: Formatter.formatSqlResult(result.rows) }],
+                content: [{ type: "text", text: Formatter.formatSqlResult(result.rows, 500) }],
             };
         }
         if (name === "check_build_status") {
@@ -201,13 +213,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (name === "trace_workflow") {
             const methodName = args?.methodName;
             const filePath = args?.filePath;
-            const fullPath = path.join(PROJECT_ROOT, filePath);
-            const methodBody = await findMethodInFile(fullPath, methodName);
-            if (!methodBody)
+            const maxDepth = args?.maxDepth || 3;
+            const trace = await traceWorkflowDeep(PROJECT_ROOT, filePath, methodName, maxDepth);
+            if (trace.length === 0)
                 return { content: [{ type: "text", text: "Method not found." }] };
-            const calls = traceMethodCalls(methodBody);
             return {
-                content: [{ type: "text", text: Formatter.formatWorkflowTrace(calls) }],
+                content: [{ type: "text", text: Formatter.formatWorkflowTrace(trace) }],
+            };
+        }
+        if (name === "audit_conformance") {
+            const scope = args?.scope || "all";
+            const findings = [];
+            if (scope === "controllers" || scope === "all")
+                findings.push(...await auditControllers(PROJECT_ROOT));
+            if (scope === "services" || scope === "all")
+                findings.push(...await auditServices(PROJECT_ROOT));
+            return {
+                content: [{ type: "text", text: Formatter.formatConformanceAudit(findings, scope) }],
             };
         }
         if (name === "list_csv_files") {

@@ -1,13 +1,18 @@
-export function formatSqlResult(rows) {
+export function formatSqlResult(rows, maxRows = 500) {
     if (!rows || rows.length === 0)
         return "No results found.";
-    const keys = Object.keys(rows[0]);
+    const shown = rows.length > maxRows ? rows.slice(0, maxRows) : rows;
+    const keys = Object.keys(shown[0]);
     const header = `| ${keys.join(" | ")} |`;
     const separator = `| ${keys.map(() => "---").join(" | ")} |`;
-    const body = rows
+    const body = shown
         .map((row) => `| ${keys.map((key) => row[key]).join(" | ")} |`)
         .join("\n");
-    return `### SQL Query Results\n\n${header}\n${separator}\n${body}`;
+    let note = "";
+    if (rows.length > maxRows) {
+        note = `\n\n> Showing first ${maxRows} of ${rows.length} rows. Add LIMIT to your query for tighter results.`;
+    }
+    return `### SQL Query Results\n\n${header}\n${separator}\n${body}${note}`;
 }
 export function formatBuildStatus(success, errors, warnings) {
     let output = `### Build Status: ${success ? "✅ Success" : "❌ Failed"}\n\n`;
@@ -52,11 +57,31 @@ export function formatCodeContext(data) {
     }
     return output;
 }
-export function formatWorkflowTrace(calls) {
-    if (!calls || calls.length === 0)
+export function formatWorkflowTrace(trace) {
+    if (!trace || trace.length === 0)
         return "No delegation calls detected.";
-    const lines = calls.map(c => `- \`${c.member}.${c.method}()\``);
-    return "### Delegation Calls\n\n" + lines.join("\n");
+    let output = "### Workflow Trace\n\n";
+    for (const step of trace) {
+        output += `#### \`${step.file}:${step.method}\`\n\n`;
+        if (step.calls.length === 0) {
+            output += "- _(no delegation calls)_\n\n";
+            continue;
+        }
+        output += step.calls.map(c => `- \`${c.member}.${c.method}()\``).join("\n") + "\n\n";
+    }
+    return output.trimEnd();
+}
+export function formatConformanceAudit(findings, scope) {
+    let output = `### Conformance Audit (${scope})\n\n`;
+    if (findings.length === 0) {
+        return output + "✅ No violations found.\n";
+    }
+    output += `Found ${findings.length} violation(s) against ARCHITECTURE.md §4 / AGENTS.md rules.\n\n`;
+    output += `| Rule | File | Item | Detail |\n| --- | --- | --- | --- |\n`;
+    for (const f of findings) {
+        output += `| ${f.rule} | ${f.file} | ${f.item} | ${f.detail} |\n`;
+    }
+    return output;
 }
 export function formatCsvList(files) {
     let output = "### CSV Files\n\n| Path | Size (bytes) |\n| --- | --- |\n";
