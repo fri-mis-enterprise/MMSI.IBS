@@ -30,6 +30,7 @@
 
 ### Housekeeping & Workflow Tools
 
+* Persistent Memory: opencode-mem provides cross-session memory. Use the `memory` tool: `memory({ mode: "search", query: "..." })` at session start for relevant context; `memory({ mode: "add", content: "..." })` for durable decisions/facts (bug patterns, "we tried X and it failed", preferences). Scope: project by default, `"scope": "all-projects"` to search across projects. Web UI at http://127.0.0.1:4747. Manual `add`/`search` only — auto-capture is disabled (free-tier provider, no structured output).
 * Session State: STATE.md holds cross-session context (current focus, decisions, key file shortcuts, next steps). READ it at session start; UPDATE it before ending a session. Keep it current or it rots.
 * Detected Issues: Whenever you READ a file and spot a possible problem (bug, smell, dead code, missing audit trail, copy-paste error, etc.), log it to DETECTED-ISSUES.md (reverse-chronological, `[date] [severity] file:line — description`). Do this even if you fix it later in the same session. Don't fix issues unrelated to the current task — just log them for a future pass.
 * Tools: Use search_code_context, trace_workflow, analyze_action, and read_model to map code. Use execute_sql for diagnostics.
