@@ -2,6 +2,7 @@
 
 ## [2026-08-05]
 ### Changed
+- **BAF charge type now switchable on Billing Create** — BAF Adjustment table gained a `TYPE` column (Per Move / Per Hour) per selected ticket, posted as `BafChargeTypes[ticketId]` (`Billing` gained `[NotMapped] Dictionary<int,string> BafChargeTypes`, added to Create `[Bind]`). Switching type or editing the rate updates the row BAF amount, the ticket-row BAF cells, the tickets-table TOTAL column, and the financial summary **live** (rate input now fires on `input`, not `change`). `ApplyBafRateAsync` now also applies a charge-type change (no longer early-returns when only the type changed; audit trail includes the new type). TOTAL column now always recomputes as dispatch + BAF instead of the stale server value. (`Billing.cs`, `BillingService.cs`, `BillingController.cs`, `Billing/Create.cshtml`)
 - **Dispatch Ticket hours floor raised 0.5h → 1h** — `CreateDispatchTicketAsync` and `UpdateDispatchTicketAsync` now use `Math.Max(duration, 1m)` so any sub-1-hour ticket bills a minimum of 1 hour (fractional durations above 1h unchanged). Same 1h floor applied to legacy `ServiceRequestController` create/edit. Added `CreateDispatchTicketAsync_MinimumHoursIsOne` test. (`IBS.Services/DispatchTicketService.cs`, `IBSWeb/Areas/User/Controllers/ServiceRequestController.cs`, `IBS.Tests/Services/DispatchTicketServiceTests.cs`)
 
 ## [2026-08-04]

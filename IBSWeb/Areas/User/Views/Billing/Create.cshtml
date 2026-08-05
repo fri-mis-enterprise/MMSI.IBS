@@ -28,6 +28,22 @@
     #undocBadge:active {
         transform: translateY(0);
     }
+    /* ponytail: scoped to #bafTable — .modern-table forces text-align:left !important, so utility classes need re-forcing here */
+    #bafTable th.text-right,
+    #bafTable td.text-right,
+    #bafTable .baf-rate-input {
+        text-align: right !important;
+    }
+    #bafTable th.text-center,
+    #bafTable td.text-center {
+        text-align: center !important;
+    }
+    #bafTable .baf-rate-input {
+        border: 1px solid var(--outline-variant);
+        border-radius: 6px;
+        background: var(--surface-container-low);
+        padding: 4px 8px;
+    }
 </style>
 
 <div class="modern-layout">
@@ -287,13 +303,14 @@
                                             <tr>
                                                 <th>DISPATCH #</th>
                                                 <th class="text-center">HOURS</th>
+                                                <th class="text-center">TYPE</th>
                                                 <th class="text-right">BAF RATE</th>
                                                 <th class="text-right">BAF AMOUNT</th>
                                             </tr>
                                         </thead>
                                         <tbody id="bafTableBody">
                                             <tr class="text-muted">
-                                                <td colspan="4" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td>
+                                                <td colspan="5" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -710,43 +727,64 @@
                     const hours = $ticketRow.data('hours') || 0;
                     const rate = $ticketRow.data('baf-rate') || 0;
                     const chargeType = $ticketRow.data('baf-charge-type') || '';
-                    const amount = computeBafAmount(rate, hours, chargeType);
+                    const type = (chargeType === 'Per move' || chargeType === 'Per hour') ? chargeType : 'Per hour';
+                    const amount = computeBafAmount(rate, hours, type);
                     $body.append(`
-                        <tr data-ticket-id="${id}" data-hours="${hours}" data-charge-type="${chargeType}">
+                        <tr data-ticket-id="${id}" data-hours="${hours}" data-charge-type="${type}">
                             <td class="font-bold">${dispatchNo}</td>
                             <td class="text-center">${Number(hours).toFixed(2)}</td>
+                            <td class="text-center">
+                                <select name="BafChargeTypes[${id}]" class="baf-charge-type" style="width: 100px; border: none; background: transparent; box-shadow: none; padding: 6px 8px;">
+                                    <option value="Per move" ${type === 'Per move' ? 'selected' : ''}>Per Move</option>
+                                    <option value="Per hour" ${type === 'Per hour' ? 'selected' : ''}>Per Hour</option>
+                                </select>
+                            </td>
                             <td class="text-right">
-                                <input type="number" name="BafRates[${id}]" class="baf-rate-input" step="0.01" min="0" value="${Number(rate).toFixed(2)}" style="width: 100%; border: none; background: transparent; box-shadow: none; padding: 6px 8px; text-align: right;">
+                                <input type="number" name="BafRates[${id}]" class="baf-rate-input" step="0.01" min="0" value="${Number(rate).toFixed(2)}" style="width: 100%;">
                             </td>
                             <td class="text-right font-bold baf-amt-cell">₱${formatNumber(amount)}</td>
                         </tr>
                     `);
                 });
                 if (!$body.find('tr').length) {
-                    $body.html('<tr><td colspan="4" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td></tr>');
+                    $body.html('<tr><td colspan="5" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td></tr>');
                 }
                 updateTotals();
             }
 
-            $("#bafTableBody").on('change', '.baf-rate-input', function () {
-                const $row = $(this).closest('tr');
+            function applyBafRow($row, rate, chargeType) {
                 const id = $row.data('ticket-id');
-                const rate = $(this).val();
-                const amount = computeBafAmount(rate, $row.data('hours'), $row.data('charge-type'));
+                const amount = computeBafAmount(rate, $row.data('hours'), chargeType);
+                // ponytail: use .data() not .attr() — updateTotals() reads .data('baf-amount'),
+                // and .attr() never refreshes jQuery's cached data value
+                $row.data('charge-type', chargeType);
                 $row.find('.baf-amt-cell').text('₱' + formatNumber(amount));
                 const $ticketRow = $ticketsTableBody.find(`tr[data-ticket-id="${id}"]`);
-                $ticketRow.attr('data-baf-amount', amount);
+                $ticketRow.data('baf-amount', amount);
                 $ticketRow.find('.baf-rate-cell').text(formatNumber(rate));
                 $ticketRow.find('.baf-amt-cell').text('₱' + formatNumber(amount));
                 updateTotals();
+            }
+
+            $("#bafTableBody").on('input', '.baf-rate-input', function () {
+                const $row = $(this).closest('tr');
+                applyBafRow($row, $(this).val(), $row.data('charge-type'));
+            });
+
+            $("#bafTableBody").on('change', '.baf-charge-type', function () {
+                const $row = $(this).closest('tr');
+                applyBafRow($row, $row.find('.baf-rate-input').val(), $(this).val());
             });
 
             function updateTotals() {
                 let dispatch = 0, baf = 0;
                 $ticketsTableBody.find('.ticket-checkbox:checked').each(function () {
                     const $row = $(this).closest('tr');
-                    dispatch += parseFloat($row.data('dispatch-amount')) || 0;
-                    baf += parseFloat($row.data('baf-amount')) || 0;
+                    const rowDispatch = parseFloat($row.data('dispatch-amount')) || 0;
+                    const rowBaf = parseFloat($row.data('baf-amount')) || 0;
+                    dispatch += rowDispatch;
+                    baf += rowBaf;
+                    $row.find('td').eq(10).text('₱' + formatNumber(rowDispatch + rowBaf));
                 });
 
                 const isVatable = $("#isVatableToggle").is(":checked");

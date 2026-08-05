@@ -158,6 +158,9 @@ namespace IBS.Models.MSAP
         public Dictionary<int, decimal> BafRates { get; set; } = new();
 
         [NotMapped]
+        public Dictionary<int, string> BafChargeTypes { get; set; } = new();
+
+        [NotMapped]
         public List<DispatchTicket>? PaidDispatchTickets { get; set; }
 
         public int? JobOrderId { get; set; }

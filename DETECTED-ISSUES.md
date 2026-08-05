@@ -5,6 +5,7 @@ Severity: `high` = likely bug, `med` = smells/tech debt, `low` = cosmetic/incons
 Format: `[date] [severity] file:line — description (session context)`. Fix when a task touches the file; otherwise leave for a dedicated pass.
 
 ## 2026-08-05
+- `med` IBS.Tests/Services/{BillingServiceTests,LegacyBillingTests,TaxAnalysisTests}.cs — all tests fail in the class constructor at `new Mock<JobOrderService>(...)` (verified failing on a clean checkout, unrelated to the BAF charge-type work). JobOrderService likely gained members the direct `Mock<JobOrderService>` can't proxy. Fix when a task touches these tests.
 - `low` IBSWeb/Areas/User/Controllers/MsapImportController.cs:1828 — `ComputeTotalHours` has no 1-hour minimum (rounds up only when fractional >= 0.75). (Session: 1h-min hours change)
 
 ## (resolved)

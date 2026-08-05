@@ -161,7 +161,10 @@ namespace IBS.Services
 
                     if (model.BafRates != null && model.BafRates.TryGetValue(dt.DispatchTicketId, out var bafRate))
                     {
-                        await ApplyBafRateAsync(dt, bafRate, username, cancellationToken);
+                        var chargeType = model.BafChargeTypes != null && model.BafChargeTypes.TryGetValue(dt.DispatchTicketId, out var ct)
+                            ? ct
+                            : null;
+                        await ApplyBafRateAsync(dt, bafRate, chargeType, username, cancellationToken);
                     }
 
                     total += dt.TotalNetRevenue;
@@ -189,14 +192,21 @@ namespace IBS.Services
             }
         }
 
-        private async Task ApplyBafRateAsync(DispatchTicket dt, decimal newRate, string username, CancellationToken cancellationToken)
+        private async Task ApplyBafRateAsync(DispatchTicket dt, decimal newRate, string? chargeType, string username, CancellationToken cancellationToken)
         {
-            if (dt.BAFRate == newRate)
+            var rateChanged = dt.BAFRate != newRate;
+            var typeChanged = !string.IsNullOrWhiteSpace(chargeType) && dt.BAFChargeType != chargeType;
+            if (!rateChanged && !typeChanged)
             {
                 return;
             }
 
             var oldRate = dt.BAFRate;
+            if (typeChanged)
+            {
+                dt.BAFChargeType = chargeType;
+            }
+
             var hours = Math.Round(dt.TotalHours, 2);
             var discountAmount = newRate * (dt.BAFDiscount / 100);
             var perHour = dt.BAFChargeType == "Per hour";
@@ -209,8 +219,9 @@ namespace IBS.Services
             dt.TotalBilling = Math.Round(dt.DispatchBillingAmount + dt.BAFBillingAmount, 2);
             dt.TotalNetRevenue = Math.Round(dt.DispatchNetRevenue + dt.BAFNetRevenue, 2);
 
+            var typeDesc = typeChanged ? $" ({dt.BAFChargeType})" : string.Empty;
             await unitOfWork.AuditTrail.AddAsync(
-                new AuditTrail(username, $"BAF rate adjusted during billing on #{dt.DispatchNumber}: {oldRate:N2} → {newRate:N2}", "Billing", dt.DispatchTicketId, dt.DispatchNumber),
+                new AuditTrail(username, $"BAF rate adjusted during billing on #{dt.DispatchNumber}: {oldRate:N2} → {newRate:N2}{typeDesc}", "Billing", dt.DispatchTicketId, dt.DispatchNumber),
                 cancellationToken);
         }
 
@@ -468,7 +479,7 @@ namespace IBS.Services
 
                         if (model.BafRates != null && model.BafRates.TryGetValue(dt.DispatchTicketId, out var bafRate))
                         {
-                            await ApplyBafRateAsync(dt, bafRate, username, cancellationToken);
+                            await ApplyBafRateAsync(dt, bafRate, null, username, cancellationToken);
                         }
 
                         total += dt.TotalNetRevenue;
@@ -882,7 +893,7 @@ namespace IBS.Services
 
                     if (model.BafRates != null && model.BafRates.TryGetValue(dt.DispatchTicketId, out var bafRate))
                     {
-                        await ApplyBafRateAsync(dt, bafRate, username, cancellationToken);
+                        await ApplyBafRateAsync(dt, bafRate, null, username, cancellationToken);
                     }
 
                     dispatch += dt.DispatchNetRevenue;
