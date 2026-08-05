@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-08-05]
+### Changed
+- **Dispatch Ticket hours floor raised 0.5h → 1h** — `CreateDispatchTicketAsync` and `UpdateDispatchTicketAsync` now use `Math.Max(duration, 1m)` so any sub-1-hour ticket bills a minimum of 1 hour (fractional durations above 1h unchanged). Same 1h floor applied to legacy `ServiceRequestController` create/edit. Added `CreateDispatchTicketAsync_MinimumHoursIsOne` test. (`IBS.Services/DispatchTicketService.cs`, `IBSWeb/Areas/User/Controllers/ServiceRequestController.cs`, `IBS.Tests/Services/DispatchTicketServiceTests.cs`)
+
 ## [2026-08-04]
 ### Changed
 - **Per-ticket BAF adjustment on Billing (Create + Edit)** — Tickets table split `NET AMOUNT` into `DISPATCH RATE | DISPATCH AMT | BAF RATE | BAF AMT | TOTAL` and added a `PORT/TERMINAL` column. New "BAF Adjustment" table below lists selected tickets with an editable `BAF RATE` input; edits live-update the row BAF amount, the tickets table, and the financial summary. On submit the entered `BafRates[ticketId]` values are written back to each ticket (`BAFBillingAmount` = rate×hours when `Per hour` else rate, `BAFNetRevenue` = gross×(1−discount%), `TotalBilling`/`TotalNetRevenue` recomputed) with an audit-trail entry per adjusted ticket, before the existing create/edit summing runs — so downstream create/edit logic is untouched. Removed the "AP Other Tug" field (view inputs, `[Bind]` lists, service assignments; DB column kept). `JobOrderTicketDto` gained `DispatchRate`/`BAFRate`/`BAFDiscount`/`BAFChargeType`/`Port`/`Terminal`; `GetJobOrderWithDetailsAsync` eager-loads `Terminal.Port`; `Billing` gained `[NotMapped] Dictionary<int,decimal> BafRates`. PHIL-CEB split path also applies entered BAF rates. (`JobOrderBillingDto.cs`, `JobOrderRepository.cs`, `Billing.cs`, `BillingService.cs`, `BillingController.cs`, `Billing/{Create,Edit}.cshtml`)

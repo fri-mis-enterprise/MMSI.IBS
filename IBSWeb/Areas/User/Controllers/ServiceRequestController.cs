@@ -117,7 +117,7 @@ namespace IBSWeb.Areas.User.Controllers
                         var dateTimeLeft = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
                         var dateTimeArrived = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
                         var timeDifference = dateTimeArrived - dateTimeLeft;
-                        model.TotalHours = Math.Round((decimal)timeDifference.TotalHours,
+                        model.TotalHours = Math.Round(Math.Max((decimal)timeDifference.TotalHours, 1m),
                             2);
                     }
                     else
@@ -266,7 +266,7 @@ namespace IBSWeb.Areas.User.Controllers
                         var dateTimeLeft = incoming.DateLeft.Value.ToDateTime(incoming.TimeLeft.Value);
                         var dateTimeArrived = incoming.DateArrived.Value.ToDateTime(incoming.TimeArrived.Value);
                         var timeDifference = dateTimeArrived - dateTimeLeft;
-                        incoming.TotalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
+                        incoming.TotalHours = Math.Round(Math.Max((decimal)timeDifference.TotalHours, 1m), 2);
                     }
                     else
                     {

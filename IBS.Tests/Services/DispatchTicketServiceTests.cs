@@ -80,6 +80,37 @@ namespace IBS.Tests.Services
         }
 
         [Fact]
+        public async Task CreateDispatchTicketAsync_MinimumHoursIsOne()
+        {
+            // Arrange
+            var viewModel = new ServiceRequestViewModel
+            {
+                JobOrderId = 1,
+                DateLeft = new DateOnly(2026, 5, 22),
+                TimeLeft = new TimeOnly(8, 0),
+                DateArrived = new DateOnly(2026, 5, 22),
+                TimeArrived = new TimeOnly(8, 30), // 0.5 hours
+                DispatchNumber = "DT-002"
+            };
+
+            _mockTicketRepo.Setup(u => u.IsJobOrderEditableAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            var jobOrder = new JobOrder { JobOrderId = 1, Status = SD.JobOrderStatus.Open };
+            _mockJobOrderRepo.Setup(u => u.GetJobOrderWithDetailsAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(jobOrder);
+
+            // Act
+            var result = await _service.CreateDispatchTicketAsync(viewModel, null, null, "user", CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            _mockTicketRepo.Verify(u => u.AddAsync(It.Is<DispatchTicket>(dt =>
+                dt.TotalHours == 1m),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
         public async Task CreateDispatchTicketAsync_Fails_IfArrivalBeforeDeparture()
         {
             // Arrange

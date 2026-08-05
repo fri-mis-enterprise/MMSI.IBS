@@ -120,7 +120,7 @@ namespace IBS.Services
 
                     model.Status = SD.DispatchTicketStatus.ForTariff;
                     var duration = (decimal)(end - start).TotalHours;
-                    model.TotalHours = Math.Round(Math.Max(duration, 0.5m), 2);
+                    model.TotalHours = Math.Round(Math.Max(duration, 1m), 2);
                 }
                 else
                 {
@@ -216,7 +216,7 @@ namespace IBS.Services
                         return ServiceResult.Failure("Date/Time Left cannot be later than Date/Time Arrived!");
                     }
 
-                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 0.5m), 2);
+                    var newTotalHours = Math.Round(Math.Max((decimal)(arrival - departure).TotalHours, 1m), 2);
                     AddChange("TotalHours", originalTotalHours, newTotalHours);
                     currentModel.TotalHours = newTotalHours;
                 }
