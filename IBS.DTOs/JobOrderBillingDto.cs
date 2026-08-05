@@ -32,8 +32,14 @@ namespace IBS.DTOs
         public string Tugboat { get; set; } = string.Empty;
         public string Service { get; set; } = string.Empty;
         public decimal Duration { get; set; }
+        public decimal DispatchRate { get; set; }
         public decimal DispatchAmount { get; set; }
+        public decimal BAFRate { get; set; }
+        public decimal BAFDiscount { get; set; }
+        public string BAFChargeType { get; set; } = string.Empty;
         public decimal BAFAmount { get; set; }
         public decimal TotalAmount { get; set; }
+        public string? Port { get; set; }
+        public string? Terminal { get; set; }
     }
 }

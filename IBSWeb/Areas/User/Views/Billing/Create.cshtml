@@ -208,10 +208,6 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="modern-label">AP Other Tug</label>
-                                    <input asp-for="ApOtherTug" step="0.01" type="number" class="modern-input" min="0" placeholder="0.00">
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -260,18 +256,48 @@
                                             <th>TUGBOAT</th>
                                             <th>SERVICE</th>
                                             <th class="text-center">HOURS</th>
-                                            <th class="text-right">NET AMOUNT</th>
+                                            <th class="text-right">DISPATCH RATE</th>
+                                            <th class="text-right">DISPATCH AMT</th>
+                                            <th class="text-right">BAF RATE</th>
+                                            <th class="text-right">BAF AMT</th>
+                                            <th>PORT/TERMINAL</th>
+                                            <th class="text-right">TOTAL</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr class="text-muted">
-                                            <td colspan="6" class="text-center py-5">
+                                            <td colspan="11" class="text-center py-5">
                                                 <span class="material-symbols-outlined opacity-20" style="font-size: 48px;">info</span>
                                                 <p class="mt-2">Please select a customer first to load available Job Orders.</p>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <!-- BAF Adjustment Table (editable per selected ticket) -->
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="modern-label mb-0">BAF Adjustment (per ticket)</label>
+                                    <span class="text-xs opacity-60">Editable BAF rate applies to selected tickets above.</span>
+                                </div>
+                                <div class="modern-table-container border border-outline-variant">
+                                    <table id="bafTable" class="modern-table">
+                                        <thead>
+                                            <tr>
+                                                <th>DISPATCH #</th>
+                                                <th class="text-center">HOURS</th>
+                                                <th class="text-right">BAF RATE</th>
+                                                <th class="text-right">BAF AMOUNT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="bafTableBody">
+                                            <tr class="text-muted">
+                                                <td colspan="4" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             <!-- Hidden select for form submission -->
@@ -421,26 +447,28 @@
                 } else {
                     $("#jobOrderSearchContainer").show();
                     $("#legacyNotice").hide();
-                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
+                    $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
                     $dispatchSelect.empty();
                     $("#selectAllTickets").prop("disabled", true);
-                    updateTotals();
+                    rebuildBafTable();
                 }
             }
 
             async function fetchTicketsByCustomer() {
                 if (!currentCustomerId) return;
-                $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Loading tickets...</td></tr>');
+                $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Loading tickets...</td></tr>');
                 try {
                     const res = await fetch(`@Url.Action("GetDispatchTicketsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
                     const response = await res.json();
                     if (response.success) {
                         renderTicketsTable(response.tickets, false);
                     } else {
-                        $ticketsTableBody.html(`<tr><td colspan="6" class="text-center py-5 text-error">${response.message}</td></tr>`);
+                        $ticketsTableBody.html(`<tr><td colspan="11" class="text-center py-5 text-error">${response.message}</td></tr>`);
+                        rebuildBafTable();
                     }
                 } catch {
-                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 text-error">Error loading tickets</td></tr>');
+                    $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5 text-error">Error loading tickets</td></tr>');
+                    rebuildBafTable();
                 }
             }
 
@@ -591,9 +619,9 @@
             $jobOrderSelect.on('change', async function () {
                 const joId = $(this).val();
                 if (!joId) {
-                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
+                    $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5 opacity-60 italic">Select a Job Order to view available tickets</td></tr>');
                     $dispatchSelect.empty();
-                    updateTotals();
+                    rebuildBafTable();
                     return;
                 }
                 try {
@@ -603,10 +631,12 @@
                         if (response.header) lockHeaderFields(response.header);
                         renderTicketsTable(response.tickets, true);
                     } else {
-                        $ticketsTableBody.html(`<tr><td colspan="6" class="text-center py-5 text-error">${response.message}</td></tr>`);
+                        $ticketsTableBody.html(`<tr><td colspan="11" class="text-center py-5 text-error">${response.message}</td></tr>`);
+                        rebuildBafTable();
                     }
                 } catch {
-                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 text-error">Error loading tickets</td></tr>');
+                    $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5 text-error">Error loading tickets</td></tr>');
+                    rebuildBafTable();
                 }
             });
 
@@ -617,13 +647,15 @@
                 $("#selectAllTickets").prop("disabled", false);
 
                 if (!tickets?.length) {
-                    $ticketsTableBody.html('<tr><td colspan="6" class="text-center py-5 opacity-60 italic">No tickets available for billing in this job order</td></tr>');
-                    updateTotals();
+                    $ticketsTableBody.html('<tr><td colspan="11" class="text-center py-5 opacity-60 italic">No tickets available for billing in this job order</td></tr>');
+                    rebuildBafTable();
                     return;
                 }
                 tickets.forEach(ticket => {
                     $ticketsTableBody.append(`
-                        <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}">
+                        <tr data-ticket-id="${ticket.dispatchTicketId}" data-dispatch-amount="${ticket.dispatchAmount}" data-baf-amount="${ticket.bafAmount}"
+                            data-dispatch-rate="${ticket.dispatchRate}" data-baf-rate="${ticket.bafRate}" data-hours="${ticket.duration}"
+                            data-baf-charge-type="${ticket.bafChargeType}">
                             <td class="text-center">
                                 <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked 
                                     style="width: 18px; height: 18px; cursor: pointer;">
@@ -632,12 +664,17 @@
                             <td>${ticket.tugboat}</td>
                             <td>${ticket.service}</td>
                             <td class="text-center">${ticket.duration.toFixed(2)}</td>
+                            <td class="text-right">${formatNumber(ticket.dispatchRate)}</td>
+                            <td class="text-right font-bold">₱${formatNumber(ticket.dispatchAmount)}</td>
+                            <td class="text-right baf-rate-cell">${formatNumber(ticket.bafRate)}</td>
+                            <td class="text-right baf-amt-cell">₱${formatNumber(ticket.bafAmount)}</td>
+                            <td>${(ticket.port || '-')} / ${(ticket.terminal || '-')}</td>
                             <td class="text-right font-bold">₱${formatNumber(ticket.totalAmount)}</td>
                         </tr>
                     `);
                     $dispatchSelect.append($('<option>').val(ticket.dispatchTicketId).text(ticket.dispatchNo).prop('selected', true));
                 });
-                updateTotals();
+                rebuildBafTable();
                 $('#selectAllTickets').prop('checked', true);
             }
 
@@ -650,11 +687,58 @@
                 } else {
                     $option.prop('selected', false);
                 }
-                updateTotals();
+                rebuildBafTable();
             });
 
             $('#selectAllTickets').on('change', function () {
                 $ticketsTableBody.find('.ticket-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
+            });
+
+            function computeBafAmount(rate, hours, chargeType) {
+                const r = parseFloat(rate) || 0;
+                const h = parseFloat(hours) || 0;
+                return chargeType === 'Per hour' ? r * h : r;
+            }
+
+            function rebuildBafTable() {
+                const $body = $("#bafTableBody");
+                $body.empty();
+                $ticketsTableBody.find('.ticket-checkbox:checked').each(function () {
+                    const $ticketRow = $(this).closest('tr');
+                    const id = $ticketRow.data('ticket-id');
+                    const dispatchNo = $ticketRow.find('td').eq(1).text();
+                    const hours = $ticketRow.data('hours') || 0;
+                    const rate = $ticketRow.data('baf-rate') || 0;
+                    const chargeType = $ticketRow.data('baf-charge-type') || '';
+                    const amount = computeBafAmount(rate, hours, chargeType);
+                    $body.append(`
+                        <tr data-ticket-id="${id}" data-hours="${hours}" data-charge-type="${chargeType}">
+                            <td class="font-bold">${dispatchNo}</td>
+                            <td class="text-center">${Number(hours).toFixed(2)}</td>
+                            <td class="text-right">
+                                <input type="number" name="BafRates[${id}]" class="baf-rate-input" step="0.01" min="0" value="${Number(rate).toFixed(2)}" style="width: 100%; border: none; background: transparent; box-shadow: none; padding: 6px 8px; text-align: right;">
+                            </td>
+                            <td class="text-right font-bold baf-amt-cell">₱${formatNumber(amount)}</td>
+                        </tr>
+                    `);
+                });
+                if (!$body.find('tr').length) {
+                    $body.html('<tr><td colspan="4" class="text-center py-4 opacity-60 italic">Select tickets above to adjust their BAF.</td></tr>');
+                }
+                updateTotals();
+            }
+
+            $("#bafTableBody").on('change', '.baf-rate-input', function () {
+                const $row = $(this).closest('tr');
+                const id = $row.data('ticket-id');
+                const rate = $(this).val();
+                const amount = computeBafAmount(rate, $row.data('hours'), $row.data('charge-type'));
+                $row.find('.baf-amt-cell').text('₱' + formatNumber(amount));
+                const $ticketRow = $ticketsTableBody.find(`tr[data-ticket-id="${id}"]`);
+                $ticketRow.attr('data-baf-amount', amount);
+                $ticketRow.find('.baf-rate-cell').text(formatNumber(rate));
+                $ticketRow.find('.baf-amt-cell').text('₱' + formatNumber(amount));
+                updateTotals();
             });
 
             function updateTotals() {

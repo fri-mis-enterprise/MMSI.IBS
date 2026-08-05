@@ -46,6 +46,7 @@ namespace IBS.DataAccess.Repository.Msap
                     .ThenInclude(dt => dt.Service)
                 .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted))
                     .ThenInclude(dt => dt.Terminal)
+                    .ThenInclude(t => t.Port)
                 .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted))
                     .ThenInclude(dt => dt.Tugboat)
                 .Include(j => j.DispatchTickets.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted))

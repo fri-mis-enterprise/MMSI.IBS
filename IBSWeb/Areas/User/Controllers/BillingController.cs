@@ -69,7 +69,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateBilling, "Access denied. You don't have permission to create Billings.")]
-        public async Task<IActionResult> Create([Bind("CustomerId,PrincipalId,BilledTo,MsapBillingNumber,IsUndocumented,Date,VoyageNumber,COSNumber,PortId,TerminalId,VesselId,ApOtherTug,IsVatable,IsVatInclusive,PrintWht,JobOrderId,ToBillDispatchTickets")] Billing model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create([Bind("CustomerId,PrincipalId,BilledTo,MsapBillingNumber,IsUndocumented,Date,VoyageNumber,COSNumber,PortId,TerminalId,VesselId,IsVatable,IsVatInclusive,PrintWht,JobOrderId,ToBillDispatchTickets,BafRates")] Billing model, CancellationToken cancellationToken)
         {
             try
             {
@@ -151,7 +151,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.EditBilling, "Access denied. You don't have permission to edit Billings.")]
-        public async Task<IActionResult> Edit([Bind("MsapBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,ApOtherTug,JobOrderId,IsVatable,IsVatInclusive,PrintWht")] Billing model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit([Bind("MsapBillingId,Date,IsUndocumented,BilledTo,VoyageNumber,COSNumber,CustomerId,PrincipalId,VesselId,PortId,TerminalId,ToBillDispatchTickets,JobOrderId,IsVatable,IsVatInclusive,PrintWht,BafRates")] Billing model, IFormFile? file, CancellationToken cancellationToken)
         {
             try
             {
@@ -637,7 +637,7 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateBilling, "Access denied. You don't have permission to create Billings.")]
         public async Task<IActionResult> CreatePhilCebSplit(
-            [Bind("CustomerId,PrincipalId,BilledTo,MsapBillingNumber,Date,VoyageNumber,COSNumber,PortId,TerminalId,VesselId,ApOtherTug,IsVatable,IsVatInclusive,PrintWht,JobOrderId,ToBillDispatchTickets")] Billing model,
+            [Bind("CustomerId,PrincipalId,BilledTo,MsapBillingNumber,Date,VoyageNumber,COSNumber,PortId,TerminalId,VesselId,IsVatable,IsVatInclusive,PrintWht,JobOrderId,ToBillDispatchTickets,BafRates")] Billing model,
             string bafBillingNumber,
             CancellationToken cancellationToken)
         {

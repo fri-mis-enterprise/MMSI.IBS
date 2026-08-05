@@ -159,6 +159,11 @@ namespace IBS.Services
                         return ServiceResult<int>.Failure($"Ticket #{dt.DispatchNumber} does not belong to the selected Job Order.");
                     }
 
+                    if (model.BafRates != null && model.BafRates.TryGetValue(dt.DispatchTicketId, out var bafRate))
+                    {
+                        await ApplyBafRateAsync(dt, bafRate, username, cancellationToken);
+                    }
+
                     total += dt.TotalNetRevenue;
                     dispatch += dt.DispatchNetRevenue;
                     baf += dt.BAFNetRevenue;
@@ -182,6 +187,31 @@ namespace IBS.Services
                 logger.LogError(ex, "Failed to create billing.");
                 return ServiceResult<int>.Failure($"Failed to create billing: {ExceptionHelper.GetErrorMessage(ex)}");
             }
+        }
+
+        private async Task ApplyBafRateAsync(DispatchTicket dt, decimal newRate, string username, CancellationToken cancellationToken)
+        {
+            if (dt.BAFRate == newRate)
+            {
+                return;
+            }
+
+            var oldRate = dt.BAFRate;
+            var hours = Math.Round(dt.TotalHours, 2);
+            var discountAmount = newRate * (dt.BAFDiscount / 100);
+            var perHour = dt.BAFChargeType == "Per hour";
+            var bafBilling = perHour ? newRate * hours : newRate;
+            var bafRevenue = perHour ? (newRate - discountAmount) * hours : newRate - discountAmount;
+
+            dt.BAFRate = Math.Round(newRate, 2);
+            dt.BAFBillingAmount = Math.Round(bafBilling, 2);
+            dt.BAFNetRevenue = Math.Round(bafRevenue, 2);
+            dt.TotalBilling = Math.Round(dt.DispatchBillingAmount + dt.BAFBillingAmount, 2);
+            dt.TotalNetRevenue = Math.Round(dt.DispatchNetRevenue + dt.BAFNetRevenue, 2);
+
+            await unitOfWork.AuditTrail.AddAsync(
+                new AuditTrail(username, $"BAF rate adjusted during billing on #{dt.DispatchNumber}: {oldRate:N2} → {newRate:N2}", "Billing", dt.DispatchTicketId, dt.DispatchNumber),
+                cancellationToken);
         }
 
         public async Task<ServiceResult> PostBillingAsync(int id, string username, CancellationToken cancellationToken)
@@ -424,7 +454,6 @@ namespace IBS.Services
                 }
                 currentModel.IsVatInclusive = model.IsVatInclusive;
                 currentModel.PrintWht = model.PrintWht;
-                currentModel.ApOtherTug = model.ApOtherTug;
 
                 if (model.ToBillDispatchTickets != null)
                 {
@@ -435,6 +464,11 @@ namespace IBS.Services
                         if (dt == null)
                         {
                             return ServiceResult.Failure($"Dispatch ticket #{ticketIdStr} not found.");
+                        }
+
+                        if (model.BafRates != null && model.BafRates.TryGetValue(dt.DispatchTicketId, out var bafRate))
+                        {
+                            await ApplyBafRateAsync(dt, bafRate, username, cancellationToken);
                         }
 
                         total += dt.TotalNetRevenue;
@@ -632,9 +666,15 @@ namespace IBS.Services
                     Tugboat = t.Tugboat.TugboatName,
                     Service = t.Service.ServiceName,
                     Duration = t.TotalHours,
+                    DispatchRate = t.DispatchRate,
                     DispatchAmount = t.DispatchBillingAmount,
+                    BAFRate = t.BAFRate,
+                    BAFDiscount = t.BAFDiscount,
+                    BAFChargeType = t.BAFChargeType ?? string.Empty,
                     BAFAmount = t.BAFBillingAmount,
-                    TotalAmount = t.TotalBilling
+                    TotalAmount = t.TotalBilling,
+                    Port = t.Terminal?.Port?.PortName,
+                    Terminal = t.Terminal?.TerminalName
                 }).ToList();
 
             return ServiceResult<JobOrderBillingDto>.Success(new JobOrderBillingDto
@@ -667,9 +707,15 @@ namespace IBS.Services
                 Tugboat = t.Tugboat.TugboatName,
                 Service = t.Service.ServiceName,
                 Duration = t.TotalHours,
+                DispatchRate = t.DispatchRate,
                 DispatchAmount = t.DispatchBillingAmount,
+                BAFRate = t.BAFRate,
+                BAFDiscount = t.BAFDiscount,
+                BAFChargeType = t.BAFChargeType ?? string.Empty,
                 BAFAmount = t.BAFBillingAmount,
-                TotalAmount = t.TotalBilling
+                TotalAmount = t.TotalBilling,
+                Port = t.Terminal?.Port?.PortName,
+                Terminal = t.Terminal?.TerminalName
             }).ToList();
 
             return ServiceResult<JobOrderBillingDto>.Success(new JobOrderBillingDto
@@ -833,6 +879,12 @@ namespace IBS.Services
                     var dt = await unitOfWork.DispatchTicket.GetAsync(t => t.DispatchTicketId == int.Parse(idStr), cancellationToken);
                     if (dt == null)
                         return ServiceResult<(int, int)>.Failure($"Dispatch ticket #{idStr} not found.");
+
+                    if (model.BafRates != null && model.BafRates.TryGetValue(dt.DispatchTicketId, out var bafRate))
+                    {
+                        await ApplyBafRateAsync(dt, bafRate, username, cancellationToken);
+                    }
+
                     dispatch += dt.DispatchNetRevenue;
                     baf += dt.BAFNetRevenue;
                     ticketEntities.Add(dt);
@@ -859,7 +911,6 @@ namespace IBS.Services
                     IsVatable = model.IsVatable,
                     IsVatInclusive = model.IsVatInclusive,
                     PrintWht = model.PrintWht,
-                    ApOtherTug = model.ApOtherTug,
                     Terms = terms,
                     Company = company,
                     Status = SD.BillingStatus.ForPosting,
@@ -947,7 +998,6 @@ namespace IBS.Services
                     IsVatable = model.IsVatable,
                     IsVatInclusive = model.IsVatInclusive,
                     PrintWht = model.PrintWht,
-                    ApOtherTug = 0,
                     Terms = terms,
                     Company = company,
                     Status = SD.BillingStatus.ForPosting,
