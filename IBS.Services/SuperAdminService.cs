@@ -22,7 +22,7 @@ namespace IBS.Services
             nameof(BaseEntity.VoidedBy), nameof(BaseEntity.VoidedDate),
             nameof(BaseEntity.PostedBy), nameof(BaseEntity.PostedDate),
             "UnpostedBy", "UnpostedDate", "UnpostRemarks",
-            "JobOrderId", "JobOrder", "BillingId", "Billing",
+            "BillingId", "Billing",
             "CollectionId", "Collection", "CollectionNumber",
         ];
 
