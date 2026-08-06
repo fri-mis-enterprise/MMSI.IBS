@@ -346,7 +346,7 @@
             const $ticketsTableBody = $("#ticketsTable tbody");
             const $ticketInputs = $("#DispatchTicketInputs");
 
-            // ponytail: Lock/unlock JO-derived ModernSelect triggers (keeps native select enabled for form POST)
+            //  Lock/unlock JO-derived ModernSelect triggers (keeps native select enabled for form POST)
             function lockTrigger(id) {
                 $(id).next('.modern-select-container').find('.modern-select-trigger')
                     .css('pointer-events', 'none').removeAttr('tabindex').addClass('disabled');
@@ -367,7 +367,7 @@
                 </text>
             }
 
-            // ponytail: Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
+            //  Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
             function lockToggle(toggleId, locked) {
                 const $toggle = $(toggleId);
                 const $container = $toggle.closest('label');
@@ -392,7 +392,7 @@
                 $("#PortSelect").on("change", handlePortChange);
                 $("#legacyToggle").on("change", handleLegacyToggleChange);
                 $("#isVatableToggle").on("change", function () {
-                    // ponytail: Enable/disable VAT inclusive based on VAT status using lockToggle
+                    //  Enable/disable VAT inclusive based on VAT status using lockToggle
                     const isVatable = $(this).is(":checked");
                     if (!isVatable) {
                         $("#isVatInclusiveToggle").prop("checked", false);
@@ -427,7 +427,7 @@
                 if (!currentCustomerId) return;
                 const $btn = $("#loadLegacyTicketsBtn");
                 $btn.prop("disabled", true).text("LOADING...");
-                
+
                 try {
                     const res = await fetch(`@Url.Action("GetDispatchTicketsByCustomer", "Billing", new { area = "User" })?customerId=${encodeURIComponent(currentCustomerId)}`);
                     const response = await res.json();
@@ -474,7 +474,7 @@
                 }
             }
 
-            
+
             function fillDataOnStartup() {
                 const initialJobOrderId = '@Model.JobOrderId';
                 const initialJobOrderText = '@(ViewData["CurrentJobOrderNumber"] ?? "")';
@@ -514,8 +514,8 @@
                         }
                     }
                 });
-                
-                // ponytail: Initialize VAT and WHT toggles based on current status and customer profile defaults but keep them open for toggling
+
+                //  Initialize VAT and WHT toggles based on current status and customer profile defaults but keep them open for toggling
                 const isVatable = $("#isVatableToggle").is(":checked");
                 lockToggle("#isVatableToggle", false);
                 if (!isVatable) {
@@ -621,8 +621,8 @@
                             data-dispatch-rate="${ticket.dispatchRate}" data-baf-rate="${ticket.bafRate}" data-hours="${ticket.duration}"
                             data-baf-charge-type="${ticket.bafChargeType}">
                             <td class="text-center">
-                                <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked 
-                                    ${isReadOnly ? 'disabled' : ''} 
+                                <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked
+                                    ${isReadOnly ? 'disabled' : ''}
                                     style="width: 18px; height: 18px; cursor: pointer;">
                             </td>
                             <td class="font-bold">${ticket.dispatchNo}</td>
@@ -668,7 +668,7 @@
             function rebuildBafTable() {
                 const $body = $("#bafTableBody");
                 $body.empty();
-                // ponytail: use .prop('checked') — jQuery :checked excludes disabled (JO-linked) inputs
+                //  use .prop('checked') — jQuery :checked excludes disabled (JO-linked) inputs
                 $ticketsTableBody.find('.ticket-checkbox').each(function () {
                     if (!$(this).prop('checked')) return;
                     const $ticketRow = $(this).closest('tr');
@@ -715,14 +715,14 @@
                     dispatch += parseFloat($row.data('dispatch-amount')) || 0;
                     baf += parseFloat($row.data('baf-amount')) || 0;
                 });
-                
+
                 const isVatable = $("#isVatableToggle").is(":checked");
                 const isInclusive = $("#isVatInclusiveToggle").is(":checked");
                 const isWht = $("#printWhtToggle").is(":checked");
-                
+
                 let subTotal = dispatch + baf;
                 let grandTotal = subTotal;
-                
+
                 if (isVatable && !isInclusive) {
                     grandTotal = subTotal * 1.12;
                 }
@@ -766,11 +766,11 @@
                     ModernAlert.alert("No Tickets Selected", "Please select at least one dispatch ticket to bill.", "warning");
                     return;
                 }
-                ModernAlert.confirm({ 
-                    title: "Save changes?", 
-                    text: "Proceed with updating this billing?", 
-                    icon: "question", 
-                    confirmText: "Yes, save" 
+                ModernAlert.confirm({
+                    title: "Save changes?",
+                    text: "Proceed with updating this billing?",
+                    icon: "question",
+                    confirmText: "Yes, save"
                 }).then(result => { if (result.isConfirmed) submitEditForm(); });
             }
 

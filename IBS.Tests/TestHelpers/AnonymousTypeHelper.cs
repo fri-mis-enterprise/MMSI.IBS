@@ -1,6 +1,6 @@
 namespace IBS.Tests.TestHelpers
 {
-    // ponytail: centralized reflection for anonymous type access from service returns
+    //  centralized reflection for anonymous type access from service returns
     // replace with a named DTO in IBS.DTOs if these properties change often
     internal static class AnonymousTypeHelper
     {

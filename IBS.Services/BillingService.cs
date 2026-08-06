@@ -599,7 +599,7 @@ namespace IBS.Services
                     billing.UnpostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     billing.UnpostRemarks = remarks;
 
-                    // ponytail: GL contra entries skipped — GL module is still TODO
+                    //  GL contra entries skipped — GL module is still TODO
                     // When GL posting is fixed, create reverse entries here:
                     // Debit Credit (original) → Credit Debit (contra) with reference "REV-#{number}"
 

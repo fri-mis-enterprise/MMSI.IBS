@@ -533,7 +533,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return Json(new { success = false, message = "Invalid target status." });
             }
 
-            // ponytail: prevent transitions from terminal states
+            //  prevent transitions from terminal states
             if (model.Status is SD.DispatchTicketStatus.Billed or SD.DispatchTicketStatus.Deleted)
             {
                 return Json(new { success = false, message = "Cannot change status from a terminal state." });

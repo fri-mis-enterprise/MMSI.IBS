@@ -432,7 +432,7 @@ namespace IBS.Services
                 return items;
             }
 
-            // ponytail: reflection-based sort, switch to Expression if performance becomes an issue
+            //  reflection-based sort, switch to Expression if performance becomes an issue
             return sortDir == "desc"
                 ? items.OrderByDescending(e => prop.GetValue(e))
                 : items.OrderBy(e => prop.GetValue(e));

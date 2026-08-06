@@ -28,7 +28,7 @@
     #undocBadge:active {
         transform: translateY(0);
     }
-    /* ponytail: scoped to #bafTable — .modern-table forces text-align:left !important, so utility classes need re-forcing here */
+    /*  scoped to #bafTable — .modern-table forces text-align:left !important, so utility classes need re-forcing here */
     #bafTable th.text-right,
     #bafTable td.text-right,
     #bafTable .baf-rate-input {
@@ -364,11 +364,11 @@
             let currentCustomerId = null;
             let currentCustomer = null;
             let currentPrincipal = null;
-            let currentTerminalName = null; // ponytail: track for PHIL-CEB split detection
+            let currentTerminalName = null; //  track for PHIL-CEB split detection
             setupEventListeners();
             handleCheckboxChange();
-            
-            // ponytail: Lock/unlock JO-derived selects (ModernSelect trigger) while keeping native select enabled for form POST
+
+            //  Lock/unlock JO-derived selects (ModernSelect trigger) while keeping native select enabled for form POST
             function lockSelect(id, val) {
                 $(id).val(val).trigger('change');
                 $(id).next('.modern-select-container').find('.modern-select-trigger')
@@ -402,7 +402,7 @@
                 unlockSelect('#VesselId');
             }
 
-            // ponytail: Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
+            //  Helper to lock/unlock toggles visually and interactively while keeping them enabled for form POST
             function lockToggle(toggleId, locked) {
                 const $toggle = $(toggleId);
                 const $container = $toggle.closest('label');
@@ -419,7 +419,7 @@
                 }
             }
 
-            // ponytail: Initialize VAT inclusive checkbox state
+            //  Initialize VAT inclusive checkbox state
             lockToggle("#isVatInclusiveToggle", !$("#isVatableToggle").is(":checked"));
 
             function setupEventListeners() {
@@ -434,7 +434,7 @@
                 });
                 $("#legacyToggle").on("change", handleLegacyToggleChange);
                 $("#isVatableToggle").on("change", function () {
-                    // ponytail: Enable/disable VAT inclusive based on VAT status using lockToggle
+                    //  Enable/disable VAT inclusive based on VAT status using lockToggle
                     const isVatable = $(this).is(":checked");
                     if (!isVatable) {
                         $("#isVatInclusiveToggle").prop("checked", false);
@@ -544,7 +544,7 @@
                         data.forEach(p => $select.append($('<option>').val(p.value).text(p.name).data('principal', p)));
                     }
                     $select.trigger('change');
-                    // ponytail: Open the principal dropdown after populating
+                    //  Open the principal dropdown after populating
                     setTimeout(() => $select.next('.modern-select-container').find('.modern-select-trigger').focus(), 100);
                 } catch {
                     console.error('Failed to load principals');
@@ -584,8 +584,8 @@
 
                 const isVatable = customer.vatType === "Vatable";
                 $("#isVatableToggle").prop("checked", isVatable);
-                
-                // ponytail: Default VAT status, inclusive, and WHT based on customer profile but keep them open for toggling
+
+                //  Default VAT status, inclusive, and WHT based on customer profile but keep them open for toggling
                 lockToggle("#isVatableToggle", false);
                 if (!isVatable) {
                     $("#isVatInclusiveToggle").prop("checked", false);
@@ -597,7 +597,7 @@
                 $("#printWhtToggle").prop("checked", customer.withholdingTax);
                 lockToggle("#printWhtToggle", false);
 
-                // ponytail: Show principal container but never auto-check; user decides
+                //  Show principal container but never auto-check; user decides
                 if (customer.hasPrincipal) {
                     $("#PrincipalMasterContainer").show();
                 } else {
@@ -674,7 +674,7 @@
                             data-dispatch-rate="${ticket.dispatchRate}" data-baf-rate="${ticket.bafRate}" data-hours="${ticket.duration}"
                             data-baf-charge-type="${ticket.bafChargeType}">
                             <td class="text-center">
-                                <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked 
+                                <input type="checkbox" class="form-check-input ticket-checkbox" value="${ticket.dispatchTicketId}" checked
                                     style="width: 18px; height: 18px; cursor: pointer;">
                             </td>
                             <td class="font-bold">${ticket.dispatchNo}</td>
@@ -755,7 +755,7 @@
             function applyBafRow($row, rate, chargeType) {
                 const id = $row.data('ticket-id');
                 const amount = computeBafAmount(rate, $row.data('hours'), chargeType);
-                // ponytail: use .data() not .attr() — updateTotals() reads .data('baf-amount'),
+                //  use .data() not .attr() — updateTotals() reads .data('baf-amount'),
                 // and .attr() never refreshes jQuery's cached data value
                 $row.data('charge-type', chargeType);
                 $row.find('.baf-amt-cell').text('₱' + formatNumber(amount));
@@ -819,7 +819,7 @@
                     }
                     return;
                 }
-                // ponytail: store principal data as data-principal on the option
+                //  store principal data as data-principal on the option
                 const principal = $option.data('principal');
                 if (principal) {
                     currentPrincipal = principal;
@@ -872,14 +872,14 @@
                     return;
                 }
 
-                ModernAlert.confirm({ 
-                    title: "Submit Billing?", 
-                    text: "Review all details before proceeding.", 
-                    confirmText: "Yes, submit" 
+                ModernAlert.confirm({
+                    title: "Submit Billing?",
+                    text: "Review all details before proceeding.",
+                    confirmText: "Yes, submit"
                 }).then(result => { if (result.isConfirmed) submitCreateForm(); });
             }
 
-            // ponytail: PHIL-CEB split — prompt user for BAF billing number with dup check
+            //  PHIL-CEB split — prompt user for BAF billing number with dup check
             function promptBafBillingNumber(errorMsg) {
                 ModernAlert.prompt({
                     title: 'BAF Billing Number',
