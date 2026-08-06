@@ -80,7 +80,7 @@
                                 <p class="modern-value-md">@(Model.VoyageNumber ?? "-")</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3" style="border-top: 1px solid var(--outline-variant); padding-top: 1rem; background-color: var(--surface-container-low); padding: 0.75rem; border-radius: var(--radius-xl);">
+                        <div class="flex items-center gap-3" style="border-top: 1px solid var(--outline-variant); background-color: var(--surface-container-low); padding: 0.75rem; border-radius: var(--radius-xl);">
                             <span class="material-symbols-outlined" style="color: var(--on-surface-variant)">calendar_month</span>
                             <div>
                                 <p class="modern-label font-bold">Planned Schedule</p>
@@ -117,7 +117,7 @@
                             <span class="material-symbols-outlined text-primary">list_alt</span>
                             <h2 class="modern-headline-md">Dispatch Tickets</h2>
                         </div>
-                        @if (ViewBag.CanCreateDispatchTicket == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && !Model.DispatchTickets.Any(t => t.Status == SD.DispatchTicketStatus.Billed))
+                        @if (ViewBag.CanCreateDispatchTicket == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && Model.DispatchTickets.All(t => t.Status != SD.DispatchTicketStatus.Billed))
                         {
                             <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
                                 <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
@@ -211,7 +211,7 @@
                                         <td class="text-right">@ticket.TotalHours.ToString("N2")</td>
                                         <td class="text-right font-bold text-primary">@ticket.TotalBilling.ToString("N2")</td>
                                         <td>
-                                            <span class="modern-badge-sm @(getStatusBadgeClass(ticket.Status))">@ticket.Status</span>
+                                            <span class="modern-badge-sm @(GetStatusBadgeClass(ticket.Status))">@ticket.Status</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="relative inline-block text-left dropdown-container">
@@ -385,7 +385,7 @@
 </div>
 
 @functions {
-    string getStatusBadgeClass(string status) {
+    string GetStatusBadgeClass(string status) {
         return status switch {
             "For Tariff" => "status-tariff",
             "For Approval" => "status-approval",
@@ -462,14 +462,6 @@
         };
 
         $(document).ready(function () {
-            let table = $('.modern-table').DataTable({
-                responsive: false,
-                paging: false,
-                searching: false,
-                info: false,
-                ordering: false,
-                dom: '<"modern-table-container"t>'
-            });
             $(document).on('click', '.dropdown-trigger', function(e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -732,7 +724,7 @@
             });
         }
 
-        function confirmPostRequest(id, jobOrderId) {
+        function confirmPostRequest(id) {
             ModernAlert.confirm({
                 title: 'Post Service Request?',
                 text: 'This will mark the service request as ready for tariff.',

@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -43,7 +42,8 @@ namespace IBSWeb.Areas.User.Controllers
         private async Task PopulateJobOrdersList(ServiceRequestViewModel viewModel, CancellationToken cancellationToken)
         {
             var openJobOrders = await dbContext.MsapJobOrders
-                .Where(j => j.Status == SD.JobOrderStatus.Open)
+                .Where(j => j.Status == SD.JobOrderStatus.Open &&
+                            !dbContext.MsapBillings.Any(b => b.JobOrderId == j.JobOrderId && b.Status == SD.BillingStatus.ForPosting))
                 .Include(j => j.Vessel)
                 .Include(j => j.Customer)
                 .OrderByDescending(j => j.JobOrderNumber)
