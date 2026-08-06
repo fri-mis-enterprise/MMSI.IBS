@@ -253,35 +253,45 @@ namespace IBS.Services
             string? sortColumn, string? sortDir,
             CancellationToken ct)
         {
+            sortDir ??= "asc";
+
             switch (table)
             {
                 case "JobOrder":
                 {
                     System.Linq.Expressions.Expression<Func<JobOrder, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : j =>
-                        j.JobOrderNumber.Contains(search) || (j.Remarks != null && j.Remarks.Contains(search));
-                    var items = await unitOfWork.JobOrder.GetAllAsync(filter, ct);
-                    return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapJobOrder);
+                        j.JobOrderNumber.Contains(search) ||
+                        (j.COSNumber != null && j.COSNumber.Contains(search)) ||
+                        (j.VoyageNumber != null && j.VoyageNumber.Contains(search)) ||
+                        (j.Remarks != null && j.Remarks.Contains(search));
+                    var (items, total) = await unitOfWork.JobOrder.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
+                    return (items.Select(MapJobOrder), total);
                 }
                 case "DispatchTicket":
                 {
                     System.Linq.Expressions.Expression<Func<DispatchTicket, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : d =>
-                        d.DispatchNumber.Contains(search) || (d.Remarks != null && d.Remarks.Contains(search));
-                    var items = await unitOfWork.DispatchTicket.GetAllAsync(filter, ct);
-                    return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapDispatchTicket);
+                        d.DispatchNumber.Contains(search) ||
+                        (d.Remarks != null && d.Remarks.Contains(search));
+                    var (items, total) = await unitOfWork.DispatchTicket.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
+                    return (items.Select(MapDispatchTicket), total);
                 }
                 case "Billing":
                 {
                     System.Linq.Expressions.Expression<Func<Billing, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : b =>
-                        b.MsapBillingNumber.Contains(search);
-                    var items = await unitOfWork.Billing.GetAllAsync(filter, ct);
-                    return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapBilling);
+                        b.MsapBillingNumber.Contains(search) ||
+                        (b.VoyageNumber != null && b.VoyageNumber.Contains(search)) ||
+                        (b.COSNumber != null && b.COSNumber.Contains(search));
+                    var (items, total) = await unitOfWork.Billing.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
+                    return (items.Select(MapBilling), total);
                 }
                 case "Collection":
                 {
                     System.Linq.Expressions.Expression<Func<Collection, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : c =>
-                        c.MsapCollectionNumber.Contains(search) || (c.Remarks != null && c.Remarks.Contains(search));
-                    var items = await unitOfWork.Collection.GetAllAsync(filter, ct);
-                    return QueryData(items, GetColumns(table), skip, take, search, sortColumn, sortDir, MapCollection);
+                        c.MsapCollectionNumber.Contains(search) ||
+                        (c.CheckNumber != null && c.CheckNumber.Contains(search)) ||
+                        (c.Remarks != null && c.Remarks.Contains(search));
+                    var (items, total) = await unitOfWork.Collection.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
+                    return (items.Select(MapCollection), total);
                 }
                 default:
                     return ([], 0);
@@ -388,55 +398,6 @@ namespace IBS.Services
         }
 
         // --- Private helpers ---
-
-        private static (IEnumerable<Dictionary<string, object?>> Data, int Total) QueryData<T>(
-            IEnumerable<T> items, List<TableColumnDef> columns,
-            int skip, int take, string? search,
-            string? sortColumn, string? sortDir,
-            Func<T, Dictionary<string, object?>> mapper)
-        {
-            var list = items.ToList();
-            var total = list.Count;
-
-            IEnumerable<T> filtered = list;
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.ToLower();
-                filtered = list.Where(e => columns
-                    .Any(c => (e?.GetType().GetProperty(c.Data)?.GetValue(e)?.ToString() ?? "")
-                        .Contains(s, StringComparison.CurrentCultureIgnoreCase)));
-            }
-
-            // Apply server-side sorting
-            var sorted = ApplySort(filtered, sortColumn, sortDir);
-
-            var data = sorted
-                .Skip(skip)
-                .Take(take)
-                .Select(mapper)
-                .ToList();
-
-            return (data, total);
-        }
-
-        private static IEnumerable<T> ApplySort<T>(IEnumerable<T> items, string? sortColumn, string? sortDir)
-        {
-            if (string.IsNullOrEmpty(sortColumn) || string.IsNullOrEmpty(sortDir))
-            {
-                return items;
-            }
-
-            var prop = typeof(T).GetProperty(sortColumn, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (prop == null)
-            {
-                return items;
-            }
-
-            //  reflection-based sort, switch to Expression if performance becomes an issue
-            return sortDir == "desc"
-                ? items.OrderByDescending(e => prop.GetValue(e))
-                : items.OrderBy(e => prop.GetValue(e));
-        }
 
         private async Task<ServiceResult> ApplyChangesAsync(
             object? entity, string? refVal,

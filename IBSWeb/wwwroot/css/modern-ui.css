@@ -450,6 +450,7 @@ table.dataTable tbody tr:hover {
 .status-tariff { background-color: var(--status-tariff); color: white; }
 .status-approval { background-color: var(--status-approval); color: white; }
 .status-closed { background-color: var(--status-closed); color: white; }
+.status-error { background-color: var(--error); color: white; }
 
 /* Sticky Footer - Responsive handling */
 .modern-sticky-footer {

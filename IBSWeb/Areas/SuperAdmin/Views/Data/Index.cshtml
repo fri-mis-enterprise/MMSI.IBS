@@ -52,8 +52,9 @@
                     <input type="hidden" id="editRecordId" />
                     <input type="hidden" id="editTableName" value="@tableName" />
 
-                    <div id="terminalStateWarning" class="alert alert-warning d-none">
-                        <strong>⚠️ Terminal State</strong> — This record is in a terminal state. Changes may have downstream impact.
+                    <div id="terminalStateWarning" class="d-none" style="display:flex; gap:0.5rem; align-items:flex-start; padding:0.75rem 1rem; border-radius:var(--radius-xl); background-color:var(--error-container); color:var(--on-error-container); font-size:0.85rem;">
+                        <span class="material-symbols-outlined" style="flex-shrink:0;">warning</span>
+                        <span><strong>Terminal State</strong> — This record is in a terminal state. Changes may have downstream impact.</span>
                     </div>
 
                     <div class="modern-grid" id="editFormFields">
@@ -95,21 +96,25 @@
         // ── Status badge colors ──
         function getStatusClass(status) {
             const map = {
-                'Open': 'badge-primary',
-                'Closed': 'badge-secondary',
-                'Draft': 'badge-secondary',
-                'Requested': 'badge-info',
-                'For Tariff': 'badge-warning',
-                'For Approval': 'badge-info',
-                'Disapproved': 'badge-error',
-                'For Billing': 'badge-info',
-                'Billed': 'badge-success',
-                'Deleted': 'badge-error',
-                'For Posting': 'badge-warning',
-                'For Collection': 'badge-info',
-                'Collected': 'badge-success',
+                'Open': 'status-open',
+                'Closed': 'status-closed',
+                'Draft': 'status-closed',
+                'Requested': 'status-approval',
+                'For Tariff': 'status-tariff',
+                'For Approval': 'status-approval',
+                'Disapproved': 'status-error',
+                'For Billing': 'status-billing',
+                'Billed': 'status-confirmed',
+                'Deleted': 'status-error',
+                'For Posting': 'status-tariff',
+                'For Collection': 'status-approval',
+                'Collected': 'status-confirmed',
             };
-            return map[status] || 'badge-secondary';
+            return map[status] || 'status-closed';
+        }
+
+        function errorNotice(msg) {
+            return '<div style="padding:0.75rem 1rem; border-radius:var(--radius-xl); background-color:var(--error-container); color:var(--on-error-container); font-size:0.85rem;">' + msg + '</div>';
         }
 
         // ── DataTable columns ──
@@ -168,9 +173,6 @@
                     return d;
                 }),
                 columns: buildColumns(),
-                scrollX: true,
-                scrollCollapse: true,
-                autoWidth: false,
                 order: [[0, 'desc']],
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
@@ -353,7 +355,7 @@
                 const result = await resp.json();
 
                 if (!result.success) {
-                    fieldsContainer.innerHTML = '<div class="modern-col-12"><div class="alert alert-error">' + result.message + '</div></div>';
+                    fieldsContainer.innerHTML = '<div class="modern-col-12">' + errorNotice(result.message) + '</div>';
                     return;
                 }
 
@@ -374,7 +376,7 @@
                 });
 
             } catch (err) {
-                fieldsContainer.innerHTML = '<div class="modern-col-12"><div class="alert alert-error">Failed to load record.</div></div>';
+                fieldsContainer.innerHTML = '<div class="modern-col-12">' + errorNotice('Failed to load record.') + '</div>';
             }
         }
 

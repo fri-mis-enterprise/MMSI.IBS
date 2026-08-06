@@ -31,6 +31,35 @@ namespace IBS.DataAccess.Repository
             return await query.ToListAsync(cancellationToken);
         }
 
+        public virtual async Task<(IEnumerable<T> Data, int Total)> GetPagedAsync(
+            Expression<Func<T, bool>>? filter,
+            string? orderBy, string orderDir, int skip, int take,
+            CancellationToken cancellationToken = default)
+        {
+            IQueryable<T> query = dbSet.AsNoTracking();
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            var total = await query.CountAsync(cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                var prop = typeof(T).GetProperty(orderBy, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+                if (prop != null)
+                {
+                    var name = char.ToUpper(orderBy[0]) + orderBy.Substring(1);
+                    query = orderDir == "desc"
+                        ? query.OrderByDescending(e => EF.Property<object>(e, name))
+                        : query.OrderBy(e => EF.Property<object>(e, name));
+                }
+            }
+
+            var data = await query.Skip(skip).Take(take).ToListAsync(cancellationToken);
+            return (data, total);
+        }
+
         public virtual async Task<T?> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter).FirstOrDefaultAsync(cancellationToken);

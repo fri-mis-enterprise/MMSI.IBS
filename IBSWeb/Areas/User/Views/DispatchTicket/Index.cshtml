@@ -30,7 +30,7 @@
             <button id="filterDisapproved" class="modern-btn-secondary">DISAPPROVED</button>
             <button id="filterForBilling" class="modern-btn-secondary">FOR BILLING</button>
             <button id="filterBilled" class="modern-btn-secondary">BILLED</button>
-            <button id="filterDeleted" class="modern-btn-secondary" style="color: var(--error); border-color: var(--error);">
+            <button id="filterDeleted" class="modern-btn-secondary modern-btn-error">
                 <span class="material-symbols-outlined" style="font-size:16px; vertical-align: middle;">delete</span> DELETED
             </button>
         </div>
@@ -79,6 +79,11 @@
         background-color: var(--primary);
         color: white;
         border-color: var(--primary);
+    }
+    .modern-btn-secondary.modern-btn-error.active {
+        background-color: var(--error);
+        color: white;
+        border-color: var(--error);
     }
 </style>
 

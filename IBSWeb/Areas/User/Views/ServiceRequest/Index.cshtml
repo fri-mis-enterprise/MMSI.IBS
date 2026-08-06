@@ -29,7 +29,7 @@
             <button id="filterAll" class="modern-btn-secondary active">ALL</button>
             <button id="filterRequested" class="modern-btn-secondary">REQUESTED</button>
             <button id="filterDraft" class="modern-btn-secondary">DRAFT</button>
-            <button id="filterDeleted" class="modern-btn-secondary" style="color: var(--on-surface-variant); border-color: var(--on-surface-variant);">
+            <button id="filterDeleted" class="modern-btn-secondary modern-btn-error">
                 <span class="material-symbols-outlined" style="font-size:16px; vertical-align: middle;">delete</span> DELETED
             </button>
         </div>
@@ -77,6 +77,11 @@
         background-color: var(--primary);
         color: white;
         border-color: var(--primary);
+    }
+    .modern-btn-secondary.modern-btn-error.active {
+        background-color: var(--error);
+        color: white;
+        border-color: var(--error);
     }
 </style>
 

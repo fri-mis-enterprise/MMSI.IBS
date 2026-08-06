@@ -16,8 +16,8 @@
             </p>
         </div>
 
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
+        <div class="modern-grid">
+            <div class="modern-col-4">
                 <a asp-action="Index" asp-controller="Data" asp-route-table="JobOrder" class="text-decoration-none">
                     <div class="modern-card modern-card-hover p-4">
                         <div class="flex items-center gap-3 mb-3">
@@ -27,12 +27,12 @@
                                 <small class="modern-label" style="color: var(--on-surface-variant)">View / Edit records</small>
                             </div>
                         </div>
-                        <span class="modern-badge-sm badge-info">Core Workflow</span>
+                        <span class="modern-badge-sm status-closed">Core Workflow</span>
                     </div>
                 </a>
             </div>
 
-            <div class="col-md-6 col-lg-3">
+            <div class="modern-col-4">
                 <a asp-action="Index" asp-controller="Data" asp-route-table="DispatchTicket" class="text-decoration-none">
                     <div class="modern-card modern-card-hover p-4">
                         <div class="flex items-center gap-3 mb-3">
@@ -42,12 +42,12 @@
                                 <small class="modern-label" style="color: var(--on-surface-variant)">View / Edit records</small>
                             </div>
                         </div>
-                        <span class="modern-badge-sm badge-info">Core Workflow</span>
+                        <span class="modern-badge-sm status-closed">Core Workflow</span>
                     </div>
                 </a>
             </div>
 
-            <div class="col-md-6 col-lg-3">
+            <div class="modern-col-4">
                 <a asp-action="Index" asp-controller="Data" asp-route-table="Billing" class="text-decoration-none">
                     <div class="modern-card modern-card-hover p-4">
                         <div class="flex items-center gap-3 mb-3">
@@ -57,12 +57,12 @@
                                 <small class="modern-label" style="color: var(--on-surface-variant)">View / Edit records</small>
                             </div>
                         </div>
-                        <span class="modern-badge-sm badge-info">Core Workflow</span>
+                        <span class="modern-badge-sm status-closed">Core Workflow</span>
                     </div>
                 </a>
             </div>
 
-            <div class="col-md-6 col-lg-3">
+            <div class="modern-col-4">
                 <a asp-action="Index" asp-controller="Data" asp-route-table="Collection" class="text-decoration-none">
                     <div class="modern-card modern-card-hover p-4">
                         <div class="flex items-center gap-3 mb-3">
@@ -72,15 +72,18 @@
                                 <small class="modern-label" style="color: var(--on-surface-variant)">View / Edit records</small>
                             </div>
                         </div>
-                        <span class="modern-badge-sm badge-info">Core Workflow</span>
+                        <span class="modern-badge-sm status-closed">Core Workflow</span>
                     </div>
                 </a>
             </div>
         </div>
 
         <div class="modern-card mt-4">
-            <div class="modern-card-header">
-                <h2 class="modern-headline-md">⚠️ Red Zone — Proceed with Caution</h2>
+            <div class="modern-card-header-action">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-error">warning</span>
+                    <h2 class="modern-headline-md mb-0">Red Zone — Proceed with Caution</h2>
+                </div>
             </div>
             <div class="modern-card-body">
                 <ul class="mb-0" style="color: var(--on-surface-variant);">

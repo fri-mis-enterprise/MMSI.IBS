@@ -4,6 +4,13 @@ Running log of issues spotted during file reads/sessions. Reverse-chronological.
 Severity: `high` = likely bug, `med` = smells/tech debt, `low` = cosmetic/inconsistency.
 Format: `[date] [severity] file:line — description (session context)`. Fix when a task touches the file; otherwise leave for a dedicated pass.
 
+## 2026-08-06
+- `low` IBSWeb/Areas/SuperAdmin/Views/Data/Index.cshtml (pre-fix) — `getStatusClass()` returned `badge-primary/badge-info/badge-error/...` classes that never existed anywhere (badges rendered colorless), `alert alert-error` was undefined, `modern-card-header` (Home) was undefined, and the DataTable's `scrollX: true` produced a phantom blank header `<tr>` (cloned scroll-head). All fixed this session.
+- `low` IBSWeb/Areas/User/Views/DispatchTicket/Index.cshtml:147 — used `status-error` badge class for Disapproved before `.status-error` existed (undefined in modern-ui.css) → rendered colorless. Fixed by adding `.status-error` to modern-ui.css this session.
+- `low` IBSWeb/Areas/SuperAdmin/Views/Data/Index.cshtml — server-side `TableColumnDef` only carries Data+Title (no render/type), so the `renderStatusBadge`/currency/boolean/date branches in `buildColumns()` are dead code; status columns render as plain text. Add render hints to the column defs if badges/₱-formatting are wanted in this screen.
+- `low` IBSWeb/Areas/SuperAdmin/Controllers/DataController.cs:102 — duplicates `IBS.Models.DataTablesParameters` instead of reusing the shared model.
+- `low` IBS.Services/SuperAdminService.cs (pre-fix) — GetDataAsync loaded the whole table (`GetAllAsync`→`ToListAsync`) and reflected over all rows in memory for filter/sort/paging. Replaced with SQL-side `GetPagedAsync` this session.
+
 ## 2026-08-05
 - `low` IBS.Tests/Services/{BillingServiceTests,LegacyBillingTests,TaxAnalysisTests}.cs — `new Mock<JobOrderService>(...)` failed because commit dbda443 ("accept rider suggestion") sealed the class & dropped `virtual` from `CreateJobOrderAsync`/`UpdateJobOrderAsync`/`TryAutoCloseAsync`. Tests only mock repo/IUnitOfWork seams elsewhere; sealing a non-interfaced domain service breaks mockability (only sealed service here, `MemoryCacheService`, is sealed because it has an interface). Decision: keep domain services non-sealed + virtual on stubbed methods.
 - `low` IBSWeb/Areas/User/Controllers/MsapImportController.cs:1828 — `ComputeTotalHours` has no 1-hour minimum (rounds up only when fractional >= 0.75). (Session: 1h-min hours change)
