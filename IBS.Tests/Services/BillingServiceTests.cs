@@ -317,9 +317,13 @@ namespace IBS.Tests.Services
             };
 
             var customer = new Customer { CustomerId = 10, CustomerName = "Legacy Customer" };
+            var vessel = new Vessel { VesselId = 1, VesselName = "Tug Titan" };
 
             _mockBillingRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Billing, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(billing);
             _mockCustomerRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Customer, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(customer);
+            _mockVesselRepo.Setup(u => u.GetAsync(It.IsAny<Expression<Func<Vessel, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(vessel);
+            _mockTicketRepo.Setup(u => u.GetAllAsync(It.IsAny<Expression<Func<DispatchTicket, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<DispatchTicket>());
             _mockBillingRepo.Setup(u => u.GetListOfAccountTitleDto(It.IsAny<CancellationToken>())).ReturnsAsync(new List<AccountTitleDto>
             {
                 new() { AccountNumber = SD.MsapAccounts.ArTrade, AccountId = 1 },

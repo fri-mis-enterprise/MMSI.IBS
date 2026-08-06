@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IBS.Services
 {
-    public sealed class JobOrderService(IUnitOfWork unitOfWork, ILogger<JobOrderService> logger)
+    public class JobOrderService(IUnitOfWork unitOfWork, ILogger<JobOrderService> logger)
     {
         public async Task<IEnumerable<JobOrder>> GetAllJobOrdersAsync(CancellationToken cancellationToken)
         {
@@ -62,7 +62,7 @@ namespace IBS.Services
             return viewModel;
         }
 
-        public async Task<ServiceResult<int>> CreateJobOrderAsync(JobOrder jobOrder, string username, CancellationToken cancellationToken)
+        public virtual async Task<ServiceResult<int>> CreateJobOrderAsync(JobOrder jobOrder, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken)
+        public virtual async Task<ServiceResult> UpdateJobOrderAsync(JobOrder model, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -224,7 +224,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task TryAutoCloseAsync(int jobOrderId, string username, CancellationToken cancellationToken)
+        public virtual async Task TryAutoCloseAsync(int jobOrderId, string username, CancellationToken cancellationToken)
         {
             try
             {

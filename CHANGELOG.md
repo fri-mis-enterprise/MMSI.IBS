@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-08-06]
+### Fixed
+- **`IBS.Tests` green again (34/34)** — `JobOrderService` had been written `sealed` + non-virtual in a Rider "formatting" commit (`dbda443`), breaking `Mock<JobOrderService>` in the ctor of 4 test classes (16 tests). Restored non-sealed + `virtual` on `CreateJobOrderAsync`/`UpdateJobOrderAsync`/`TryAutoCloseAsync` (matches every other imported `IUnitOfWork`-based domain service; no interface per no-single-impl rule). Also fixed `PostBillingAsync_PopulatesSalesBook_WithWht_LegacyData`: added the missing `Vessel` + empty ticket-list setups (the NRE inside the transaction had been hidden because the mock `ExecuteInTransactionAsync` returns a completed task and swallows callback exceptions). (`IBS.Services/JobOrderService.cs`, `IBS.Tests/Services/BillingServiceTests.cs`)
+
 ## [2026-08-05]
 ### Changed
 - **BAF charge type now switchable on Billing Create** — BAF Adjustment table gained a `TYPE` column (Per Move / Per Hour) per selected ticket, posted as `BafChargeTypes[ticketId]` (`Billing` gained `[NotMapped] Dictionary<int,string> BafChargeTypes`, added to Create `[Bind]`). Switching type or editing the rate updates the row BAF amount, the ticket-row BAF cells, the tickets-table TOTAL column, and the financial summary **live** (rate input now fires on `input`, not `change`). `ApplyBafRateAsync` now also applies a charge-type change (no longer early-returns when only the type changed; audit trail includes the new type). TOTAL column now always recomputes as dispatch + BAF instead of the stale server value. (`Billing.cs`, `BillingService.cs`, `BillingController.cs`, `Billing/Create.cshtml`)
