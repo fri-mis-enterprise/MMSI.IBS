@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-08-07]
+### Removed
+- **Test projects removed from solution** — `IBS.Tests` (xUnit/Moq) and `IBS.Tests.UI` (Playwright) deleted along with their entries in `MMSI.IBS.sln`. No automated tests remain. AGENTS.md updated to reflect the absence of tests.
+
 ## [2026-08-06]
 ### Changed
 - **SuperAdmin module brought onto modern UI + server-side paging** — All SuperAdmin views restyled to the standard modern pattern: Home dashboard uses `modern-grid`/`modern-col-4` card layout (was Bootstrap `row`/`col`), defined-but-missing badge classes (`badge-*`, `alert-error` never existed) replaced with real `status-*` classes and a themed `errorNotice()` helper, the raw `⚠️` emoji/undefined `modern-card-header` heading replaced with a `modern-card-header-action` + `warning` icon, and the phantom blank header row removed by dropping `scrollX`/`scrollCollapse`/`autoWidth` from the DataTable init (cloned scroll-head `<tr>` from `scrollX` no longer renders). Also added the missing `.status-error` CSS (was referenced by DispatchTicket Disapproved but never defined). (`SuperAdmin/Views/{Home,Data}/Index.cshtml`, `modern-ui.css`)

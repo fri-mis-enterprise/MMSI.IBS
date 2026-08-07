@@ -5,7 +5,7 @@
 ### Quick Reference & Environment
 
 * Build: dotnet build (TreatWarningsAsErrors on 6/8 projects). Only run when touching .cs/.csproj — .cshtml/js/css changes need no build; browser refresh is enough.
-* Tests: dotnet test IBS.Tests (xUnit/Moq) | dotnet test IBS.Tests.UI (Playwright)
+* Tests: None. Test projects (`IBS.Tests` xUnit/Moq, `IBS.Tests.UI` Playwright) were removed from the solution (2026-08-07). Do not reference `dotnet test` or re-add test scaffolding.
 * Environment: docker compose up (App :5001, DB :5002)
 * DB: localhost:5432, mmsi_ibs_dev, user postgres/mis123
 
