@@ -12,11 +12,9 @@ Format: `[date] [severity] file:line — description (session context)`. Fix whe
 - `low` IBS.Services/SuperAdminService.cs (pre-fix) — GetDataAsync loaded the whole table (`GetAllAsync`→`ToListAsync`) and reflected over all rows in memory for filter/sort/paging. Replaced with SQL-side `GetPagedAsync` this session.
 
 ## 2026-08-05
-- `low` IBS.Tests/Services/{BillingServiceTests,LegacyBillingTests,TaxAnalysisTests}.cs — `new Mock<JobOrderService>(...)` failed because commit dbda443 ("accept rider suggestion") sealed the class & dropped `virtual` from `CreateJobOrderAsync`/`UpdateJobOrderAsync`/`TryAutoCloseAsync`. Tests only mock repo/IUnitOfWork seams elsewhere; sealing a non-interfaced domain service breaks mockability (only sealed service here, `MemoryCacheService`, is sealed because it has an interface). Decision: keep domain services non-sealed + virtual on stubbed methods.
 - `low` IBSWeb/Areas/User/Controllers/MsapImportController.cs:1828 — `ComputeTotalHours` has no 1-hour minimum (rounds up only when fractional >= 0.75). (Session: 1h-min hours change)
 
 ## (resolved)
-- 2026-08-06 — IBS.Services/JobOrderService.cs + IBS.Tests/Services/{BillingServiceTests,LegacyBillingTests,TaxAnalysisTests}.cs + Controllers/JobOrderControllerTests.cs — reverted `sealed`, restored `virtual` (Create/Update/TryAutoClose) so `Mock<JobOrderService>` proxies again. Fixed `PostBillingAsync_PopulatesSalesBook_WithWht_LegacyData` (missing Vessel + empty ticket-list setups; NRE inside txn was swallowed by the mock `ExecuteInTransactionAsync` that returns a completed task). 34/34 tests pass.
 - 2026-08-05 — IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:120,269 — applied 1-hour minimum (`Math.Max(hours, 1m)`) to legacy SR create/edit TotalHours.
 
 ## 2026-08-04

@@ -47,15 +47,12 @@ customerName = GetString(record, "CUSTNAME");
 
 | File | Line | Code |
 |------|------|------|
-| `IBS.Tests.UI/PlaywrightTestBase.cs` | 242 | `catch { }` — bare empty, SweetAlert dismiss |
-| `IBS.Tests.UI/PlaywrightTestBase.cs` | 263 | `catch { }` — inside retry loop |
-| `IBS.Tests.UI/PlaywrightTestBase.cs` | 269 | `catch { }` — dismiss-all-SweetAlerts |
 | `IBSWeb/Areas/User/Controllers/MsapImportController.cs` | 321 | `catch { /* Ignore if fails */ }` |
 | `IBSWeb/Areas/User/Controllers/JobOrderController.cs` | 149, 154 | `catch { logger.LogWarning("...") }` — no exception variable, loses context |
 
-**Why it's hacky:** Tests pass despite genuine failures. Production import silently skips rows. The `catch { }` in line 321 masks parse/import errors — imported data may be silently incomplete.
+**Why it's hacky:** Production import silently skips rows. The `catch { }` in line 321 masks parse/import errors — imported data may be silently incomplete.
 
-**Fix:** Remove bare catches; let failures propagate. In tests, let xUnit report the failure. In import, log the real exception or throw.
+**Fix:** Remove bare catches; let failures propagate. In import, log the real exception or throw.
 
 ---
 
@@ -178,26 +175,6 @@ decimal bafDiscountAmount = bafRate * (0 / 100m);
 
 ## P3 — Low
 
-### 9. Brittle DOM Mutation in UI Tests
-
-**File:** `IBS.Tests.UI/PlaywrightTestBase.cs:250-270`
-
-```csharp
-// 20-line method with retries, catch { }, and WaitForTimeout(300)
-// called DismissAnySweetAlertAsync
-```
-
-Also `SelectModernOptionAsync` (lines 102-188, 90 lines) with:
-- 3 retry attempts with jQuery escape hatch
-- Regex-based option matching
-- 300-500ms `WaitForTimeout` calls
-
-**Why it's hacky:** Tests compensate for UI fragility with retries and timeouts instead of fixing the UI. The `catch { }` on line 263 means a SweetAlert that doesn't dismiss is silently ignored — the test may pass when it shouldn't, or fail 50 lines later with a confusing error.
-
-**Fix:** Add `data-testid` attributes to the modern-select and SweetAlert2 confirm buttons, replace `SelectModernOptionAsync` with a deterministic `Page.Locator('[data-testid="..."]').ClickAsync()`.
-
----
-
 ### 10. Dev-Tools-Blocking JavaScript
 
 **File:** `IBSWeb/wwwroot/js/disable-dev-tools-in-print.js` (57 lines)
@@ -229,14 +206,13 @@ if (sessionStorage.getItem('isSubmitting') === 'true') { ... }
 | Category | Count | Key Files |
 |----------|-------|-----------|
 | `dynamic` bypassing type safety | 17 calls | `MsapImportController.cs` |
-| Empty catches hiding failures | 6 | `PlaywrightTestBase.cs`, `MsapImportController.cs`, `JobOrderController.cs` |
+| Empty catches hiding failures | 3 | `MsapImportController.cs`, `JobOrderController.cs` |
 | `.Result` deadlock risk | 2 | `DepartmentAuthorizeAttribute.cs`, `BillingService.cs` |
 | Full table loads (perf) | 25+ calls | 12 service files |
 | Inline event handlers | 35+ | 50+ cshtml files |
 | Magic business constants | 3 values | `CollectionService.cs` |
 | CSS `!important` | 237 | 5 CSS files |
 | Dead code (discount) | 2 lines | `DispatchTicketService.cs` |
-| Brittle test DOM hacks | 2 methods | `PlaywrightTestBase.cs` |
 | Fake client-side security | 1 file | `disable-dev-tools-in-print.js` |
 
 Each finding is cross-referenced to a file+line. None is speculative.
