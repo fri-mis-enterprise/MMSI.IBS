@@ -207,7 +207,7 @@
                 ],
                 initComplete: function() {
                     if (statusFilter) {
-                        this.api().column(10).search(statusFilter).draw();
+                        this.api().column(11).search(statusFilter).draw();
                         updateFilterButtons(statusFilter);
                     }
                 }
@@ -230,7 +230,7 @@
                 else if (id === 'filterDeleted') status = '@SD.DispatchTicketStatus.Deleted';
 
                 filterType = status === '@SD.DispatchTicketStatus.Deleted' ? 'deleted' : status ? '' : '';
-                table.column(10).search(status).draw();
+                table.column(11).search(status).draw();
                 updateUrl(status);
                 updateFilterButtons(status);
             });

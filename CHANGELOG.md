@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-09-01]
+### Fixed
+- **MSAP Index Pages header status & date filters fixed** — Corrected DataTable column indices for status search in `DispatchTicket/Index.cshtml` (column index 10 → 11) and `Billing/Index.cshtml` (column index 6 → 7) where search was mistakenly querying column 10 (Vessel) and column 6 (Dispatch Ticket #) instead of Status, causing non-Deleted filters to return empty tables. Also corrected date filter column target in `ServiceRequest/Index.cshtml` (column index 1 → 0).
+
 ## [2026-08-07]
 ### Removed
 - **Test projects removed from solution** — `IBS.Tests` (xUnit/Moq) and `IBS.Tests.UI` (Playwright) deleted along with their entries in `MMSI.IBS.sln`. No automated tests remain. AGENTS.md updated to reflect the absence of tests.

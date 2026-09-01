@@ -31,18 +31,9 @@
     /*  scoped to #bafTable — .modern-table forces text-align:left !important, so utility classes need re-forcing here */
     #bafTable th.text-right,
     #bafTable td.text-right,
-    #bafTable .baf-rate-input {
-        text-align: right !important;
-    }
     #bafTable th.text-center,
     #bafTable td.text-center {
         text-align: center !important;
-    }
-    #bafTable .baf-rate-input {
-        border: 1px solid var(--outline-variant);
-        border-radius: 6px;
-        background: var(--surface-container-low);
-        padding: 4px 8px;
     }
 </style>
 
@@ -350,11 +341,11 @@
     <script>
         window.IBS_TOUR_STEPS = [
             { step: 1, title: "Customer", text: "Select the customer to bill. Their profile defaults VAT, WHT, and terms." },
-            { step: 2, title: "Target Job Order", text: "Pick a job order to pull its tickets and prefill billing details — or toggle LEGACY (NO JO) to bill tickets without a job order and enter details manually." },
+            { step: 2, title: "Target Job Order", text: "Pick a job order to pull its tickets and prefill billing details — or toggle LEGACY (NO JO) to bill tickets without a job order and enter details manually.", autoAdvance: false },
             { step: 3, title: "Dispatch Tickets", text: "Tick the tickets to include in this billing. Totals update live below.", autoAdvance: false },
             { step: 4, title: "Billing Number", text: "Enter the billing number. Toggle UNDOCUMENTED to auto-generate it.", required: false, autoAdvance: false },
-            { step: 5, title: "VAT / WHT", text: "Set VAT status, VAT-inclusive, and withholding tax. These affect the computed totals." },
-            { step: 6, title: "Port / Terminal / Vessel", text: "Prefilled from the job order. In LEGACY mode, select them manually." },
+            { step: 5, title: "VAT / WHT", text: "Set VAT status, VAT-inclusive, and withholding tax. These affect the computed totals.", autoAdvance: false },
+            { step: 6, title: "Port / Terminal / Vessel", text: "Prefilled from the job order. In LEGACY mode, select them manually.", autoAdvance: false },
             { step: 7, title: "Submit Billing", text: "Review the totals and click SUBMIT BILLING." }
         ];
     </script>

@@ -45,16 +45,16 @@ const ModernTable = {
     // Reusable column renderers
     render: {
         date: (data) => data ? new Date(data).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-',
-        
+
         dateTime: (datePart, timePart) => {
             if (!datePart) return '-';
             return `${datePart} ${timePart || ''}`.trim();
         },
 
         currency: (data) => '₱' + parseFloat(data || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        
+
         badge: (data, statusClass) => `<span class="modern-badge-sm ${statusClass || ''}">${data}</span>`,
-        
+
         ellipsis: (data, maxWidth = '250px') => {
             if (!data) return '';
             return `<div style="max-width: ${maxWidth}; overflow: hidden; text-overflow: ellipsis;" title="${data}">${data}</div>`;
@@ -64,7 +64,7 @@ const ModernTable = {
         // items: Array of { label, icon, url, isError, onclick, condition }
         dropdown: function(items = []) {
             const filteredItems = items.filter(item => item === 'divider' || (item && (item.condition === undefined || item.condition === true)));
-            
+
             if (filteredItems.length === 0) return '';
 
             let html = `
@@ -73,7 +73,7 @@ const ModernTable = {
                         ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
                     </button>
                     <div class="modern-dropdown-menu dropdown-menu">`;
-            
+
             filteredItems.forEach(item => {
                 if (item === 'divider') {
                     html += `<div class="border-t border-outline-variant my-1"></div>`;
@@ -102,14 +102,14 @@ $(document).ready(function() {
         e.stopImmediatePropagation();
         const $trigger = $(this);
         const $menu = $trigger.siblings('.modern-dropdown-menu');
-        
+
         $('.modern-dropdown-menu').not($menu).removeClass('show');
         $menu.toggleClass('show');
-        
+
         if ($menu.hasClass('show')) {
             const rect = $trigger[0].getBoundingClientRect();
             const menuWidth = $menu.outerWidth();
-            
+
             $menu.css({
                 'position': 'fixed',
                 'top': (rect.bottom + 4) + 'px',

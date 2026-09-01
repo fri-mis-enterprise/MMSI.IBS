@@ -165,7 +165,7 @@
                 ],
                 initComplete: function() {
                     if (statusFilter) {
-                        this.api().column(6).search(statusFilter).draw();
+                        this.api().column(7).search(statusFilter).draw();
                         updateFilterButtons(statusFilter);
                     }
                 }
@@ -184,7 +184,7 @@
                 else if (id === 'filterForCollection') status = "@SD.BillingStatus.ForCollection";
                 else if (id === 'filterCollected') status = "@SD.BillingStatus.Collected";
 
-                table.column(6).search(status).draw();
+                table.column(7).search(status).draw();
                 updateUrl(status);
                 updateFilterButtons(status);
             });

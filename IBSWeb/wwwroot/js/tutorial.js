@@ -1,10 +1,16 @@
 /**
  * ============================================================================
- * IBS INTERACTIVE GUIDED TOUR ENGINE (tutorial.js)
+ * IBS INTERACTIVE GUIDED TOUR ENGINE (tutorial.js) — STANDALONE BUILD
  * ============================================================================
  * An interactive, step-by-step page wizard and guide engine.
  * Supports auto-detecting HTML required fields, live unblocked field interaction,
  * custom ModernSelect/Select2 dropdown integration, and smart popover positioning.
+ *
+ * This build has no dependency on external CSS classes/frameworks
+ * (no modern-btn-*, no material-symbols-outlined, no btn/btn-sm, etc).
+ * All visuals are defined in the CSS block below and via inline styles,
+ * using its own "tour-" prefixed classes throughout, and a plain
+ * inline SVG for the help icon instead of an icon font.
  *
  * ----------------------------------------------------------------------------
  * 1. HOW TO IMPLEMENT ON A PAGE (CSHTML)
@@ -49,32 +55,64 @@
  */
 (function () {
     'use strict';
-    
+
     var steps = [];
     var idx = 0;
     var overlay, spot, box;
     var activeCleanups = [];
 
+    // All colors/spacing are hard-coded (with a couple of CSS vars offering
+    // an *optional* host-theme override — they all carry hard fallbacks,
+    // so nothing breaks if the host page defines no CSS variables at all).
     var CSS = ''
-        + '.tour-overlay{position:fixed;inset:0;z-index:10000;pointer-events:none;display:none}'
+        + '.tour-overlay{position:fixed;inset:0;z-index:10000;pointer-events:none;display:none;'
+        +   'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}'
+        + '.tour-overlay *{box-sizing:border-box;}'
         + '.tour-overlay.active{display:block}'
-        + '.tour-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);pointer-events:auto;transition:opacity 0.2s}'
-        + '.tour-spot{position:fixed;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);border-radius:6px;pointer-events:none;z-index:10001;transition:all 0.15s ease-out;outline:2px solid var(--primary, #005cbb);outline-offset:2px;}'
+        + '.tour-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);pointer-events:auto;transition:opacity .2s}'
+        + '.tour-spot{position:fixed;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);border-radius:6px;pointer-events:none;'
+        +   'z-index:10001;transition:all .15s ease-out;outline:2px solid var(--tour-accent,#005cbb);outline-offset:2px;}'
         + '.tour-interactive-active{position:relative !important;z-index:10002 !important;pointer-events:auto !important;}'
-        + '.select2-container--open, .modern-select-dropdown.show{z-index:10005 !important;pointer-events:auto !important;}'
-        + '.tour-box{position:fixed;max-width:340px;width:calc(100vw - 32px);background:var(--surface, #ffffff);color:var(--on-surface, #1a1c1e);border:1px solid var(--outline-variant, #c4c6cf);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.25);z-index:10006;pointer-events:auto;transition:top 0.12s ease-out, left 0.12s ease-out;font-family:inherit}'
+        + '.select2-container--open,.modern-select-dropdown.show{z-index:10005 !important;pointer-events:auto !important;}'
+        + '.tour-box{position:fixed;max-width:340px;width:calc(100vw - 32px);background:var(--tour-surface,#ffffff);'
+        +   'color:var(--tour-on-surface,#1a1c1e);border:1px solid var(--tour-outline-variant,#c4c6cf);border-radius:12px;'
+        +   'padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.25);z-index:10006;pointer-events:auto;'
+        +   'transition:top .12s ease-out,left .12s ease-out;line-height:normal;}'
         + '.tour-box .tour-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}'
-        + '.tour-box .tour-title{font-weight:700;font-size:15px;color:var(--on-surface, #1a1c1e);margin:0}'
-        + '.tour-box .tour-text{font-size:13px;line-height:1.5;color:var(--on-surface-variant, #44474e);margin-bottom:14px}'
+        + '.tour-box .tour-title{font-weight:700;font-size:15px;color:var(--tour-on-surface,#1a1c1e);margin:0;line-height:1.3}'
+        + '.tour-box .tour-text{font-size:13px;line-height:1.5;color:var(--tour-on-surface-variant,#44474e);margin-bottom:14px}'
         + '.tour-box .tour-nav{display:flex;align-items:center;gap:8px}'
-        + '.tour-box .tour-count{margin-left:auto;color:var(--outline, #74777f);font-size:12px;font-weight:500}';
+        + '.tour-box .tour-count{margin-left:auto;color:var(--tour-outline,#74777f);font-size:12px;font-weight:500}'
+        // Self-contained buttons (replace modern-btn-primary / modern-btn-secondary / btn-link)
+        + '.tour-btn{appearance:none;-webkit-appearance:none;border-radius:8px;font-size:12px;font-weight:600;'
+        +   'padding:6px 12px;cursor:pointer;border:1px solid transparent;line-height:1.4;font-family:inherit;}'
+        + '.tour-btn:disabled{cursor:not-allowed;}'
+        + '.tour-btn-primary{background:var(--tour-accent,#005cbb);color:#ffffff;}'
+        + '.tour-btn-primary:hover:not(:disabled){background:var(--tour-accent-hover,#00468e);}'
+        + '.tour-btn-secondary{background:#ffffff;color:var(--tour-on-surface,#1a1c1e);border-color:var(--tour-outline-variant,#c4c6cf);}'
+        + '.tour-btn-secondary:hover:not(:disabled){background:#f2f2f4;}'
+        + '.tour-btn-link{background:transparent;color:var(--tour-outline,#74777f);padding:6px 4px;text-decoration:underline;}'
+        + '.tour-btn-link:hover{color:var(--tour-on-surface,#1a1c1e);}'
+        // Self-contained help icon button (replaces btn/btn-sm/btn-icon + material-symbols-outlined)
+        + '.tour-help-btn{background:transparent;border:none;padding:0;cursor:pointer;color:var(--tour-outline,#74777f);'
+        +   'display:inline-flex;align-items:center;justify-content:center;opacity:.75;transition:opacity .2s;'
+        +   'vertical-align:middle;width:22px;height:22px;}'
+        + '.tour-help-btn:hover{opacity:1;}'
+        + '.tour-help-btn svg{width:20px;height:20px;display:block;}';
+
+    // Inline SVG help/question-mark icon — no icon font dependency.
+    var HELP_ICON_SVG = ''
+        + '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
+        + '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>'
+        + '<path d="M9.5 9.3a2.5 2.5 0 1 1 3.6 2.25c-.7.35-1.1.9-1.1 1.55v.4" '
+        +   'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+        + '<circle cx="12" cy="16.9" r="1" fill="currentColor"/>'
+        + '</svg>';
 
     function injectHeaderHelpButton() {
-        // Target element explicitly marked with data-page-header
         var header = document.querySelector('[data-page-header]');
         if (!header || header.dataset.tourHelpInjected) return;
 
-        // Ensure header aligns icon inline
         var computedDisplay = window.getComputedStyle(header).display;
         if (computedDisplay === 'block' || computedDisplay === 'inline') {
             header.style.display = 'inline-flex';
@@ -84,14 +122,11 @@
 
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'btn btn-sm btn-icon tour-header-help-btn';
+        btn.className = 'tour-help-btn';
         btn.title = 'Start Guided Tour';
-        btn.style.cssText = 'background:transparent; border:none; padding:0; cursor:pointer; color:var(--outline, #74777f); display:inline-flex; align-items:center; opacity:0.75; transition:opacity 0.2s; vertical-align:middle;';
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">help</span>';
-        
-        btn.addEventListener('mouseenter', function() { btn.style.opacity = '1'; });
-        btn.addEventListener('mouseleave', function() { btn.style.opacity = '0.75'; });
-        btn.addEventListener('click', function(e) {
+        btn.innerHTML = HELP_ICON_SVG;
+
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             window.startTour();
         });
@@ -115,9 +150,9 @@
             + '<div class="tour-header"><h3 class="tour-title"></h3></div>'
             + '<div class="tour-text"></div>'
             + '<div class="tour-nav">'
-            + '<button type="button" class="modern-btn-secondary btn-sm tour-prev" style="padding:4px 10px; font-size:12px">Previous</button>'
-            + '<button type="button" class="modern-btn-primary btn-sm tour-next" style="padding:4px 12px; font-size:12px">Next</button>'
-            + '<button type="button" class="btn btn-sm btn-link tour-close" style="font-size:12px; color:var(--outline, #74777f)">Close</button>'
+            + '<button type="button" class="tour-btn tour-btn-secondary tour-prev">Previous</button>'
+            + '<button type="button" class="tour-btn tour-btn-primary tour-next">Next</button>'
+            + '<button type="button" class="tour-btn tour-btn-link tour-close">Close</button>'
             + '<span class="tour-count"></span>'
             + '</div></div>';
         document.body.appendChild(overlay);
@@ -167,9 +202,9 @@
                 title: s.title || '',
                 text: s.text || '',
                 pos: s.pos || 'auto',
-                required: s.required,                // undefined means auto-detect HTML required attribute
-                interactive: s.interactive !== false, // default to true (allow interacting with highlighted field)
-                autoAdvance: s.autoAdvance !== false  // auto-advance to next step upon user action
+                required: s.required,
+                interactive: s.interactive !== false,
+                autoAdvance: s.autoAdvance !== false
             };
         });
     }
@@ -189,7 +224,6 @@
         spot.style.width = (r.width + padding * 2) + 'px';
         spot.style.height = (r.height + padding * 2) + 'px';
 
-        // Calculate Box placement
         var boxWidth = box.offsetWidth || 320;
         var boxHeight = box.offsetHeight || 160;
         var viewportW = window.innerWidth;
@@ -197,19 +231,17 @@
 
         var top, left;
 
-        // Preferred placement: placing above if space permits or if element is dropdown
         var isSelect = el.matches('select, .modern-select-container, .js-modern-select') || el.querySelector('.modern-select-container, select');
-        
+
         if (step.pos === 'top' || isSelect || (step.pos === 'auto' && r.bottom + boxHeight + 15 > viewportH && r.top - boxHeight - 15 > 0)) {
             top = r.top - boxHeight - 12;
-            if (top < 16) top = r.bottom + 12; // Fallback to bottom if top gets cut off
+            if (top < 16) top = r.bottom + 12;
         } else {
             top = r.bottom + 12;
         }
 
         left = r.left + (r.width / 2) - (boxWidth / 2);
 
-        // Clamp to screen bounds
         if (left < 16) left = 16;
         if (left + boxWidth > viewportW - 16) left = viewportW - boxWidth - 16;
         if (top < 16) top = 16;
@@ -225,9 +257,8 @@
         var $valEl = window.jQuery ? window.jQuery(el).find('select, input, textarea').addBack('select, input, textarea') : el.querySelector('select, input, textarea');
         var domNode = ($valEl && $valEl.length) ? $valEl[0] : null;
 
-        // Determine if field is required (explicit step config OR HTML required attribute/data-val-required)
-        var isRequired = (typeof step.required === 'boolean') 
-            ? step.required 
+        var isRequired = (typeof step.required === 'boolean')
+            ? step.required
             : (domNode && (domNode.hasAttribute('required') || domNode.hasAttribute('data-val-required') || domNode.required));
 
         if (!isRequired) return true;
@@ -262,7 +293,6 @@
 
         var el = resolveElement(step);
         if (!el) {
-            // Poll briefly if dynamic element
             var tries = 0;
             var poll = setInterval(function () {
                 tries++;
@@ -281,20 +311,16 @@
             return;
         }
 
-        // Scroll element into view smoothly
         el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 
-        // Enable interaction with highlighted element
         if (step.interactive) {
             el.classList.add('tour-interactive-active');
-            
-            // Also enable child select2/input if inside container
+
             var targetControls = el.querySelectorAll('input, select, textarea, button, .select2-container, .modern-select-container');
             targetControls.forEach(function (ctrl) {
                 ctrl.classList.add('tour-interactive-active');
             });
 
-            // Monitor input/change to re-evaluate Next button validity live
             var monitorHandler = function () {
                 updateNextButtonState(step, el);
             };
@@ -305,9 +331,7 @@
                 activeCleanups.push(function () { $controls.off('input.tourVal change.tourVal select2:select.tourVal'); });
             }
 
-            // If autoAdvance is set, listen for change/input to advance tour automatically once valid
             if (step.autoAdvance) {
-                // Guard against input+change firing together (e.g. radio groups) causing a double advance
                 var lastAdvanceAt = 0;
                 var advanceHandler = function () {
                     var now = Date.now();
@@ -322,13 +346,11 @@
                     }, 50);
                 };
 
-                // Handle jQuery/ModernSelect change event if applicable
                 var $targetSelect = window.jQuery ? window.jQuery(el).find('select').addBack('select') : null;
                 if ($targetSelect && $targetSelect.length) {
                     $targetSelect.one('select2:select.tour change.tour', advanceHandler);
                     activeCleanups.push(function () { $targetSelect.off('select2:select.tour change.tour'); });
                 } else {
-                    // Advance on value change of contained inputs, not on raw click
                     var $containedInputs = window.jQuery ? window.jQuery(el).find('input, textarea') : null;
                     if ($containedInputs && $containedInputs.length) {
                         $containedInputs.one('change.tour input.tour', advanceHandler);
@@ -340,7 +362,6 @@
                     }
                 }
 
-                // If element has a ModernSelect container, flip popover above when dropdown opens
                 var $trigger = window.jQuery ? window.jQuery(el).find('.modern-select-trigger') : null;
                 if ($trigger && $trigger.length) {
                     var onOpen = function () {
@@ -360,7 +381,6 @@
 
         updateNextButtonState(step, el);
 
-        // Give scroll time to settle before measuring coordinates
         setTimeout(updateSpotAndBox, 100);
     }
 
@@ -406,6 +426,3 @@
         init();
     }
 })();
-
-
-
