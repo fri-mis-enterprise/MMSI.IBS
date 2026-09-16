@@ -8,7 +8,7 @@
     var vatAmt = Model.IsVatable ? Math.Round(gross * 0.12m / 1.12m, 2) : 0m;
     var netVat = gross - vatAmt;
     var whtAmt = Model.PrintWht ? Math.Round(netVat * 0.02m, 2) : 0m;
-    var wvatAmt = Model.PrintWht && Model.Customer?.WithHoldingVat == true ? Math.Round(netVat * 0.05m, 2) : 0m;
+    var wvatAmt = Model is { PrintWht: true, Customer.WithHoldingVat: true } ? Math.Round(netVat * 0.05m, 2) : 0m;
     var amtDue = netVat - whtAmt - wvatAmt;
     var totalDue = amtDue + vatAmt;
 
@@ -65,7 +65,7 @@
 
         }
         .ticket-image-page {
-            border-top: 1px dashed var(--border-color, #ccc);
+            border-top: 1px dashed var(--bs-border-color, #ccc);
             margin-top: 2rem;
             padding-top: 1.5rem;
         }
@@ -127,7 +127,7 @@
             <div class="flex gap-2">
                 <div class="actions-dropdown">
                     <button type="button" class="modern-btn-secondary" id="actionsBtn">
-                        <span class="material-symbols-outlined">settings</span> ACTIONS <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
+                        <span class="material-symbols-outlined">settings</span> PRINT <span class="material-symbols-outlined" style="font-size:16px">arrow_drop_down</span>
                     </button>
                     <div class="actions-menu" id="actionsMenu">
                         <label><input type="checkbox" id="chkTickets"> Include Ticket Images</label>
@@ -170,7 +170,7 @@
                     <tbody>
                         <tr>
                             <td style="width: 10%; padding: 0; margin: 0;"><b>BILLED TO:</b></td>
-                            <td class="border-bottom-dark"><b>@(Model.PrincipalId != null ? Model.Principal?.PrincipalName : Model.Customer?.CustomerName)</b></td>
+                            <td class="border-bottom-dark"><b>@(Model.PrincipalId != null ? Model.Principal?.PrincipalName : Model.Customer.CustomerName)</b></td>
                             <td style="width: 40px;"></td>
                             <td style="width: 80px;"><b>DATE:</b></td>
                             <td class="border-bottom-dark">@Model.Date.ToString("MM/dd/yyyy")</td>
@@ -180,21 +180,21 @@
                             <td class="border-bottom-dark" style="width: 40%;">@Model.AddressLine1</td>
                             <td></td>
                             <td><b>TIN:</b></td>
-                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.TIN : Model.Customer?.CustomerTin)</td>
+                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.TIN : Model.Customer.CustomerTin)</td>
                         </tr>
                         <tr>
                             <td></td>
                             <td class="border-bottom-dark">@Model.AddressLine2</td>
                             <td></td>
                             <td style="text-wrap: nowrap"><b>BUSINESS STYLE:</b></td>
-                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.BusinessType : Model.Customer?.BusinessStyle)</td>
+                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.BusinessType : Model.Customer.BusinessStyle)</td>
                         </tr>
                         <tr>
                             <td></td>
                             <td class="border-bottom-dark">@Model.AddressLine3</td>
                             <td></td>
                             <td><b>TERMS:</b></td>
-                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.Terms : Model.Customer?.CustomerTerms)</td>
+                            <td class="border-bottom-dark">@(Model.PrincipalId != null ? Model.Principal?.Terms : Model.Customer.CustomerTerms)</td>
                         </tr>
                     </tbody>
                 </table>
@@ -207,7 +207,7 @@
                 <div class="mb-2" style="font-size: 10px;">
                     <div class="flex items-center justify-content-between mb-1 text-xs" style="font-size: 10px;">
                         <div style="width: 30%;"><b>FOR THE SERVICE RE:</b></div>
-                        <div style="width: 100%;" class="flex-grow border-bottom-dark px-2 font-bold uppercase">@Model.Vessel?.VesselName</div>
+                        <div style="width: 100%;" class="flex-grow border-bottom-dark px-2 font-bold uppercase">@Model.Vessel.VesselName</div>
                         <div style="width: 15%; margin-left: 5%;" class="text-left "><b>VOYAGE #:</b></div>
                         <div style="width: 40%;" class="border-bottom-dark px-2">@Model.VoyageNumber</div>
                     </div>
@@ -235,7 +235,7 @@
                     <tbody>
                         @foreach (var tugboat in Model.UniqueTugboats!)
                         {
-                            var dispatchNetTickets = Model.PaidDispatchTickets!.Where(dt => dt.Tugboat?.TugboatName == tugboat && dt.DispatchNetRevenue > 0).ToList();
+                            var dispatchNetTickets = Model.PaidDispatchTickets!.Where(dt => dt.Tugboat.TugboatName == tugboat && dt.DispatchNetRevenue > 0).ToList();
                             if (dispatchNetTickets.Any())
                             {
                                 <tr>
@@ -245,7 +245,7 @@
                                 {
                                     <tr>
                                         <td class="text-left">@dt.Date.ToString("dd-MMM")</td>
-                                        <td>@dt.Service?.ServiceName</td>
+                                        <td>@dt.Service.ServiceName</td>
                                         <td class="text-left">@dt.DateLeft?.ToString("MM/dd/yyyy") @dt.TimeLeft?.ToString(@"HH\:mm")</td>
                                         <td class="text-left">@dt.DateArrived?.ToString("MM/dd/yyyy") @dt.TimeArrived?.ToString(@"HH\:mm")</td>
                                         <td class="text-center">@dt.TotalHours.ToString("N2")</td>
@@ -265,7 +265,7 @@
                             {
                                 <tr class="baf-row">
                                     <td class="text-left">@dt.Date.ToString("dd-MMM")</td>
-                                    <td>@dt.Service?.ServiceName (BAF)</td>
+                                    <td>@dt.Service.ServiceName (BAF)</td>
                                     <td class="text-left">@dt.DateLeft?.ToString("MM/dd/yyyy") @dt.TimeLeft?.ToString(@"HH\:mm")</td>
                                     <td class="text-left">@dt.DateArrived?.ToString("MM/dd/yyyy") @dt.TimeArrived?.ToString(@"HH\:mm")</td>
                                     <td class="text-center">@dt.TotalHours.ToString("N2")</td>
@@ -354,7 +354,7 @@
                 <div class="modern-card ticket-image-page">
                     <div class="billing-statement text-center">
                         <h4 class="font-bold text-sm mb-3">
-                            Dispatch Ticket #@(dt.DispatchNumber ?? dt.DispatchTicketId.ToString()) &mdash; Billing @Model.MsapBillingNumber
+                            Dispatch Ticket #@(dt.DispatchNumber) &mdash; Billing @Model.MsapBillingNumber
                         </h4>
                         <div class="flex justify-center items-center" style="max-height: 90vh;">
                             <img src="@dt.ImageSignedUrl" alt="Dispatch Ticket @dt.DispatchNumber" style="max-width: 100%; max-height: 85vh; object-fit: contain;" />
@@ -418,7 +418,7 @@
             });
 
             if (window.matchMedia) {
-                window.matchMedia('print').addListener(function (mql) {
+                window.matchMedia('print').addEventListener('change', function (mql) {
                     if (!mql.matches) restoreDefaults();
                 });
             }
