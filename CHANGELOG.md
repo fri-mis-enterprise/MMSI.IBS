@@ -338,3 +338,10 @@
 ## [2026-07-01]
 ### Changed
 - Deduplicated customer search into a shared helper (scope: IBS.Utility)
+
+## 2026-09-16
+- Simplified SalesSummary output: aligned 35 fixed columns with Sales Report.xlsx and exported a values-only snapshot.
+- 2026-09-16 — Sales Report IOC classification now follows VFP: exact billing-port `INSULAR` match using the dispatch ticket's direct Port relation.
+- 2026-09-16 — SalesSummary now includes qualifying unbilled dispatches and writes lower summary totals directly instead of generating formulas.
+
+- 2026-09-16 — Reports no longer hide empty columns; all defined columns remain visible.

@@ -18,8 +18,9 @@ namespace IBS.DataAccess.Repository.Msap
 
             if (filterByBillingDate)
             {
-                query = query.Where(dt => dt.BillingId != null
-                    && db.MsapBillings.Any(b => b.MsapBillingId == dt.BillingId && b.Date >= dateFrom && b.Date <= dateTo));
+                query = query.Where(dt =>
+                    (dt.BillingId != null && db.MsapBillings.Any(b => b.MsapBillingId == dt.BillingId && b.Date >= dateFrom && b.Date <= dateTo))
+                    || (dt.BillingId == null && dt.Date >= dateFrom && dt.Date <= dateTo && dt.CustomerId != 0));
             }
             else
             {
@@ -33,10 +34,11 @@ namespace IBS.DataAccess.Repository.Msap
                     .Include(dt => dt.Tugboat)
                     .ThenInclude(t => t.TugboatOwner)
                     .Include(dt => dt.TugMaster)
+                    .Include(dt => dt.Port)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(t => t.Port)
                     .Include(dt => dt.Service)
-                    .OrderBy(dt => dt.Billing!.Date)
+                    .OrderBy(dt => dt.Billing == null ? dt.Date : dt.Billing.Date)
                     .ThenBy(dt => dt.DispatchNumber)
                     .ToListAsync(cancellationToken)
                 : await query
@@ -45,6 +47,7 @@ namespace IBS.DataAccess.Repository.Msap
                     .Include(dt => dt.Tugboat)
                     .ThenInclude(t => t.TugboatOwner)
                     .Include(dt => dt.TugMaster)
+                    .Include(dt => dt.Port)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(t => t.Port)
                     .Include(dt => dt.Service)

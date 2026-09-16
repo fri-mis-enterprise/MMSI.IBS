@@ -1,5 +1,8 @@
 # Detected Code Problems
 
+## 2026-09-16
+- `med` IBSWeb/Areas/User/Controllers/MaritimeReportController.cs:271 — SalesSummary filters only billed dispatches by billing date, so qualifying unbilled dispatches are omitted from the monthly report; repository query needs the legacy unbilled branch.
+
 Running log of issues spotted during file reads/sessions. Reverse-chronological.
 Severity: `high` = likely bug, `med` = smells/tech debt, `low` = cosmetic/inconsistency.
 Format: `[date] [severity] file:line — description (session context)`. Fix when a task touches the file; otherwise leave for a dedicated pass.

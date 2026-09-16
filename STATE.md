@@ -43,3 +43,6 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - 2026-08-04 — 14-VM conversion complete; view audit 38→9; ARCHITECTURE §5.2 V4 documents Billing/UserAccess deviation.
 - 2026-08-04 — MCP tools: `audit_views` (V1-V7 baseline 57→9); `audit_conformance` (6/8/14); recursive `trace_workflow`; `execute_sql` cap 500.
 - 2026-08-03 — Transport-aware denial + navbar gating + linear action visibility; AccessControlService cleanup; Billing/Create tour.
+- **Sales Report simplification (2026-09-16):** aligned MaritimeReportController SalesSummary fixed columns to Sales Report.xlsx and strips formulas from exported snapshot. **Open:** replace remaining dynamic/lower-summary construction with direct value writes; fix unbilled dispatch inclusion.
+- **Sales Report IOC classification (2026-09-16):** uses direct DispatchTicket.Port and exact `INSULAR` match, matching OldVFPLogic.txt. **Open:** verify generated workbook against live records.
+- **Sales Report non-IOC cleanup (2026-09-16):** monthly query includes unbilled dispatches and lower summary writes values directly. **Open:** obtain and review official IOC terminal list; verify generated workbook.
