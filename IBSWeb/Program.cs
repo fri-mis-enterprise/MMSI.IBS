@@ -110,6 +110,11 @@ builder.Services.AddMemoryCache(options =>
     options.SizeLimit = 1024 * 1024 * 100; // 100MB cap
 });
 
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = builder.Configuration["Sentry:Dsn"];
+});
+
 if (builder.Environment.IsProduction())
 {
     var bucketName = builder.Configuration["GoogleCloudStorageBucketName"]!;
