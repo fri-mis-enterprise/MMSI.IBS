@@ -81,12 +81,12 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             if (result.Succeeded)
             {
-                logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", user.Id);
+                logger.LogInformation("User with ID '{UserId}' logged in with a recovery code", user.Id);
                 return LocalRedirect(returnUrl ?? Url.Content("~/"));
             }
             if (result.IsLockedOut)
             {
-                logger.LogWarning("User account locked out.");
+                logger.LogWarning("User account locked out");
                 return RedirectToPage("./Lockout");
             }
             else

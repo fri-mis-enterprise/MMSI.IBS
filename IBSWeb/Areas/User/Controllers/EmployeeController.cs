@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get employee list.");
+                logger.LogError(ex, "Failed to get employee list");
                 return Json(new { error = "Internal server error" });
             }
         }

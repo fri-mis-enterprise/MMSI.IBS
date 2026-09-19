@@ -88,7 +88,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create billing.");
+                logger.LogError(ex, "Failed to create billing");
                 return Json(new { success = false, message = ExceptionHelper.GetErrorMessage(ex) });
             }
         }
@@ -171,7 +171,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit billing.");
+                logger.LogError(ex, "Failed to edit billing");
                 return Json(new { success = false, message = ExceptionHelper.GetErrorMessage(ex) });
             }
         }
@@ -306,14 +306,14 @@ namespace IBSWeb.Areas.User.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add($"Billing #{billing.MsapBillingNumber}");
                 worksheet.Cells.Style.Font.Name = "Calibri";
-                worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
+                worksheet.Cells["B2"].Value = $"{billing.Customer.CustomerName}";
                 worksheet.Cells["E2"].Value = $"{billing.Date}";
                 worksheet.Cells["E2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                worksheet.Cells["B3"].Value = $"{billing.Customer?.CustomerAddress}                              TERMS: {billing.Customer?.CustomerTerms}";
-                worksheet.Cells["B4"].Value = $"{billing.Customer?.CustomerTin}";
+                worksheet.Cells["B3"].Value = $"{billing.Customer.CustomerAddress} TERMS: {billing.Customer.CustomerTerms}";
+                worksheet.Cells["B4"].Value = $"{billing.Customer.CustomerTin}";
                 worksheet.Cells["E4"].Value = $"VOYAGE NO. {billing.VoyageNumber}";
-                worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel?.VesselName}";
-                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port?.PortName}";
+                worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel.VesselName}";
+                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port.PortName}";
 
                 var row = 9;
                 if (billing.UniqueTugboats != null)
@@ -323,11 +323,11 @@ namespace IBSWeb.Areas.User.Controllers
                         worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: {tugboat}";
                         row++;
 
-                        foreach (var ticket in billing.PaidDispatchTickets!.Where(t => t.Tugboat?.TugboatName == tugboat))
+                        foreach (var ticket in billing.PaidDispatchTickets!.Where(t => t.Tugboat.TugboatName == tugboat))
                         {
                             worksheet.Cells[row, 1].Value = "1";
                             worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                            worksheet.Cells[row, 2].Value = $"{ticket.Service.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
                             worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
                             worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, 5].Value = $"{ticket.DispatchBillingAmount}";
@@ -346,7 +346,7 @@ namespace IBSWeb.Areas.User.Controllers
                         row++;
                         worksheet.Cells[row, 1].Value = "1";
                         worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                        worksheet.Cells[row, 2].Value = $"{ticket.Service.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
                         worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
                         worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                         worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
@@ -389,7 +389,7 @@ namespace IBSWeb.Areas.User.Controllers
                     row++;
 
                     decimal wvatAmount = 0;
-                    if (billing.Customer?.WithHoldingVat == true)
+                    if (billing.Customer.WithHoldingVat)
                     {
                         wvatAmount = vatableSales * 0.05m;
                         worksheet.Cells[row, 4].Value = "LESS 5% WVAT";
@@ -423,7 +423,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to print billing.");
+                logger.LogError(ex, "Failed to print billing");
                 TempData["error"] = ExceptionHelper.GetErrorMessage(ex);
                 return RedirectToAction(nameof(Index));
             }
@@ -450,7 +450,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get dispatch tickets.");
+                logger.LogError(ex, "Failed to get dispatch tickets");
                 return Json(new { success = false, message = ex.Message });
             }
         }
@@ -472,7 +472,9 @@ namespace IBSWeb.Areas.User.Controllers
                     .Select(p => (p.Year, p.Month))
                     .ToHashSet();
                 foreach (var item in data)
+                {
                     item.IsMonthClosed = closedMonths.Contains((item.Date.Year, item.Date.Month));
+                }
 
                 return Json(new
                 {
@@ -484,7 +486,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get billings.");
+                logger.LogError(ex, "Failed to get billings");
                 return Json(new { draw = parameters.Draw, recordsTotal = 0, recordsFiltered = 0, data = Array.Empty<object>(), error = "An error occurred while loading the billing list." });
             }
         }
@@ -508,10 +510,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<JsonResult> GetCustomerDetail(int customerId, CancellationToken cancellationToken)
         {
             var result = await billingService.GetCustomerDetailsAsync(customerId, cancellationToken);
-            if (!result.IsSuccess)
-                return Json(new { success = false, message = result.Message });
-
-            return Json(result.Data);
+            return !result.IsSuccess ? Json(new { success = false, message = result.Message }) : Json(result.Data);
         }
 
         /// <summary>
@@ -649,13 +648,15 @@ namespace IBSWeb.Areas.User.Controllers
                 var result = await billingService.CreatePhilCebSplitAsync(model, bafBillingNumber, username, company, cancellationToken);
 
                 if (result.IsSuccess)
+                {
                     return Json(new { success = true, message = result.Message, redirectUrl = Url.Action(nameof(Index)) });
+                }
 
                 return Json(new { success = false, message = result.Message });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create PHIL-CEB split billing.");
+                logger.LogError(ex, "Failed to create PHIL-CEB split billing");
                 return Json(new { success = false, message = ExceptionHelper.GetErrorMessage(ex) });
             }
         }

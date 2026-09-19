@@ -104,7 +104,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create user access.");
+                logger.LogError(ex, "Failed to create user access");
                 return ServiceResult.Failure($"Failed to create user access: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -183,7 +183,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit user access.");
+                logger.LogError(ex, "Failed to edit user access");
                 return ServiceResult.Failure($"Failed to edit user access: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }

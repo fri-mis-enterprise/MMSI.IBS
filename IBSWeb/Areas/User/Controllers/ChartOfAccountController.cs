@@ -100,7 +100,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get chart of accounts.");
+                logger.LogError(ex, "Failed to get chart of accounts");
                 return Json(new { error = "Internal server error" });
             }
         }

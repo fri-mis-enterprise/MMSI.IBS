@@ -52,7 +52,7 @@ namespace IBS.Services
                     }
                     else
                     {
-                        logger.LogInformation($"Environment: {environment}, Auth File: {_options.GCPStorageAuthFile}");
+                        logger.LogInformation("Environment: {Environment}, Auth File: {OptionsGcpStorageAuthFile}", environment, _options.GCPStorageAuthFile);
 
                         if (!File.Exists(_options.GCPStorageAuthFile))
                         {
@@ -68,7 +68,7 @@ namespace IBS.Services
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError($"Failed to initialize Google Cloud Storage client: {ex.Message}");
+                    logger.LogError("Failed to initialize Google Cloud Storage client: {ExMessage}", ex.Message);
                     throw;
                 }
             }
@@ -83,7 +83,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error occurred while deleting file: {ex.Message}");
+                logger.LogError(ex, "Error occurred while deleting file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -98,12 +98,12 @@ namespace IBS.Services
 
                 var signedUrl = await urlSigner.SignAsync(bucketName, fileNameToRead, TimeSpan.FromMinutes(timeOutInMinutes));
 
-                logger.LogInformation($"Signed URL obtained for file '{fileNameToRead}'");
+                logger.LogInformation("Signed URL obtained for file '{FileNameToRead}'", fileNameToRead);
                 return signedUrl;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error occurred while obtaining signed URL for file: {ex.Message}");
+                logger.LogError(ex, "Error occurred while obtaining signed URL for file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -113,7 +113,7 @@ namespace IBS.Services
             EnsureInitialized();
             if (fileToUpload == null || fileToUpload.Length == 0)
             {
-                logger.LogError("File upload failed: No file provided or file is empty.");
+                logger.LogError("File upload failed: No file provided or file is empty");
                 throw new ArgumentException("File is either null or empty.", nameof(fileToUpload));
             }
 
@@ -133,7 +133,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error occurred while uploading file: {ex.Message}");
+                logger.LogError(ex, "Error occurred while uploading file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -146,12 +146,12 @@ namespace IBS.Services
                 var memoryStream = new MemoryStream();
                 await _storageClient!.DownloadObjectAsync(_options.GoogleCloudStorageBucketName, fileNameToDownload, memoryStream);
                 memoryStream.Seek(0, SeekOrigin.Begin); // Reset stream position to the beginning for reading
-                logger.LogInformation($"File {fileNameToDownload} downloaded successfully");
+                logger.LogInformation("File {FileNameToDownload} downloaded successfully", fileNameToDownload);
                 return memoryStream;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error occurred while downloading file: {ex.Message}");
+                logger.LogError(ex, "Error occurred while downloading file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -182,7 +182,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error processing file: {ex.Message}");
+                logger.LogError(ex, "Error processing file: {ExMessage}", ex.Message);
                 throw;
             }
         }

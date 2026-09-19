@@ -106,7 +106,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
             }
 
             await signInManager.RefreshSignInAsync(user);
-            logger.LogInformation("User changed their password successfully.");
+            logger.LogInformation("User changed their password successfully");
             StatusMessage = "Your password has been changed.";
 
             return RedirectToPage();

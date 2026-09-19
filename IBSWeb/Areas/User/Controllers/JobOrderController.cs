@@ -81,7 +81,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get job orders.");
+                logger.LogError(ex, "Failed to get job orders");
                 return Json(new { draw = parameters.Draw, error = ex.Message });
             }
         }

@@ -152,7 +152,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation("User created a new account with password");
                     TempData["success"] = "User created a new account with password.";
 
                     await _userManager.AddToRoleAsync(user, Input.Role);

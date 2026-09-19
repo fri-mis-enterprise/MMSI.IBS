@@ -27,7 +27,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{userManager.GetUserId(User)}'.");
             }
 
-            logger.LogInformation("User with ID '{UserId}' asked for their personal data.", userManager.GetUserId(User));
+            logger.LogInformation("User with ID '{UserId}' asked for their personal data", userManager.GetUserId(User));
 
             // Only include personal data for download
             var personalData = new Dictionary<string, string>();

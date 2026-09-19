@@ -56,10 +56,10 @@
             let table = $('#bankAccountTable').DataTable(ModernTable.config({
                 serverSide: false,
                 ajax: {
-    url: "@Url.Action("GetAll", "BankAccount", new { area = "User" })",
-    type: "GET",
-    data: function(d) { return d; }
-},
+                    url: "@Url.Action("GetAll", "BankAccount", new { area = "User" })",
+                    type: "GET",
+                    data: function(d) { return d; },
+                },
                 columns: [
                     { data: "bankAccountCode" },
                     { data: "bank" },

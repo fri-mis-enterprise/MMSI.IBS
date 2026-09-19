@@ -1,5 +1,4 @@
 using IBS.Models;
-using IBS.Models.MSAP;
 using IBS.Models.MSAP.ViewModels;
 using IBS.Services;
 using Microsoft.AspNetCore.Identity;

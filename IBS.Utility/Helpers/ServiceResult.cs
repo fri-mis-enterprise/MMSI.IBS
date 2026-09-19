@@ -26,6 +26,5 @@ namespace IBS.Utility.Helpers
         Warning,
         NotFound,
         ValidationError,
-        ConfirmationRequired
     }
 }

@@ -50,7 +50,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
                 throw new InvalidOperationException($"Unexpected error occurred disabling 2FA.");
             }
 
-            logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", userManager.GetUserId(User));
+            logger.LogInformation("User with ID '{UserId}' has disabled 2fa", userManager.GetUserId(User));
             StatusMessage = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
             return RedirectToPage("./TwoFactorAuthentication");
         }

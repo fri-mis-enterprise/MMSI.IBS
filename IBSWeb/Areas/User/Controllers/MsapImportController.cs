@@ -309,7 +309,10 @@ namespace IBSWeb.Areas.User.Controllers
                         string crNum = GetString(record, "crnum");
                         bool active = ParseBool(record, "active");
 
-                        if (!active || billNum == "-" || crNum == "-") continue;
+                        if (!active || billNum == "-" || crNum == "-")
+                        {
+                            continue;
+                        }
 
                         if (!maps.CollectBill.ContainsKey(billNum))
                         {
@@ -527,7 +530,11 @@ namespace IBSWeb.Areas.User.Controllers
                 };
 
                 newRecords.Add((entity, legacyId, legacyParentId));
-                if (accNum != null) existingAccSet.Add(accNum);
+                if (accNum != null)
+                {
+                    existingAccSet.Add(accNum);
+                }
+
                 existingNameSet.Add(accName);
             }
 
@@ -572,7 +579,10 @@ namespace IBSWeb.Areas.User.Controllers
             foreach (var record in records)
             {
                 string code = GetString(record, "code").TrimStart('0');
-                if (string.IsNullOrEmpty(code)) code = "0";
+                if (string.IsNullOrEmpty(code))
+                {
+                    code = "0";
+                }
 
                 if (maps.BankAccount.ContainsKey(code) || maps.BankAccount.ContainsKey(GetString(record, "code")))
                 {
@@ -1297,7 +1307,10 @@ namespace IBSWeb.Areas.User.Controllers
 
                 string checkDate = GetString(record, "checkdate");
                 string bankCode = GetString(record, "bankacctco").TrimStart('0');
-                if (string.IsNullOrEmpty(bankCode)) bankCode = "0";
+                if (string.IsNullOrEmpty(bankCode))
+                {
+                    bankCode = "0";
+                }
 
                 int? bankId = null;
                 if (maps.BankAccount.TryGetValue(bankCode, out int bid))
@@ -1374,7 +1387,10 @@ namespace IBSWeb.Areas.User.Controllers
                 string crNum = GetString(record, "crnum");
                 bool active = ParseBool(record, "active");
 
-                if (!active || billNum == "-" || crNum == "-") continue;
+                if (!active || billNum == "-" || crNum == "-")
+                {
+                    continue;
+                }
 
                 if (!maps.CollectBill.ContainsKey(billNum))
                 {
@@ -1773,7 +1789,10 @@ namespace IBSWeb.Areas.User.Controllers
                             }
                         }
                     }
-                    if (tId != null || !useFallback) return (pId, tId);
+                    if (tId != null || !useFallback)
+                    {
+                        return (pId, tId);
+                    }
                 }
 
                 // 3. Try as Port Legacy ID (from port.csv RECID)
@@ -1886,7 +1905,11 @@ namespace IBSWeb.Areas.User.Controllers
 
         private static string GetString(IDictionary<string, object?>? record, string propertyName)
         {
-            if (record == null) return "-";
+            if (record == null)
+            {
+                return "-";
+            }
+
             var targetKey = propertyName.Trim().ToLower();
 
             foreach (var kvp in record)

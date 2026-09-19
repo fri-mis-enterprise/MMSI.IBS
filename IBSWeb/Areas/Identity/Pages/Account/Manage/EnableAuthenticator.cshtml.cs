@@ -112,7 +112,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
 
             await userManager.SetTwoFactorEnabledAsync(user, true);
             var userId = await userManager.GetUserIdAsync(user);
-            logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
+            logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app", userId);
 
             StatusMessage = "Your authenticator app has been verified.";
 

@@ -19,17 +19,20 @@ namespace IBSWeb.Areas.SuperAdmin.Controllers
 
         public IActionResult Index(string table)
         {
-            if (!superAdminService.SupportedTables.Contains(table))
-                return NotFound();
+            if (superAdminService.SupportedTables.Contains(table))
+            {
+                ViewBag.TableName = table;
+                ViewBag.DisplayName = superAdminService.DisplayName(table);
+                ViewBag.ColumnsJson = JsonSerializer.Serialize(superAdminService.GetColumns(table), JsonCamelCase);
+                ViewBag.FieldsJson =
+                    JsonSerializer.Serialize(superAdminService.GetEditableFields(table), JsonCamelCase);
+                ViewBag.IdColumn = superAdminService.IdColumn(table);
+                ViewBag.ReferenceColumn = superAdminService.ReferenceColumn(table);
 
-            ViewBag.TableName = table;
-            ViewBag.DisplayName = superAdminService.DisplayName(table);
-            ViewBag.ColumnsJson = JsonSerializer.Serialize(superAdminService.GetColumns(table), JsonCamelCase);
-            ViewBag.FieldsJson = JsonSerializer.Serialize(superAdminService.GetEditableFields(table), JsonCamelCase);
-            ViewBag.IdColumn = superAdminService.IdColumn(table);
-            ViewBag.ReferenceColumn = superAdminService.ReferenceColumn(table);
+                return View();
+            }
 
-            return View();
+            return NotFound();
         }
 
         [HttpPost]
@@ -71,10 +74,7 @@ namespace IBSWeb.Areas.SuperAdmin.Controllers
         public async Task<IActionResult> GetRecord(string table, int id, CancellationToken cancellationToken)
         {
             var record = await superAdminService.GetRecordAsync(table, id, cancellationToken);
-            if (record == null)
-                return Json(new { success = false, message = "Record not found." });
-
-            return Json(new { success = true, data = record });
+            return record == null ? Json(new { success = false, message = "Record not found." }) : Json(new { success = true, data = record });
         }
 
         [HttpPost]

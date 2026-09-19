@@ -43,7 +43,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
             await userManager.SetTwoFactorEnabledAsync(user, false);
             await userManager.ResetAuthenticatorKeyAsync(user);
             var userId = await userManager.GetUserIdAsync(user);
-            logger.LogInformation("User with ID '{UserId}' has reset their authentication app key.", user.Id);
+            logger.LogInformation("User with ID '{UserId}' has reset their authentication app key", user.Id);
 
             await signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.";

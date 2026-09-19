@@ -15,7 +15,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await signInManager.SignOutAsync();
-            logger.LogInformation("User logged out.");
+            logger.LogInformation("User logged out");
             return returnUrl != null ? LocalRedirect(returnUrl) : RedirectToPage();
         }
 

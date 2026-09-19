@@ -233,7 +233,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get suppliers.");
+                logger.LogError(ex, "Failed to get suppliers");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -254,9 +254,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var model = new SupplierViewModel(supplier);
-
-            model.DefaultExpenses = await dbContext.ChartOfAccounts
+            var model = new SupplierViewModel(supplier) { DefaultExpenses = await dbContext.ChartOfAccounts
                 .Where(coa => !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
@@ -264,19 +262,19 @@ namespace IBSWeb.Areas.User.Controllers
                     Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken),
+                WithholdingTaxList = await dbContext.ChartOfAccounts
+                    .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber + " " + s.AccountName,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken),
+                PaymentTerms = await unitOfWork.Terms.GetTermsListAsyncByCode(cancellationToken)
+            };
 
-            model.WithholdingTaxList = await dbContext.ChartOfAccounts
-                .Where(coa => coa.AccountNumber!.Contains("2010302") && !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber + " " + s.AccountName,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            model.PaymentTerms = await unitOfWork.Terms.GetTermsListAsyncByCode(cancellationToken);
             return View(model);
         }
 
@@ -605,7 +603,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get suppliers. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                logger.LogError(ex, "Failed to get suppliers. Error: {ErrorMessage}, Stack: {StackTrace}",
                     ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));

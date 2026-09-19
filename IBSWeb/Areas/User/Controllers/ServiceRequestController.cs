@@ -163,7 +163,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 logger.LogError(ex,
-                    "Failed to create service request.");
+                    "Failed to create service request");
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
@@ -372,7 +372,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 logger.LogError(ex,
-                    "Failed to edit service request.");
+                    "Failed to edit service request");
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
@@ -545,7 +545,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to dispatch tickets.");
+                    "Failed to dispatch tickets");
                 return Json(new { draw = parameters.Draw, error = ex.Message });
             }
         }
@@ -579,7 +579,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to delete image.");
+                    "Failed to delete image");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Edit),
                     new
@@ -618,7 +618,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to delete video.");
+                    "Failed to delete video");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Edit),
                     new
@@ -693,7 +693,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete service request.");
+                logger.LogError(ex, "Failed to delete service request");
                 return Json(new { success = false, message = $"Failed to delete: {ex.Message}" });
             }
         }
@@ -729,7 +729,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to restore service request.");
+                logger.LogError(ex, "Failed to restore service request");
                 return Json(new { success = false, message = $"Failed to restore: {ex.Message}" });
             }
         }

@@ -14,7 +14,7 @@ namespace IBSWeb.Areas.User.Controllers
     [Area("User")]
     public class PaymentTermsController(
         IUnitOfWork unitOfWork,
-        ILogger<SupplierController> logger,
+        ILogger<PaymentTermsController> logger,
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext dbContext)
         : Controller
@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get suppliers.");
+                logger.LogError(ex, "Failed to get suppliers");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

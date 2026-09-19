@@ -45,17 +45,17 @@ namespace IBS.Services
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
-                    _logger.LogInformation($"File deleted: {filePath}");
+                    _logger.LogInformation("File deleted: {FilePath}", filePath);
                 }
                 else
                 {
-                    _logger.LogWarning($"File not found for deletion: {filePath}");
+                    _logger.LogWarning("File not found for deletion: {FilePath}", filePath);
                 }
                 return Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while deleting file: {ex.Message}");
+                _logger.LogError(ex, "Error occurred while deleting file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -72,7 +72,7 @@ namespace IBS.Services
             // Return a URL that can be used to access the file
             // In development, this will be a relative path
             var relativePath = $"/local-storage/{fileNameToRead.Replace("\\", "/")}";
-            _logger.LogInformation($"Local URL generated for file '{fileNameToRead}': {relativePath}");
+            _logger.LogInformation("Local URL generated for file '{FileNameToRead}': {RelativePath}", fileNameToRead, relativePath);
             return Task.FromResult(relativePath);
         }
 
@@ -80,7 +80,7 @@ namespace IBS.Services
         {
             if (fileToUpload == null || fileToUpload.Length == 0)
             {
-                _logger.LogError("File upload failed: No file provided or file is empty.");
+                _logger.LogError("File upload failed: No file provided or file is empty");
                 throw new ArgumentException("File is either null or empty.", nameof(fileToUpload));
             }
 
@@ -110,12 +110,12 @@ namespace IBS.Services
                     await fileToUpload.CopyToAsync(stream);
                 }
 
-                _logger.LogInformation($"File uploaded successfully: {filePath}");
+                _logger.LogInformation("File uploaded successfully: {FilePath}", filePath);
                 return filePath;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while uploading file: {ex.Message}");
+                _logger.LogError(ex, "Error occurred while uploading file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -137,12 +137,12 @@ namespace IBS.Services
                 }
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
-                _logger.LogInformation($"File {fileNameToDownload} downloaded successfully");
+                _logger.LogInformation("File {FileNameToDownload} downloaded successfully", fileNameToDownload);
                 return Task.FromResult<Stream>(memoryStream);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while downloading file: {ex.Message}");
+                _logger.LogError(ex, "Error occurred while downloading file: {ExMessage}", ex.Message);
                 throw;
             }
         }
@@ -173,7 +173,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error processing file: {ex.Message}");
+                _logger.LogError(ex, "Error processing file: {ExMessage}", ex.Message);
                 throw;
             }
         }

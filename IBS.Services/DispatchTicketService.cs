@@ -135,7 +135,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create dispatch ticket.");
+                logger.LogError(ex, "Failed to create dispatch ticket");
                 return ServiceResult<int>.Failure($"Failed to create dispatch ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -301,7 +301,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to edit ticket.");
+                logger.LogError(ex, "Failed to edit ticket");
                 return ServiceResult.Failure($"Failed to edit ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -457,7 +457,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to approve tariff.");
+                logger.LogError(ex, "Failed to approve tariff");
                 return ServiceResult.Failure($"Failed to approve tariff: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -502,7 +502,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to disapprove tariff.");
+                logger.LogError(ex, "Failed to disapprove tariff");
                 return ServiceResult.Failure($"Failed to disapprove tariff: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -565,7 +565,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to batch approve tariffs.");
+                logger.LogError(ex, "Failed to batch approve tariffs");
                 return ServiceResult.Failure($"Failed to batch approve tariffs: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -652,7 +652,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to batch set tariffs.");
+                logger.LogError(ex, "Failed to batch set tariffs");
                 return ServiceResult.Failure($"Failed to batch set tariffs: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -697,7 +697,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete ticket.");
+                logger.LogError(ex, "Failed to delete ticket");
                 return ServiceResult.Failure($"Failed to delete ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -740,7 +740,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to restore ticket.");
+                logger.LogError(ex, "Failed to restore ticket");
                 return ServiceResult.Failure($"Failed to restore ticket: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -775,7 +775,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete image.");
+                logger.LogError(ex, "Failed to delete image");
                 return ServiceResult.Failure($"Failed to delete image: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }
@@ -810,7 +810,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete video.");
+                logger.LogError(ex, "Failed to delete video");
                 return ServiceResult.Failure($"Failed to delete video: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }

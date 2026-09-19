@@ -168,7 +168,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error upserting user.");
+                logger.LogError(ex, "Error upserting user");
                 return ServiceResult.Failure($"Failed to save user: {ExceptionHelper.GetErrorMessage(ex)}");
             }
         }

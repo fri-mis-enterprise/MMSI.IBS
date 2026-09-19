@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account.Manage
 
             await signInManager.SignOutAsync();
 
-            logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
+            logger.LogInformation("User with ID '{UserId}' deleted themselves", userId);
 
             return Redirect("~/");
         }

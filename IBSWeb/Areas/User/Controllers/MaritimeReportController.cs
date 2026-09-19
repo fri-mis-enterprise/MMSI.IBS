@@ -440,7 +440,11 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                             }
                             else
                             {
-                                if (customerStartCol == -1) customerStartCol = col1;
+                                if (customerStartCol == -1)
+                                {
+                                    customerStartCol = col1;
+                                }
+
                                 customerEndCol = col1;
                                 customerNameToCol[label] = col1;
                             }
@@ -763,7 +767,10 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                 foreach (var tug in companyOwnedTugboats)
                 {
                     var name = tug.TugboatName;
-                    if (!tugboatCols.TryGetValue(name, out var tcSummary)) continue;
+                    if (!tugboatCols.TryGetValue(name, out var tcSummary))
+                    {
+                        continue;
+                    }
 
                     // IOC LOCAL
                     currRow += 2;
@@ -771,27 +778,40 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                     ws.Cells[currRow, 3].Value = "IOC";
                     ws.Cells[currRow, 4].Value = "LOCAL";
                     if (tcSummary.AssistsLocalIoc.HasValue)
+                    {
                         ws.Cells[currRow, 5].Value = Number(totalRow, tcSummary.AssistsLocalIoc.Value);
+                    }
+
                     ws.Cells[currRow, 7].Value = Number(currRow, 5) + Number(currRow, 6);
                     if (tcSummary.TendingHoursLocal.HasValue)
+                    {
                         ws.Cells[currRow, 8].Value = Number(totalRow, tcSummary.TendingHoursLocal.Value);
+                    }
 
                     // IOC FOREIGN
                     currRow += 1;
                     ws.Cells[currRow, 3].Value = "IOC";
                     ws.Cells[currRow, 4].Value = "FOREIGN";
                     if (tcSummary.AssistsForeignIoc.HasValue)
+                    {
                         ws.Cells[currRow, 5].Value = Number(totalRow, tcSummary.AssistsForeignIoc.Value);
+                    }
+
                     ws.Cells[currRow, 7].Value = Number(currRow, 5) + Number(currRow, 6);
                     if (tcSummary.TendingHoursForeign.HasValue)
+                    {
                         ws.Cells[currRow, 8].Value = Number(totalRow, tcSummary.TendingHoursForeign.Value);
+                    }
 
                     // OTHER PORT LOCAL
                     currRow += 1;
                     ws.Cells[currRow, 3].Value = "OTHER PORT";
                     ws.Cells[currRow, 4].Value = "LOCAL";
                     if (tcSummary.AssistsLocalOutside.HasValue)
+                    {
                         ws.Cells[currRow, 5].Value = Number(totalRow, tcSummary.AssistsLocalOutside.Value);
+                    }
+
                     ws.Cells[currRow, 7].Value = Number(currRow, 5) + Number(currRow, 6);
 
                     // OTHER PORT FOREIGN
@@ -799,14 +819,19 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                     ws.Cells[currRow, 3].Value = "OTHER PORT";
                     ws.Cells[currRow, 4].Value = "FOREIGN";
                     if (tcSummary.AssistsForeignOutside.HasValue)
+                    {
                         ws.Cells[currRow, 5].Value = Number(totalRow, tcSummary.AssistsForeignOutside.Value);
+                    }
+
                     ws.Cells[currRow, 7].Value = Number(currRow, 5) + Number(currRow, 6);
 
                     // SUB TOTAL - <TUGBOAT>
                     currRow += 1;
                     ws.Cells[currRow, 3].Value = $"SUB TOTAL - {name}";
                     for (int c = 5; c <= 9; c++)
+                    {
                         ws.Cells[currRow, c].Value = Enumerable.Range(currRow - 4, 4).Sum(r => Number(r, c));
+                    }
 
                     using (var rng = ws.Cells[currRow, 1, currRow, 9])
                     {
@@ -825,25 +850,37 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                 ws.Cells[currRow, 3].Value = "ALL PORTS";
                 ws.Cells[currRow, 4].Value = "LOCAL";
                 if (otherTugsAssistsLocCol > 0)
+                {
                     ws.Cells[currRow, 5].Value = Number(totalRow, otherTugsAssistsLocCol);
+                }
+
                 ws.Cells[currRow, 7].Value = Number(currRow, 5) + Number(currRow, 6);
                 if (otherTugsTendHrsLocCol > 0)
+                {
                     ws.Cells[currRow, 8].Value = Number(totalRow, otherTugsTendHrsLocCol);
+                }
 
                 currRow += 1;
                 ws.Cells[currRow, 3].Value = "ALL PORTS";
                 ws.Cells[currRow, 4].Value = "FOREIGN";
                 if (otherTugsAssistsForCol > 0)
+                {
                     ws.Cells[currRow, 5].Value = Number(totalRow, otherTugsAssistsForCol);
+                }
+
                 ws.Cells[currRow, 7].Value = Number(currRow, 5) + Number(currRow, 6);
                 if (otherTugsTendHrsForCol > 0)
+                {
                     ws.Cells[currRow, 8].Value = Number(totalRow, otherTugsTendHrsForCol);
+                }
 
                 // SUB TOTAL - OTHER TUGS
                 currRow += 1;
                 ws.Cells[currRow, 3].Value = "SUB TOTAL - OTHER TUGS";
                 for (int c = 5; c <= 9; c++)
+                {
                     ws.Cells[currRow, c].Value = Enumerable.Range(currRow - 2, 2).Sum(r => Number(r, c));
+                }
 
                 using (var rng = ws.Cells[currRow, 1, currRow, 9])
                 {
@@ -861,7 +898,9 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                 if (subtotalRows.Count > 0)
                 {
                     for (int c = 5; c <= 9; c++)
+                    {
                         ws.Cells[currRow, c].Value = subtotalRows.Sum(r => Number(r, c));
+                    }
                 }
 
                 using (var rng = ws.Cells[currRow, 1, currRow, 9])

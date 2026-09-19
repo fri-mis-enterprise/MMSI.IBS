@@ -175,7 +175,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     await HttpContext.SignOutAsync("Identity.Application");
                     await HttpContext.SignInAsync("Identity.Application", principal);
 
-                    logger.LogInformation("User logged in.");
+                    logger.LogInformation("User logged in");
                     return LocalRedirect(returnUrl);
                 }
 
@@ -186,7 +186,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
                 if (result.IsLockedOut)
                 {
-                    logger.LogWarning("User account locked out.");
+                    logger.LogWarning("User account locked out");
                     return RedirectToPage("./Lockout");
                 }
 

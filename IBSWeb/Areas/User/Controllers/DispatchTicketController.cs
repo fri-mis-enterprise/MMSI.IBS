@@ -668,7 +668,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to get dispatch tickets.");
+                logger.LogError(ex, "Failed to get dispatch tickets");
                 return Json(new { error = ex.Message, draw = parameters.Draw, recordsTotal = 0, recordsFiltered = 0, data = Array.Empty<DispatchTicket>() });
             }
         }
