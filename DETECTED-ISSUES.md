@@ -1,5 +1,18 @@
 # Detected Code Problems
 
+## 2026-09-19
+- [2026-09-19] [high] IBS.Services/DispatchTicketService.cs:49 — Direct creation bypassed Service Request posting and immediately assigned ForTariff. Fixed: removed direct creation service/form; legacy POST rejects requests and GET redirects to Service Request.
+- [2026-09-19] [high] IBS.Services/DispatchTicketService.cs:60 — Ticket editing could promote an unposted Service Request to ForTariff when critical fields changed. Fixed: reject Draft, Requested and Service Request Deleted records before mutation.
+- [2026-09-19] [med] IBS.DataAccess/Repository/Msap/DispatchTicketRepository.cs:113 — Registry excluded obsolete status names but included Draft/Requested service requests. Fixed: exclude current Service Request states from rows and totals.
+- [2026-09-19] [med] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:83 — Create relied on the browser's required Job Order selector; submitted missing/closed/pending-billing Job Orders were not rejected. Fixed using the existing eligible Job Order list.
+- [2026-09-19] [high] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:352 — Edit saves before adding its audit entry and then commits without another SaveAsync; the audit entry may never persist.
+- [2026-09-19] [high] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:561 — DeleteImage/DeleteVideo lack mutation-specific permission checks, workflow-state guards and audit entries; class access includes users with posting-only permission.
+- [2026-09-19] [med] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:640 — Post checks Requested status but does not revalidate the parent Job Order or closed accounting period. Create also lacks the closed-period guard used by the removed direct-creation service.
+- [2026-09-19] [med] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:723 — Restore always assigns Requested, including records deleted while Draft; incomplete requests can then be posted.
+- [2026-09-19] [med] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:469 — Global search dereferences nullable COSNumber/TugMaster and lowercases the query without lowercasing several searched fields.
+- [2026-09-19] [low] IBSWeb/Areas/User/Controllers/JobOrderController.cs:162 — Loads TicketViewModel select lists into ViewData although no view reads TicketViewModel.
+- [2026-09-19] [low] IBSWeb/Views/Shared/_Navbar.cshtml:52 — Comment still describes opt-in/localStorage activation although the modern navbar is always on.
+
 ## 2026-09-16
 - `med` IBSWeb/Areas/User/Controllers/MaritimeReportController.cs:271 — SalesSummary filters only billed dispatches by billing date, so qualifying unbilled dispatches are omitted from the monthly report; repository query needs the legacy unbilled branch.
 

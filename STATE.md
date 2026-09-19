@@ -11,6 +11,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Recent Decisions / Gotchas / Open Questions: only what a future session can't find elsewhere.
 
 ### Current Focus
+- **Service Request first (2026-09-19):** Job Order action routes to preselected Service Request; direct ticket creation service/form removed, legacy GET redirects and POST rejects. Registry and ticket editing exclude unposted requests. Findings recorded in DETECTED-ISSUES.md. **Open:** authenticated browser verification of create → post → tariff; review legacy SR audit/attachment/posting findings separately.
 - **SuperAdmin modernization + paging (2026-08-06, committed):** modern UI (grid cards, real `status-*` badges + new `.status-error`, styled notices, no phantom `scrollX` header row); `GetDataAsync` pages/sorts/filters in SQL via new `IRepository<T>.GetPagedAsync` (was loading whole tables in memory). DELETED filter buttons → shared `modern-btn-error` on ServiceRequest/DispatchTicket Index.
 - **ServiceRequest job-order filter (2026-08-06, committed d56e904):** `PopulateJobOrdersList` (Create+Edit) excludes Open JOs with a `ForPosting` billing (`!dbContext.MsapBillings.Any(...)`), matching JobOrderService.cs:120. Was causing submit entity errors.
 - **Billing BAF (2026-08-05):** per-ticket BAF + switchable TYPE (Per Move/Per Hour), live rate edits on `input`, `BafRates[ticketId]` write-back with audit trail. Gotcha: mutate `data-*` via `.data()` not `.attr()` (jQuery caches on first read). **Open:** Edit.cshtml has no TYPE switch (Create only, intentional); Playwright/browser check pending.
@@ -35,6 +36,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element via `.tour-interactive-active` (z-index 10002) must stay above overlay/backdrop; popover flips above for selects.
 
 ### Session Log (recent only — full history in CHANGELOG.md)
+- 2026-09-19 — Required Service Request entry flow implemented; build passed with 0 warnings/errors and git diff --check passed. No permission migration or version increment.
 - 2026-08-06 — SuperAdmin modern UI + server-side paging (GetPagedAsync). DELETED filters → modern-btn-error. Build green.
 - 2026-08-06 — ServiceRequest Create/Edit JO filter (excludes Open JOs w/ ForPosting billing). Committed d56e904.
 - 2026-08-05 — Billing Create BAF switchable TYPE + live rates; tickets TOTAL live. Build 0/0. Broken pre-session: BillingService/Legacy/Dispatcher/TaxAnalysisTests dtor.

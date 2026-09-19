@@ -117,11 +117,11 @@
                             <span class="material-symbols-outlined text-primary">list_alt</span>
                             <h2 class="modern-headline-md">Dispatch Tickets</h2>
                         </div>
-                        @if (ViewBag.CanCreateDispatchTicket == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && Model.DispatchTickets.All(t => t.Status != SD.DispatchTicketStatus.Billed))
+                        @if (ViewBag.CanCreateServiceRequest == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && Model.DispatchTickets.All(t => t.Status != SD.DispatchTicketStatus.Billed))
                         {
-                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
+                            <a asp-action="Create" asp-controller="ServiceRequest" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
                                 <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
-                                ADD TICKET
+                                ADD SERVICE REQUEST
                             </a>
                         }
                     </div>

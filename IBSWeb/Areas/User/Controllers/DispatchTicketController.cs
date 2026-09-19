@@ -51,53 +51,19 @@ namespace IBSWeb.Areas.User.Controllers
 
         #region Create
 
-        /// <summary>
-        /// Displays the form to create a new Dispatch Ticket.
-        /// </summary>
         [HttpGet]
-        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
-        public async Task<IActionResult> Create(int jobOrderId, CancellationToken cancellationToken = default)
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to create Service Requests.")]
+        public IActionResult Create(int? jobOrderId)
         {
-            var viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, jobOrderId, cancellationToken);
-            return View(viewModel);
+            return RedirectToAction("Create", "ServiceRequest", new { jobOrderId });
         }
 
-        /// <summary>
-        /// Processes the creation of a new Dispatch Ticket, including file uploads.
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
-        public async Task<IActionResult> Create(
-            ServiceRequestViewModel viewModel,
-            IFormFile? imageFile,
-            IFormFile? videoFile,
-            CancellationToken cancellationToken = default)
+        public IActionResult Create()
         {
-            if ((imageFile == null || imageFile.Length == 0) && !User.IsInRole("Admin"))
-            {
-                TempData["warning"] = "An image of the Dispatch Ticket is strictly required!";
-                viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
-                return View(viewModel);
-            }
-
-            var result = await dispatchTicketService.CreateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
-
-            if (result.IsSuccess)
-            {
-                TempData["success"] = result.Message;
-
-                if (viewModel.JobOrderId.HasValue)
-                {
-                    return RedirectToAction("Details", "JobOrder", new { id = viewModel.JobOrderId });
-                }
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            TempData["error"] = result.Message;
-            viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
-            return View(viewModel);
+            return BadRequest("Direct Dispatch Ticket creation is disabled. Create and post a Service Request first.");
         }
 
         #endregion

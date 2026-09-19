@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-09-19]
+### Changed
+- **Service Request is the required ticket entry point** — Job Order Details now offers Add Service Request using the Service Request create permission and preselects its Job Order. Legacy DispatchTicket/Create GET redirects to that flow; POST rejects direct creation. Removed the direct creation service and Razor form. Service Request creation validates the selected Job Order against the existing eligible list. Unposted requests are excluded from the Dispatch Ticket registry and cannot bypass posting via ticket editing. Existing tickets and historical import handling are unchanged.
+
 ## [2026-09-01]
 ### Fixed
 - **MSAP Index Pages header status & date filters fixed** — Corrected DataTable column indices for status search in `DispatchTicket/Index.cshtml` (column index 10 → 11) and `Billing/Index.cshtml` (column index 6 → 7) where search was mistakenly querying column 10 (Vessel) and column 6 (Dispatch Ticket #) instead of Status, causing non-Deleted filters to return empty tables. Also corrected date filter column target in `ServiceRequest/Index.cshtml` (column index 1 → 0).

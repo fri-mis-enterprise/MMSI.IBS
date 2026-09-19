@@ -57,9 +57,9 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpGet]
         [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to create Service Requests.")]
-        public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(int? jobOrderId, CancellationToken cancellationToken = default)
         {
-            var viewModel = new ServiceRequestViewModel();
+            var viewModel = new ServiceRequestViewModel { JobOrderId = jobOrderId };
             viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel,
                 cancellationToken);
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
@@ -78,6 +78,12 @@ namespace IBSWeb.Areas.User.Controllers
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
+
+            if (!viewModel.JobOrders!.Any(j => j.Value == viewModel.JobOrderId?.ToString()))
+            {
+                TempData["warning"] = "Select an open Job Order without a pending billing.";
+                return View(viewModel);
+            }
 
             if (imageFile == null || imageFile.Length == 0)
             {
