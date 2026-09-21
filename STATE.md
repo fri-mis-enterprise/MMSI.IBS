@@ -19,6 +19,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - **14 master-file Create/Edit screens on `XViewModel : XEntity` (2026-08-04):** (9 MSAP + 5 MasterFile). Controllers build VM in GET, bind in POST; [NotMapped] select-lists populated after ctor. Activate/Deactivate keep entity @model.
 
 ### Recent Decisions
+- Closed-period guards return `ServiceResult` from services; MVC controllers turn failures into `TempData["error"]`, rendered by `_Notification.cshtml` via `ModernAlert.error`. Do not introduce UI dependencies into services.
 - Tours: `data-tour-step="N"` + `window.IBS_TOUR_STEPS` in `@section Scripts`; `data-page-header` on `<h1>` auto-injects (?) help. Editable-only fields tag steps only in their editable branches (tutorial.js auto-skips missing).
 - tutorial.js autoAdvance fires on `change/input` of contained inputs, not raw `click` (was blocking native date/time pickers).
 - Transport-aware denial: AJAX gets JSON `{success:false,message}`; full-page navs redirect to same-origin referer with TempData["error"] (fallback Home/Index).
@@ -36,6 +37,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element via `.tour-interactive-active` (z-index 10002) must stay above overlay/backdrop; popover flips above for selects.
 
 ### Session Log (recent only — full history in CHANGELOG.md)
+- 2026-09-21 — Closed-period alerts — Job Order create/edit service failures now show the shared ModernAlert rather than the validation summary; `dotnet build --no-restore` was blocked only by the active IBSWeb/debugger DLL locks.
 - 2026-09-21 — Detected-issues review — restored legacy Draft/Requested registry exclusions and marked the issue resolved; Job Order Detail retains the edit-and-promote path.
 - 2026-09-21 — Removed Service Request module and restored direct Dispatch Ticket entry; final build and migration script passed. Browser smoke check blocked because no local browser/runtime is available.
 - 2026-09-21 — User authorized committing the existing bug fixes before a separate removal; build passed with 0 warnings/errors. Removal scope clarification requested.

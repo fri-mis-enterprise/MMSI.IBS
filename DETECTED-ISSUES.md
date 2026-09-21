@@ -3,6 +3,7 @@
 Entries dated 2026-09-19 and earlier are resolved or verified already fixed. Historical file/line references are retained.
 
 ## 2026-09-21 (Resolved)
+- [2026-09-21] [low] IBS.Services/DispatchTicketService.cs:55 — The "Cannot add ticket" error contains mojibake (`Ã¢â‚¬â€`) instead of an em dash, so users see corrupted text when the parent Job Order is closed or cancelled.
 - [2026-09-21] [med] IBS.DataAccess/Repository/Msap/DispatchTicketRepository.cs:123,183 — The entry below says legacy `Draft`/`Requested` tickets remain excluded from the Dispatch Ticket registry, but the current base and total queries exclude only `For Posting`, `Incomplete`, and `Deleted`; these legacy records are returned. **Resolved 2026-09-21: restored the `Draft`/`Requested` exclusions to the registry query and its total count.**
 - [2026-09-21] [low] IBS.DataAccess/Repository/Msap/JobOrderRepository.cs:83 — Removal consolidation temporarily produced a duplicate `Deleted` predicate in the billable-Job-Order filter. **Fixed 2026-09-21: kept one deleted-status predicate.**
 - [2026-09-21] [high] IBSWeb/Areas/User/Controllers/DispatchTicketController.cs:58 — After the requested Service Request controller/view removal, Create still redirects to the removed endpoint; POST still rejects direct creation. **Fixed 2026-09-21: restored the existing direct Dispatch Ticket create flow, which creates `For Tariff` tickets.**

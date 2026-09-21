@@ -120,7 +120,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Details), new { id = result.Data });
             }
 
-            ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
+            TempData["error"] = result.Message ?? "An error occurred.";
             await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
             return View(viewModel);
         }
@@ -249,7 +249,7 @@ namespace IBSWeb.Areas.User.Controllers
             ViewData["JobOrderNumber"] = jo?.JobOrderNumber ?? "";
             ViewData["HasTickets"] = jo?.DispatchTickets.Any() ?? false;
             await jobOrderService.PopulateJobOrderViewModelAsync(viewModel, cancellationToken);
-            ModelState.AddModelError(string.Empty, result.Message ?? "An error occurred.");
+            TempData["error"] = result.Message ?? "An error occurred.";
             return View(viewModel);
         }
 
