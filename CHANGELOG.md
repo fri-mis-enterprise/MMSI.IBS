@@ -1,6 +1,9 @@
 # Changelog
 
 ## [2026-09-21]
+### Fixed
+- **Legacy Service Request records hidden from Dispatch Ticket registry** — Restored `Draft`/`Requested` status exclusions in the paged query and its total count. Job Order Detail remains the path to edit a legacy record and promote it to `For Tariff`.
+
 ### Removed
 - **Service Request module** — Deleted its controller, views, user-access fields, permission enum entries, status constants, navigation, manual, and assets. Restored direct Dispatch Ticket creation and Job Order actions. `RemoveServiceRequest` converts existing `Draft`/`Requested` tickets to `For Tariff` and `Service Request Deleted` to `Deleted`, then drops the obsolete permission columns. Renamed the shared form model to `DispatchTicketViewModel` and moved its select-list query into `DispatchTicketRepository`.
 

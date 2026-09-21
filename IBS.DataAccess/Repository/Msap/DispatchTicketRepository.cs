@@ -124,7 +124,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Billing)
-                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete");
+                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != "Draft" && dt.Status != "Requested");
 
             if (!string.IsNullOrEmpty(filterType))
             {
@@ -180,7 +180,7 @@ namespace IBS.DataAccess.Repository.Msap
                 }
             }
 
-            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.Deleted, cancellationToken);
+            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != "Draft" && dt.Status != "Requested" && dt.Status != SD.DispatchTicketStatus.Deleted, cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
             if (parameters.Order?.Count > 0 && parameters.Columns != null)

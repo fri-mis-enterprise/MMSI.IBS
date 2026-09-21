@@ -2,14 +2,15 @@
 
 Entries dated 2026-09-19 and earlier are resolved or verified already fixed. Historical file/line references are retained.
 
-## 2026-09-21
+## 2026-09-21 (Resolved)
+- [2026-09-21] [med] IBS.DataAccess/Repository/Msap/DispatchTicketRepository.cs:123,183 — The entry below says legacy `Draft`/`Requested` tickets remain excluded from the Dispatch Ticket registry, but the current base and total queries exclude only `For Posting`, `Incomplete`, and `Deleted`; these legacy records are returned. **Resolved 2026-09-21: restored the `Draft`/`Requested` exclusions to the registry query and its total count.**
 - [2026-09-21] [low] IBS.DataAccess/Repository/Msap/JobOrderRepository.cs:83 — Removal consolidation temporarily produced a duplicate `Deleted` predicate in the billable-Job-Order filter. **Fixed 2026-09-21: kept one deleted-status predicate.**
 - [2026-09-21] [high] IBSWeb/Areas/User/Controllers/DispatchTicketController.cs:58 — After the requested Service Request controller/view removal, Create still redirects to the removed endpoint; POST still rejects direct creation. **Fixed 2026-09-21: restored the existing direct Dispatch Ticket create flow, which creates `For Tariff` tickets.**
 - [2026-09-21] [high] IBSWeb/Areas/User/Views/JobOrder/Details.cshtml:122 — Add, Accept and Edit Request actions still target the removed ServiceRequest controller (also lines 233, 243); IBSWeb/Views/Shared/_Navbar.cshtml:207 retains its registry link. **Fixed 2026-09-21: Job Order uses DispatchTicket Create/Edit and the Service Request navigation/manual item was removed.**
 - [2026-09-21] [med] IBS.DataAccess/Repository/Msap/DispatchTicketRepository.cs:113 — Draft/Requested tickets remain excluded from the registry and IBS.Services/DispatchTicketService.cs:40 rejects editing them, while the removed controller owned acceptance. Existing request-state records need a workflow decision in the next pass; no data/status migration performed. **Fixed 2026-09-21: legacy requests remain excluded from the registry, but Edit Ticket moves them into `For Tariff`; no bulk data migration was needed.**
 - [2026-09-21] [med] IBSWeb/Areas/User/Controllers/HomeController.cs:45 — Dashboard still counts Requested Service Requests after their controller/views were removed; reconcile this with the replacement workflow. **Fixed 2026-09-21: removed the obsolete dashboard count.**
 
-## 2026-09-19
+## 2026-09-19 (Resolved)
 - [2026-09-19] [med] AGENTS.md:7,29 — Build guidance incorrectly excluded Razor changes; CHANGELOG.md also claimed Razor never validates views at build. **Resolved:** require builds for .cshtml edits; a temporary invalid Razor view produced CS0117 during build, proving compilation is enabled. Probe removed; HTML/JavaScript still require separate checks.
 - [2026-09-19] [high] IBSWeb/Areas/User/Controllers/PaymentTermsController.cs:149,217,271 — Create/Edit/Delete queued audit entries after their last save and committed without persisting them. **Resolved:** SaveAsync now runs after adding each audit entry and before commit.
 - [2026-09-19] [med] IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:496 — Deleted/date filters were ignored, and recordsTotal reflected filtered rows. **Resolved:** handle both filters and preserve the pre-filter count.
@@ -26,27 +27,25 @@ Entries dated 2026-09-19 and earlier are resolved or verified already fixed. His
 - [2026-09-19] [low] IBSWeb/Areas/User/Controllers/JobOrderController.cs:162 — Loads TicketViewModel select lists into ViewData although no view reads TicketViewModel. **Fixed 2026-09-19: removed the unused load and its now-unused population method.**
 - [2026-09-19] [low] IBSWeb/Views/Shared/_Navbar.cshtml:52 — Comment still describes opt-in/localStorage activation although the modern navbar is always on. **Fixed 2026-09-19: corrected the always-on navbar comment.**
 
-## 2026-09-16
+## 2026-09-16 (Resolved)
 - `med` IBSWeb/Areas/User/Controllers/MaritimeReportController.cs:271 — SalesSummary filters only billed dispatches by billing date, so qualifying unbilled dispatches are omitted from the monthly report; repository query needs the legacy unbilled branch. **Verified resolved 2026-09-19: ReportRepository.GetDispatchReportData already includes the unbilled dispatch-date branch; removed stale controller TODO.**
 
 Running log of issues spotted during file reads/sessions. Reverse-chronological.
 Severity: `high` = likely bug, `med` = smells/tech debt, `low` = cosmetic/inconsistency.
 Format: `[date] [severity] file:line — description (session context)`. Fix when a task touches the file; otherwise leave for a dedicated pass.
 
-## 2026-08-06
+## 2026-08-06 (Resolved)
 - `low` IBSWeb/Areas/SuperAdmin/Views/Data/Index.cshtml (pre-fix) — `getStatusClass()` returned `badge-primary/badge-info/badge-error/...` classes that never existed anywhere (badges rendered colorless), `alert alert-error` was undefined, `modern-card-header` (Home) was undefined, and the DataTable's `scrollX: true` produced a phantom blank header `<tr>` (cloned scroll-head). All fixed this session.
 - `low` IBSWeb/Areas/User/Views/DispatchTicket/Index.cshtml:147 — used `status-error` badge class for Disapproved before `.status-error` existed (undefined in modern-ui.css) → rendered colorless. Fixed by adding `.status-error` to modern-ui.css this session.
 - `low` IBSWeb/Areas/SuperAdmin/Views/Data/Index.cshtml — server-side `TableColumnDef` only carries Data+Title (no render/type), so the `renderStatusBadge`/currency/boolean/date branches in `buildColumns()` are dead code; status columns render as plain text. Add render hints to the column defs if badges/₱-formatting are wanted in this screen. **Fixed 2026-09-19: render status from its actual column name, use escaped text for other cells, remove unreachable renderer branches.**
 - `low` IBSWeb/Areas/SuperAdmin/Controllers/DataController.cs:102 — duplicates `IBS.Models.DataTablesParameters` instead of reusing the shared model. **Fixed 2026-09-19: reuse IBS.Models request types; SuperAdmin searches normalize both query and fields.**
 - `low` IBS.Services/SuperAdminService.cs (pre-fix) — GetDataAsync loaded the whole table (`GetAllAsync`→`ToListAsync`) and reflected over all rows in memory for filter/sort/paging. Replaced with SQL-side `GetPagedAsync` this session.
 
-## 2026-08-05
+## 2026-08-05 (Resolved)
 - `low` IBSWeb/Areas/User/Controllers/MsapImportController.cs:1828 — `ComputeTotalHours` has no 1-hour minimum (rounds up only when fractional >= 0.75). (Session: 1h-min hours change) **Fixed 2026-09-19: apply Math.Max(totalHours, 1m) after customer-specific rounding; missing timestamps retain their existing zero result.**
-
-## (resolved)
 - 2026-08-05 — IBSWeb/Areas/User/Controllers/ServiceRequestController.cs:120,269 — applied 1-hour minimum (`Math.Max(hours, 1m)`) to legacy SR create/edit TotalHours.
 
-## 2026-08-04
+## 2026-08-04 (Resolved)
 - `low` IBSWeb/Areas/User/Views/Billing/Edit.cshtml:475 — `fillDataOnStartup` comment claims jQuery `:checked` excludes disabled inputs (so it iterates all checkboxes manually). jQuery `:checked` actually matches disabled+checked inputs, so `updateTotals()`'s `:checked` usage is fine; the comment is misleading. New `rebuildBafTable()` deliberately uses `.prop('checked')` to be safe either way. (Session: BAF per-ticket work) **Fixed 2026-09-19: corrected both misleading comments; hidden inputs still submit disabled selected tickets.**
 - `med` IBSWeb/Areas/User/Controllers/PaymentTermsController.cs:17 — `ILogger<SupplierController>` injected into `PaymentTermsController` (copy-paste; should be `ILogger<PaymentTermsController>`). Harmless (ILogger<T> is contravariant) but misleading. Spotted during V2 ViewModel conversion. **Verified already resolved 2026-09-19: constructor uses ILogger<PaymentTermsController>.**
 - `low` IBSWeb/Areas/User/Controllers/PaymentTermsController.cs:126 — self-assignment `model.NumberOfDays = model.NumberOfDays;` (dead code). Spotted during V2 ViewModel conversion. **Fixed 2026-09-19: removed both NumberOfDays and NumberOfMonths self-assignments.**
