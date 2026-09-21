@@ -1,6 +1,12 @@
 # Detected Code Problems
 
-All entries below are resolved or verified already fixed as of 2026-09-19. Historical file/line references are retained.
+Entries dated 2026-09-19 and earlier are resolved or verified already fixed. Historical file/line references are retained.
+
+## 2026-09-21
+- [2026-09-21] [high] IBSWeb/Areas/User/Controllers/DispatchTicketController.cs:58 — After the requested Service Request controller/view removal, Create still redirects to the removed endpoint; POST still rejects direct creation. Replacement ticket-entry flow is pending the next module pass.
+- [2026-09-21] [high] IBSWeb/Areas/User/Views/JobOrder/Details.cshtml:122 — Add, Accept and Edit Request actions still target the removed ServiceRequest controller (also lines 233, 243); IBSWeb/Views/Shared/_Navbar.cshtml:207 retains its registry link. Deferred with module cleanup per the staged removal request.
+- [2026-09-21] [med] IBS.DataAccess/Repository/Msap/DispatchTicketRepository.cs:113 — Draft/Requested tickets remain excluded from the registry and IBS.Services/DispatchTicketService.cs:40 rejects editing them, while the removed controller owned acceptance. Existing request-state records need a workflow decision in the next pass; no data/status migration performed.
+- [2026-09-21] [med] IBSWeb/Areas/User/Controllers/HomeController.cs:45 — Dashboard still counts Requested Service Requests after their controller/views were removed; reconcile this with the replacement workflow.
 
 ## 2026-09-19
 - [2026-09-19] [med] AGENTS.md:7,29 — Build guidance incorrectly excluded Razor changes; CHANGELOG.md also claimed Razor never validates views at build. **Resolved:** require builds for .cshtml edits; a temporary invalid Razor view produced CS0117 during build, proving compilation is enabled. Probe removed; HTML/JavaScript still require separate checks.

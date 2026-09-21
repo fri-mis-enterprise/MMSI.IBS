@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-09-21]
+### Removed
+- **Service Request controller and views** — Deleted ServiceRequestController and its Create, Edit and Index views as the first removal step. Remaining module routes and status dependencies are logged in DETECTED-ISSUES.md for the next pass; existing database records, shared models, repositories and permissions are retained.
+
 ## [2026-09-19]
 ### Fixed
 - **Detected-issues backlog resolved** — Persist Service Request and Payment Terms audits before commit; audit bank-account creation/edits. Require editable parent Job Orders, valid posting periods and complete requests before Service Request posting; protect and audit attachment deletion; restore incomplete requests as Draft. Fix null/case handling and deleted/date filters in Service Request search. Apply the import one-hour minimum after existing customer rounding. Reuse the shared SuperAdmin DataTables model, normalize its searches, activate escaped status rendering and remove unreachable render branches. Remove unused ticket select-list loading and Payment Terms self-assignments; correct stale comments and mark already-fixed entries in DETECTED-ISSUES.md.
