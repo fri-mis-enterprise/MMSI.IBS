@@ -4,6 +4,10 @@
 
 Entries dated 2026-09-19 and earlier are resolved or verified already fixed. Historical file/line references are retained.
 
+## 2026-09-21 (Open)
+- [2026-09-21] [high] docker-compose.yaml:8 — Web startup fails with Sentry null-DSN exception because the DSN in .env is not forwarded to the container. **Fixed:** renamed local key to Sentry__Dsn and explicitly mapped it into web environment.
+- [2026-09-21] [med] docker-compose.yaml:29 — Database health check has no startup grace period (5s interval, 5 retries) and checks the local socket, which can accept connections during the temporary initialization server. First initialization finished at 04:13:25 UTC; web remains Created with no logs/start attempt. Suspected initial dependency-health timeout; original Compose CLI error is unavailable. Consider a startup grace period and TCP readiness check.
+
 ## 2026-09-21 (Resolved)
 - [2026-09-21] [low] IBS.Services/DispatchTicketService.cs:55 — The "Cannot add ticket" error contains mojibake (`Ã¢â‚¬â€`) instead of an em dash, so users see corrupted text when the parent Job Order is closed or cancelled.
 - [2026-09-21] [med] IBS.DataAccess/Repository/Msap/DispatchTicketRepository.cs:123,183 — The entry below says legacy `Draft`/`Requested` tickets remain excluded from the Dispatch Ticket registry, but the current base and total queries exclude only `For Posting`, `Incomplete`, and `Deleted`; these legacy records are returned. **Resolved 2026-09-21: restored the `Draft`/`Requested` exclusions to the registry query and its total count.**

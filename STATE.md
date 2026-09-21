@@ -37,6 +37,8 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element via `.tour-interactive-active` (z-index 10002) must stay above overlay/backdrop; popover flips above for selects.
 
 ### Session Log (recent only — full history in CHANGELOG.md)
+- 2026-09-21 — Docker Sentry startup fixed — new web logs confirmed missing DSN (earlier DB timeout was only a hypothesis). Renamed ignored .env key to Sentry__Dsn and forwarded it in Compose. Recreated web; logs confirm Application started/listening on :8080, published at :5001. Compose validation passed; no C# changes.
+- 2026-09-21 — Compose log diagnosis — DB healthy on host :5002; web remains Created, never started, no app logs or recorded runtime error. Suspect first-initialization health timeout (5s × 5 retries, no start_period). Original CLI error unavailable; no containers/config changed. Next: rerun docker compose up -d and inspect web startup; harden DB readiness if confirmed.
 - 2026-09-21 — Closed-period alerts — Job Order create/edit service failures now show the shared ModernAlert rather than the validation summary; `dotnet build --no-restore` was blocked only by the active IBSWeb/debugger DLL locks.
 - 2026-09-21 — Detected-issues review — restored legacy Draft/Requested registry exclusions and marked the issue resolved; Job Order Detail retains the edit-and-promote path.
 - 2026-09-21 — Removed Service Request module and restored direct Dispatch Ticket entry; final build and migration script passed. Browser smoke check blocked because no local browser/runtime is available.

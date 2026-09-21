@@ -1,3 +1,7 @@
+# 2026-09-21 — Docker Sentry configuration
+
+- Pass Sentry__Dsn from local .env into the web container to fix the null-DSN startup exception.
+
 # Changelog
 
 ## [2026-09-21]
