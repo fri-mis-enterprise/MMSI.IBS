@@ -1,5 +1,7 @@
 # Detected Code Problems
 
+- [2026-09-21] [low] docker-compose.yaml — Linux checkout had mixed line endings despite repository LF rules; normalized tracked text files.
+
 Entries dated 2026-09-19 and earlier are resolved or verified already fixed. Historical file/line references are retained.
 
 ## 2026-09-21 (Resolved)

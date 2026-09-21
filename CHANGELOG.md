@@ -2,6 +2,10 @@
 
 ## [2026-09-21]
 ### Fixed
+- Normalized tracked text files to LF line endings.
+
+## [2026-09-21]
+### Fixed
 - **Closed-period messages use the shared alert** — Job Order create and edit now put service failures in `TempData["error"]`, allowing `_Notification` to display the standard `ModernAlert` instead of rendering them in the validation summary. Billing, Collection, and Dispatch Ticket already used alert-compatible response paths.
 - **Legacy Service Request records hidden from Dispatch Ticket registry** — Restored `Draft`/`Requested` status exclusions in the paged query and its total count. Job Order Detail remains the path to edit a legacy record and promote it to `For Tariff`.
 
