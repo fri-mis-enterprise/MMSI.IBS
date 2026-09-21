@@ -159,9 +159,6 @@ namespace IBSWeb.Areas.User.Controllers
             ViewBag.CanCreateServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateServiceRequest);
             ViewBag.CanPostServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.PostServiceRequest);
 
-            var ticketViewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, id, cancellationToken);
-            ViewData["TicketViewModel"] = ticketViewModel;
-
             foreach (var ticket in jobOrder.DispatchTickets)
             {
                 if (!string.IsNullOrEmpty(ticket.ImageName))

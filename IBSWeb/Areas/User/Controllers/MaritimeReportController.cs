@@ -269,8 +269,7 @@ public class MaritimeReportController(IUnitOfWork unitOfWork) : Controller
                 var dateFrom = new DateOnly(year, month, 1);
                 var dateTo = dateFrom.AddMonths(1).AddDays(-1);
 
-                // TODO: Include unbilled dispatches in repository query (old system lines 150-214: !a.billed AND !EMPTY(a.custno) in same month/year).
-                    // Includes billed records by billing date and qualifying unbilled records by dispatch date.
+                // Includes billed records by billing date and qualifying unbilled records by dispatch date.
                 var data = await unitOfWork.Report.GetDispatchReportData(dateFrom, dateTo, ct, filterByBillingDate: true);
 
                 // Load all masterfile entities required for dynamic columns (as in old system curtug, curowner, curcustomer)

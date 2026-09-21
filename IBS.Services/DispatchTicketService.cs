@@ -20,31 +20,6 @@ namespace IBS.Services
             return await unitOfWork.DispatchTicket.GetDispatchTicketWithDetailsAsync(id, cancellationToken);
         }
 
-        public async Task<ServiceRequestViewModel> PopulateDispatchTicketViewModelAsync(ServiceRequestViewModel? viewModel, int? jobOrderId, CancellationToken cancellationToken)
-        {
-            viewModel ??= new ServiceRequestViewModel();
-
-            if (jobOrderId.HasValue)
-            {
-                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == jobOrderId.Value, cancellationToken);
-                if (jobOrder != null)
-                {
-                    viewModel.JobOrderId = jobOrderId;
-                    viewModel.CustomerId = jobOrder.CustomerId;
-                    viewModel.VesselId = jobOrder.VesselId;
-                    viewModel.PortId = jobOrder.PortId;
-                    viewModel.TerminalId = jobOrder.TerminalId;
-                    viewModel.VoyageNumber = jobOrder.VoyageNumber;
-                    viewModel.COSNumber = jobOrder.COSNumber;
-                    viewModel.Date = jobOrder.Date;
-                }
-            }
-
-            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
-
-            return viewModel;
-        }
 
 
         public async Task<ServiceResult> UpdateDispatchTicketAsync(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, string username, CancellationToken cancellationToken)
@@ -64,7 +39,7 @@ namespace IBS.Services
 
                 if (currentModel.Status is SD.ServiceRequestStatus.Draft or SD.ServiceRequestStatus.Requested or SD.ServiceRequestStatus.ServiceRequestDeleted)
                 {
-                    return ServiceResult.Failure("Create and post the Service Request before editing it as a Dispatch Ticket.");
+                    return ServiceResult.Failure("Create and accept the Service Request before editing it as a Dispatch Ticket.");
                 }
 
                 var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);

@@ -63,7 +63,7 @@ namespace IBSWeb.Areas.User.Controllers
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
         public IActionResult Create()
         {
-            return BadRequest("Direct Dispatch Ticket creation is disabled. Create and post a Service Request first.");
+            return BadRequest("Direct Dispatch Ticket creation is disabled. Create and accept a Service Request first.");
         }
 
         #endregion

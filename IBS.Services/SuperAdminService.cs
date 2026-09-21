@@ -254,42 +254,43 @@ namespace IBS.Services
             CancellationToken ct)
         {
             sortDir ??= "asc";
+            search = search?.Trim().ToLower();
 
             switch (table)
             {
                 case "JobOrder":
                 {
                     System.Linq.Expressions.Expression<Func<JobOrder, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : j =>
-                        j.JobOrderNumber.Contains(search) ||
-                        (j.COSNumber != null && j.COSNumber.Contains(search)) ||
-                        (j.VoyageNumber != null && j.VoyageNumber.Contains(search)) ||
-                        (j.Remarks != null && j.Remarks.Contains(search));
+                        j.JobOrderNumber.ToLower().Contains(search) ||
+                        (j.COSNumber != null && j.COSNumber.ToLower().Contains(search)) ||
+                        (j.VoyageNumber != null && j.VoyageNumber.ToLower().Contains(search)) ||
+                        (j.Remarks != null && j.Remarks.ToLower().Contains(search));
                     var (items, total) = await unitOfWork.JobOrder.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
                     return (items.Select(MapJobOrder), total);
                 }
                 case "DispatchTicket":
                 {
                     System.Linq.Expressions.Expression<Func<DispatchTicket, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : d =>
-                        d.DispatchNumber.Contains(search) ||
-                        (d.Remarks != null && d.Remarks.Contains(search));
+                        d.DispatchNumber.ToLower().Contains(search) ||
+                        (d.Remarks != null && d.Remarks.ToLower().Contains(search));
                     var (items, total) = await unitOfWork.DispatchTicket.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
                     return (items.Select(MapDispatchTicket), total);
                 }
                 case "Billing":
                 {
                     System.Linq.Expressions.Expression<Func<Billing, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : b =>
-                        b.MsapBillingNumber.Contains(search) ||
-                        (b.VoyageNumber != null && b.VoyageNumber.Contains(search)) ||
-                        (b.COSNumber != null && b.COSNumber.Contains(search));
+                        b.MsapBillingNumber.ToLower().Contains(search) ||
+                        (b.VoyageNumber != null && b.VoyageNumber.ToLower().Contains(search)) ||
+                        (b.COSNumber != null && b.COSNumber.ToLower().Contains(search));
                     var (items, total) = await unitOfWork.Billing.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
                     return (items.Select(MapBilling), total);
                 }
                 case "Collection":
                 {
                     System.Linq.Expressions.Expression<Func<Collection, bool>>? filter = string.IsNullOrWhiteSpace(search) ? null : c =>
-                        c.MsapCollectionNumber.Contains(search) ||
-                        (c.CheckNumber != null && c.CheckNumber.Contains(search)) ||
-                        (c.Remarks != null && c.Remarks.Contains(search));
+                        c.MsapCollectionNumber.ToLower().Contains(search) ||
+                        (c.CheckNumber != null && c.CheckNumber.ToLower().Contains(search)) ||
+                        (c.Remarks != null && c.Remarks.ToLower().Contains(search));
                     var (items, total) = await unitOfWork.Collection.GetPagedAsync(filter, sortColumn, sortDir, skip, take, ct);
                     return (items.Select(MapCollection), total);
                 }

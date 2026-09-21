@@ -4,7 +4,7 @@
 
 ### Quick Reference & Environment
 
-* Build: dotnet build (TreatWarningsAsErrors on 6/8 projects). Only run when touching .cs/.csproj — .cshtml/js/css changes need no build; browser refresh is enough.
+* Build: run `dotnet build` after `.cs`, `.csproj`, or `.cshtml` changes. Razor views compile on build and publish; Razor/C# errors fail the build. JavaScript/CSS-only changes need browser verification, not a .NET build.
 * Tests: None. Test projects (`IBS.Tests` xUnit/Moq, `IBS.Tests.UI` Playwright) were removed from the solution (2026-08-07). Do not reference `dotnet test` or re-add test scaffolding.
 * Environment: docker compose up (App :5001, DB :5002)
 * DB: localhost:5432, mmsi_ibs_dev, user postgres/mis123
@@ -26,7 +26,7 @@
 * Patterns First: Follow existing implementations in Areas/User/Views/ before writing new code.
 * Root-Cause Fixes: Grep all callers of a function before modifying shared logic.
 * Constraints: Invariant Philippine time via DateTimeHelper.GetCurrentPhilippineTime(). Workflow state guards mandatory (e.g., "ForTariff" before pricing). Audit trails required on all CUD operations.
-* Frontend: Refreshes only for .cshtml/.js/.css (no build needed). Icons via <span class="material-symbols-outlined">. Gotcha: ModernTable.ajax() is POST by default; pass explicit inline type: "GET" if targeting [HttpGet].
+* Frontend: Browser-check affected pages for HTML layout and JavaScript behavior; Razor compilation does not validate these. Icons via <span class="material-symbols-outlined">. Gotcha: ModernTable.ajax() is POST by default; pass explicit inline type: "GET" if targeting [HttpGet].
 
 ### Housekeeping & Workflow Tools
 

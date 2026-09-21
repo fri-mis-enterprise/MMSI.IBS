@@ -234,7 +234,7 @@
                                                                     @Html.AntiForgeryToken()
                                                                 </form>
                                                                 <button type="button" class="modern-dropdown-item" style="color: var(--primary); width:100%; border:none; background:none; cursor:pointer;" onclick="confirmPostRequest(@ticket.DispatchTicketId, @Model.JobOrderId)">
-                                                                    <span class="material-symbols-outlined">check_circle</span> Post Request
+                                                                    <span class="material-symbols-outlined">check_circle</span> Accept Request
                                                                 </button>
                                                             }
                                                         }
@@ -726,13 +726,13 @@
 
         function confirmPostRequest(id) {
             ModernAlert.confirm({
-                title: 'Post Service Request?',
+                title: 'Accept Service Request?',
                 text: 'This will mark the service request as ready for tariff.',
                 icon: 'question',
-                confirmText: 'Yes, post it!'
+                confirmText: 'Yes, accept it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    ModernAlert.showLoading("Posting service request...");
+                    ModernAlert.showLoading("Accepting service request...");
                     document.getElementById('postForm-' + id).submit();
                 }
             });

@@ -123,8 +123,6 @@ namespace IBSWeb.Areas.User.Controllers
             try
             {
                 model.TermsCode = model.TermsCode.Trim();
-                model.NumberOfDays = model.NumberOfDays;
-                model.NumberOfMonths = model.NumberOfMonths;
                 model.CreatedBy = getUserFullName;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.EditedBy = string.Empty;
@@ -139,6 +137,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion -- Audit Trail Recording --
 
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Terms created successfully";
                 return RedirectToAction(nameof(Index));
@@ -197,6 +196,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion -- Audit Trail Recording --
 
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Terms updated successfully";
                 return RedirectToAction(nameof(Index));
@@ -246,6 +246,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion -- Audit Trail Recording --
 
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Terms deleted successfully";
                 return RedirectToAction(nameof(Index));

@@ -79,9 +79,10 @@ namespace IBSWeb.Areas.User.Controllers
             await PopulateJobOrdersList(viewModel, cancellationToken);
             ViewData["PortId"] = viewModel.PortId;
 
-            if (!viewModel.JobOrders!.Any(j => j.Value == viewModel.JobOrderId?.ToString()))
+            var workflowError = await GetWorkflowErrorAsync(viewModel.JobOrderId, viewModel.Date, cancellationToken);
+            if (workflowError != null)
             {
-                TempData["warning"] = "Select an open Job Order without a pending billing.";
+                TempData["warning"] = workflowError;
                 return View(viewModel);
             }
 
@@ -134,13 +135,7 @@ namespace IBSWeb.Areas.User.Controllers
                     }
                 }
 
-                model.Status = SD.ServiceRequestStatus.Draft;
-
-                if (model is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
-                    model.TerminalId != 0 && model.ServiceId != 0 && model.TugBoatId != 0 && model.TugMasterId != null && model.VesselId != 0)
-                {
-                    model.Status = SD.ServiceRequestStatus.Requested;
-                }
+                model.Status = IsReadyToPost(model) ? SD.ServiceRequestStatus.Requested : SD.ServiceRequestStatus.Draft;
 
                 await unitOfWork.DispatchTicket.AddAsync(model,
                     cancellationToken);
@@ -243,6 +238,14 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.EditedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
+                var workflowError = await GetWorkflowErrorAsync(currentModel.JobOrderId, currentModel.Date, cancellationToken)
+                    ?? await GetWorkflowErrorAsync(incoming.JobOrderId, incoming.Date, cancellationToken);
+                if (workflowError != null)
+                {
+                    TempData["error"] = workflowError;
+                    return View(viewModel);
+                }
+
                 if (imageFile != null)
                 {
                     if (!string.IsNullOrEmpty(currentModel.ImageName))
@@ -327,16 +330,6 @@ namespace IBSWeb.Areas.User.Controllers
                 currentModel.PortId = incoming.PortId;
                 currentModel.Remarks = incoming.Remarks;
 
-                if (currentModel is { DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null } &&
-                    currentModel.TerminalId != 0 && currentModel.ServiceId != 0 && currentModel.TugBoatId != 0 && currentModel.TugMasterId != null && currentModel.VesselId != 0)
-                {
-                    currentModel.Status = SD.ServiceRequestStatus.Requested;
-                }
-                else
-                {
-                    currentModel.Status = SD.ServiceRequestStatus.Draft;
-                }
-
                 if (imageFile != null)
                 {
                     currentModel.ImageName = incoming.ImageName;
@@ -348,8 +341,6 @@ namespace IBSWeb.Areas.User.Controllers
                     currentModel.VideoName = incoming.VideoName;
                     currentModel.VideoSavedUrl = incoming.VideoSavedUrl;
                 }
-
-                await unitOfWork.SaveAsync(cancellationToken);
 
                 #endregion -- Apply changes
 
@@ -370,6 +361,8 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion --Audit Trail
 
+                currentModel.Status = IsReadyToPost(currentModel) ? SD.ServiceRequestStatus.Requested : SD.ServiceRequestStatus.Draft;
+                await unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Entry edited successfully!";
                 return RedirectToAction(nameof(Index));
@@ -469,6 +462,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 var queried = await queriedBase.ToListAsync(cancellationToken);
+                var totalRecords = queried.Count;
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -477,15 +471,15 @@ namespace IBSWeb.Areas.User.Controllers
 
                     queried = queried
                     .Where(dt =>
-                        dt.COSNumber!.ToLower().Contains(searchValue) ||
-                        dt.DispatchNumber.ToLower().Contains(searchValue) ||
-                        dt.Service.ServiceName.ToString().Contains(searchValue) ||
-                        dt.Terminal.TerminalName.ToString().Contains(searchValue) ||
-                        dt.Terminal.Port.PortName.ToString().Contains(searchValue) ||
-                        dt.Tugboat.TugboatName.ToString().Contains(searchValue) ||
-                        dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) ||
-                        dt.Vessel.VesselName.ToString().Contains(searchValue) ||
-                        dt.Status.Contains(searchValue)
+                        dt.COSNumber?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.DispatchNumber?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.Service?.ServiceName?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.Terminal?.TerminalName?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.Terminal?.Port?.PortName?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.Tugboat?.TugboatName?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.TugMaster?.TugMasterName?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.Vessel?.VesselName?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true ||
+                        dt.Status.Contains(searchValue, StringComparison.OrdinalIgnoreCase)
                         )
                         .ToList();
                 }
@@ -503,8 +497,13 @@ namespace IBSWeb.Areas.User.Controllers
                                 {
                                     "requested" => queried.Where(s => s.Status == SD.ServiceRequestStatus.Requested).ToList(),
                                     "draft" => queried.Where(s => s.Status == SD.ServiceRequestStatus.Draft).ToList(),
+                                    "service request deleted" => queried.Where(s => s.Status == SD.ServiceRequestStatus.ServiceRequestDeleted).ToList(),
                                     _ => queried.Where(s => !string.IsNullOrEmpty(s.Status)).ToList()
                                 };
+                                break;
+                            case "date":
+                                if (DateOnly.TryParse(searchValue, out var date))
+                                    queried = queried.Where(s => s.Date == date).ToList();
                                 break;
                         }
                     }
@@ -523,7 +522,7 @@ namespace IBSWeb.Areas.User.Controllers
                         .ToList();
                 }
 
-                var totalRecords = queried.Count();
+                var filteredRecords = queried.Count;
 
                 var pagedData = queried
                     .Skip(parameters.Start)
@@ -543,7 +542,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     draw = parameters.Draw,
                     recordsTotal = totalRecords,
-                    recordsFiltered = totalRecords,
+                    recordsFiltered = filteredRecords,
                     data = pagedData
                 });
 
@@ -558,6 +557,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to edit Service Request attachments.")]
         public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken = default)
         {
             try
@@ -570,10 +570,29 @@ namespace IBSWeb.Areas.User.Controllers
                     return NotFound();
                 }
 
-                await cloudStorageService.DeleteFileAsync(model.ImageName!);
+                if (model.Status is not (SD.ServiceRequestStatus.Draft or SD.ServiceRequestStatus.Requested))
+                {
+                    TempData["error"] = "Attachments can only be deleted from Draft or Requested service requests.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var workflowError = await GetWorkflowErrorAsync(model.JobOrderId, model.Date, cancellationToken);
+                if (workflowError != null)
+                {
+                    TempData["error"] = workflowError;
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                if (string.IsNullOrEmpty(model.ImageName)) return RedirectToAction(nameof(Edit), new { id });
+                await cloudStorageService.DeleteFileAsync(model.ImageName);
                 model.ImageName = null;
                 model.ImageSignedUrl = null;
                 model.ImageSavedUrl = null;
+                model.Status = SD.ServiceRequestStatus.Draft;
+                model.EditedBy = User.Identity?.Name ?? "System";
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(model.EditedBy,
+                    $"Deleted image from service request #{model.DispatchNumber}", "Service Request", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
                 return RedirectToAction(nameof(Edit),
@@ -597,6 +616,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to edit Service Request attachments.")]
         public async Task<IActionResult> DeleteVideo(int id, CancellationToken cancellationToken = default)
         {
             try
@@ -609,10 +629,28 @@ namespace IBSWeb.Areas.User.Controllers
                     return NotFound();
                 }
 
-                await cloudStorageService.DeleteFileAsync(model.VideoName!);
+                if (model.Status is not (SD.ServiceRequestStatus.Draft or SD.ServiceRequestStatus.Requested))
+                {
+                    TempData["error"] = "Attachments can only be deleted from Draft or Requested service requests.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var workflowError = await GetWorkflowErrorAsync(model.JobOrderId, model.Date, cancellationToken);
+                if (workflowError != null)
+                {
+                    TempData["error"] = workflowError;
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                if (string.IsNullOrEmpty(model.VideoName)) return RedirectToAction(nameof(Edit), new { id });
+                await cloudStorageService.DeleteFileAsync(model.VideoName);
                 model.VideoName = null;
                 model.VideoSignedUrl = null;
                 model.VideoSavedUrl = null;
+                model.EditedBy = User.Identity?.Name ?? "System";
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(model.EditedBy,
+                    $"Deleted video from service request #{model.DispatchNumber}", "Service Request", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Video Deleted Successfully!";
                 return RedirectToAction(nameof(Edit),
@@ -636,17 +674,26 @@ namespace IBSWeb.Areas.User.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to post Service Requests.")]
+        [RequireAccess(ProcedureEnum.PostServiceRequest, "Access denied. You don't have permission to accept Service Requests.")]
         public async Task<IActionResult> Post(int id, int? jobOrderId, CancellationToken cancellationToken = default)
         {
             var record = await unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
             if (record is { Status: SD.ServiceRequestStatus.Requested })
             {
-                record.Status = SD.DispatchTicketStatus.ForTariff;
+                var workflowError = await GetWorkflowErrorAsync(record.JobOrderId, record.Date, cancellationToken);
+                if (workflowError != null || !IsReadyToPost(record))
+                {
+                    TempData["error"] = workflowError ?? "Complete the Service Request and attach a ticket image before acceptance.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-                var auditMsg = jobOrderId.HasValue
-                    ? $"Posted service request #{record.DispatchNumber} (Job Order #{jobOrderId})"
-                    : $"Posted service request #{record.DispatchNumber}";
+                record.Status = SD.DispatchTicketStatus.ForTariff;
+                record.EditedBy = User.Identity?.Name ?? "System";
+                record.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                var auditMsg = record.JobOrderId.HasValue
+                    ? $"Accepted service request #{record.DispatchNumber} (Job Order #{record.JobOrderId})"
+                    : $"Accepted service request #{record.DispatchNumber}";
 
                 var audit = new AuditTrail(
                     await GetUserNameAsync() ?? throw new InvalidOperationException(),
@@ -656,7 +703,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await unitOfWork.AuditTrail.AddAsync(audit, cancellationToken);
                 await unitOfWork.SaveAsync(cancellationToken);
 
-                TempData["success"] = $"Service Request #{record.DispatchNumber} has been posted.";
+                TempData["success"] = $"Service Request #{record.DispatchNumber} has been accepted.";
             }
 
             if (jobOrderId.HasValue)
@@ -722,7 +769,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return Json(new { success = false, message = $"Cannot restore — status is '{model.Status}'. Only deleted requests can be restored." });
                 }
 
-                model.Status = SD.ServiceRequestStatus.Requested;
+                model.Status = IsReadyToPost(model) ? SD.ServiceRequestStatus.Requested : SD.ServiceRequestStatus.Draft;
                 model.EditedBy = User.Identity?.Name ?? "System";
                 model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -738,6 +785,27 @@ namespace IBSWeb.Areas.User.Controllers
                 logger.LogError(ex, "Failed to restore service request");
                 return Json(new { success = false, message = $"Failed to restore: {ex.Message}" });
             }
+        }
+
+        private static bool IsReadyToPost(DispatchTicket model) =>
+            model is { JobOrderId: > 0, CustomerId: > 0, TerminalId: > 0, ServiceId: > 0, TugBoatId: > 0, TugMasterId: > 0, VesselId: > 0,
+                DateLeft: not null, TimeLeft: not null, DateArrived: not null, TimeArrived: not null }
+            && !string.IsNullOrWhiteSpace(model.ImageName)
+            && model.DateArrived.Value.ToDateTime(model.TimeArrived.Value) > model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+
+        private async Task<string?> GetWorkflowErrorAsync(int? jobOrderId, DateOnly date, CancellationToken cancellationToken)
+        {
+            if (!jobOrderId.HasValue || await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == jobOrderId && j.Status == SD.JobOrderStatus.Open, cancellationToken) == null)
+                return "Select an open Job Order.";
+
+            if (await unitOfWork.Billing.GetAsync(b => b.JobOrderId == jobOrderId && b.Status == SD.BillingStatus.ForPosting, cancellationToken) != null
+                || await unitOfWork.DispatchTicket.GetAsync(t => t.JobOrderId == jobOrderId && t.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
+                return "Cannot modify a Service Request under a Job Order with pending billing or billed tickets.";
+
+            if (await unitOfWork.PostedPeriod.IsMonthClosedAsync(date.Year, date.Month, cancellationToken))
+                return $"Cannot modify: {date:MMMM yyyy} is closed.";
+
+            return null;
         }
 
         private string GenerateFileNameToSave(string incomingFileName, string type)

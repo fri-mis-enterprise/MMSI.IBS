@@ -1866,7 +1866,7 @@ namespace IBSWeb.Areas.User.Controllers
                            : whole;
             }
 
-            return totalHours;
+            return Math.Max(totalHours, 1m);
         }
 
         private static IFormFile? ResolveFile(

@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MasterFile;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -45,6 +46,8 @@ namespace IBSWeb.Areas.User.Controllers
             bankAccount.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
             await unitOfWork.BankAccount.AddAsync(bankAccount, cancellationToken);
+            await unitOfWork.AuditTrail.AddAsync(new AuditTrail(GetUserFullName(),
+                $"Created bank account #{bankAccount.BankAccountCode}", "Bank Account", referenceNumber: bankAccount.BankAccountCode), cancellationToken);
             await unitOfWork.SaveAsync(cancellationToken);
             TempData["success"] = "Bank Account created successfully.";
             return RedirectToAction(nameof(Index));
@@ -87,6 +90,8 @@ namespace IBSWeb.Areas.User.Controllers
             existingBankAccount.AccountName = bankAccount.AccountName;
             existingBankAccount.Company = bankAccount.Company;
 
+            await unitOfWork.AuditTrail.AddAsync(new AuditTrail(GetUserFullName(),
+                $"Edited bank account #{existingBankAccount.BankAccountCode}", "Bank Account", existingBankAccount.BankAccountId, existingBankAccount.BankAccountCode), cancellationToken);
             await unitOfWork.SaveAsync(cancellationToken);
             TempData["success"] = "Bank Account updated successfully.";
             return RedirectToAction(nameof(Index));

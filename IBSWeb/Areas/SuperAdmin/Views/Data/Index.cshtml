@@ -123,26 +123,16 @@
                 const col = {
                     data: c.data,
                     title: c.title,
-                    orderable: c.orderable,
+                    orderable: true,
                     defaultContent: ''
                 };
 
-                if (c.render === 'renderStatusBadge') {
-                    col.render = (data) =>
-                        `<span class="modern-badge-sm ${getStatusClass(data)}">${data || ''}</span>`;
-                } else if (c.render) {
-                    // Custom render for lookup fields — show the text value (already resolved on server)
-                    col.render = (data) => data || '-';
-                } else if (c.type === 'currency') {
-                    col.render = (data) => data != null ? '₱' + parseFloat(data).toLocaleString('en-US', { minimumFractionDigits: 2 }) : '-';
-                } else if (c.type === 'boolean') {
-                    col.render = (data) => data ? '✅ Yes' : '❌ No';
-                } else if (c.type === 'date') {
-                    col.render = (data) => data || '-';
-                } else if (c.type === 'datetime') {
-                    col.render = (data) => data || '-';
+                if (c.data === 'Status') {
+                    col.render = (data, type) => type === 'display'
+                        ? `<span class="modern-badge-sm ${getStatusClass(data)}">${$.fn.dataTable.render.text().display(data || '')}</span>`
+                        : data;
                 } else {
-                    col.render = (data) => data != null ? data : '';
+                    col.render = $.fn.dataTable.render.text();
                 }
 
                 return col;

@@ -503,9 +503,7 @@
                 }
 
                 // Initialize hidden inputs for server-rendered tickets.
-                // NOTE: We must NOT use ':checked' selector here because jQuery excludes
-                // disabled inputs from that filter. JO-linked tickets are checked+disabled,
-                // so we iterate ALL ticket checkboxes and check their .prop('checked') manually.
+                // Include checked, disabled JO-linked tickets via hidden inputs for submission.
                 $ticketsTableBody.find('.ticket-checkbox').each(function () {
                     if ($(this).prop('checked')) {
                         const tid = $(this).val();
@@ -668,7 +666,7 @@
             function rebuildBafTable() {
                 const $body = $("#bafTableBody");
                 $body.empty();
-                //  use .prop('checked') — jQuery :checked excludes disabled (JO-linked) inputs
+                // Include checked JO-linked tickets even when their checkboxes are disabled.
                 $ticketsTableBody.find('.ticket-checkbox').each(function () {
                     if (!$(this).prop('checked')) return;
                     const $ticketRow = $(this).closest('tr');
