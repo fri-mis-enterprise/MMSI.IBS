@@ -16,10 +16,6 @@ namespace IBS.Models.MSAP.MasterFile
 
         #region -- MSAP Workflow --
 
-        public bool CanCreateServiceRequest { get; set; }
-
-        public bool CanPostServiceRequest { get; set; }
-
         public bool CanCreateDispatchTicket { get; set; }
 
         public bool CanEditDispatchTicket { get; set; }

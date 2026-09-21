@@ -2,7 +2,7 @@
 
 ## [2026-09-21]
 ### Removed
-- **Service Request controller and views** — Deleted ServiceRequestController and its Create, Edit and Index views as the first removal step. Remaining module routes and status dependencies are logged in DETECTED-ISSUES.md for the next pass; existing database records, shared models, repositories and permissions are retained.
+- **Service Request module** — Deleted its controller, views, user-access fields, permission enum entries, status constants, navigation, manual, and assets. Restored direct Dispatch Ticket creation and Job Order actions. `RemoveServiceRequest` converts existing `Draft`/`Requested` tickets to `For Tariff` and `Service Request Deleted` to `Deleted`, then drops the obsolete permission columns. Renamed the shared form model to `DispatchTicketViewModel` and moved its select-list query into `DispatchTicketRepository`.
 
 ## [2026-09-19]
 ### Fixed

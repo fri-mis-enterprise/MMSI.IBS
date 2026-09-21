@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MSAP.ViewModels
 {
-    public class ServiceRequestViewModel
+    public class DispatchTicketViewModel
     {
         public int? JobOrderId { get; set; }
 

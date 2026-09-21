@@ -4,7 +4,9 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Msap.IRepository;
 using IBS.Models;
 using IBS.Models.MSAP;
+using IBS.Models.MSAP.ViewModels;
 using IBS.Utility.Constants;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Msap
@@ -100,6 +102,18 @@ namespace IBS.DataAccess.Repository.Msap
             return jobOrder?.Status == Utility.Constants.SD.JobOrderStatus.Open;
         }
 
+        public async Task<DispatchTicketViewModel> GetDispatchTicketSelectLists(DispatchTicketViewModel model, CancellationToken cancellationToken = default)
+        {
+            model.Services = await _db.MsapServices.OrderBy(s => s.ServiceName).Select(s => new SelectListItem { Value = s.ServiceId.ToString(), Text = s.ServiceName }).ToListAsync(cancellationToken);
+            model.Ports = await _db.MsapPorts.OrderBy(p => p.PortName).Select(p => new SelectListItem { Value = p.PortId.ToString(), Text = p.PortName }).ToListAsync(cancellationToken);
+            model.Tugboats = await _db.MsapTugboats.OrderBy(t => t.TugboatName).Select(t => new SelectListItem { Value = t.TugboatId.ToString(), Text = t.TugboatName }).ToListAsync(cancellationToken);
+            model.TugMasters = await _db.MsapTugMasters.OrderBy(t => t.TugMasterName).Select(t => new SelectListItem { Value = t.TugMasterId.ToString(), Text = t.TugMasterName }).ToListAsync(cancellationToken);
+            model.Vessels = await _db.MsapVessels.OrderBy(v => v.VesselName).Select(v => new SelectListItem { Value = v.VesselId.ToString(), Text = v.VesselName }).ToListAsync(cancellationToken);
+            var portId = model.Terminal?.Port?.PortId ?? model.PortId;
+            model.Terminals = await _db.MsapTerminals.Where(t => t.PortId == portId).OrderBy(t => t.TerminalName).Select(t => new SelectListItem { Value = t.TerminalId.ToString(), Text = t.TerminalName }).ToListAsync(cancellationToken);
+            return model;
+        }
+
         public async Task<(IEnumerable<DispatchTicket> Data, int RecordsFiltered, int TotalRecords)> GetPagedDispatchTicketsAsync(DataTablesParameters parameters, string filterType, CancellationToken cancellationToken = default)
         {
             var query = dbSet
@@ -110,7 +124,7 @@ namespace IBS.DataAccess.Repository.Msap
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Billing)
-                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.ServiceRequestStatus.Draft && dt.Status != SD.ServiceRequestStatus.Requested && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted);
+                .Where(dt => dt.Status != "For Posting" && dt.Status != "Incomplete");
 
             if (!string.IsNullOrEmpty(filterType))
             {
@@ -122,12 +136,12 @@ namespace IBS.DataAccess.Repository.Msap
                     "for billing" => query.Where(dt => dt.Status == "For Billing"),
                     "billed" => query.Where(dt => dt.Status == "Billed"),
                     "deleted" => query.Where(dt => dt.Status == SD.DispatchTicketStatus.Deleted),
-                    _ => query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted)
+                    _ => query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted)
                 };
             }
             else
             {
-                query = query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted);
+                query = query.Where(dt => dt.Status != SD.DispatchTicketStatus.Deleted);
             }
 
             if (!string.IsNullOrEmpty(parameters.Search.Value))
@@ -166,7 +180,7 @@ namespace IBS.DataAccess.Repository.Msap
                 }
             }
 
-            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.ServiceRequestStatus.Draft && dt.Status != SD.ServiceRequestStatus.Requested && dt.Status != SD.DispatchTicketStatus.Deleted && dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted, cancellationToken);
+            var totalRecords = await dbSet.CountAsync(dt => dt.Status != "For Posting" && dt.Status != "Incomplete" && dt.Status != SD.DispatchTicketStatus.Deleted, cancellationToken);
             var recordsFiltered = await query.CountAsync(cancellationToken);
 
             if (parameters.Order?.Count > 0 && parameters.Columns != null)

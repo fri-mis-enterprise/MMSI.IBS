@@ -4,8 +4,6 @@ namespace IBS.Models.Enums
     {
         #region -- MSAP Workflow --
 
-        CreateServiceRequest,
-        PostServiceRequest,
         CreateDispatchTicket,
         EditDispatchTicket,
         DeleteDispatchTicket,

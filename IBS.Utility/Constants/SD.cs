@@ -56,13 +56,6 @@ namespace IBS.Utility.Constants
             public const string Closed = "Closed";
         }
 
-        public static class ServiceRequestStatus
-        {
-            public const string Draft = "Draft";
-            public const string Requested = "Requested";
-            public const string ServiceRequestDeleted = "Service Request Deleted";
-        }
-
         public static class DispatchTicketStatus
         {
             public const string ForTariff = "For Tariff";

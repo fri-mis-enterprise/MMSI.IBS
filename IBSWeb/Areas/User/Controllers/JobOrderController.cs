@@ -156,8 +156,7 @@ namespace IBSWeb.Areas.User.Controllers
             ViewBag.CanEditTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditDispatchTicket);
             ViewBag.CanDeleteTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.DeleteDispatchTicket);
             ViewBag.CanEditJobOrder = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.EditJobOrder);
-            ViewBag.CanCreateServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateServiceRequest);
-            ViewBag.CanPostServiceRequest = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.PostServiceRequest);
+            ViewBag.CanCreateDispatchTicket = userId != null && await accessControl.HasAccessAsync(userId, ProcedureEnum.CreateDispatchTicket);
 
             foreach (var ticket in jobOrder.DispatchTickets)
             {

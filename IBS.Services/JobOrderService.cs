@@ -171,8 +171,7 @@ namespace IBS.Services
             var tickets = await unitOfWork.DispatchTicket.GetAllAsync(
                 dt => dt.JobOrderId == jobOrder.JobOrderId &&
                       dt.Status != SD.DispatchTicketStatus.Billed &&
-                      dt.Status != SD.DispatchTicketStatus.Deleted &&
-                      dt.Status != SD.ServiceRequestStatus.ServiceRequestDeleted,
+                      dt.Status != SD.DispatchTicketStatus.Deleted,
                 cancellationToken);
 
             foreach (var ticket in tickets)
@@ -228,7 +227,7 @@ namespace IBS.Services
         {
             try
             {
-                var closedStatuses = new[] { SD.DispatchTicketStatus.Billed, SD.DispatchTicketStatus.Deleted, SD.ServiceRequestStatus.ServiceRequestDeleted };
+                var closedStatuses = new[] { SD.DispatchTicketStatus.Billed, SD.DispatchTicketStatus.Deleted };
                 var anyUnbilled = await unitOfWork.DispatchTicket.GetAsync(
                     dt => dt.JobOrderId == jobOrderId && !closedStatuses.Contains(dt.Status),
                     cancellationToken) != null;

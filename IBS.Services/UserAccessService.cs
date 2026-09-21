@@ -32,8 +32,6 @@ namespace IBS.Services
 
             return procedure switch
             {
-                ProcedureEnum.CreateServiceRequest => userAccess.CanCreateServiceRequest,
-                ProcedureEnum.PostServiceRequest => userAccess.CanPostServiceRequest,
                 ProcedureEnum.CreateDispatchTicket => userAccess.CanCreateDispatchTicket,
                 ProcedureEnum.EditDispatchTicket => userAccess.CanEditDispatchTicket,
                 ProcedureEnum.DeleteDispatchTicket => userAccess.CanDeleteDispatchTicket,
@@ -120,8 +118,6 @@ namespace IBS.Services
                 }
 
                 var changes = new List<string>();
-                if (existing.CanCreateServiceRequest != model.CanCreateServiceRequest) changes.Add($"Create SR: {existing.CanCreateServiceRequest} → {model.CanCreateServiceRequest}");
-                if (existing.CanPostServiceRequest != model.CanPostServiceRequest) changes.Add($"Post SR: {existing.CanPostServiceRequest} → {model.CanPostServiceRequest}");
                 if (existing.CanCreateDispatchTicket != model.CanCreateDispatchTicket) changes.Add($"Create DT: {existing.CanCreateDispatchTicket} → {model.CanCreateDispatchTicket}");
                 if (existing.CanEditDispatchTicket != model.CanEditDispatchTicket) changes.Add($"Edit DT: {existing.CanEditDispatchTicket} → {model.CanEditDispatchTicket}");
                 if (existing.CanDeleteDispatchTicket != model.CanDeleteDispatchTicket) changes.Add($"Delete DT: {existing.CanDeleteDispatchTicket} → {model.CanDeleteDispatchTicket}");
@@ -152,8 +148,6 @@ namespace IBS.Services
                         await unitOfWork.AuditTrail.AddAsync(auditTrail, cancellationToken);
                     }
 
-                    existing.CanCreateServiceRequest = model.CanCreateServiceRequest;
-                    existing.CanPostServiceRequest = model.CanPostServiceRequest;
                     existing.CanCreateDispatchTicket = model.CanCreateDispatchTicket;
                     existing.CanEditDispatchTicket = model.CanEditDispatchTicket;
                     existing.CanDeleteDispatchTicket = model.CanDeleteDispatchTicket;

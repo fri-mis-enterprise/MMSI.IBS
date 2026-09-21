@@ -42,11 +42,6 @@
         return await AccessControl.HasMsapImportAccessAsync(userId);
     }
 
-    async Task<bool> ModernHasServiceRequestAccess()
-    {
-        if (string.IsNullOrEmpty(userId)) return false;
-        return await AccessControl.HasServiceRequestAccessAsync(userId);
-    }
 }
 
 <!-- Always-on modern navbar -->
@@ -197,18 +192,6 @@
                                 </div>
                             </div>
                         </div>
-                    </li>
-                }
-
-                @if (await ModernHasServiceRequestAccess())
-                {
-                    <li class="mnav-item" role="none">
-                        <a class="mnav-trigger"
-                           asp-area="User" asp-controller="ServiceRequest" asp-action="Index"
-                           title="Submit and track your service requests"
-                           role="menuitem">
-                            Service Requests
-                        </a>
                     </li>
                 }
 

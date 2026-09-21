@@ -4,14 +4,12 @@ A **Dispatch Ticket** records actual maritime service delivery — tugboat assig
 
 ## Workflow State
 
-Dispatch Tickets are created either directly (under a Job Order) or by posting a **Service Request** (see [Service Requests](service-request)). The Dispatch Ticket flow is independent of the Service Request flow once the ticket exists.
+Dispatch Tickets are created directly under a Job Order.
 
 ```mermaid
 graph LR
     %% Entry points
     Create[Create Dispatch Ticket] --> ForTariff[For Tariff]
-    SR[Service Request] -->|post| ForTariff
-
     %% Main flow
     ForTariff -->|set tariff| ForApproval[For Approval]
     ForApproval -->|approve| ForBilling[For Billing]

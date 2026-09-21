@@ -20,9 +20,127 @@ namespace IBS.Services
             return await unitOfWork.DispatchTicket.GetDispatchTicketWithDetailsAsync(id, cancellationToken);
         }
 
+        public async Task<DispatchTicketViewModel> PopulateDispatchTicketViewModelAsync(DispatchTicketViewModel? viewModel, int? jobOrderId, CancellationToken cancellationToken)
+        {
+            viewModel ??= new DispatchTicketViewModel();
 
+            if (jobOrderId.HasValue)
+            {
+                var jobOrder = await unitOfWork.JobOrder.GetAsync(j => j.JobOrderId == jobOrderId.Value, cancellationToken);
+                if (jobOrder != null)
+                {
+                    viewModel.JobOrderId = jobOrderId;
+                    viewModel.CustomerId = jobOrder.CustomerId;
+                    viewModel.VesselId = jobOrder.VesselId;
+                    viewModel.PortId = jobOrder.PortId;
+                    viewModel.TerminalId = jobOrder.TerminalId;
+                    viewModel.VoyageNumber = jobOrder.VoyageNumber;
+                    viewModel.COSNumber = jobOrder.COSNumber;
+                    viewModel.Date = jobOrder.Date;
+                }
+            }
 
-        public async Task<ServiceResult> UpdateDispatchTicketAsync(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, string username, CancellationToken cancellationToken)
+            viewModel = await unitOfWork.DispatchTicket.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
+
+            return viewModel;
+        }
+
+        public async Task<ServiceResult<int>> CreateDispatchTicketAsync(DispatchTicketViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, string username, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!viewModel.JobOrderId.HasValue)
+                {
+                    return ServiceResult<int>.Failure("Dispatch tickets must be created under a Job Order.");
+                }
+
+                if (!await IsJobOrderEditableAsync(viewModel.JobOrderId, cancellationToken))
+                {
+                    return ServiceResult<int>.Failure("Cannot add ticket Ã¢â‚¬â€ parent Job Order is cancelled or closed.");
+                }
+
+                if (viewModel.JobOrderId.HasValue && await unitOfWork.DispatchTicket.GetAsync(dt => dt.JobOrderId == viewModel.JobOrderId && dt.Status == SD.DispatchTicketStatus.Billed, cancellationToken) != null)
+                {
+                    return ServiceResult<int>.Failure("Cannot add ticket â€” Job Order already has billed tickets.");
+                }
+
+                var model = viewModel.ToEntity();
+
+                if (imageFile is { Length: > 0 })
+                {
+                    var ext = Path.GetExtension(imageFile.FileName);
+                    var name = Path.GetFileNameWithoutExtension(imageFile.FileName);
+                    model.ImageName = $"{name}-img-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{ext}";
+                    model.ImageSavedUrl = await cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
+                }
+
+                if (videoFile is { Length: > 0 })
+                {
+                    var ext = Path.GetExtension(videoFile.FileName);
+                    var name = Path.GetFileNameWithoutExtension(videoFile.FileName);
+                    model.VideoName = $"{name}-vid-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{ext}";
+                    model.VideoSavedUrl = await cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
+                }
+
+                model.CreatedBy = username;
+                model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                // Logic from Repository.AddAsync
+                if (model.JobOrderId.HasValue)
+                {
+                    var jobOrder = await unitOfWork.JobOrder.GetJobOrderWithDetailsAsync(model.JobOrderId.Value, cancellationToken);
+                    if (jobOrder != null)
+                    {
+                        model.CustomerId = jobOrder.CustomerId;
+                        model.VesselId = jobOrder.VesselId;
+                        model.PortId = jobOrder.PortId;
+                        model.TerminalId = jobOrder.TerminalId;
+                        model.VoyageNumber = jobOrder.VoyageNumber;
+                        model.COSNumber = jobOrder.COSNumber;
+                        model.Date = jobOrder.Date;
+                    }
+                }
+
+                var guard = await GuardClosedPeriodAsync(model.Date, cancellationToken);
+                if (guard != null)
+                {
+                    return ServiceResult<int>.Failure(guard.Message!);
+                }
+
+                if (model is { DateLeft: not null, DateArrived: not null, TimeLeft: not null, TimeArrived: not null })
+                {
+                    var start = model.DateLeft.Value.ToDateTime(model.TimeLeft.Value);
+                    var end = model.DateArrived.Value.ToDateTime(model.TimeArrived.Value);
+
+                    if (end <= start)
+                    {
+                        return ServiceResult<int>.Failure("Arrival Date/Time must be strictly after Departure Date/Time.");
+                    }
+
+                    model.Status = SD.DispatchTicketStatus.ForTariff;
+                    var duration = (decimal)(end - start).TotalHours;
+                    model.TotalHours = Math.Round(Math.Max(duration, 1m), 2);
+                }
+                else
+                {
+                    model.Status = SD.DispatchTicketStatus.ForTariff;
+                }
+
+                await unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
+                await unitOfWork.AuditTrail.AddAsync(new AuditTrail(username, $"Create dispatch ticket #{model.DispatchNumber}", "Dispatch Ticket", model.DispatchTicketId, model.DispatchNumber), cancellationToken);
+                await unitOfWork.SaveAsync(cancellationToken);
+
+                return ServiceResult<int>.Success(model.DispatchTicketId, $"Dispatch Ticket #{model.DispatchNumber} was successfully created.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create dispatch ticket");
+                return ServiceResult<int>.Failure($"Failed to create dispatch ticket: {ExceptionHelper.GetErrorMessage(ex)}");
+            }
+        }
+
+        public async Task<ServiceResult> UpdateDispatchTicketAsync(DispatchTicketViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, string username, CancellationToken cancellationToken)
         {
             try
             {
@@ -35,11 +153,6 @@ namespace IBS.Services
                 if (currentModel == null)
                 {
                     return ServiceResult.Failure("Ticket not found.", ServiceResultStatus.NotFound);
-                }
-
-                if (currentModel.Status is SD.ServiceRequestStatus.Draft or SD.ServiceRequestStatus.Requested or SD.ServiceRequestStatus.ServiceRequestDeleted)
-                {
-                    return ServiceResult.Failure("Create and accept the Service Request before editing it as a Dispatch Ticket.");
                 }
 
                 var guard = await GuardClosedPeriodAsync(currentModel.Date, cancellationToken);
@@ -775,9 +888,9 @@ namespace IBS.Services
             }).ToList();
         }
 
-        public async Task<ServiceRequestViewModel> PopulateSelectListsAsync(ServiceRequestViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<DispatchTicketViewModel> PopulateSelectListsAsync(DispatchTicketViewModel viewModel, CancellationToken cancellationToken)
         {
-            viewModel = await unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
+            viewModel = await unitOfWork.DispatchTicket.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             viewModel.Customers = await unitOfWork.GetCustomerListAsyncById(cancellationToken);
             return viewModel;
         }
@@ -837,6 +950,5 @@ namespace IBS.Services
         }
     }
 }
-
 
 

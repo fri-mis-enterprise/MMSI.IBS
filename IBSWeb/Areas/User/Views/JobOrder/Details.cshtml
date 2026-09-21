@@ -117,11 +117,11 @@
                             <span class="material-symbols-outlined text-primary">list_alt</span>
                             <h2 class="modern-headline-md">Dispatch Tickets</h2>
                         </div>
-                        @if (ViewBag.CanCreateServiceRequest == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && Model.DispatchTickets.All(t => t.Status != SD.DispatchTicketStatus.Billed))
+                        @if (ViewBag.CanCreateDispatchTicket == true && Model.Status == SD.JobOrderStatus.Open && !ViewBag.HasBilling && Model.DispatchTickets.All(t => t.Status != SD.DispatchTicketStatus.Billed))
                         {
-                            <a asp-action="Create" asp-controller="ServiceRequest" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
+                            <a asp-action="Create" asp-controller="DispatchTicket" asp-route-jobOrderId="@Model.JobOrderId" class="modern-btn-primary text-sm" data-hotkey="a">
                                 <span class="material-symbols-outlined" style="font-size:18px">add_circle</span>
-                                ADD SERVICE REQUEST
+                                ADD TICKET
                             </a>
                         }
                     </div>
@@ -226,22 +226,10 @@
 
                                                     @if (!ViewBag.HasBilling && ticket.Status is "Draft" or "Requested")
                                                     {
-                                                        @if (ticket.Status == "Requested")
+                                                        @if (ViewBag.CanEditTicket == true && Model.Status == SD.JobOrderStatus.Open)
                                                         {
-                                                            @if (ViewBag.CanPostServiceRequest == true)
-                                                            {
-                                                                <form id="postForm-@ticket.DispatchTicketId" method="post" asp-controller="ServiceRequest" asp-action="Post" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" style="display:none">
-                                                                    @Html.AntiForgeryToken()
-                                                                </form>
-                                                                <button type="button" class="modern-dropdown-item" style="color: var(--primary); width:100%; border:none; background:none; cursor:pointer;" onclick="confirmPostRequest(@ticket.DispatchTicketId, @Model.JobOrderId)">
-                                                                    <span class="material-symbols-outlined">check_circle</span> Accept Request
-                                                                </button>
-                                                            }
-                                                        }
-                                                        @if (ViewBag.CanCreateServiceRequest == true)
-                                                        {
-                                                            <a asp-controller="ServiceRequest" asp-action="Edit" asp-route-id="@ticket.DispatchTicketId" class="modern-dropdown-item">
-                                                                <span class="material-symbols-outlined">edit</span> Edit Request
+                                                            <a asp-action="EditTicket" asp-controller="DispatchTicket" asp-route-id="@ticket.DispatchTicketId" asp-route-jobOrderId="@Model.JobOrderId" class="modern-dropdown-item">
+                                                                <span class="material-symbols-outlined">edit</span> Edit Ticket
                                                             </a>
                                                         }
                                                         @if (!string.IsNullOrEmpty(ticket.ImageSignedUrl))
@@ -720,20 +708,6 @@
                         }
                     })
                     .catch(error => ModernAlert.error(`Request failed: ${error}`));
-                }
-            });
-        }
-
-        function confirmPostRequest(id) {
-            ModernAlert.confirm({
-                title: 'Accept Service Request?',
-                text: 'This will mark the service request as ready for tariff.',
-                icon: 'question',
-                confirmText: 'Yes, accept it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    ModernAlert.showLoading("Accepting service request...");
-                    document.getElementById('postForm-' + id).submit();
                 }
             });
         }

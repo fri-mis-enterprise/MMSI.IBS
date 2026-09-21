@@ -58,7 +58,6 @@ namespace IBS.DataAccess.Repository
         #region --MSAP
 
         public IMsapRepository Msap { get; }
-        public IServiceRequestRepository ServiceRequest { get; }
         public IJobOrderRepository JobOrder { get; }
         public IDispatchTicketRepository DispatchTicket { get; }
         public IBillingRepository Billing { get; }
@@ -118,7 +117,6 @@ namespace IBS.DataAccess.Repository
             Port = new PortRepository(_db);
             Principal = new PrincipalRepository(_db);
             Service = new ServiceRepository(_db);
-            ServiceRequest = new ServiceRequestRepository(_db);
             TariffTable = new TariffTableRepository(_db);
             Terminal = new TerminalRepository(_db);
             Tugboat = new TugboatRepository(_db);

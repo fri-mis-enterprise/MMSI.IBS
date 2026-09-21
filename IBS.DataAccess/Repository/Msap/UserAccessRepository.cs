@@ -35,8 +35,6 @@ namespace IBS.DataAccess.Repository.Msap
 
             query = procedure switch
             {
-                ProcedureEnum.CreateServiceRequest => query.Where(u => u.CanCreateServiceRequest),
-                ProcedureEnum.PostServiceRequest => query.Where(u => u.CanPostServiceRequest),
                 ProcedureEnum.CreateDispatchTicket => query.Where(u => u.CanCreateDispatchTicket),
                 ProcedureEnum.EditDispatchTicket => query.Where(u => u.CanEditDispatchTicket),
                 ProcedureEnum.DeleteDispatchTicket => query.Where(u => u.CanDeleteDispatchTicket),

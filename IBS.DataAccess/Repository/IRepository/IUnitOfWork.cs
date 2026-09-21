@@ -62,7 +62,6 @@ namespace IBS.DataAccess.Repository.IRepository
         #region --MSAP
 
         IMsapRepository Msap { get; }
-        IServiceRequestRepository ServiceRequest { get; }
         IJobOrderRepository JobOrder { get; }
         IDispatchTicketRepository DispatchTicket { get; }
         IBillingRepository Billing { get; }

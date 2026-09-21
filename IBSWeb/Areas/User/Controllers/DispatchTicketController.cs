@@ -51,19 +51,53 @@ namespace IBSWeb.Areas.User.Controllers
 
         #region Create
 
+        /// <summary>
+        /// Displays the form to create a new Dispatch Ticket.
+        /// </summary>
         [HttpGet]
-        [RequireAccess(ProcedureEnum.CreateServiceRequest, "Access denied. You don't have permission to create Service Requests.")]
-        public IActionResult Create(int? jobOrderId)
+        [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
+        public async Task<IActionResult> Create(int jobOrderId, CancellationToken cancellationToken = default)
         {
-            return RedirectToAction("Create", "ServiceRequest", new { jobOrderId });
+            var viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(null, jobOrderId, cancellationToken);
+            return View(viewModel);
         }
 
+        /// <summary>
+        /// Processes the creation of a new Dispatch Ticket, including file uploads.
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.CreateDispatchTicket, "Access denied. You don't have permission to create Dispatch Tickets.")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(
+            DispatchTicketViewModel viewModel,
+            IFormFile? imageFile,
+            IFormFile? videoFile,
+            CancellationToken cancellationToken = default)
         {
-            return BadRequest("Direct Dispatch Ticket creation is disabled. Create and accept a Service Request first.");
+            if ((imageFile == null || imageFile.Length == 0) && !User.IsInRole("Admin"))
+            {
+                TempData["warning"] = "An image of the Dispatch Ticket is strictly required!";
+                viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
+                return View(viewModel);
+            }
+
+            var result = await dispatchTicketService.CreateDispatchTicketAsync(viewModel, imageFile, videoFile, User.Identity?.Name ?? "System", cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                TempData["success"] = result.Message;
+
+                if (viewModel.JobOrderId.HasValue)
+                {
+                    return RedirectToAction("Details", "JobOrder", new { id = viewModel.JobOrderId });
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["error"] = result.Message;
+            viewModel = await dispatchTicketService.PopulateDispatchTicketViewModelAsync(viewModel, null, cancellationToken);
+            return View(viewModel);
         }
 
         #endregion
@@ -363,7 +397,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(Index), new { filterType });
             }
 
-            var viewModel = new ServiceRequestViewModel();
+            var viewModel = new DispatchTicketViewModel();
             viewModel.FromEntity(model);
             viewModel.JobOrderId = jobOrderId ?? model.JobOrderId;
 
@@ -392,7 +426,7 @@ namespace IBSWeb.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         [RequireAccess(ProcedureEnum.EditDispatchTicket, "Access denied. You don't have permission to edit Dispatch Tickets.")]
         public async Task<IActionResult> EditTicket(
-            ServiceRequestViewModel viewModel,
+            DispatchTicketViewModel viewModel,
             IFormFile? imageFile,
             IFormFile? videoFile,
             string? filterType,

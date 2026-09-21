@@ -23,7 +23,6 @@ How to access MSAP and navigate the interface.
 After login, you land on the **Dashboard** showing:
 
 - **Tasks Overview** — quick counts of pending work items:
-  - Service Requests for Posting
   - Dispatch Tickets for Tariff / Approval / Disapproved
   - Billings for Collection
 - Quick links to each module
@@ -38,7 +37,6 @@ The top navigation bar has these sections:
 |----------|-------------|
 | **Home** | Dashboard |
 | **MSAP** | Core workflow: Job Orders, Dispatch Tickets, Billing, Collection, Import, Reports |
-| **Service Requests** | Create and manage service requests |
 | **Master File** | (Admin only) Users, Roles, Employees, User Access, Chart of Accounts, Payment Terms, Bank Accounts |
 | **MSAP References** | Master data: Activities, Ports, Principals, Tariff Rates, Terminals, Tugboats, Vessels, Customers, Suppliers |
 | **Manual** | This user manual |

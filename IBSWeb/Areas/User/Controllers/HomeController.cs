@@ -41,10 +41,6 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 #region -- MMSI
 
-                MsapServiceRequestForPosting = await dbContext.MsapDispatchTickets
-                        .Where(po => po.Status == SD.ServiceRequestStatus.Requested)
-                        .CountAsync(),
-
                 MsapDispatchTicketForTariff = await dbContext.MsapDispatchTickets
                         .Where(po => po.Status == "For Tariff")
                         .CountAsync(),

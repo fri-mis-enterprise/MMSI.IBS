@@ -36,15 +36,10 @@ PostgreSQL (via Npgsql, snake_case naming)
 ## 3. MSAP Workflow State Machine
 
 > The state machine below reflects **what the UI allows**, not every constant in the
-> domain model. `ServiceRequestStatus` and `DispatchTicketStatus` are separate enums;
-> see `Docs/WORKFLOW-DESIGN-REVIEW.md` for the remaining cleanup (service-level state guards).
+> domain model.
 
 ```
 JobOrder:  Open  ──→  Closed  (auto-closes when all DTs billed)
-
-ServiceRequest (separate lifecycle):
-  Draft ⇄ Requested (edit re-evaluates) → For Tariff (post, becomes a Dispatch Ticket)
-  Draft / Requested → Service Request Deleted ⇄ restore
 
 DispatchTicket:
   create → For Tariff
@@ -138,4 +133,3 @@ public class Repository<T> : IRepository<T> where T : class
 - **Legacy column attributes** (`[Column("RECID")]`, `[Column("CUSTNO")]`) on `DispatchTicket`, `Billing`, `Collection` indicate this was migrated from a legacy system
 - Some models extend `BaseEntity` (JobOrder, Billing, Collection) while `DispatchTicket` has its own `CreatedBy`/`EditedBy` fields (legacy carryover)
 - `DispatchTicket` has a `DispatchTicketId` PK but also legacy `RECID` column mapping
-

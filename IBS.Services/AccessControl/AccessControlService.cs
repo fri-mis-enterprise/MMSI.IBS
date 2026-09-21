@@ -55,13 +55,6 @@ namespace IBS.Services.AccessControl
     {
         #region -- MSAP Workflow --
 
-        public static async Task<bool> HasServiceRequestAccessAsync(this IAccessControlService accessControl, string userId)
-        {
-            return await accessControl.HasAnyAccessAsync(userId,
-                ProcedureEnum.CreateServiceRequest,
-                ProcedureEnum.PostServiceRequest);
-        }
-
         #endregion -- MSAP Workflow --
 
         #region -- MSAP Import --

@@ -11,10 +11,9 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Recent Decisions / Gotchas / Open Questions: only what a future session can't find elsewhere.
 
 ### Current Focus
-- **Service Request removal (2026-09-21, uncommitted):** user requested controller and views deleted first, with module errors/status discrepancies handled afterward. Deleted the controller and Create/Edit/Index views. **Open:** remaining navbar/Job Order routes, DispatchTicket creation redirect/rejection, dashboard counts and request-state handling are logged in DETECTED-ISSUES.md; determine replacement workflow before changing stored statuses.
+- **Service Request removal (2026-09-21, uncommitted):** direct Dispatch Ticket flow restored; runtime code, permissions, documentation, and assets removed. `RemoveServiceRequest` maps `Draft`/`Requested` to `For Tariff` and `Service Request Deleted` to `Deleted`, then drops obsolete user-access columns. Select-list loading lives directly in `DispatchTicketRepository`; no form-only repository remains. Final build and migration-script checks pass. **Open:** authenticated browser smoke check blocked because no local browser/runtime is available.
 - **Detected-issues cleanup (2026-09-21, committed 2cbfccd):** prior bug fixes and Accept Request wording preserved in git before Service Request removal. Build passed with 0 warnings/errors. **Open:** authenticated browser smoke check of retained fixes.
-- **SuperAdmin modernization + paging (2026-08-06, committed):** modern UI (grid cards, real `status-*` badges + new `.status-error`, styled notices, no phantom `scrollX` header row); `GetDataAsync` pages/sorts/filters in SQL via new `IRepository<T>.GetPagedAsync` (was loading whole tables in memory). DELETED filter buttons → shared `modern-btn-error` on ServiceRequest/DispatchTicket Index.
-- **ServiceRequest job-order filter (2026-08-06, committed d56e904):** `PopulateJobOrdersList` (Create+Edit) excludes Open JOs with a `ForPosting` billing (`!dbContext.MsapBillings.Any(...)`), matching JobOrderService.cs:120. Was causing submit entity errors.
+- **SuperAdmin modernization + paging (2026-08-06, committed):** modern UI (grid cards, real `status-*` badges + new `.status-error`, styled notices, no phantom `scrollX` header row); `GetDataAsync` pages/sorts/filters in SQL via new `IRepository<T>.GetPagedAsync` (was loading whole tables in memory).
 - **Billing BAF (2026-08-05):** per-ticket BAF + switchable TYPE (Per Move/Per Hour), live rate edits on `input`, `BafRates[ticketId]` write-back with audit trail. Gotcha: mutate `data-*` via `.data()` not `.attr()` (jQuery caches on first read). **Open:** Edit.cshtml has no TYPE switch (Create only, intentional); Playwright/browser check pending.
 - **View + conformance audits at zero (2026-08-04):** all remaining findings are documented deviations (Billing/UserAccess V2) or false positives (C3 global FallbackPolicy, S1 infra services, etc). Build green 0/0.
 - **14 master-file Create/Edit screens on `XViewModel : XEntity` (2026-08-04):** (9 MSAP + 5 MasterFile). Controllers build VM in GET, bind in POST; [NotMapped] select-lists populated after ctor. Activate/Deactivate keep entity @model.
@@ -26,7 +25,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 
 ### Key Files & Shortcuts
 - IBSWeb/wwwroot/js/tutorial.js — tour engine.
-- Views refs: JobOrder/Create (steps 1-8), Billing/Create (1-7; template for multi-select + undoc-toggle, mirrors Collection/Create). ServiceRequest views removed; replacement ticket entry pending.
+- Views refs: JobOrder/Create (steps 1-8), DispatchTicket/Create (ticket entry), Billing/Create (1-7; template for multi-select + undoc-toggle, mirrors Collection/Create).
 
 ### Open Questions / Next Steps
 - Decide if the 9 audit findings must read zero → Billing + UserAccess V2 conversion only actionable items left.
@@ -37,7 +36,7 @@ Read this FIRST at session start. Update it at the END of every session so the n
 - Tutorial.js z-index: interactive element via `.tour-interactive-active` (z-index 10002) must stay above overlay/backdrop; popover flips above for selects.
 
 ### Session Log (recent only — full history in CHANGELOG.md)
-- 2026-09-21 — Removed ServiceRequestController and three views as requested; build passed with 0 warnings/errors and git diff --check passed. Remaining module links and status dependencies logged for follow-up; browser verification not performed.
+- 2026-09-21 — Removed Service Request module and restored direct Dispatch Ticket entry; final build and migration script passed. Browser smoke check blocked because no local browser/runtime is available.
 - 2026-09-21 — User authorized committing the existing bug fixes before a separate removal; build passed with 0 warnings/errors. Removal scope clarification requested.
 - 2026-09-19 — Renamed user-facing Post Request wording to Accept Request, including confirmation, permission labels, success/error messages and new request audit entries; internal routes/permission identifiers unchanged.
 - 2026-09-19 — Detected-issues backlog resolved; Razor compilation verified. Temporary checks remain outside the repo at C:/Users/MIS2/AppData/Local/Temp/msap-issues-check-20260919 (run `dotnet run --project <folder>/Check.csproj --no-restore` and `node <folder>/check-view.cjs`); no test projects added to the solution.
